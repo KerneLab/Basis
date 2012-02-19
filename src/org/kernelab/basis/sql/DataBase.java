@@ -2,11 +2,7 @@ package org.kernelab.basis.sql;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Properties;
 
 import org.kernelab.basis.Copieable;
@@ -17,10 +13,9 @@ import org.kernelab.basis.Copieable;
  * To support various database, this class can be extended and just override the
  * method getURL().
  * 
- * JDBC4.0 and Java5.0 are required.
+ * JDBC3.0 and Java5.0 are required.
  * 
  * @author Dilly King
- * @version 2011.12.10
  */
 public abstract class DataBase implements Copieable<DataBase>
 {
@@ -503,17 +498,15 @@ public abstract class DataBase implements Copieable<DataBase>
 
 	}
 
-	protected String				serverName;
+	protected String		serverName;
 
-	protected int					portNumber	= DEFAULT_PORT_NUMBER;
+	protected int			portNumber	= DEFAULT_PORT_NUMBER;
 
-	protected String				catalog;
+	protected String		catalog;
 
-	protected Properties			information;
+	protected Properties	information;
 
-	private Connection				connection;
-
-	private Collection<Statement>	statements;
+	private Connection		connection;
 
 	protected DataBase(DataBase dataBase)
 	{
@@ -521,7 +514,6 @@ public abstract class DataBase implements Copieable<DataBase>
 		this.setPortNumber(dataBase.portNumber);
 		this.setCatalog(dataBase.catalog);
 		this.setInformation(dataBase.information);
-		this.setStatements(new LinkedList<Statement>());
 	}
 
 	public DataBase(String serverName, int portNumber, String catalog,
@@ -579,21 +571,10 @@ public abstract class DataBase implements Copieable<DataBase>
 	public void closeConnection()
 	{
 		try {
-
 			if (this.getConnection() != null) {
-
-				for (Statement statement : this.getStatements()) {
-					if (statement != null) {
-						statement.close();
-					}
-				}
-
-				this.getStatements().clear();
-
 				this.getConnection().close();
 				this.setConnection(null);
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -603,46 +584,10 @@ public abstract class DataBase implements Copieable<DataBase>
 	protected void finalize()
 	{
 		this.closeConnection();
-	}
-
-	public void finalize(ResultSet rs)
-	{
-		if (rs != null) {
-			try {
-				finalize(rs.getStatement());
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void finalize(Statement s)
-	{
-		if (s != null) {
-			try {
-				s.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void garbageStatements()
-	{
-		Collection<Statement> garbage = new LinkedList<Statement>();
-
-		for (Statement statement : this.getStatements()) {
-			try {
-				if (statement.isClosed()) {
-					garbage.add(statement);
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-
-		for (Statement statement : garbage) {
-			this.getStatements().remove(statement);
+		try {
+			super.finalize();
+		} catch (Throwable e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -694,11 +639,6 @@ public abstract class DataBase implements Copieable<DataBase>
 			e.printStackTrace();
 		}
 		return kit;
-	}
-
-	public Collection<Statement> getStatements()
-	{
-		return statements;
 	}
 
 	/**
@@ -777,11 +717,6 @@ public abstract class DataBase implements Copieable<DataBase>
 	public void setServerName(String serverName)
 	{
 		this.serverName = serverName;
-	}
-
-	private void setStatements(Collection<Statement> statements)
-	{
-		this.statements = statements;
 	}
 
 	public void setUserName(String userName)

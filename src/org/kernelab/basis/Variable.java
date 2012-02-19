@@ -150,7 +150,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	 */
 	public static boolean isNumber(String string)
 	{
-		return !string.isEmpty() && string.matches("^-?\\d*\\.?\\d*$");
+		return string.length() != 0 && string.matches("^-?\\d*\\.?\\d*$");
 	}
 
 	/**

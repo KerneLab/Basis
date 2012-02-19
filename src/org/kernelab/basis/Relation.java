@@ -2,8 +2,6 @@ package org.kernelab.basis;
 
 import java.util.Map.Entry;
 
-import org.kernelab.basis.gui.VectorAccessible;
-
 /**
  * The class to describe the relation between key and value.
  * 

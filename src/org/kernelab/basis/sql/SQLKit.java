@@ -65,7 +65,6 @@ import org.kernelab.basis.sql.DataBase.MySQL;
  * </pre>
  * 
  * @author Dilly King
- * @version 2011.12.11.6
  */
 public class SQLKit
 {
@@ -201,21 +200,25 @@ public class SQLKit
 
 	public void close()
 	{
-		try {
-			statement = null;
-			if (statements != null) {
-				for (Statement s : statements.values()) {
+		statement = null;
+		if (statements != null) {
+			for (Statement s : statements.values()) {
+				try {
 					s.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
 				}
-				statements.clear();
-				statements = null;
 			}
-			if (connection != null) {
+			statements.clear();
+			statements = null;
+		}
+		if (connection != null) {
+			try {
 				connection.close();
-				connection = null;
+			} catch (SQLException e) {
+				e.printStackTrace();
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
+			connection = null;
 		}
 	}
 
