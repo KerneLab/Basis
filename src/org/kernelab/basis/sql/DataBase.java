@@ -627,7 +627,7 @@ public abstract class DataBase implements Copieable<DataBase>
 	{
 		SQLKit kit = null;
 		try {
-			if (!this.isOpen()) {
+			if (this.isClosed()) {
 				this.openConnection();
 			}
 			kit = new SQLKit(this.getConnection());
@@ -653,14 +653,14 @@ public abstract class DataBase implements Copieable<DataBase>
 		return information.getProperty(USER);
 	}
 
-	public boolean isOpen()
+	public boolean isClosed()
 	{
-		boolean is = false;
+		boolean is = true;
 
 		if (this.getConnection() != null) {
 
 			try {
-				is = !this.getConnection().isClosed();
+				is = this.getConnection().isClosed();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -675,7 +675,7 @@ public abstract class DataBase implements Copieable<DataBase>
 	{
 		try {
 
-			if (!this.isOpen()) {
+			if (this.isClosed()) {
 				// No need for JDBC4.0 with Java6.0
 
 				Class.forName(this.getDriverName()).newInstance();
