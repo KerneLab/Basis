@@ -9,6 +9,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * A light weighted class of JSON.
@@ -56,7 +57,7 @@ public class JSON extends LinkedHashMap<String, Object>
 			public Object next()
 			{
 				last = cursor++;
-				return JSAN.this.get(last);
+				return JSAN.this.attr(last);
 			}
 
 			public int nextIndex()
@@ -67,7 +68,7 @@ public class JSON extends LinkedHashMap<String, Object>
 			public Object previous()
 			{
 				last = --cursor;
-				return JSAN.this.get(last);
+				return JSAN.this.attr(last);
 			}
 
 			public int previousIndex()
@@ -147,11 +148,7 @@ public class JSON extends LinkedHashMap<String, Object>
 		@SuppressWarnings("unchecked")
 		public <E> E attr(int index)
 		{
-			Object object = this.get(index);
-			while (IsQuotation(object)) {
-				object = ((JSONQuotation) object).quote();
-			}
-			return (E) object;
+			return (E) Quote(this.get(index));
 		}
 
 		public JSAN attr(int index, Object value)
@@ -881,6 +878,15 @@ public class JSON extends LinkedHashMap<String, Object>
 		return object;
 	}
 
+	public static Object Quote(Object o)
+	{
+		while (o instanceof JSONQuotation) {
+			o = ((JSONQuotation) o).quote();
+		}
+
+		return o;
+	}
+
 	public static int ReverseDualMatchIndex(CharSequence sequence, char a, char b,
 			int from)
 	{
@@ -1031,11 +1037,7 @@ public class JSON extends LinkedHashMap<String, Object>
 	@SuppressWarnings("unchecked")
 	public <E> E attr(String key)
 	{
-		Object object = this.get(key);
-		while (IsQuotation(object)) {
-			object = ((JSONQuotation) object).quote();
-		}
-		return (E) object;
+		return (E) Quote(this.get(key));
 	}
 
 	public JSON attr(String key, Object value)
@@ -1111,6 +1113,12 @@ public class JSON extends LinkedHashMap<String, Object>
 	{
 		this.entry = entry;
 		return this;
+	}
+
+	@Override
+	public Set<Entry<String, Object>> entrySet()
+	{
+		return null;
 	}
 
 	public JSON outer()
