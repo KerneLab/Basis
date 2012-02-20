@@ -119,6 +119,28 @@ public class Tools
 	}
 
 	/**
+	 * To cast an object to a given class.
+	 * 
+	 * @param <T>
+	 *            The generic type of the target class.
+	 * @param obj
+	 *            The object to be casted.
+	 * @param cls
+	 *            The given class.
+	 * @return A casted object type of cls, null if object does not belong to
+	 *         cls or obj itself is null.
+	 */
+	public static <T> T as(Object obj, Class<T> cls)
+	{
+		T t = null;
+		try {
+			t = cls.cast(obj);
+		} catch (ClassCastException e) {
+		}
+		return t;
+	}
+
+	/**
 	 * To convert a CharSequence into char[].
 	 * 
 	 * @param sequence

@@ -496,6 +496,22 @@ public class JSON extends LinkedHashMap<String, Object>
 		}
 	}
 
+	public static class JSONSyntaxException extends RuntimeException
+	{
+
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 5584855948726666241L;
+
+		public JSONSyntaxException(CharSequence source, int index)
+		{
+			super("Near\n"
+					+ source.subSequence(Math.max(index - 30, 0),
+							Math.min(index + 30, source.length())));
+		}
+	}
+
 	/**
 	 * 
 	 */
@@ -577,20 +593,12 @@ public class JSON extends LinkedHashMap<String, Object>
 
 	public static final JSAN AsJSAN(Object o)
 	{
-		JSAN jsan = null;
-		if (IsJSAN(o)) {
-			jsan = (JSAN) o;
-		}
-		return jsan;
+		return Tools.as(o, JSAN.class);
 	}
 
 	public static final JSON AsJSON(Object o)
 	{
-		JSON json = null;
-		if (IsJSON(o)) {
-			json = (JSON) o;
-		}
-		return json;
+		return Tools.as(o, JSON.class);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -712,9 +720,9 @@ public class JSON extends LinkedHashMap<String, Object>
 	 */
 	public static void main(String[] args)
 	{
-		String a = "[\"a\",\"]\",[\"]\",\"k\",{\"k}\":\"v]\"}]]";
-		JSON j = JSON.Parse(a);
-		Tools.debug(j.toString());
+		String s = "{1,[\"2]}";
+		JSON json = JSON.Parse(s);
+		Tools.debug(json.toString());
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -760,105 +768,114 @@ public class JSON extends LinkedHashMap<String, Object>
 
 		boolean inString = false;
 
+		int i = 0;
 		char c;
 
-		i: for (int i = 0; i < json.length(); i++) {
+		try {
 
-			c = json.charAt(i);
+			i: for (i = 0; i < json.length(); i++) {
 
-			if (c == ESCAPE_CHAR) {
-				json.deleteCharAt(i);
 				c = json.charAt(i);
-				if (ESCAPING_CHAR.containsKey(c)) {
+
+				if (c == ESCAPE_CHAR) {
 					json.deleteCharAt(i);
-					json.insert(i, ESCAPING_CHAR.get(c));
-				} else if (c == UNICODE_ESCAPING_CHAR) {
-					json.deleteCharAt(i);
-					String unicode = json.substring(i, i + UNICODE_ESCAPED_LENGTH);
-					json.delete(i, i + UNICODE_ESCAPED_LENGTH);
-					json.insert(i, (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX));
+					c = json.charAt(i);
+					if (ESCAPING_CHAR.containsKey(c)) {
+						json.deleteCharAt(i);
+						json.insert(i, ESCAPING_CHAR.get(c));
+					} else if (c == UNICODE_ESCAPING_CHAR) {
+						json.deleteCharAt(i);
+						String unicode = json.substring(i, i + UNICODE_ESCAPED_LENGTH);
+						json.delete(i, i + UNICODE_ESCAPED_LENGTH);
+						json.insert(i,
+								(char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX));
+					}
+					continue i;
 				}
-				continue i;
-			}
 
-			if (!inString) {
+				if (!inString) {
 
-				switch (c)
-				{
-					case OBJECT_BEGIN_CHAR:
-						if (i != 0) {
-							int match = DualMatchIndex(json, OBJECT_BEGIN_CHAR,
-									OBJECT_END_CHAR, i);
-							value = Parse(json.substring(i, match + 1), new JSON(),
-									context);
-							i = match;
-							nail = NOT_BEGIN;
-						} else {
-							nail = i + 1;
-						}
-						break;
+					switch (c)
+					{
+						case OBJECT_BEGIN_CHAR:
+							if (i != 0) {
+								int match = DualMatchIndex(json, OBJECT_BEGIN_CHAR,
+										OBJECT_END_CHAR, i);
+								value = Parse(json.substring(i, match + 1), new JSON(),
+										context);
+								i = match;
+								nail = NOT_BEGIN;
+							} else {
+								nail = i + 1;
+							}
+							break;
 
-					case OBJECT_END_CHAR:
-						if (entry != null) {
+						case OBJECT_END_CHAR:
+							if (entry != null) {
+								if (nail != NOT_BEGIN) {
+									value = Value(json.substring(nail, i));
+								}
+								object.put(entry, value);
+							}
+							break i;
+
+						case ARRAY_BEGIN_CHAR:
+							if (nail != NOT_BEGIN && nail != i) {
+								i = DualMatchIndex(json, ARRAY_BEGIN_CHAR,
+										ARRAY_END_CHAR, i);
+							} else if (i != 0) {
+								int match = DualMatchIndex(json, ARRAY_BEGIN_CHAR,
+										ARRAY_END_CHAR, i);
+								value = Parse(json.substring(i, match + 1), new JSAN(),
+										context);
+								i = match;
+								nail = NOT_BEGIN;
+							} else {
+								nail = i + 1;
+								arrayIndex++;
+							}
+							break;
+
+						case ARRAY_END_CHAR:
+							if (nail != NOT_BEGIN && nail != i) {
+								value = Value(json.substring(nail, i));
+							}
+							if (value != null) {
+								object.put(JSAN.Index(arrayIndex), value);
+							}
+							break i;
+
+						case PAIR_CHAR:
 							if (nail != NOT_BEGIN) {
 								value = Value(json.substring(nail, i));
 							}
+							if (arrayIndex > NOT_BEGIN) {
+								entry = JSAN.Index(arrayIndex);
+								arrayIndex++;
+							}
 							object.put(entry, value);
-						}
-						break i;
-
-					case ARRAY_BEGIN_CHAR:
-						if (nail != NOT_BEGIN && nail != i) {
-							i = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i);
-						} else if (i != 0) {
-							int match = DualMatchIndex(json, ARRAY_BEGIN_CHAR,
-									ARRAY_END_CHAR, i);
-							value = Parse(json.substring(i, match + 1), new JSAN(),
-									context);
-							i = match;
-							nail = NOT_BEGIN;
-						} else {
 							nail = i + 1;
-							arrayIndex++;
-						}
-						break;
+							entry = null;
+							value = null;
+							break;
 
-					case ARRAY_END_CHAR:
-						if (nail != NOT_BEGIN && nail != i) {
-							value = Value(json.substring(nail, i));
-						}
-						if (value != null) {
-							object.put(JSAN.Index(arrayIndex), value);
-						}
-						break i;
+						case ATTR_CHAR:
+							entry = TrimQuotes(json.substring(nail, i));
+							nail = FirstNonWhitespaceIndex(json, i + 1);
+							break;
 
-					case PAIR_CHAR:
-						if (nail != NOT_BEGIN) {
-							value = Value(json.substring(nail, i));
-						}
-						if (arrayIndex > NOT_BEGIN) {
-							entry = JSAN.Index(arrayIndex);
-							arrayIndex++;
-						}
-						object.put(entry, value);
-						nail = i + 1;
-						entry = null;
-						value = null;
-						break;
+						case QUOTE_CHAR:
+							inString = !inString;
+							break;
+					}
 
-					case ATTR_CHAR:
-						entry = TrimQuotes(json.substring(nail, i));
-						nail = FirstNonWhitespaceIndex(json, i + 1);
-						break;
-
-					case QUOTE_CHAR:
-						inString = !inString;
-						break;
+				} else if (c == QUOTE_CHAR) {
+					inString = !inString;
 				}
-
-			} else if (c == QUOTE_CHAR) {
-				inString = !inString;
 			}
+
+		} catch (RuntimeException e) {
+			throw new JSONSyntaxException(json, i);
 		}
 
 		return object;
