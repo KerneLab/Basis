@@ -2,7 +2,7 @@ package org.kernelab.basis;
 
 import java.util.Map;
 
-public class JSONQuotation
+public class JSONQuotation implements JSONHierarchical
 {
 	public static final char	LINEAR_ATTRIBUTE		= '.';
 
@@ -184,7 +184,7 @@ public class JSONQuotation
 		quote(quote);
 	}
 
-	protected JSONContext context()
+	public JSONContext context()
 	{
 		return outer == null ? null : outer.context();
 	}
@@ -194,7 +194,7 @@ public class JSONQuotation
 		return entry;
 	}
 
-	protected JSONQuotation entry(String entry)
+	public JSONQuotation entry(String entry)
 	{
 		this.entry = entry;
 		return this;
@@ -205,7 +205,7 @@ public class JSONQuotation
 		return outer;
 	}
 
-	protected JSONQuotation outer(JSON outer)
+	public JSONQuotation outer(JSON outer)
 	{
 		this.outer = outer;
 		return this;

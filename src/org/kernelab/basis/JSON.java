@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
  * 
  * @author Dilly King
  */
-public class JSON extends LinkedHashMap<String, Object>
+public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchical
 {
 
 	/**
@@ -318,7 +318,8 @@ public class JSON extends LinkedHashMap<String, Object>
 			return this.remove(indexOf(object));
 		}
 
-		public JSAN removeAll(Iterable<Object> iterable)
+		@Override
+		public JSAN removeAll(Iterable<? extends Object> iterable)
 		{
 			if (iterable != null) {
 				for (Object o : iterable) {
@@ -577,6 +578,11 @@ public class JSON extends LinkedHashMap<String, Object>
 		ESCAPED_CHAR.put('\t', "\\t");
 	}
 
+	public static final JSONHierarchical AsHierarchical(Object o)
+	{
+		return Tools.as(o, JSONHierarchical.class);
+	}
+
 	@SuppressWarnings("unchecked")
 	public static final Iterable<Object> AsIterable(Object o)
 	{
@@ -696,6 +702,11 @@ public class JSON extends LinkedHashMap<String, Object>
 		return o instanceof JSONContext;
 	}
 
+	public static final boolean IsHierarchical(Object o)
+	{
+		return o instanceof JSONHierarchical;
+	}
+
 	public static final boolean IsJSAN(Object o)
 	{
 		return o instanceof JSAN;
@@ -704,11 +715,6 @@ public class JSON extends LinkedHashMap<String, Object>
 	public static final boolean IsJSON(Object o)
 	{
 		return o instanceof JSON;
-	}
-
-	public static final boolean IsQuotation(Object o)
-	{
-		return o instanceof JSONQuotation;
 	}
 
 	/**
@@ -1108,7 +1114,7 @@ public class JSON extends LinkedHashMap<String, Object>
 		return entry;
 	}
 
-	protected JSON entry(String entry)
+	public JSON entry(String entry)
 	{
 		this.entry = entry;
 		return this;
@@ -1119,7 +1125,7 @@ public class JSON extends LinkedHashMap<String, Object>
 		return outer;
 	}
 
-	protected JSON outer(JSON outer)
+	public JSON outer(JSON outer)
 	{
 		this.outer = outer;
 		return this;
@@ -1139,10 +1145,11 @@ public class JSON extends LinkedHashMap<String, Object>
 			value = jsan;
 		}
 
-		if (IsJSON(value)) {
-			((JSON) value).outer(this).entry(key);
-		} else if (IsQuotation(value)) {
-			((JSONQuotation) value).outer(this).entry(key);
+		JSONHierarchical hirch = AsHierarchical(value);
+		if (hirch != null) {
+			if (hirch.context() == null) {
+				hirch.outer(this).entry(key);
+			}
 		}
 
 		super.put(key, value);
@@ -1173,13 +1180,29 @@ public class JSON extends LinkedHashMap<String, Object>
 	@Override
 	public Object remove(Object key)
 	{
-		Object object = super.remove(key);
-		if (IsJSON(object)) {
-			((JSON) object).outer(null).entry(null);
-		} else if (IsQuotation(object)) {
-			((JSONQuotation) object).outer(null).entry(null);
+		Object value = super.remove(key);
+
+		JSONHierarchical hirch = AsHierarchical(value);
+		if (hirch != null) {
+			if (context() == hirch.context()) {
+				hirch.outer(null).entry(null);
+			}
 		}
-		return object;
+
+		return value;
+	}
+
+	public JSON removeAll(Iterable<? extends Object> keys)
+	{
+		for (Object key : keys) {
+			this.remove(key);
+		}
+		return this;
+	}
+
+	public JSON removeAll(Map<? extends Object, ? extends Object> map)
+	{
+		return this.removeAll(map.keySet());
 	}
 
 	public JSON swap(JSON json)
