@@ -9,7 +9,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 /**
  * A light weighted class of JSON.
@@ -1113,12 +1112,6 @@ public class JSON extends LinkedHashMap<String, Object>
 	{
 		this.entry = entry;
 		return this;
-	}
-
-	@Override
-	public Set<Entry<String, Object>> entrySet()
-	{
-		return null;
 	}
 
 	public JSON outer()
