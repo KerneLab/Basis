@@ -1,5 +1,7 @@
 package org.kernelab.basis;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -9,14 +11,137 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.kernelab.basis.JSON.Context;
+
+interface Hierarchical extends Copieable<Hierarchical>
+{
+	public Context context();
+
+	public String entry();
+
+	public Hierarchical entry(String entry);
+
+	public JSON outer();
+
+	public Hierarchical outer(JSON json);
+}
 
 /**
  * A light weighted class of JSON.
  * 
  * @author Dilly King
  */
-public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchical
+public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 {
+
+	public static class Context extends JSON
+	{
+
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -7456943054258519317L;
+
+		public static final Matcher	VAR_ENTRY_MATCHER	= Pattern
+																.compile(
+																		"^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$")
+																.matcher("");
+
+		public static final Matcher	VAR_EXIT_MATCHER	= Pattern.compile(
+																"^\\s*(.*?)\\s*;\\s*$")
+																.matcher("");
+
+		private DataReader			reader;
+
+		public Context()
+		{
+			reader = new DataReader() {
+
+				private String			entry	= null;
+
+				private StringBuilder	buffer	= new StringBuilder();
+
+				@Override
+				protected void readFinished()
+				{
+
+				}
+
+				@Override
+				protected void readLine(CharSequence line)
+				{
+					buffer.append(line);
+
+					if (entry == null) {
+						if (VAR_ENTRY_MATCHER.reset(buffer).lookingAt()) {
+							entry = VAR_ENTRY_MATCHER.group(2);
+							line = VAR_ENTRY_MATCHER.group(3);
+							Tools.clearStringBuilder(buffer);
+							buffer.append(line);
+						}
+					}
+
+					if (entry != null) {
+
+						if (VAR_EXIT_MATCHER.reset(buffer).lookingAt()) {
+
+							line = VAR_EXIT_MATCHER.group(1);
+							Tools.clearStringBuilder(buffer);
+							buffer.append(line);
+
+							Object object = JSON.Value(buffer.toString());
+
+							if (object == JSON.NOT_A_VALUE) {
+								object = JSON.Parse(buffer, null, Context.this);
+							}
+
+							if (object != JSON.NOT_A_VALUE) {
+								Quotation.Quote(Context.this, entry, object);
+								entry = null;
+								Tools.clearStringBuilder(buffer);
+							}
+						}
+					}
+				}
+
+				@Override
+				protected void readPrepare()
+				{
+					entry = null;
+				}
+			};
+		}
+
+		@Override
+		public Context context()
+		{
+			return this;
+		}
+
+		protected DataReader getReader()
+		{
+			return reader;
+		}
+
+		public Context read(File file)
+		{
+			try {
+				reader.setDataFile(file).read();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			return this;
+		}
+
+		protected void setReader(DataReader reader)
+		{
+			this.reader = reader;
+		}
+
+	}
 
 	/**
 	 * A class to describe Array object using JSON format.
@@ -195,7 +320,7 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 		@Override
 		public JSAN clone()
 		{
-			return new JSAN(this);
+			return new JSAN(this).outer(outer()).entry(entry()).toJSAN();
 		}
 
 		public boolean contains(Object o)
@@ -493,7 +618,237 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 		}
 	}
 
-	public static class JSONSyntaxException extends RuntimeException
+	public static class Quotation implements Hierarchical
+	{
+		public static final char	LINEAR_ATTRIBUTE		= '.';
+
+		public static final char	NESTED_ATTRIBUTE_BEGIN	= '[';
+
+		public static final char	NESTED_ATTRIBUTE_END	= ']';
+
+		public static final char	NESTED_ATTRIBUTE_QUOTE	= '"';
+
+		public static Object Quote(Context context, String quote)
+		{
+			if (context == null) {
+				return null;
+			}
+
+			Object object = context;
+
+			Map<String, Object> map = null;
+			int nail = 0;
+
+			char c = 0;
+			int i = 0;
+			String entry;
+
+			i: for (i = 0; i < quote.length(); i++) {
+				c = quote.charAt(i);
+
+				if (c == LINEAR_ATTRIBUTE) {
+					if (nail != i) {
+						map = JSON.AsMap(object);
+						if (map == null) {
+							return null;
+						} else {
+							entry = quote.substring(nail, i).trim();
+							object = map.get(entry);
+							nail = i + 1;
+						}
+					} else {
+						nail = i + 1;
+					}
+				}
+
+				if (c == NESTED_ATTRIBUTE_BEGIN) {
+					if (nail != i) {
+						map = JSON.AsMap(object);
+						if (map == null) {
+							return null;
+						} else {
+							entry = quote.substring(nail, i).trim();
+							object = map.get(entry);
+							nail = i + 1;
+						}
+					} else {
+						nail = i + 1;
+					}
+					i = JSON.DualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN,
+							NESTED_ATTRIBUTE_END, i) - 1;
+					continue i;
+				}
+
+				if (c == NESTED_ATTRIBUTE_QUOTE) {
+					nail = i + 1;
+					do {
+						i = Tools.seekIndex(quote, NESTED_ATTRIBUTE_QUOTE, i + 1);
+					} while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
+					break;
+				}
+
+				if (c == NESTED_ATTRIBUTE_END) {
+					map = JSON.AsMap(object);
+					if (map == null) {
+						return null;
+					} else {
+						entry = Quote(context, quote.substring(nail, i)).toString();
+						object = map.get(entry);
+						nail = i + 1;
+					}
+				}
+			}
+
+			if (c == NESTED_ATTRIBUTE_QUOTE || Variable.isInteger(quote)) {
+				object = quote.substring(nail, i);
+			} else if (c != NESTED_ATTRIBUTE_END) {
+				map = JSON.AsMap(object);
+				if (map == null) {
+					return null;
+				} else {
+					entry = quote.substring(nail, i).trim();
+					object = map.get(entry);
+				}
+			}
+
+			return object;
+		}
+
+		public static Object Quote(Context context, String quote, Object object)
+		{
+			JSON outer = null;
+			String entry = null;
+
+			int quoteLength = quote.length() - 1;
+			if (quote.charAt(quoteLength) == NESTED_ATTRIBUTE_END) {
+				int begin = JSON.ReverseDualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN,
+						NESTED_ATTRIBUTE_END, quoteLength);
+				outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
+				if (outer != null) {
+					entry = Quote(context, quote.substring(begin + 1, quoteLength))
+							.toString();
+				}
+			} else {
+				int begin = quote.lastIndexOf(LINEAR_ATTRIBUTE);
+				if (begin == -1) {
+					outer = context;
+					entry = quote;
+				} else {
+					outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
+					if (outer != null) {
+						entry = quote.substring(begin + 1);
+					}
+				}
+			}
+
+			if (outer != null && entry != null) {
+				Object temp = object;
+				object = outer.get(entry);
+				outer.put(entry, temp);
+			}
+
+			return object;
+		}
+
+		public static String Quote(JSON json)
+		{
+			StringBuilder buffer = new StringBuilder();
+
+			JSON outer = json.outer();
+			String entry = null;
+
+			do {
+				entry = json.entry();
+
+				if (outer.outer() != null) {
+					buffer.insert(0, NESTED_ATTRIBUTE_END);
+					if (!JSON.IsJSAN(outer)) {
+						buffer.insert(0, NESTED_ATTRIBUTE_QUOTE);
+					}
+				}
+				buffer.insert(0, entry);
+				if (outer.outer() != null) {
+					if (!JSON.IsJSAN(outer)) {
+						buffer.insert(0, NESTED_ATTRIBUTE_QUOTE);
+					}
+					buffer.insert(0, NESTED_ATTRIBUTE_BEGIN);
+				}
+
+				json = outer;
+				outer = json.outer();
+			} while (outer != null);
+
+			return buffer.toString();
+		}
+
+		private JSON	outer;
+
+		private String	entry;
+
+		private String	quote;
+
+		protected Quotation(Quotation q)
+		{
+			quote(q.quote).outer(q.outer()).entry(q.entry());
+		}
+
+		public Quotation(String quote)
+		{
+			quote(quote);
+		}
+
+		@Override
+		public Quotation clone()
+		{
+			return new Quotation(this).outer(null).entry(null);
+		}
+
+		public Context context()
+		{
+			return outer == null ? null : outer.context();
+		}
+
+		public String entry()
+		{
+			return entry;
+		}
+
+		public Quotation entry(String entry)
+		{
+			this.entry = entry;
+			return this;
+		}
+
+		public JSON outer()
+		{
+			return outer;
+		}
+
+		public Quotation outer(JSON outer)
+		{
+			this.outer = outer;
+			return this;
+		}
+
+		public Object quote()
+		{
+			return Quote(context(), quote);
+		}
+
+		protected Quotation quote(String quote)
+		{
+			this.quote = quote.trim();
+			return this;
+		}
+
+		@Override
+		public String toString()
+		{
+			return quote;
+		}
+	}
+
+	public static class SyntaxErrorException extends RuntimeException
 	{
 
 		/**
@@ -501,7 +856,7 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 		 */
 		private static final long	serialVersionUID	= 5584855948726666241L;
 
-		public JSONSyntaxException(CharSequence source, int index)
+		public SyntaxErrorException(CharSequence source, int index)
 		{
 			super("Near\n"
 					+ source.subSequence(Math.max(index - 30, 0),
@@ -578,9 +933,9 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 		ESCAPED_CHAR.put('\t', "\\t");
 	}
 
-	public static final JSONHierarchical AsHierarchical(Object o)
+	public static final Hierarchical AsHierarchical(Object o)
 	{
-		return Tools.as(o, JSONHierarchical.class);
+		return Tools.as(o, Hierarchical.class);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -611,6 +966,11 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 			map = (Map<String, Object>) o;
 		}
 		return map;
+	}
+
+	public static final Quotation AsQuotation(Object o)
+	{
+		return Tools.as(o, Quotation.class);
 	}
 
 	public static boolean CharacterNeedToEscape(char c)
@@ -699,12 +1059,12 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 
 	public static final boolean IsContext(Object o)
 	{
-		return o instanceof JSONContext;
+		return o instanceof Context;
 	}
 
 	public static final boolean IsHierarchical(Object o)
 	{
-		return o instanceof JSONHierarchical;
+		return o instanceof Hierarchical;
 	}
 
 	public static final boolean IsJSAN(Object o)
@@ -717,14 +1077,26 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 		return o instanceof JSON;
 	}
 
+	public static final boolean IsQuotation(Object o)
+	{
+		return o instanceof Quotation;
+	}
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args)
 	{
-		String s = "{1,[\"2]}";
-		JSON json = JSON.Parse(s);
-		Tools.debug(json.toString());
+		String s = "[1,[2,[3]]]";
+		JSAN jsan = JSAN.Parse(s).toJSAN();
+
+		JSAN jsan1 = jsan.attrJSAN(1);
+		JSAN other = jsan1.clone();
+		jsan1 = jsan1.attrJSAN(1);
+		other = other.attrJSAN(1);
+
+		Tools.debug(jsan1.outer() == other.outer());
+		Tools.debug(jsan1.outer().outer() == other.outer().outer());
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -737,7 +1109,7 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 		return Parse(source, object, null);
 	}
 
-	public static JSON Parse(CharSequence source, JSON object, JSONContext context)
+	public static JSON Parse(CharSequence source, JSON object, Context context)
 	{
 		String string = source.toString().trim();
 
@@ -877,7 +1249,7 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 			}
 
 		} catch (RuntimeException e) {
-			throw new JSONSyntaxException(json, i);
+			throw new SyntaxErrorException(json, i);
 		}
 
 		return object;
@@ -885,8 +1257,8 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 
 	public static Object Quote(Object o)
 	{
-		while (o instanceof JSONQuotation) {
-			o = ((JSONQuotation) o).quote();
+		while (o instanceof Quotation) {
+			o = ((Quotation) o).quote();
 		}
 
 		return o;
@@ -1014,7 +1386,7 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 			} else if (!string.startsWith(OBJECT_BEGIN_MARK)
 					&& !string.startsWith(ARRAY_BEGIN_MARK))
 			{
-				value = new JSONQuotation(string);
+				value = new Quotation(string);
 			} else {
 				value = NOT_A_VALUE;
 			}
@@ -1034,9 +1406,26 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 		super();
 	}
 
-	protected JSON(JSON json)
+	protected JSON(JSON source)
 	{
-		super(json);
+		this();
+
+		outer(source.outer()).entry(source.entry());
+
+		String key = null;
+		Object object = null;
+		Hierarchical hirch = null;
+
+		for (Entry<String, Object> entry : source.entrySet()) {
+			key = entry.getKey();
+			object = entry.getValue();
+
+			if ((hirch = JSON.AsHierarchical(object)) != null) {
+				object = hirch.clone().outer(this).entry(key);
+			}
+
+			this.put(key, object);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1090,18 +1479,18 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 	@Override
 	public JSON clone()
 	{
-		return new JSON(this);
+		return new JSON(this).outer(null).entry(null);
 	}
 
-	public JSONContext context()
+	public Context context()
 	{
-		JSONContext context = null;
+		Context context = null;
 		JSON outer = this;
 
 		do {
 			outer = outer.outer();
 			if (IsContext(outer)) {
-				context = (JSONContext) outer;
+				context = (Context) outer;
 				break;
 			}
 		} while (outer != null);
@@ -1145,7 +1534,7 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 			value = jsan;
 		}
 
-		JSONHierarchical hirch = AsHierarchical(value);
+		Hierarchical hirch = AsHierarchical(value);
 		if (hirch != null) {
 			if (hirch.context() == null) {
 				hirch.outer(this).entry(key);
@@ -1157,24 +1546,24 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 		return value;
 	}
 
-	public JSONQuotation quote()
+	public Quotation quote()
 	{
-		return new JSONQuotation(JSONQuotation.Quote(this));
+		return new Quotation(Quotation.Quote(this));
 	}
 
-	public JSONQuotation quote(String entry)
+	public Quotation quote(String entry)
 	{
-		String quote = JSONQuotation.Quote(this);
-		quote += JSONQuotation.NESTED_ATTRIBUTE_BEGIN;
+		String quote = Quotation.Quote(this);
+		quote += Quotation.NESTED_ATTRIBUTE_BEGIN;
 		if (JSON.IsJSAN(this)) {
-			quote += JSONQuotation.NESTED_ATTRIBUTE_QUOTE;
+			quote += Quotation.NESTED_ATTRIBUTE_QUOTE;
 		}
 		quote += entry;
 		if (JSON.IsJSAN(this)) {
-			quote += JSONQuotation.NESTED_ATTRIBUTE_QUOTE;
+			quote += Quotation.NESTED_ATTRIBUTE_QUOTE;
 		}
-		quote += JSONQuotation.NESTED_ATTRIBUTE_END;
-		return new JSONQuotation(quote);
+		quote += Quotation.NESTED_ATTRIBUTE_END;
+		return new Quotation(quote);
 	}
 
 	@Override
@@ -1182,7 +1571,7 @@ public class JSON extends LinkedHashMap<String, Object> implements JSONHierarchi
 	{
 		Object value = super.remove(key);
 
-		JSONHierarchical hirch = AsHierarchical(value);
+		Hierarchical hirch = AsHierarchical(value);
 		if (hirch != null) {
 			if (context() == hirch.context()) {
 				hirch.outer(null).entry(null);
