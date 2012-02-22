@@ -320,7 +320,7 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 		@Override
 		public JSAN clone()
 		{
-			return new JSAN(this).outer(outer()).entry(entry()).toJSAN();
+			return new JSAN(this);
 		}
 
 		public boolean contains(Object o)
@@ -1087,13 +1087,24 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		String s = "[1,[2,[3]]]";
-		JSAN jsan = JSAN.Parse(s).toJSAN();
+		// String s = "[1,[2,[3]]]";
+		// JSAN jsan = JSAN.Parse(s).toJSAN();
+		//
+		// JSAN jsan1 = jsan.attrJSAN(1);
+		// JSAN other = jsan1.clone();
+		// jsan1 = jsan1.attrJSAN(1);
+		// other = other.attrJSAN(1);
+		//
+		// Tools.debug(jsan1.outer() == other.outer());
+		// Tools.debug(jsan1.outer().outer() == other.outer().outer());
 
-		JSAN jsan1 = jsan.attrJSAN(1);
-		JSAN other = jsan1.clone();
-		jsan1 = jsan1.attrJSAN(1);
-		other = other.attrJSAN(1);
+		String s = "{\"1\":{\"2\":{\"3\":\"4\"}}}";
+		JSON jsan = JSON.Parse(s);
+
+		JSON jsan1 = jsan.attrJSON("1");
+		JSON other = jsan1.clone();
+		jsan1 = jsan1.attrJSON("2");
+		other = other.attrJSON("2");
 
 		Tools.debug(jsan1.outer() == other.outer());
 		Tools.debug(jsan1.outer().outer() == other.outer().outer());
@@ -1479,7 +1490,7 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 	@Override
 	public JSON clone()
 	{
-		return new JSON(this).outer(null).entry(null);
+		return new JSON(this);
 	}
 
 	public Context context()
