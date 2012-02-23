@@ -99,8 +99,6 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 				// setReading(false), isReading() returns true here.
 				this.readFinished();
 
-				reading = false;
-
 			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {
@@ -108,6 +106,8 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 					reader.close();
 				} catch (IOException e) {
 					e.printStackTrace();
+				} finally {
+					reading = false;
 				}
 			}
 		}

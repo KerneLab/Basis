@@ -151,13 +151,13 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 	 */
 	public static class JSAN extends JSON implements Iterable<Object>
 	{
-		private class JSANListIterator implements ListIterator<Object>
+		private class ArrayIterator implements ListIterator<Object>
 		{
 			private int	cursor;
 
 			private int	last;
 
-			public JSANListIterator(int index)
+			public ArrayIterator(int index)
 			{
 				cursor = index;
 				last = cursor - 1;
@@ -388,9 +388,9 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 			return index;
 		}
 
-		public JSANListIterator iterator()
+		public ArrayIterator iterator()
 		{
-			return new JSANListIterator(0);
+			return new ArrayIterator(0);
 		}
 
 		public int lastIndexOf(Object object)
@@ -398,7 +398,7 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 			int index = -1;
 			if (object == null) {
 				int i = size();
-				JSANListIterator iter = new JSANListIterator(size());
+				ArrayIterator iter = new ArrayIterator(size());
 				while (iter.hasPrevious()) {
 					i--;
 					if (iter.previous() == null) {
@@ -408,7 +408,7 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 				}
 			} else {
 				int i = size();
-				JSANListIterator iter = new JSANListIterator(size());
+				ArrayIterator iter = new ArrayIterator(size());
 				while (iter.hasPrevious()) {
 					i--;
 					if (object.equals(iter.previous())) {
@@ -1087,27 +1087,7 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		// String s = "[1,[2,[3]]]";
-		// JSAN jsan = JSAN.Parse(s).toJSAN();
-		//
-		// JSAN jsan1 = jsan.attrJSAN(1);
-		// JSAN other = jsan1.clone();
-		// jsan1 = jsan1.attrJSAN(1);
-		// other = other.attrJSAN(1);
-		//
-		// Tools.debug(jsan1.outer() == other.outer());
-		// Tools.debug(jsan1.outer().outer() == other.outer().outer());
 
-		String s = "{\"1\":{\"2\":{\"3\":\"4\"}}}";
-		JSON jsan = JSON.Parse(s);
-
-		JSON jsan1 = jsan.attrJSON("1");
-		JSON other = jsan1.clone();
-		jsan1 = jsan1.attrJSON("2");
-		other = other.attrJSON("2");
-
-		Tools.debug(jsan1.outer() == other.outer());
-		Tools.debug(jsan1.outer().outer() == other.outer().outer());
 	}
 
 	public static JSON Parse(CharSequence source)
