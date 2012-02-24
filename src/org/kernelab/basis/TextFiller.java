@@ -9,11 +9,10 @@ import java.util.regex.Pattern;
  * To fill a text template with a Map.
  * 
  * @author Dilly King
- * @version 2012.01.13.3
  */
 public class TextFiller
 {
-	public static char	DEFAULT_BOUNDARY	= '?';
+	public static String	DEFAULT_BOUNDARY	= "?";
 
 	/**
 	 * @param args
@@ -22,14 +21,14 @@ public class TextFiller
 	{
 		TextFiller f = new TextFiller("Hello ?nam(e)?, this is ?number?.");
 		JSON json = JSON.Parse("{\"nam(e)\":\"Dilly\",\"number\":3}");
-		Tools.debug(f.reset().fillWith(json).getResult());
+		Tools.debug(f.reset().fillWith(json).result());
 	}
 
 	private CharSequence	template;
 
-	private char			leftBoundary;
+	private String			leftBoundary;
 
-	private char			rightBoundary;
+	private String			rightBoundary;
 
 	private StringBuffer	backup;
 
@@ -40,29 +39,35 @@ public class TextFiller
 		this(DEFAULT_BOUNDARY);
 	}
 
-	public TextFiller(char boundary)
-	{
-		this(boundary, boundary);
-	}
-
-	public TextFiller(char leftBoundary, char rightBoundary)
-	{
-		this(null, leftBoundary, rightBoundary);
-	}
-
 	public TextFiller(CharSequence template)
 	{
 		this(template, DEFAULT_BOUNDARY);
 	}
 
-	public TextFiller(CharSequence template, char boundary)
+	public TextFiller(CharSequence template, String boundary)
 	{
 		this(template, boundary, boundary);
 	}
 
-	public TextFiller(CharSequence template, char leftBoundary, char rightBoundary)
+	public TextFiller(CharSequence template, String leftBoundary, String rightBoundary)
 	{
-		this.setTemplate(template).setBoundary(leftBoundary, rightBoundary);
+		this.template(template).boundary(leftBoundary, rightBoundary);
+	}
+
+	protected StringBuffer backup()
+	{
+		return backup;
+	}
+
+	protected TextFiller backup(StringBuffer backup)
+	{
+		this.backup = backup;
+		return this;
+	}
+
+	public TextFiller boundary(String leftBoundary, String rightBoundary)
+	{
+		return this.leftBoundary(leftBoundary).rightBoundary(rightBoundary);
 	}
 
 	public TextFiller fillWith(JSON json)
@@ -89,45 +94,31 @@ public class TextFiller
 
 			Matcher matcher = Pattern.compile(
 					"\\Q" + leftBoundary + target + rightBoundary + "\\E").matcher(
-					this.getResult());
+					this.result());
 
 			this.shiftResult();
 
 			String value = object.toString();
 
 			while (matcher.find()) {
-				matcher.appendReplacement(this.getResult(), value);
+				matcher.appendReplacement(this.result(), value);
 			}
 
-			matcher.appendTail(this.getResult());
+			matcher.appendTail(this.result());
 		}
 
 		return this;
 	}
 
-	protected StringBuffer getBackup()
-	{
-		return backup;
-	}
-
-	public char getLeftBoundary()
+	public String leftBoundary()
 	{
 		return leftBoundary;
 	}
 
-	public StringBuffer getResult()
+	public TextFiller leftBoundary(String leftBoundary)
 	{
-		return result;
-	}
-
-	public char getRightBoundary()
-	{
-		return rightBoundary;
-	}
-
-	public CharSequence getTemplate()
-	{
-		return template;
+		this.leftBoundary = leftBoundary;
+		return this;
 	}
 
 	public TextFiller reset()
@@ -138,68 +129,66 @@ public class TextFiller
 	public TextFiller reset(CharSequence template)
 	{
 		if (template != null) {
-			this.setTemplate(template);
+			this.template(template);
 		}
-		if (this.getResult() == null) {
-			this.setResult(new StringBuffer());
+		if (this.result() == null) {
+			this.result(new StringBuffer());
 		} else {
-			Tools.clearStringBuffer(this.getResult());
+			Tools.clearStringBuffer(this.result());
 		}
-		this.getResult().append(this.getTemplate());
-		if (this.getBackup() == null) {
-			this.setBackup(new StringBuffer());
+		this.result().append(this.template());
+		if (this.backup() == null) {
+			this.backup(new StringBuffer());
 		} else {
-			Tools.clearStringBuffer(this.getBackup());
+			Tools.clearStringBuffer(this.backup());
 		}
 		return this;
 	}
 
-	protected TextFiller setBackup(StringBuffer backup)
+	public StringBuffer result()
 	{
-		this.backup = backup;
-		return this;
+		return result;
 	}
 
-	public TextFiller setBoundary(char leftBoundary, char rightBoundary)
-	{
-		return this.setLeftBoundary(leftBoundary).setRightBoundary(rightBoundary);
-	}
-
-	public TextFiller setLeftBoundary(char leftBoundary)
-	{
-		this.leftBoundary = leftBoundary;
-		return this;
-	}
-
-	protected TextFiller setResult(StringBuffer result)
+	protected TextFiller result(StringBuffer result)
 	{
 		this.result = result;
 		return this;
 	}
 
-	public TextFiller setRightBoundary(char rightBoundary)
+	public String rightBoundary()
+	{
+		return rightBoundary;
+	}
+
+	public TextFiller rightBoundary(String rightBoundary)
 	{
 		this.rightBoundary = rightBoundary;
 		return this;
 	}
 
-	public TextFiller setTemplate(CharSequence template)
+	public TextFiller shiftResult()
 	{
-		this.template = template;
+		StringBuffer temp = this.result();
+		this.result(Tools.clearStringBuffer(this.backup()));
+		this.backup(temp);
 		return this;
 	}
 
-	public TextFiller shiftResult()
+	public CharSequence template()
 	{
-		StringBuffer temp = this.getResult();
-		this.setResult(Tools.clearStringBuffer(this.getBackup()));
-		this.setBackup(temp);
+		return template;
+	}
+
+	public TextFiller template(CharSequence template)
+	{
+		this.template = template;
 		return this;
 	}
 
 	@Override
 	public String toString()
 	{
-		return this.getResult().toString();
+		return this.result().toString();
 	}
 }
