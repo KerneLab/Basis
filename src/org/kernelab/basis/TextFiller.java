@@ -19,7 +19,7 @@ public class TextFiller
 	 */
 	public static void main(String[] args)
 	{
-		TextFiller f = new TextFiller("Hello ?nam(e)?, this is ?number?.");
+		TextFiller f = new TextFiller("Hello ???nam(e)??, this is ?number?.");
 		JSON json = JSON.Parse("{\"nam(e)\":\"Dilly\",\"number\":3}");
 		Tools.debug(f.reset().fillWith(json).result());
 	}
@@ -72,8 +72,18 @@ public class TextFiller
 
 	public TextFiller fillWith(JSON json)
 	{
+		return fillWith(json, leftBoundary, rightBoundary);
+	}
+
+	public TextFiller fillWith(JSON json, String boundary)
+	{
+		return fillWith(json, boundary, boundary);
+	}
+
+	public TextFiller fillWith(JSON json, String leftBoundary, String rightBoundary)
+	{
 		for (String key : json.keySet()) {
-			fillWith(key, json.attr(key));
+			fillWith(key, json.attr(key), leftBoundary, rightBoundary);
 		}
 
 		return this;
@@ -81,8 +91,19 @@ public class TextFiller
 
 	public TextFiller fillWith(Map<String, Object> map)
 	{
+		return fillWith(map, leftBoundary, rightBoundary);
+	}
+
+	public TextFiller fillWith(Map<String, Object> map, String boundary)
+	{
+		return fillWith(map, boundary, boundary);
+	}
+
+	public TextFiller fillWith(Map<String, Object> map, String leftBoundary,
+			String rightBoundary)
+	{
 		for (Entry<String, Object> entry : map.entrySet()) {
-			fillWith(entry.getKey(), entry.getValue());
+			fillWith(entry.getKey(), entry.getValue(), leftBoundary, rightBoundary);
 		}
 
 		return this;
@@ -90,10 +111,21 @@ public class TextFiller
 
 	public TextFiller fillWith(String target, Object object)
 	{
+		return fillWith(target, object, leftBoundary, rightBoundary);
+	}
+
+	public TextFiller fillWith(String target, Object object, String boundary)
+	{
+		return fillWith(target, object, boundary, boundary);
+	}
+
+	public TextFiller fillWith(String target, Object object, String leftBoundary,
+			String rightBoundary)
+	{
 		if (target != null && object != null) {
 
 			Matcher matcher = Pattern.compile(
-					"\\Q" + leftBoundary + target + rightBoundary + "\\E").matcher(
+					Pattern.quote(leftBoundary + target + rightBoundary)).matcher(
 					this.result());
 
 			this.shiftResult();

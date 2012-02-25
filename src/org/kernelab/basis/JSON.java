@@ -3,14 +3,15 @@ package org.kernelab.basis;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +35,7 @@ interface Hierarchical extends Copieable<Hierarchical>
  * 
  * @author Dilly King
  */
-public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
+public class JSON implements Map<String, Object>, Hierarchical
 {
 
 	public static class Context extends JSON
@@ -211,12 +212,14 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 			}
 		}
 
-		private static final Map<Integer, String>	INDEX				= new HashMap<Integer, String>();
-
 		/**
-                 * 
-                 */
+         * 
+         */
 		private static final long					serialVersionUID	= -4343125403853941129L;
+
+		public static final int						LAST				= -1;
+
+		private static final Map<Integer, String>	INDEX				= new HashMap<Integer, String>();
 
 		public static final String Index(int i)
 		{
@@ -230,12 +233,13 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 
 		public JSAN()
 		{
-			super();
-		}
+			prototype(new TreeMap<String, Object>(new Comparator<String>() {
 
-		protected JSAN(JSAN jsan)
-		{
-			super(jsan);
+				public int compare(String a, String b)
+				{
+					return Integer.parseInt(a) - Integer.parseInt(b);
+				}
+			}));
 		}
 
 		public JSAN add(int index, Object object)
@@ -245,17 +249,37 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 
 		public JSAN add(Object object)
 		{
-			return splice(this.size(), 0, object);
+			return add(LAST, object);
 		}
 
-		public JSAN addAll(Iterable<? extends Object> iterable)
+		public JSAN addAll(Collection<? extends Object> collection)
 		{
-			return splice(this.size(), 0, iterable);
+			return addAll(LAST, collection);
+		}
+
+		public JSAN addAll(int index, Collection<? extends Object> collection)
+		{
+			return splice(index, 0, collection);
+		}
+
+		public JSAN addAll(int index, JSAN jsan)
+		{
+			return splice(index, 0, jsan);
+		}
+
+		public JSAN addAll(int index, Object[] array)
+		{
+			return splice(index, 0, array);
+		}
+
+		public JSAN addAll(JSAN jsan)
+		{
+			return addAll(LAST, jsan);
 		}
 
 		public JSAN addAll(Object[] array)
 		{
-			return splice(this.size(), 0, array);
+			return addAll(LAST, array);
 		}
 
 		public Collection<Object> addTo(Collection<Object> collection)
@@ -317,10 +341,15 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 			return attrCast(index, String.class);
 		}
 
+		protected int bound(int index)
+		{
+			return Tools.limitNumber(index(index) + (index < 0 ? 1 : 0), 0, this.size());
+		}
+
 		@Override
 		public JSAN clone()
 		{
-			return new JSAN(this);
+			return new JSAN().clone(this);
 		}
 
 		public boolean contains(Object o)
@@ -351,8 +380,10 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 
 		public Object get(int index)
 		{
+			index = index(index);
+
 			if (!has(index)) {
-				throw new NoSuchElementException();
+				throw new IndexOutOfBoundsException(Index(index));
 			}
 
 			return super.get(Index(index));
@@ -361,6 +392,11 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 		public boolean has(int index)
 		{
 			return index >= 0 && index < this.size();
+		}
+
+		protected int index(int index)
+		{
+			return index >= 0 ? index : index + this.size();
 		}
 
 		public int indexOf(Object object)
@@ -420,19 +456,16 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 			return index;
 		}
 
+		protected Object put(int index, Object value)
+		{
+			return super.put(Index(index), value);
+		}
+
 		public Object remove(int index)
 		{
-			if (!has(index)) {
-				throw new NoSuchElementException();
-			}
-
 			Object object = this.get(index);
 
-			for (int i = index + 1; i < this.size(); i++) {
-				super.put(Index(i - 1), this.get(i));
-			}
-
-			super.remove(Index(this.size() - 1));
+			splice(index, 1);
 
 			return object;
 		}
@@ -440,7 +473,13 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 		@Override
 		public Object remove(Object object)
 		{
-			return this.remove(indexOf(object));
+			int index = indexOf(object);
+
+			if (index == -1) {
+				return null;
+			} else {
+				return this.remove(index);
+			}
 		}
 
 		@Override
@@ -486,41 +525,74 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 
 		public Object set(int index, Object object)
 		{
-			if (!has(index)) {
-				throw new NoSuchElementException();
-			}
-
 			Object old = this.get(index);
+
 			super.put(Index(index), object);
 
 			return old;
 		}
 
-		public JSAN splice(int index, int cover, Collection<Object> collection)
+		public JSAN slice(int start)
 		{
-			index = Tools.limitNumber(index, 0, this.size());
-			cover = Tools.limitNumber(cover, 0, this.size());
+			return slice(start, LAST);
+		}
 
-			int delta = collection.size() - cover;
-			int total = this.size();
+		public JSAN slice(int start, int end)
+		{
+			return slice(null, start, end);
+		}
 
-			List<Object> buffer = new LinkedList<Object>();
+		public JSAN slice(JSAN jsan, int start)
+		{
+			return slice(jsan, start, LAST);
+		}
 
-			for (int i = index + cover; i < total; i++) {
-				buffer.add(this.get(i));
+		public JSAN slice(JSAN jsan, int start, int end)
+		{
+			if (jsan == null) {
+				jsan = new JSAN();
 			}
 
-			int j = index + cover;
-			for (Object object : buffer) {
-				super.put(Index(delta + j++), object);
+			start = bound(start);
+			end = bound(end);
+
+			for (int i = start; i < end; i++) {
+				jsan.add(this.get(i));
 			}
 
-			for (int i = total + delta; i < total; i++) {
-				super.remove(Index(i));
+			return jsan;
+		}
+
+		public <T extends Object> JSAN splice(int index, int cover,
+				Collection<T> collection)
+		{
+			int trace = this.size();
+			index = bound(index);
+			cover = Tools.limitNumber(cover, 0, trace - index);
+			trace--;
+
+			int fills = collection.size();
+			int delta = fills - cover;
+			int tail = index + cover;
+
+			int i = 0;
+
+			if (delta > 0) {
+				for (i = trace; i >= tail; i--) {
+					this.put(i + delta, this.get(i));
+				}
+			} else if (delta < 0) {
+				for (i = tail; i <= trace; i++) {
+					this.put(i + delta, this.get(i));
+				}
+				for (i = trace + delta + 1; i <= trace; i++) {
+					super.remove(Index(i));
+				}
 			}
 
-			for (Object object : collection) {
-				super.put(Index(index++), object);
+			i = 0;
+			for (T object : collection) {
+				this.put(index + i++, object);
 			}
 
 			return this;
@@ -528,59 +600,65 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 
 		public JSAN splice(int index, int cover, JSAN jsan)
 		{
-			index = Tools.limitNumber(index, 0, this.size());
-			cover = Tools.limitNumber(cover, 0, this.size());
+			int trace = this.size();
+			index = bound(index);
+			cover = Tools.limitNumber(cover, 0, trace - index);
+			trace--;
 
-			int delta = jsan.size() - cover;
-			int total = this.size();
+			int fills = jsan.size();
+			int delta = fills - cover;
+			int tail = index + cover;
 
-			List<Object> buffer = new LinkedList<Object>();
+			int i = 0;
 
-			for (int i = index + cover; i < total; i++) {
-				buffer.add(this.get(i));
+			if (delta > 0) {
+				for (i = trace; i >= tail; i--) {
+					this.put(i + delta, this.get(i));
+				}
+			} else if (delta < 0) {
+				for (i = tail; i <= trace; i++) {
+					this.put(i + delta, this.get(i));
+				}
+				for (i = trace + delta + 1; i <= trace; i++) {
+					super.remove(Index(i));
+				}
 			}
 
-			int j = index + cover;
-			for (Object object : buffer) {
-				super.put(Index(delta + j++), object);
-			}
-
-			for (int i = total + delta; i < total; i++) {
-				super.remove(Index(i));
-			}
-
-			for (Object object : jsan) {
-				super.put(Index(index++), object);
+			for (i = 0; i < fills; i++) {
+				this.put(index + i, jsan.get(i));
 			}
 
 			return this;
 		}
 
-		public JSAN splice(int index, int cover, Object... objects)
+		public <T extends Object> JSAN splice(int index, int cover, T... objects)
 		{
-			index = Tools.limitNumber(index, 0, this.size());
-			cover = Tools.limitNumber(cover, 0, this.size());
+			int trace = this.size();
+			index = bound(index);
+			cover = Tools.limitNumber(cover, 0, trace - index);
+			trace--;
 
-			int delta = objects.length - cover;
-			int total = this.size();
+			int fills = objects.length;
+			int delta = fills - cover;
+			int tail = index + cover;
 
-			List<Object> buffer = new LinkedList<Object>();
+			int i = 0;
 
-			for (int i = index + cover; i < total; i++) {
-				buffer.add(this.get(i));
+			if (delta > 0) {
+				for (i = trace; i >= tail; i--) {
+					this.put(i + delta, this.get(i));
+				}
+			} else if (delta < 0) {
+				for (i = tail; i <= trace; i++) {
+					this.put(i + delta, this.get(i));
+				}
+				for (i = trace + delta + 1; i <= trace; i++) {
+					super.remove(Index(i));
+				}
 			}
 
-			int j = index + cover;
-			for (Object object : buffer) {
-				super.put(Index(delta + j++), object);
-			}
-
-			for (int i = total + delta; i < total; i++) {
-				super.remove(Index(i));
-			}
-
-			for (Object object : objects) {
-				super.put(Index(index++), object);
+			for (i = 0; i < fills; i++) {
+				this.put(index + i, objects[i]);
 			}
 
 			return this;
@@ -1087,7 +1165,9 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-
+		String a = "[1,2,3]";
+		JSAN ja = JSON.Parse(a).toJSAN();
+		Tools.debug(ja.splice(3, 2, 5, 6).toString());
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -1388,35 +1468,15 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 		return value;
 	}
 
-	private JSON	outer;
+	private Map<String, Object>	map;
 
-	private String	entry;
+	private JSON				outer;
+
+	private String				entry;
 
 	public JSON()
 	{
-		super();
-	}
-
-	protected JSON(JSON source)
-	{
-		this();
-
-		outer(source.outer()).entry(source.entry());
-
-		String key = null;
-		Object object = null;
-		Hierarchical hirch = null;
-
-		for (Entry<String, Object> entry : source.entrySet()) {
-			key = entry.getKey();
-			object = entry.getValue();
-
-			if ((hirch = JSON.AsHierarchical(object)) != null) {
-				object = hirch.clone().outer(this).entry(key);
-			}
-
-			this.put(key, object);
-		}
+		prototype(new LinkedHashMap<String, Object>());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1467,10 +1527,48 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 		return attrCast(key, String.class);
 	}
 
+	public void clear()
+	{
+		map.clear();
+	}
+
 	@Override
 	public JSON clone()
 	{
-		return new JSON(this);
+		return new JSON().clone(this);
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <T extends JSON> T clone(JSON source)
+	{
+		outer(source.outer()).entry(source.entry());
+
+		String key = null;
+		Object object = null;
+		Hierarchical hirch = null;
+
+		for (Entry<String, Object> entry : source.entrySet()) {
+			key = entry.getKey();
+			object = entry.getValue();
+
+			if ((hirch = JSON.AsHierarchical(object)) != null) {
+				object = hirch.clone().outer(this).entry(key);
+			}
+
+			this.put(key, object);
+		}
+
+		return (T) this;
+	}
+
+	public boolean containsKey(Object key)
+	{
+		return map.containsKey(key);
+	}
+
+	public boolean containsValue(Object value)
+	{
+		return map.containsValue(value);
 	}
 
 	public Context context()
@@ -1500,6 +1598,26 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 		return this;
 	}
 
+	public Set<Entry<String, Object>> entrySet()
+	{
+		return map.entrySet();
+	}
+
+	public Object get(Object key)
+	{
+		return map.get(key);
+	}
+
+	public boolean isEmpty()
+	{
+		return map.isEmpty();
+	}
+
+	public Set<String> keySet()
+	{
+		return map.keySet();
+	}
+
 	public JSON outer()
 	{
 		return outer;
@@ -1511,17 +1629,29 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 		return this;
 	}
 
+	protected Map<String, Object> prototype()
+	{
+		return map;
+	}
+
+	protected JSON prototype(Map<String, Object> map)
+	{
+		if (map != null) {
+			this.map = map;
+		}
+		return this;
+	}
+
 	@SuppressWarnings("unchecked")
-	@Override
 	public Object put(String key, Object value)
 	{
 		if (value instanceof Map<?, ?> && !IsJSON(value)) {
 			JSON json = new JSON();
 			json.putAll((Map<? extends String, ? extends Object>) value);
 			value = json;
-		} else if (value instanceof Iterable<?> && !IsJSAN(value)) {
+		} else if (value instanceof Collection<?> && !IsJSAN(value)) {
 			JSAN jsan = new JSAN();
-			jsan.addAll((Iterable<? extends Object>) value);
+			jsan.addAll((Collection<? extends Object>) value);
 			value = jsan;
 		}
 
@@ -1532,9 +1662,14 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 			}
 		}
 
-		super.put(key, value);
+		map.put(key, value);
 
 		return value;
+	}
+
+	public void putAll(Map<? extends String, ? extends Object> m)
+	{
+		map.putAll(m);
 	}
 
 	public Quotation quote()
@@ -1557,10 +1692,9 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 		return new Quotation(quote);
 	}
 
-	@Override
 	public Object remove(Object key)
 	{
-		Object value = super.remove(key);
+		Object value = map.remove(key);
 
 		Hierarchical hirch = AsHierarchical(value);
 		if (hirch != null) {
@@ -1583,6 +1717,11 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 	public JSON removeAll(Map<? extends Object, ? extends Object> map)
 	{
 		return this.removeAll(map.keySet());
+	}
+
+	public int size()
+	{
+		return map.size();
 	}
 
 	public JSON swap(JSON json)
@@ -1616,5 +1755,10 @@ public class JSON extends LinkedHashMap<String, Object> implements Hierarchical
 	public String toString()
 	{
 		return Serialize(this);
+	}
+
+	public Collection<Object> values()
+	{
+		return map.values();
 	}
 }
