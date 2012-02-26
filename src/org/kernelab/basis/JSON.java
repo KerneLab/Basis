@@ -973,7 +973,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public static final int							NOT_BEGIN				= -1;
 
-	public static final Object						NOT_A_VALUE				= new Object();
+	public static final Object						NOT_A_VALUE				= new String(
+																					"NOT A VALUE");
 
 	public static final String						NULL_STRING				= "null";
 
@@ -1165,9 +1166,9 @@ public class JSON implements Map<String, Object>, Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		String a = "[1,2,3]";
+		String a = "[\"1\",{\"2\":\"3\"},\"4\",[]]";
 		JSAN ja = JSON.Parse(a).toJSAN();
-		Tools.debug(ja.splice(3, 2, 5, 6).toString());
+		Tools.debug(ja.toString());
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -1251,7 +1252,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 								i = match;
 								nail = NOT_BEGIN;
 							} else {
-								nail = i + 1;
+								nail = FirstNonWhitespaceIndex(json, i + 1);
 							}
 							break;
 
@@ -1276,7 +1277,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 								i = match;
 								nail = NOT_BEGIN;
 							} else {
-								nail = i + 1;
+								nail = FirstNonWhitespaceIndex(json, i + 1);
 								arrayIndex++;
 							}
 							break;
@@ -1299,7 +1300,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 								arrayIndex++;
 							}
 							object.put(entry, value);
-							nail = i + 1;
+							nail = FirstNonWhitespaceIndex(json, i + 1);
 							entry = null;
 							value = null;
 							break;
@@ -1724,14 +1725,19 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return map.size();
 	}
 
+	public JSON swap()
+	{
+		return swap(null);
+	}
+
 	public JSON swap(JSON json)
 	{
 		if (json == null) {
 			json = new JSON();
 		}
 
-		for (Entry<String, Object> entry : this.entrySet()) {
-			json.put(entry.getValue().toString(), entry.getKey());
+		for (String key : this.keySet()) {
+			json.put(this.attr(key).toString(), key);
 		}
 
 		return json;
