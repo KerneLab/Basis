@@ -9,11 +9,16 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The Entrance of Basis.
@@ -94,47 +99,77 @@ public class Entrance
 
 	private Map<String, String>	updates;
 
-	public Entrance()
+	protected Map<String, String> initiate(JarFile file)
 	{
-		initiate();
-	}
-
-	protected void initiate()
-	{
-		updates = Collections.unmodifiableMap(Updates(BelongingJarFile(this.getClass())));
+		return updates = Collections.unmodifiableMap(Updates(file));
 	}
 
 	protected void present(String... args)
 	{
-		switch (args.length)
+		Map<String, String> map = new LinkedHashMap<String, String>();
+
+		String key = null;
+		String value = null;
+		for (String arg : args) {
+			if (arg.startsWith("-")) {
+				key = arg.substring(1);
+			} else {
+				value = arg;
+			}
+			map.put(key, value);
+			if (value != null) {
+				key = null;
+				value = null;
+			}
+		}
+
+		JarFile file = null;
+		if (map.get("f") == null) {
+			file = BelongingJarFile(this.getClass());
+		} else {
+			try {
+				file = new JarFile(new File(map.get("f")));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		initiate(file);
+
+		if ((!map.containsKey("u") && !map.containsKey("v"))
+				|| (map.containsKey("v") && map.get("v") == null))
 		{
-			case 1:
-				if (args[0].equals("-v")) {
-					Tools.debug(version());
-				} else if (args[0].equals("-u")) {
+			Tools.debug(version());
+		} else {
+			Set<String> filter = new HashSet<String>();
+
+			if (map.containsKey("u")) {
+				if (map.get("u") != null) {
+					Matcher matcher = Pattern.compile(map.get("u")).matcher("");
 					for (Entry<String, String> entry : updates().entrySet()) {
-						Tools.debug(entry.getValue() + '\t' + entry.getKey());
-					}
-				}
-				break;
-			case 2:
-				if (args[0].equals("-v")) {
-					for (Entry<String, String> entry : updates().entrySet()) {
-						if (entry.getValue().contains(args[1])) {
-							Tools.debug(entry.getValue() + '\t' + entry.getKey());
-						}
-					}
-				} else if (args[0].equals("-u")) {
-					for (Entry<String, String> entry : updates().entrySet()) {
-						if (entry.getKey().contains(args[1])) {
-							Tools.debug(entry.getValue() + '\t' + entry.getKey());
+						if (!matcher.reset(entry.getKey()).find()) {
+							filter.add(entry.getKey());
 						}
 					}
 				}
-				break;
-			default:
-				Tools.debug(version());
-				break;
+			}
+
+			if (map.containsKey("v")) {
+				if (map.get("v") != null) {
+					Matcher matcher = Pattern.compile(map.get("v")).matcher("");
+					for (Entry<String, String> entry : updates().entrySet()) {
+						if (!matcher.reset(entry.getValue()).find()) {
+							filter.add(entry.getKey());
+						}
+					}
+				}
+			}
+
+			for (Entry<String, String> entry : updates().entrySet()) {
+				if (!filter.contains(entry.getKey())) {
+					Tools.debug(entry.getValue() + '\t' + entry.getKey());
+				}
+			}
 		}
 	}
 
