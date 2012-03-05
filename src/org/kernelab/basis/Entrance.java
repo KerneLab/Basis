@@ -99,6 +99,25 @@ public class Entrance
 
 	private Map<String, String>	updates;
 
+	public Entrance()
+	{
+		initiate(BelongingJarFile(getClass()));
+	}
+
+	public Entrance(Class<?> cls)
+	{
+		initiate(BelongingJarFile(cls));
+	}
+
+	public Entrance(File file)
+	{
+		try {
+			initiate(new JarFile(file));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	protected Map<String, String> initiate(JarFile file)
 	{
 		return updates = Collections.unmodifiableMap(Updates(file));
