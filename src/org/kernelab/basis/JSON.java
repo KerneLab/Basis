@@ -41,19 +41,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public static class Context extends JSON
 	{
 
-		/**
-		 * 
-		 */
-		private static final long	serialVersionUID	= -7456943054258519317L;
-
-		public static final Matcher	VAR_ENTRY_MATCHER	= Pattern
-																.compile(
-																		"^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$")
+		public static final Matcher	VAR_ENTRY_MATCHER	= Pattern.compile("^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$")
 																.matcher("");
 
-		public static final Matcher	VAR_EXIT_MATCHER	= Pattern.compile(
-																"^\\s*(.*?)\\s*;\\s*$")
-																.matcher("");
+		public static final Matcher	VAR_EXIT_MATCHER	= Pattern.compile("^\\s*(.*?)\\s*;\\s*$").matcher("");
 
 		private DataReader			reader;
 
@@ -212,14 +203,9 @@ public class JSON implements Map<String, Object>, Hierarchical
 			}
 		}
 
-		/**
-         * 
-         */
-		private static final long					serialVersionUID	= -4343125403853941129L;
+		public static final int						LAST	= -1;
 
-		public static final int						LAST				= -1;
-
-		private static final Map<Integer, String>	INDEX				= new HashMap<Integer, String>();
+		private static final Map<Integer, String>	INDEX	= new HashMap<Integer, String>();
 
 		public static final String Index(int i)
 		{
@@ -374,8 +360,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public boolean equalValues(JSAN jsan)
 		{
-			return this.size() == jsan.size() && this.containsAll(jsan)
-					&& jsan.containsAll(this);
+			return this.size() == jsan.size() && this.containsAll(jsan) && jsan.containsAll(this);
 		}
 
 		public Object get(int index)
@@ -563,8 +548,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 			return jsan;
 		}
 
-		public <T extends Object> JSAN splice(int index, int cover,
-				Collection<T> collection)
+		public <T extends Object> JSAN splice(int index, int cover, Collection<T> collection)
 		{
 			int trace = this.size();
 			index = bound(index);
@@ -679,8 +663,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 		public Object[] toArray(Object[] array)
 		{
 			if (array.length < size()) {
-				array = (Object[]) java.lang.reflect.Array.newInstance(Object.class,
-						size());
+				array = (Object[]) java.lang.reflect.Array.newInstance(Object.class, size());
 			}
 
 			int i = 0;
@@ -752,8 +735,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 					} else {
 						nail = i + 1;
 					}
-					i = JSON.DualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN,
-							NESTED_ATTRIBUTE_END, i) - 1;
+					i = JSON.DualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, i) - 1;
 					continue i;
 				}
 
@@ -799,12 +781,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 			int quoteLength = quote.length() - 1;
 			if (quote.charAt(quoteLength) == NESTED_ATTRIBUTE_END) {
-				int begin = JSON.ReverseDualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN,
-						NESTED_ATTRIBUTE_END, quoteLength);
+				int begin = JSON
+						.ReverseDualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, quoteLength);
 				outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
 				if (outer != null) {
-					entry = Quote(context, quote.substring(begin + 1, quoteLength))
-							.toString();
+					entry = Quote(context, quote.substring(begin + 1, quoteLength)).toString();
 				}
 			} else {
 				int begin = quote.lastIndexOf(LINEAR_ATTRIBUTE);
@@ -936,16 +917,9 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public SyntaxErrorException(CharSequence source, int index)
 		{
-			super("Near\n"
-					+ source.subSequence(Math.max(index - 30, 0),
-							Math.min(index + 30, source.length())));
+			super("Near\n" + source.subSequence(Math.max(index - 30, 0), Math.min(index + 30, source.length())));
 		}
 	}
-
-	/**
-	 * 
-	 */
-	private static final long						serialVersionUID		= -4977780486670612620L;
 
 	public static final char						OBJECT_BEGIN_CHAR		= '{';
 	public static final String						OBJECT_BEGIN_MARK		= String.valueOf(OBJECT_BEGIN_CHAR);
@@ -973,8 +947,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public static final int							NOT_BEGIN				= -1;
 
-	public static final Object						NOT_A_VALUE				= new String(
-																					"NOT A VALUE");
+	public static final Object						NOT_A_VALUE				= new String("NOT A VALUE");
 
 	public static final String						NULL_STRING				= "null";
 
@@ -1186,8 +1159,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 		String string = source.toString().trim();
 
 		if (!(string.startsWith(OBJECT_BEGIN_MARK) && string.endsWith(OBJECT_END_MARK))
-				&& !(string.startsWith(ARRAY_BEGIN_MARK) && string
-						.endsWith(ARRAY_END_MARK)))
+				&& !(string.startsWith(ARRAY_BEGIN_MARK) && string.endsWith(ARRAY_END_MARK)))
 		{
 			return null;
 		}
@@ -1197,9 +1169,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 		if (object == null) {
 			if (string.startsWith(ARRAY_BEGIN_MARK) && string.endsWith(ARRAY_END_MARK)) {
 				object = new JSAN();
-			} else if (string.startsWith(OBJECT_BEGIN_MARK)
-					&& string.endsWith(OBJECT_END_MARK))
-			{
+			} else if (string.startsWith(OBJECT_BEGIN_MARK) && string.endsWith(OBJECT_END_MARK)) {
 				object = new JSON();
 			} else {
 				return null;
@@ -1233,8 +1203,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 						json.deleteCharAt(i);
 						String unicode = json.substring(i, i + UNICODE_ESCAPED_LENGTH);
 						json.delete(i, i + UNICODE_ESCAPED_LENGTH);
-						json.insert(i,
-								(char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX));
+						json.insert(i, (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX));
 					}
 					continue i;
 				}
@@ -1245,10 +1214,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 					{
 						case OBJECT_BEGIN_CHAR:
 							if (i != 0) {
-								int match = DualMatchIndex(json, OBJECT_BEGIN_CHAR,
-										OBJECT_END_CHAR, i);
-								value = Parse(json.substring(i, match + 1), new JSON(),
-										context);
+								int match = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i);
+								value = Parse(json.substring(i, match + 1), new JSON(), context);
 								i = match;
 								nail = NOT_BEGIN;
 							} else {
@@ -1267,13 +1234,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 						case ARRAY_BEGIN_CHAR:
 							if (nail != NOT_BEGIN && nail != i) {
-								i = DualMatchIndex(json, ARRAY_BEGIN_CHAR,
-										ARRAY_END_CHAR, i);
+								i = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i);
 							} else if (i != 0) {
-								int match = DualMatchIndex(json, ARRAY_BEGIN_CHAR,
-										ARRAY_END_CHAR, i);
-								value = Parse(json.substring(i, match + 1), new JSAN(),
-										context);
+								int match = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i);
+								value = Parse(json.substring(i, match + 1), new JSAN(), context);
 								i = match;
 								nail = NOT_BEGIN;
 							} else {
@@ -1336,8 +1300,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return o;
 	}
 
-	public static int ReverseDualMatchIndex(CharSequence sequence, char a, char b,
-			int from)
+	public static int ReverseDualMatchIndex(CharSequence sequence, char a, char b, int from)
 	{
 		int index = -1;
 		int match = 0;
@@ -1432,8 +1395,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 		if (string.equals(NULL_STRING)) {
 			string = null;
 		} else {
-			string = string.replaceFirst("^" + QUOTE_CHAR + "([\\d\\D]*)" + QUOTE_CHAR
-					+ "$", "$1");
+			string = string.replaceFirst("^" + QUOTE_CHAR + "([\\d\\D]*)" + QUOTE_CHAR + "$", "$1");
 		}
 		return string;
 	}
@@ -1455,9 +1417,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 				value = Boolean.valueOf(string);
 			} else if (string.equals(NULL_STRING)) {
 				value = null;
-			} else if (!string.startsWith(OBJECT_BEGIN_MARK)
-					&& !string.startsWith(ARRAY_BEGIN_MARK))
-			{
+			} else if (!string.startsWith(OBJECT_BEGIN_MARK) && !string.startsWith(ARRAY_BEGIN_MARK)) {
 				value = new Quotation(string);
 			} else {
 				value = NOT_A_VALUE;

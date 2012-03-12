@@ -93,7 +93,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 					l = c;
 
-				} while (i != -1);
+				} while (i != -1 && reading);
 
 				// If the reading process was not terminated by
 				// setReading(false), isReading() returns true here.
