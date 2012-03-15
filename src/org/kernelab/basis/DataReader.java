@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
@@ -157,11 +158,26 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		return this;
 	}
 
-	public DataReader setDataFile(File file, String charSetName)
-			throws UnsupportedEncodingException, FileNotFoundException
+	public DataReader setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
+			FileNotFoundException
 	{
-		return this.setReader(new InputStreamReader(new FileInputStream(file),
-				charSetName));
+		return this.setReader(new InputStreamReader(new FileInputStream(file), charSetName));
+	}
+
+	public DataReader setInputStream(InputStream is)
+	{
+		try {
+			this.setInputStream(is, DEFAULT_CHARSET_NAME);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return this;
+	}
+
+	public DataReader setInputStream(InputStream is, String charSetName) throws UnsupportedEncodingException
+	{
+		this.setReader(new InputStreamReader(is, charSetName));
+		return this;
 	}
 
 	/**

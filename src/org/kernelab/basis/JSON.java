@@ -2,6 +2,7 @@ package org.kernelab.basis;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -125,6 +126,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
+			return this;
+		}
+
+		public Context read(InputStream is)
+		{
+			reader.setInputStream(is).read();
 			return this;
 		}
 
