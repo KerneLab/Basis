@@ -1576,6 +1576,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return map.get(key);
 	}
 
+	public boolean has(String entry)
+	{
+		return map.containsKey(entry);
+	}
+
 	public boolean isEmpty()
 	{
 		return map.isEmpty();
