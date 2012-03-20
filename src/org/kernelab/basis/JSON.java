@@ -1048,7 +1048,17 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 			char c = sequence.charAt(i);
 
-			if (c == QUOTE_CHAR && i > 0 && sequence.charAt(i - 1) != ESCAPE_CHAR) {
+			if (c == ESCAPE_CHAR) {
+				c = sequence.charAt(i + 1);
+				if (ESCAPING_CHAR.containsKey(c)) {
+					i++;
+				} else if (c == UNICODE_ESCAPING_CHAR) {
+					i += UNICODE_ESCAPED_LENGTH + 1;
+				}
+				continue i;
+			}
+
+			if (c == QUOTE_CHAR) {
 				inString = !inString;
 			}
 			if (inString) {
@@ -1146,7 +1156,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		String a = "[\"1\",{\"2\":\"3\"},\"4\",[]]";
+		String a = "[\"1\",{\"2\":\"\\\\\"},\"4\",[]]";
+		Tools.debug(a);
 		JSAN ja = JSON.Parse(a).toJSAN();
 		Tools.debug(ja.toString());
 	}
@@ -1200,22 +1211,27 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 				c = json.charAt(i);
 
-				if (c == ESCAPE_CHAR) {
-					json.deleteCharAt(i);
-					c = json.charAt(i);
-					if (ESCAPING_CHAR.containsKey(c)) {
-						json.deleteCharAt(i);
-						json.insert(i, ESCAPING_CHAR.get(c));
-					} else if (c == UNICODE_ESCAPING_CHAR) {
-						json.deleteCharAt(i);
-						String unicode = json.substring(i, i + UNICODE_ESCAPED_LENGTH);
-						json.delete(i, i + UNICODE_ESCAPED_LENGTH);
-						json.insert(i, (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX));
-					}
-					continue i;
-				}
+				if (inString) {
 
-				if (!inString) {
+					if (c == ESCAPE_CHAR) {
+						json.deleteCharAt(i);
+						c = json.charAt(i);
+						if (ESCAPING_CHAR.containsKey(c)) {
+							json.deleteCharAt(i);
+							json.insert(i, ESCAPING_CHAR.get(c));
+						} else if (c == UNICODE_ESCAPING_CHAR) {
+							json.deleteCharAt(i);
+							String unicode = json.substring(i, i + UNICODE_ESCAPED_LENGTH);
+							json.delete(i, i + UNICODE_ESCAPED_LENGTH);
+							json.insert(i, (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX));
+						}
+						continue i;
+
+					} else if (c == QUOTE_CHAR) {
+						inString = !inString;
+					}
+
+				} else {
 
 					switch (c)
 					{
@@ -1285,9 +1301,6 @@ public class JSON implements Map<String, Object>, Hierarchical
 							inString = !inString;
 							break;
 					}
-
-				} else if (c == QUOTE_CHAR) {
-					inString = !inString;
 				}
 			}
 
