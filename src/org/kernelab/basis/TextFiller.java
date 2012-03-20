@@ -99,11 +99,48 @@ public class TextFiller
 		return fillWith(map, boundary, boundary);
 	}
 
-	public TextFiller fillWith(Map<String, Object> map, String leftBoundary,
-			String rightBoundary)
+	public TextFiller fillWith(Map<String, Object> map, String leftBoundary, String rightBoundary)
 	{
 		for (Entry<String, Object> entry : map.entrySet()) {
 			fillWith(entry.getKey(), entry.getValue(), leftBoundary, rightBoundary);
+		}
+
+		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public TextFiller fillWith(String target, Iterable<?> iterable, String leftBoundary, String rightBoundary)
+	{
+		if (target != null && iterable != null) {
+
+			Matcher matcher = Pattern.compile(
+					Pattern.quote(leftBoundary + target + rightBoundary) + "(.*?)"
+							+ Pattern.quote(leftBoundary + target + rightBoundary), Pattern.DOTALL).matcher(
+					this.result());
+
+			this.shiftResult();
+
+			while (matcher.find()) {
+
+				TextFiller filler = new TextFiller(matcher.group(1), leftBoundary, rightBoundary);
+
+				StringBuilder buffer = new StringBuilder();
+
+				for (Object o : iterable) {
+
+					if (o instanceof JSON) {
+						filler.reset().fillWith((JSON) o);
+					} else if (o instanceof Map<?, ?>) {
+						filler.reset().fillWith((Map<String, Object>) o);
+					}
+
+					buffer.append(filler.result());
+				}
+
+				matcher.appendReplacement(this.result(), buffer.toString());
+			}
+
+			matcher.appendTail(this.result());
 		}
 
 		return this;
@@ -119,24 +156,29 @@ public class TextFiller
 		return fillWith(target, object, boundary, boundary);
 	}
 
-	public TextFiller fillWith(String target, Object object, String leftBoundary,
-			String rightBoundary)
+	public TextFiller fillWith(String target, Object object, String leftBoundary, String rightBoundary)
 	{
 		if (target != null && object != null) {
 
-			Matcher matcher = Pattern.compile(
-					Pattern.quote(leftBoundary + target + rightBoundary)).matcher(
-					this.result());
+			if (object instanceof Iterable<?>) {
 
-			this.shiftResult();
+				return this.fillWith(target, (Iterable<?>) object, leftBoundary, rightBoundary);
 
-			String value = object.toString();
+			} else {
 
-			while (matcher.find()) {
-				matcher.appendReplacement(this.result(), value);
+				Matcher matcher = Pattern.compile(Pattern.quote(leftBoundary + target + rightBoundary)).matcher(
+						this.result());
+
+				this.shiftResult();
+
+				String value = object.toString();
+
+				while (matcher.find()) {
+					matcher.appendReplacement(this.result(), value);
+				}
+
+				matcher.appendTail(this.result());
 			}
-
-			matcher.appendTail(this.result());
 		}
 
 		return this;
