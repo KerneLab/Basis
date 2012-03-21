@@ -14,14 +14,22 @@ public class TextFiller
 {
 	public static String	DEFAULT_BOUNDARY	= "?";
 
+	public static final String LiteralizeReplacement(String replacement)
+	{
+		return replacement.replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$");
+	}
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args)
 	{
-		TextFiller f = new TextFiller("Hello ???nam(e)??, this is ?number?.");
-		JSON json = JSON.Parse("{\"nam(e)\":\"Dilly\",\"number\":3}");
-		Tools.debug(f.reset().fillWith(json).result());
+		// TextFiller f = new
+		// TextFiller("Hello ???nam(e)??, this is ?number?.");
+		// JSON json = JSON.Parse("{\"nam(e)\":\"Dilly\",\"number\":3}");
+		// Tools.debug(f.reset().fillWith(json).result());
+
+		Tools.debug(LiteralizeReplacement("kf\\id$sk"));
 	}
 
 	private CharSequence	template;
@@ -137,7 +145,7 @@ public class TextFiller
 					buffer.append(filler.result());
 				}
 
-				matcher.appendReplacement(this.result(), buffer.toString());
+				matcher.appendReplacement(this.result(), LiteralizeReplacement(buffer.toString()));
 			}
 
 			matcher.appendTail(this.result());
@@ -174,7 +182,7 @@ public class TextFiller
 				String value = object.toString();
 
 				while (matcher.find()) {
-					matcher.appendReplacement(this.result(), value);
+					matcher.appendReplacement(this.result(), LiteralizeReplacement(value));
 				}
 
 				matcher.appendTail(this.result());
