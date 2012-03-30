@@ -161,7 +161,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	public DataReader setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
 			FileNotFoundException
 	{
-		return this.setReader(new InputStreamReader(new FileInputStream(file), charSetName));
+		return this.setInputStream(new FileInputStream(file), charSetName);
 	}
 
 	public DataReader setInputStream(InputStream is)

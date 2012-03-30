@@ -3,6 +3,8 @@ package org.kernelab.basis;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -129,9 +131,37 @@ public class JSON implements Map<String, Object>, Hierarchical
 			return this;
 		}
 
+		public Context read(File file, String charSetName)
+		{
+			try {
+				reader.setDataFile(file, charSetName).read();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			return this;
+		}
+
 		public Context read(InputStream is)
 		{
 			reader.setInputStream(is).read();
+			return this;
+		}
+
+		public Context read(InputStream is, String charSetName)
+		{
+			try {
+				reader.setInputStream(is, charSetName).read();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			return this;
+		}
+
+		public Context read(Reader r)
+		{
+			reader.setReader(r).read();
 			return this;
 		}
 
@@ -139,7 +169,6 @@ public class JSON implements Map<String, Object>, Hierarchical
 		{
 			this.reader = reader;
 		}
-
 	}
 
 	/**
