@@ -304,13 +304,14 @@ public class JSON implements Map<String, Object>, Hierarchical
 			return addAll(LAST, array);
 		}
 
-		public Collection<Object> addTo(Collection<Object> collection)
+		@SuppressWarnings("unchecked")
+		public <T> Collection<T> addTo(Collection<T> collection)
 		{
 			if (collection == null) {
-				collection = new LinkedList<Object>();
+				collection = new LinkedList<T>();
 			}
 			for (Object o : this) {
-				collection.add(o);
+				collection.add((T) o);
 			}
 			return collection;
 		}
