@@ -43,6 +43,15 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public static class Context extends JSON
 	{
+		public static final String	VAR_DEFINE_MARK		= "var";
+
+		public static final char	VAR_ASSIGN_CHAR		= '=';
+
+		public static final String	VAR_ASSIGN_MARK		= String.valueOf(VAR_ASSIGN_CHAR);
+
+		public static final char	VAR_END_CHAR		= ';';
+
+		public static final String	VAR_END_MARK		= String.valueOf(VAR_END_CHAR);
 
 		public static final Matcher	VAR_ENTRY_MATCHER	= Pattern.compile("^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$")
 																.matcher("");
@@ -1002,6 +1011,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public static final Map<Character, String>		ESCAPED_CHAR			= new HashMap<Character, String>();
 
+	public static String							LINE_INDENT				= "\t";
+
+	public static String							LINE_WRAP				= "\n";
+
 	static {
 		ESCAPING_CHAR.put('"', '"');
 		ESCAPING_CHAR.put('\\', '\\');
@@ -1186,10 +1199,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		String a = "[\"1\",{\"2\":\"\\\\\"},\"4\",[]]";
+		String a = "[\"1\",{\"2\":\"\\\\\"},\"4\",[\"5\",{\"6\":\"OK~\",\"7\":[\"8\",\"9\"]}]]";
 		Tools.debug(a);
 		JSAN ja = JSON.Parse(a).toJSAN();
-		Tools.debug(ja.toString());
+		Tools.debug(ja.toString(0));
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -1382,9 +1395,18 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return index;
 	}
 
-	public static String Serialize(JSON json)
+	public static StringBuilder Serialize(JSON json, StringBuilder buffer, int indent)
 	{
-		StringBuilder buffer = new StringBuilder();
+		if (buffer == null) {
+			buffer = new StringBuilder();
+		}
+
+		int inner = indent;
+		if (inner > -1) {
+			if (!JSON.IsContext(json)) {
+				inner++;
+			}
+		}
 
 		boolean isJSAN = IsJSAN(json);
 		boolean isFirst = true;
@@ -1398,27 +1420,45 @@ public class JSON implements Map<String, Object>, Hierarchical
 			key = entry.getKey();
 			object = entry.getValue();
 
-			if (isFirst) {
-				isFirst = false;
-			} else {
-				buffer.append(PAIR_CHAR);
+			if (!JSON.IsContext(json)) {
+				if (isFirst) {
+					isFirst = false;
+				} else {
+					buffer.append(PAIR_CHAR);
+				}
+				if (indent > -1) {
+					buffer.append(LINE_WRAP);
+					Tools.repeat(buffer, LINE_INDENT, indent + 1);
+				}
 			}
 
 			if (!isJSAN) {
 				if (key == null) {
 					buffer.append(NULL_STRING);
 				} else {
-					buffer.append(QUOTE_CHAR);
+
+					if (JSON.IsContext(json)) {
+						buffer.append(Context.VAR_DEFINE_MARK);
+						buffer.append(' ');
+					} else {
+						buffer.append(QUOTE_CHAR);
+					}
+
 					buffer.append(EscapeString(entry.getKey()));
-					buffer.append(QUOTE_CHAR);
-					buffer.append(ATTR_CHAR);
+
+					if (JSON.IsContext(json)) {
+						buffer.append(Context.VAR_ASSIGN_CHAR);
+					} else {
+						buffer.append(QUOTE_CHAR);
+						buffer.append(ATTR_CHAR);
+					}
 				}
 			}
 
 			if (object == null) {
 				value = NULL_STRING;
 			} else if (IsJSON(object)) {
-				value = Serialize((JSON) object);
+				value = Serialize((JSON) object, null, inner).toString();
 			} else if (object instanceof String) {
 				value = QUOTE_CHAR + EscapeString(object.toString()) + QUOTE_CHAR;
 			} else {
@@ -1426,17 +1466,33 @@ public class JSON implements Map<String, Object>, Hierarchical
 			}
 
 			buffer.append(value);
+
+			if (JSON.IsContext(json)) {
+				buffer.append(Context.VAR_END_CHAR);
+				buffer.append(LINE_WRAP);
+			}
 		}
 
-		if (isJSAN) {
-			buffer.insert(0, ARRAY_BEGIN_CHAR);
-			buffer.append(ARRAY_END_CHAR);
-		} else {
-			buffer.insert(0, OBJECT_BEGIN_CHAR);
-			buffer.append(OBJECT_END_CHAR);
+		if (!JSON.IsContext(json)) {
+
+			if (isJSAN) {
+				buffer.insert(0, ARRAY_BEGIN_CHAR);
+				if (indent > -1) {
+					buffer.append(LINE_WRAP);
+					Tools.repeat(buffer, LINE_INDENT, indent);
+				}
+				buffer.append(ARRAY_END_CHAR);
+			} else {
+				buffer.insert(0, OBJECT_BEGIN_CHAR);
+				if (indent > -1) {
+					buffer.append(LINE_WRAP);
+					Tools.repeat(buffer, LINE_INDENT, indent);
+				}
+				buffer.append(OBJECT_END_CHAR);
+			}
 		}
 
-		return buffer.toString();
+		return buffer;
 	}
 
 	public static String TrimQuotes(String string)
@@ -1775,7 +1831,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 	@Override
 	public String toString()
 	{
-		return Serialize(this);
+		return Serialize(this, null, -1).toString();
+	}
+
+	public String toString(int indent)
+	{
+		return Serialize(this, null, indent).insert(0, Tools.repeat(LINE_INDENT, indent)).toString();
 	}
 
 	public Collection<Object> values()

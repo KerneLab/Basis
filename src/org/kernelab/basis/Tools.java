@@ -61,8 +61,7 @@ public class Tools
 
 	protected static final Calendar			CALENDAR		= new GregorianCalendar();
 
-	private static final DateFormat			DATETIME_FORMAT	= new SimpleDateFormat(
-																	"yyyy-MM-dd HH:mm:ss");
+	private static final DateFormat			DATETIME_FORMAT	= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	static {
 		Outs.add(STD_OUT);
@@ -478,8 +477,7 @@ public class Tools
 	 * @param object
 	 * @see Copieable
 	 */
-	public static <T extends Copieable<T>> void copyCollection(Collection<T> source,
-			Collection<T> object)
+	public static <T extends Copieable<T>> void copyCollection(Collection<T> source, Collection<T> object)
 	{
 		for (T t : source) {
 			object.add(t.clone());
@@ -967,8 +965,7 @@ public class Tools
 	 *            LinkedList would be created.
 	 * @return The result Collection.
 	 */
-	public static <E> Collection<E> filter(Iterable<E> iterable, Filter<E> filter,
-			Collection<E> result)
+	public static <E> Collection<E> filter(Iterable<E> iterable, Filter<E> filter, Collection<E> result)
 	{
 		if (result == null) {
 			result = new LinkedList<E>();
@@ -1000,8 +997,7 @@ public class Tools
 	 *            LinkedList would be created.
 	 * @return The result Collection.
 	 */
-	public static <E> Collection<E> filter(Iterable<E> iterable, IndexedFilter<E> filter,
-			Collection<E> result)
+	public static <E> Collection<E> filter(Iterable<E> iterable, IndexedFilter<E> filter, Collection<E> result)
 	{
 		if (result == null) {
 			result = new LinkedList<E>();
@@ -1384,10 +1380,8 @@ public class Tools
 	public static Graphics2D graphicsAntiAliasing(Graphics g)
 	{
 		Graphics2D g2 = graphics2D(g);
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-				RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		return g2;
 	}
 
@@ -1499,8 +1493,7 @@ public class Tools
 	 *            would be created if list is null.
 	 * @return the List of Strings.
 	 */
-	public static List<String> inputStreamToStrings(InputStream inputStream,
-			List<String> list)
+	public static List<String> inputStreamToStrings(InputStream inputStream, List<String> list)
 	{
 		return inputStreamToStrings(inputStream, list, null);
 	}
@@ -1518,8 +1511,7 @@ public class Tools
 	 *            the name of CharSet.
 	 * @return the List of Strings.
 	 */
-	public static List<String> inputStreamToStrings(InputStream inputStream,
-			List<String> list, String charSetName)
+	public static List<String> inputStreamToStrings(InputStream inputStream, List<String> list, String charSetName)
 	{
 		if (list == null) {
 			list = new LinkedList<String>();
@@ -1532,8 +1524,7 @@ public class Tools
 			charSet = Charset.forName(charSetName);
 		}
 
-		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
-				inputStream, charSet));
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, charSet));
 
 		try {
 			String line = null;
@@ -1565,8 +1556,7 @@ public class Tools
 	 *            the name of CharSet.
 	 * @return the List of Strings.
 	 */
-	public static List<String> inputStreamToStrings(InputStream inputStream,
-			String charSetName)
+	public static List<String> inputStreamToStrings(InputStream inputStream, String charSetName)
 	{
 		return inputStreamToStrings(inputStream, null, charSetName);
 	}
@@ -1709,8 +1699,7 @@ public class Tools
 	 *         elements. The result Collection should be a Set object to avoid
 	 *         this case.
 	 */
-	public static <T> Collection<T> intersection(Iterable<T> a, Iterable<T> b,
-			Collection<T> result)
+	public static <T> Collection<T> intersection(Iterable<T> a, Iterable<T> b, Collection<T> result)
 	{
 		if (result == null) {
 			result = new LinkedList<T>();
@@ -1766,8 +1755,7 @@ public class Tools
 	 *            a series of delimiter which would split these CharSequences.
 	 * @return the whole String.
 	 */
-	public static String jointCharSequences(Iterable<CharSequence> iter,
-			CharSequence... delimiter)
+	public static String jointCharSequences(Iterable<CharSequence> iter, CharSequence... delimiter)
 	{
 		StringBuilder builder = new StringBuilder();
 
@@ -1999,8 +1987,7 @@ public class Tools
 	 *            null, an empty LinkedList would be created.
 	 * @return The mapping result.
 	 */
-	public static <K, V> Collection<V> map(Iterable<K> iterable,
-			IndexedMapper<K, V> mapper, Collection<V> result)
+	public static <K, V> Collection<V> map(Iterable<K> iterable, IndexedMapper<K, V> mapper, Collection<V> result)
 	{
 		if (result == null) {
 			result = new LinkedList<V>();
@@ -2033,8 +2020,7 @@ public class Tools
 	 *            null, an empty LinkedList would be created.
 	 * @return The mapping result.
 	 */
-	public static <K, V> Collection<V> map(Iterable<K> iterable, Mapper<K, V> mapper,
-			Collection<V> result)
+	public static <K, V> Collection<V> map(Iterable<K> iterable, Mapper<K, V> mapper, Collection<V> result)
 	{
 		if (result == null) {
 			result = new LinkedList<V>();
@@ -2702,8 +2688,7 @@ public class Tools
 	 *            the Collection of Strings to be output.
 	 * @return true if output does succeed otherwise false.
 	 */
-	public static boolean outputStringsToFile(FileWriter fileWriter,
-			Collection<String> strings)
+	public static boolean outputStringsToFile(FileWriter fileWriter, Collection<String> strings)
 	{
 		boolean success = false;
 
@@ -2736,8 +2721,7 @@ public class Tools
 	 *            The initial value of the reduction result.
 	 * @return The result of the reduction.
 	 */
-	public static <E, R> R reduce(Iterable<E> iterable, IndexedReducer<E, R> reducer,
-			R result)
+	public static <E, R> R reduce(Iterable<E> iterable, IndexedReducer<E, R> reducer, R result)
 	{
 		int index = 0;
 		try {
@@ -2786,8 +2770,7 @@ public class Tools
 	 *            The Iterable object which contains the elements to be removed.
 	 * @return The Collection.
 	 */
-	public static <T> Collection<T> removeAll(Collection<T> collection,
-			Iterable<T> iterable)
+	public static <T> Collection<T> removeAll(Collection<T> collection, Iterable<T> iterable)
 	{
 		if (collection != null && iterable != null) {
 			for (T o : iterable) {
@@ -2832,8 +2815,7 @@ public class Tools
 				}
 			}
 			result = string.substring(0, begin)
-					+ (begin + remove.length() < string.length() ? string.substring(begin
-							+ remove.length()) : "");
+					+ (begin + remove.length() < string.length() ? string.substring(begin + remove.length()) : "");
 		} else {
 			result = string;
 		}
@@ -2949,6 +2931,242 @@ public class Tools
 	}
 
 	/**
+	 * To get a String of n times repeat of a certain character.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @return The repeated String.
+	 * @see Tools#repeat(CharSequence, int)
+	 */
+	public static StringBuffer repeat(StringBuffer b, char c, int n)
+	{
+		return repeat(b, String.valueOf(c), n);
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain character.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The repeated String.
+	 * @see Tools#repeat(char, int, CharSequence)
+	 */
+	public static StringBuffer repeat(StringBuffer b, char c, int n, char delimiter)
+	{
+		return repeat(b, c, n, String.valueOf(delimiter));
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain character.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The repeated String.
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static StringBuffer repeat(StringBuffer b, char c, int n, CharSequence delimiter)
+	{
+		return repeat(b, String.valueOf(c), n, delimiter);
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain CharSequence.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @return The repeated String.
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static StringBuffer repeat(StringBuffer b, CharSequence s, int n)
+	{
+		return repeat(b, s, n, "");
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain CharSequence which split
+	 * by a given character.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The repeated String.
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static StringBuffer repeat(StringBuffer b, CharSequence s, int n, char delimiter)
+	{
+		return repeat(b, s, n, String.valueOf(delimiter));
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain CharSequence which split
+	 * by a given delimiter.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The repeated String.
+	 */
+	public static StringBuffer repeat(StringBuffer b, CharSequence s, int n, CharSequence delimiter)
+	{
+		for (int i = 0; i < n; i++) {
+			if (i != 0) {
+				b.append(delimiter);
+			}
+			b.append(s);
+		}
+
+		return b;
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain character.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @return The repeated String.
+	 * @see Tools#repeat(CharSequence, int)
+	 */
+	public static StringBuilder repeat(StringBuilder b, char c, int n)
+	{
+		return repeat(b, String.valueOf(c), n);
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain character.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The repeated String.
+	 * @see Tools#repeat(char, int, CharSequence)
+	 */
+	public static StringBuilder repeat(StringBuilder b, char c, int n, char delimiter)
+	{
+		return repeat(b, c, n, String.valueOf(delimiter));
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain character.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The repeated String.
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static StringBuilder repeat(StringBuilder b, char c, int n, CharSequence delimiter)
+	{
+		return repeat(b, String.valueOf(c), n, delimiter);
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain CharSequence.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @return The repeated String.
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n)
+	{
+		return repeat(b, s, n, "");
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain CharSequence which split
+	 * by a given character.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The repeated String.
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n, char delimiter)
+	{
+		return repeat(b, s, n, String.valueOf(delimiter));
+	}
+
+	/**
+	 * To get a String of n times repeat of a certain CharSequence which split
+	 * by a given delimiter.
+	 * 
+	 * @param b
+	 *            The buffer holds the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The repeated String.
+	 */
+	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n, CharSequence delimiter)
+	{
+		for (int i = 0; i < n; i++) {
+			if (i != 0) {
+				b.append(delimiter);
+			}
+			b.append(s);
+		}
+
+		return b;
+	}
+
+	/**
 	 * Reset the System.err to the default.
 	 */
 	public static void resetErr()
@@ -2978,8 +3196,7 @@ public class Tools
 	 *            retained.
 	 * @return The Collection.
 	 */
-	public static <T> Collection<T> retainAll(Collection<T> collection,
-			Iterable<T> iterable)
+	public static <T> Collection<T> retainAll(Collection<T> collection, Iterable<T> iterable)
 	{
 		if (collection != null && iterable != null) {
 			LinkedList<T> temp = new LinkedList<T>();
@@ -3016,8 +3233,7 @@ public class Tools
 	 *            From which position we start to find the dual match.
 	 * @return The position that we find the left character for the dual match.
 	 */
-	public static int reverseDualMatchIndex(CharSequence sequence, char a, char b,
-			int from)
+	public static int reverseDualMatchIndex(CharSequence sequence, char a, char b, int from)
 	{
 		int index = -1;
 		int match = 0;
@@ -3426,8 +3642,7 @@ public class Tools
 	 *            number.
 	 * @return A String array contains these split string.
 	 */
-	public static String[] splitCharSequence(CharSequence sequence, CharSequence split,
-			int limit)
+	public static String[] splitCharSequence(CharSequence sequence, CharSequence split, int limit)
 	{
 		String[] result = null;
 
@@ -3543,8 +3758,7 @@ public class Tools
 	 *         elements. The result Collection should be a Set object to avoid
 	 *         this case.
 	 */
-	public static <T> Collection<T> subtraction(Iterable<T> a, Iterable<T> b,
-			Collection<T> result)
+	public static <T> Collection<T> subtraction(Iterable<T> a, Iterable<T> b, Collection<T> result)
 	{
 		if (result == null) {
 			result = new LinkedList<T>();
@@ -3578,8 +3792,7 @@ public class Tools
 	 *         Attention that the Union result May contains DUPLICATE elements.
 	 *         The result Collection should be a Set object to avoid this case.
 	 */
-	public static <T> Collection<T> union(Iterable<T> a, Iterable<T> b,
-			Collection<T> result)
+	public static <T> Collection<T> union(Iterable<T> a, Iterable<T> b, Collection<T> result)
 	{
 		if (result == null) {
 			result = new LinkedList<T>();
