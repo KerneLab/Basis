@@ -25,6 +25,8 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	public static String		DEFAULT_CHARSET_NAME	= Charset.defaultCharset().name();
 
+	private String				charSetName				= DEFAULT_CHARSET_NAME;
+
 	protected Reader			reader;
 
 	private boolean				reading;
@@ -41,6 +43,11 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	public ActionEvent getAccomplishedEvent()
 	{
 		return null;
+	}
+
+	public String getCharSetName()
+	{
+		return charSetName;
 	}
 
 	public Reader getReader()
@@ -148,10 +155,18 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		this.buffer = buffer;
 	}
 
+	public DataReader setCharSetName(String charSetName)
+	{
+		if (Charset.isSupported(charSetName)) {
+			this.charSetName = charSetName;
+		}
+		return this;
+	}
+
 	public DataReader setDataFile(File file) throws FileNotFoundException
 	{
 		try {
-			this.setDataFile(file, DEFAULT_CHARSET_NAME);
+			this.setDataFile(file, charSetName);
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
@@ -167,7 +182,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	public DataReader setInputStream(InputStream is)
 	{
 		try {
-			this.setInputStream(is, DEFAULT_CHARSET_NAME);
+			this.setInputStream(is, charSetName);
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
