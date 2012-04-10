@@ -1596,6 +1596,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public void clear()
 	{
+		rescind();
 		map.clear();
 	}
 
@@ -1668,6 +1669,17 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public Set<Entry<String, Object>> entrySet()
 	{
 		return map.entrySet();
+	}
+
+	@Override
+	protected void finalize()
+	{
+		outer(null).entry(null).clear();
+		try {
+			super.finalize();
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Object get(Object key)
@@ -1789,6 +1801,19 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public JSON removeAll(Map<? extends Object, ? extends Object> map)
 	{
 		return this.removeAll(map.keySet());
+	}
+
+	protected JSON rescind()
+	{
+		Hierarchical hirch = null;
+		for (Object o : values()) {
+			if ((hirch = AsHierarchical(o)) != null) {
+				if (hirch.outer() == this) {
+					hirch.outer(null).entry(null);
+				}
+			}
+		}
+		return this;
 	}
 
 	public int size()
