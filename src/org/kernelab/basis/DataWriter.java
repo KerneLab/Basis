@@ -34,6 +34,8 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 
 	public static String	DEFAULT_CHARSET_NAME	= Charset.defaultCharset().name();
 
+	private String			charSetName				= DEFAULT_CHARSET_NAME;
+
 	protected PrintWriter	writer;
 
 	private boolean			autoFlush;
@@ -65,6 +67,11 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	public ActionEvent getAccomplishedEvent()
 	{
 		return null;
+	}
+
+	public String getCharSetName()
+	{
+		return charSetName;
 	}
 
 	public OutputStream getOutputStream()
@@ -147,6 +154,14 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		return this;
 	}
 
+	public DataWriter setCharSetName(String charSetName)
+	{
+		if (Charset.isSupported(charSetName)) {
+			this.charSetName = charSetName;
+		}
+		return this;
+	}
+
 	/**
 	 * Set the file to be output with the data. Calling this method is equal to
 	 * setDataFile(file,false) which means the writer would override the content
@@ -166,24 +181,39 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	public DataWriter setDataFile(File file, boolean append) throws FileNotFoundException
 	{
 		try {
-			this.setDataFile(file, append, DEFAULT_CHARSET_NAME);
+			this.setDataFile(file, append, charSetName);
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
 		return this;
 	}
 
-	public DataWriter setDataFile(File file, boolean append, String charSetName)
-			throws UnsupportedEncodingException, FileNotFoundException
+	public DataWriter setDataFile(File file, boolean append, String charSetName) throws UnsupportedEncodingException,
+			FileNotFoundException
 	{
-		return this.setWriter(new OutputStreamWriter(new FileOutputStream(file, append),
-				charSetName));
+		return this.setOutputStream(new FileOutputStream(file, append), charSetName);
 	}
 
-	public DataWriter setDataFile(File file, String charSetName)
-			throws UnsupportedEncodingException, FileNotFoundException
+	public DataWriter setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
+			FileNotFoundException
 	{
 		return this.setDataFile(file, false, charSetName);
+	}
+
+	public DataWriter setOutputStream(OutputStream os)
+	{
+		try {
+			this.setOutputStream(os, charSetName);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return this;
+	}
+
+	public DataWriter setOutputStream(OutputStream os, String charSetName) throws UnsupportedEncodingException
+	{
+		this.setWriter(new OutputStreamWriter(os, charSetName));
+		return this;
 	}
 
 	/**
