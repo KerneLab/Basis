@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +41,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -51,17 +54,19 @@ import javax.swing.UnsupportedLookAndFeelException;
  */
 public class Tools
 {
-	private static final PrintStream		STD_OUT			= System.out;
+	private static final PrintStream		STD_OUT					= System.out;
 
-	private static final PrintStream		STD_ERR			= System.err;
+	private static final PrintStream		STD_ERR					= System.err;
 
-	private static final Set<PrintStream>	Outs			= new LinkedHashSet<PrintStream>();
+	private static final Set<PrintStream>	Outs					= new LinkedHashSet<PrintStream>();
 
-	protected static final Date				DATE			= new Date();
+	protected static final Date				DATE					= new Date();
 
-	protected static final Calendar			CALENDAR		= new GregorianCalendar();
+	protected static final Calendar			CALENDAR				= new GregorianCalendar();
 
-	private static final DateFormat			DATETIME_FORMAT	= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	public static final String				DATETIME_FORMAT_STRING	= "yyyy-MM-dd HH:mm:ss";
+
+	public static final DateFormat			DATETIME_FORMAT			= new SimpleDateFormat(DATETIME_FORMAT_STRING);
 
 	static {
 		Outs.add(STD_OUT);
@@ -1015,6 +1020,85 @@ public class Tools
 	}
 
 	/**
+	 * Get the Calendar object according to the datetime String which is
+	 * formatted by {@link Tools#DATETIME_FORMAT_STRING}.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @return The Calendar object.
+	 */
+	public static Calendar getCalendar(String datetime)
+	{
+		return getCalendar(datetime, DATETIME_FORMAT_STRING);
+	}
+
+	/**
+	 * Get the Calendar object according to the datetime String which is
+	 * formatted by format String.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param format
+	 *            The datetime format String, such as "yyyy-MM-dd HH:mm:ss"
+	 * @return The Calendar object.
+	 */
+	public static Calendar getCalendar(String datetime, String format)
+	{
+		return getCalendar(datetime, format, null);
+	}
+
+	/**
+	 * Get the Calendar object according to the datetime String which is
+	 * formatted by format String.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param format
+	 *            The datetime format String, such as "yyyy-MM-dd HH:mm:ss"
+	 * @param calendar
+	 *            The Calendar object which holds the result. If null, a new
+	 *            GregorianCalendar object would be created.
+	 * @return The Calendar object.
+	 */
+	public static Calendar getCalendar(String datetime, String format, Calendar calendar)
+	{
+		if (calendar == null) {
+			calendar = new GregorianCalendar();
+		}
+
+		calendar.set(0, 0, 0, 0, 0, 0);
+
+		Map<Integer, String> map = new LinkedHashMap<Integer, String>();
+		map.put(Calendar.YEAR, "y");
+		map.put(Calendar.MONTH, "M");
+		map.put(Calendar.DAY_OF_MONTH, "d");
+		map.put(Calendar.HOUR_OF_DAY, "H");
+		map.put(Calendar.MINUTE, "m");
+		map.put(Calendar.SECOND, "s");
+
+		for (Entry<Integer, String> entry : map.entrySet()) {
+
+			int field = entry.getKey();
+			int value = -1;
+
+			Matcher matcher = Pattern.compile(entry.getValue() + "+").matcher(format);
+
+			if (matcher.find()) {
+
+				value = Integer.parseInt(datetime.substring(matcher.start(), matcher.end()));
+
+				if (field == Calendar.MONTH) {
+					value--;
+				}
+
+				calendar.set(field, value);
+			}
+		}
+
+		return calendar;
+	}
+
+	/**
 	 * Get the value of a number char.
 	 * 
 	 * @param c
@@ -1947,9 +2031,10 @@ public class Tools
 	 */
 	public static void main(String[] args)
 	{
-		String s = "(morning(afternoon)evening)";
-		Tools.debug(reverseDualMatchIndex(s, '(', ')', 26));
-		Tools.debug(reverseDualMatchIndex(s, '(', ')', 18));
+		String s = "2012/12/07 13:23:58";
+		String f = "yyyy/dd/MM HH";
+		Calendar c = getCalendar(s, f, null);
+		Tools.debug(getDateTimeString(c, "yyyy-MM-dd HH:mm:ss"));
 	}
 
 	/**
