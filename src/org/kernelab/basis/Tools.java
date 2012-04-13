@@ -1079,7 +1079,7 @@ public class Tools
 		for (Entry<Integer, String> entry : map.entrySet()) {
 
 			int field = entry.getKey();
-			int value = -1;
+			int value = 0;
 
 			Matcher matcher = Pattern.compile(entry.getValue() + "+").matcher(format);
 

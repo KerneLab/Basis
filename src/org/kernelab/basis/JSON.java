@@ -273,6 +273,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 			}));
 		}
 
+		public JSAN(Object... values)
+		{
+			this();
+			addAll(values);
+		}
+
 		public JSAN add(int index, Object object)
 		{
 			return splice(index, 0, object);
@@ -1199,10 +1205,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		String a = "[\"1\",{\"2\":\"\\\\\"},\"4\",[\"5\",{\"6\":\"OK~\",\"7\":[\"8\",\"9\"]}]]";
-		Tools.debug(a);
-		JSAN ja = JSON.Parse(a).toJSAN();
-		Tools.debug(ja.toString(0));
+		JSAN jsan = new JSAN(5, 1, 2, 3);
+		Tools.debug(jsan.toString());
 	}
 
 	public static JSON Parse(CharSequence source)
