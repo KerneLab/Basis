@@ -1556,6 +1556,62 @@ public class Tools
 	}
 
 	/**
+	 * Input the content in InputStream as a single String and using the default
+	 * charSet.
+	 * 
+	 * @param inputStream
+	 *            the InputStream.
+	 * @return the String.
+	 */
+	public static String inputStreamToString(InputStream inputStream)
+	{
+		return inputStreamToString(inputStream, null);
+	}
+
+	/**
+	 * Input the content in InputStream as a single String.
+	 * 
+	 * @param inputStream
+	 *            the InputStream.
+	 * @param charSetName
+	 *            the name of CharSet.
+	 * @return the String.
+	 */
+	public static String inputStreamToString(InputStream inputStream, String charSetName)
+	{
+		StringBuilder builder = new StringBuilder();
+
+		Charset charSet = null;
+		if (charSetName == null) {
+			charSet = Charset.defaultCharset();
+		} else {
+			charSet = Charset.forName(charSetName);
+		}
+
+		InputStreamReader reader = new InputStreamReader(inputStream, charSet);
+
+		try {
+			char[] buffer = new char[3072];
+			int length = -1;
+			while ((length = reader.read(buffer)) != -1) {
+				builder.append(buffer, 0, length);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return builder.toString();
+	}
+
+	/**
 	 * Input the content in InputStream into a List of Strings.
 	 * 
 	 * @param inputStream
@@ -1657,7 +1713,7 @@ public class Tools
 	 */
 	public static String inputStringFromFile(File file)
 	{
-		return inputStringFromFile(file, Charset.defaultCharset().name());
+		return inputStringFromFile(file, null);
 	}
 
 	/**
@@ -1674,28 +1730,39 @@ public class Tools
 	 */
 	public static String inputStringFromFile(File file, String charSetName)
 	{
-		String string = null;
-		FileInputStream fis = null;
+		StringBuilder builder = new StringBuilder();
+
+		Charset charSet = null;
+		if (charSetName == null) {
+			charSet = Charset.defaultCharset();
+		} else {
+			charSet = Charset.forName(charSetName);
+		}
+
+		InputStreamReader reader = null;
+
 		try {
-			fis = new FileInputStream(file);
-			byte[] buffer = new byte[(int) file.length()];
-			if (fis.read(buffer) > -1) {
-				string = new String(buffer, charSetName);
+			reader = new InputStreamReader(new FileInputStream(file), charSet);
+			char[] buffer = new char[3072];
+			int length = -1;
+			while ((length = reader.read(buffer)) != -1) {
+				builder.append(buffer, 0, length);
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			if (fis != null) {
+			if (reader != null) {
 				try {
-					fis.close();
+					reader.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		}
-		return string;
+
+		return builder.toString();
 	}
 
 	/**
@@ -2782,6 +2849,71 @@ public class Tools
 		for (String string : strings) {
 			printWriter.println(string);
 		}
+
+		printWriter.close();
+
+		success = true;
+
+		return success;
+	}
+
+	/**
+	 * To output a String to a File. By default, this method isn't append mode.<br />
+	 * If the string contains great amount of chars, this method would perform
+	 * in low efficiency. {@link DataWriter} is recommended for this situation.
+	 * 
+	 * @param file
+	 *            the file to be output.
+	 * @param strings
+	 *            the String to be output.
+	 * @return true if output does succeed otherwise false.
+	 */
+	public static boolean outputStringToFile(File file, String string)
+	{
+		boolean success = false;
+
+		FileWriter fileWriter = null;
+
+		try {
+
+			fileWriter = new FileWriter(file);
+
+			success = Tools.outputStringToFile(fileWriter, string);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (fileWriter != null) {
+				try {
+					fileWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return success;
+	}
+
+	/**
+	 * To output a String to a FileWriter. The FileWriter could be defined as
+	 * {@code new FileWriter(File,true)} to let this method be append mode.<br />
+	 * If the string contains great amount of chars, this method would perform
+	 * in low efficiency. {@link DataWriter} is recommended for this situation.
+	 * 
+	 * @param fileWriter
+	 *            the FileWriter to output the string.
+	 * @param string
+	 *            the String to be output.
+	 * @return true if output does succeed otherwise false.
+	 */
+	public static boolean outputStringToFile(FileWriter fileWriter, String string)
+	{
+		boolean success = false;
+
+		PrintWriter printWriter = new PrintWriter(fileWriter, true);
+
+		printWriter.println(string);
 
 		printWriter.close();
 
