@@ -83,24 +83,24 @@ public class SQLKit
 	 * {@code query("SELECT * FROM `table` WHERE `name`!=?",SQLKit.NULL);}
 	 * 
 	 */
-	public static final Object	NULL						= new Object();
+	public static final Object		NULL						= new Object();
 
 	/**
 	 * To declare that there is no parameter.<br />
 	 * This object would be ignored if it is not the first parameter.
 	 */
-	public static final Object	EMPTY						= new Object();
+	public static final Object		EMPTY						= new Object();
 
-	public static final int[][]	OPTIMIZING_PRESET_SCHEMES	= {
+	public static final byte		OPTIMIZING_AS_DEFAULT		= 0;
+
+	public static final byte		OPTIMIZING_AS_TRACER		= 1;
+
+	public static final byte		OPTIMIZING_AS_HUNTER		= 2;
+
+	protected static final int[][]	OPTIMIZING_PRESET_SCHEMES	= {
 			{ ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT },
 			{ ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT },
 			{ ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE, ResultSet.HOLD_CURSORS_OVER_COMMIT } };
-
-	public static final byte	OPTIMIZING_AS_DEFAULT		= 0;
-
-	public static final byte	OPTIMIZING_AS_TRACER		= 1;
-
-	public static final byte	OPTIMIZING_AS_HUNTER		= 2;
 
 	/**
 	 * Get the result number of a ResultSet.
@@ -346,6 +346,12 @@ public class SQLKit
 		return statement;
 	}
 
+	protected void finalize() throws Throwable
+	{
+		this.close();
+		super.finalize();
+	}
+
 	public Connection getConnection()
 	{
 		return connection;
@@ -395,12 +401,12 @@ public class SQLKit
 	{
 		if (params.length > 0) {
 			resultSetType = params[0];
-		}
-		if (params.length > 1) {
-			resultSetConcurrency = params[1];
-		}
-		if (params.length > 2) {
-			resultSetHoldability = params[2];
+			if (params.length > 1) {
+				resultSetConcurrency = params[1];
+				if (params.length > 2) {
+					resultSetHoldability = params[2];
+				}
+			}
 		}
 		return this;
 	}
