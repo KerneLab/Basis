@@ -222,35 +222,20 @@ public class Arbiter
 		return LoadInterpreters(JSAN.Parse(Tools.inputStreamToString(is)).toJSAN());
 	}
 
-	public static Iterable<ConditionInterpreter> LoadInterpreters(Iterable<String> classNames)
+	@SuppressWarnings("unchecked")
+	public static Iterable<ConditionInterpreter> LoadInterpreters(Iterable<Object> classes)
 	{
 		List<ConditionInterpreter> interpreters = new LinkedList<ConditionInterpreter>();
 
-		for (String className : classNames) {
+		for (Object object : classes) {
 			try {
-				Object o = Class.forName(className).newInstance();
-				if (o instanceof ConditionInterpreter) {
-					interpreters.add((ConditionInterpreter) o);
+				Class<ConditionInterpreter> cls = null;
+				if (object instanceof Class<?>) {
+					cls = (Class<ConditionInterpreter>) object;
+				} else {
+					cls = (Class<ConditionInterpreter>) Class.forName(object.toString());
 				}
-			} catch (InstantiationException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
-
-		return interpreters;
-	}
-
-	public static Iterable<ConditionInterpreter> LoadInterpreters(JSAN classNames)
-	{
-		List<ConditionInterpreter> interpreters = new LinkedList<ConditionInterpreter>();
-
-		for (Object className : classNames) {
-			try {
-				Object o = Class.forName(className.toString()).newInstance();
+				Object o = cls.newInstance();
 				if (o instanceof ConditionInterpreter) {
 					interpreters.add((ConditionInterpreter) o);
 				}
