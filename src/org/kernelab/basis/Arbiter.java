@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON.JSAN;
@@ -28,20 +27,6 @@ public class Arbiter
 	protected static final String	LOGICAL_AND_MARK	= "&";
 
 	protected static final int		DEFAULT_LOGIC		= LOGICAL_OR;
-
-	protected static final String	EQUAL_MARK			= "==";
-
-	protected static final String	NOT_EQUAL_MARK		= "!=";
-
-	protected static final String	GREATER_MARK		= ">";
-
-	protected static final String	GREATER_EQUAL_MARK	= ">=";
-
-	protected static final String	LESS_MARK			= "<";
-
-	protected static final String	LESS_EQUAL_MARK		= "<=";
-
-	protected static final String	MATCH_MARK			= "=~";
 
 	public static boolean Arbitrate(JSON values, JSAN condition, Iterable<ConditionInterpreter> interpreters)
 	{
@@ -97,72 +82,12 @@ public class Arbiter
 								}
 
 								if (!hit) {
-									boolean isNumValue = v instanceof Number;
-									Matcher matcher = null;
-									if (cs.startsWith(EQUAL_MARK)) {
-										cs = cs.substring(2);
-										if (isNumValue && Variable.isNumber(cs)) {
-											present = Double.valueOf(vs).compareTo(Double.valueOf(cs)) == 0;
-										} else {
-											present = vs.compareTo(cs) == 0;
-										}
-									} else if (cs.startsWith(NOT_EQUAL_MARK)) {
-										cs = cs.substring(2);
-										if (isNumValue && Variable.isNumber(cs)) {
-											present = Double.valueOf(vs).compareTo(Double.valueOf(cs)) != 0;
-										} else {
-											present = vs.compareTo(cs) != 0;
-										}
-									} else if (cs.startsWith(GREATER_EQUAL_MARK)) {
-										cs = cs.substring(2);
-										if (isNumValue && Variable.isNumber(cs)) {
-											present = Double.valueOf(vs).compareTo(Double.valueOf(cs)) >= 0;
-										} else {
-											present = vs.compareTo(cs) >= 0;
-										}
-									} else if (cs.startsWith(LESS_EQUAL_MARK)) {
-										cs = cs.substring(2);
-										if (isNumValue && Variable.isNumber(cs)) {
-											present = Double.valueOf(vs).compareTo(Double.valueOf(cs)) <= 0;
-										} else {
-											present = vs.compareTo(cs) <= 0;
-										}
-									} else if (cs.startsWith(GREATER_MARK)) {
-										cs = cs.substring(1);
-										if (isNumValue && Variable.isNumber(cs)) {
-											present = Double.valueOf(vs).compareTo(Double.valueOf(cs)) > 0;
-										} else {
-											present = vs.compareTo(cs) > 0;
-										}
-									} else if (cs.startsWith(LESS_MARK)) {
-										cs = cs.substring(1);
-										if (isNumValue && Variable.isNumber(cs)) {
-											present = Double.valueOf(vs).compareTo(Double.valueOf(cs)) < 0;
-										} else {
-											present = vs.compareTo(cs) < 0;
-										}
-									} else if (cs.startsWith(MATCH_MARK)
-											&& ((matcher = Pattern.compile("=~\\/(.*)\\/([gim]*)").matcher(cs))
-													.matches()))
+									if ((v instanceof Number && c instanceof Number)
+											|| (v instanceof Boolean && c instanceof Boolean))
 									{
-										String expr = matcher.group(1);
-										String flag = matcher.group(2);
-										int flags = 0;
-										if (flag.contains("i")) {
-											flags |= Pattern.CASE_INSENSITIVE;
-										}
-										if (flag.contains("m")) {
-											flags |= Pattern.MULTILINE;
-										}
-										present = Pattern.compile(expr, flags).matcher(vs).find();
+										present = v.equals(c);
 									} else {
-										if ((isNumValue && c instanceof Number)
-												|| (v instanceof Boolean && c instanceof Boolean))
-										{
-											present = v.equals(c);
-										} else {
-											present = Pattern.compile(cs).matcher(vs).find();
-										}
+										present = Pattern.compile(cs).matcher(vs).find();
 									}
 								}
 							}
