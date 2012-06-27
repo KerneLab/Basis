@@ -84,8 +84,9 @@ public abstract class SQLProcess extends AbstractAccomplishable implements Runna
 		this.accomplished();
 	}
 
-	public void setDataBase(DataBase dataBase)
+	public SQLProcess setDataBase(DataBase dataBase)
 	{
 		this.dataBase = dataBase;
+		return this;
 	}
 }
