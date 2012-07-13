@@ -320,13 +320,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 		}
 
 		@SuppressWarnings("unchecked")
-		public <T> Collection<T> addTo(Collection<T> collection)
+		public <E, T extends Collection<E>> T addTo(T collection)
 		{
-			if (collection == null) {
-				collection = new LinkedList<T>();
-			}
-			for (Object o : this) {
-				collection.add((T) o);
+			if (collection != null) {
+				for (Object o : this) {
+					collection.add((E) o);
+				}
 			}
 			return collection;
 		}
