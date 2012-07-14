@@ -22,6 +22,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -2920,6 +2921,55 @@ public class Tools
 		success = true;
 
 		return success;
+	}
+
+	/**
+	 * Read the content in Reader into a StringBuilder.
+	 * 
+	 * @param reader
+	 *            the Reader.
+	 * @return the StringBuilder which holds the content in the reader.
+	 */
+	public static StringBuilder readerToStringBuilder(Reader reader)
+	{
+		return readerToStringBuilder(reader, null);
+	}
+
+	/**
+	 * Read the content in Reader into a StringBuilder with a given buffer.
+	 * 
+	 * @param reader
+	 *            the Reader.
+	 * @param result
+	 *            a StringBuilder which would hold the read characters. If null,
+	 *            a new StringBuilder would be created instead.
+	 * @return the StringBuilder which holds the content in the reader.
+	 */
+	public static StringBuilder readerToStringBuilder(Reader reader, StringBuilder result)
+	{
+		if (result == null) {
+			result = new StringBuilder();
+		}
+
+		int read = -1;
+
+		char[] buffer = new char[1024];
+
+		try {
+			while ((read = reader.read(buffer)) >= 0) {
+				result.append(buffer, 0, read);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return result;
 	}
 
 	/**

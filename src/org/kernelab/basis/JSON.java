@@ -1204,8 +1204,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		JSAN jsan = new JSAN(5, 1, 2, 3);
-		Tools.debug(jsan.toString());
+		JSON j = new JSON();
+		JSON i = new JSON();
+		JSON k = new JSON();
+		j.attr("k", i);
+		j.attr("k", k);
+		Tools.debug(j.toString());
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -1355,6 +1359,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 		}
 
 		return object;
+	}
+
+	public static JSON Parse(Reader reader)
+	{
+		return Parse(Tools.readerToStringBuilder(reader));
 	}
 
 	public static Object Quote(Object o)
@@ -1732,6 +1741,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 	@SuppressWarnings("unchecked")
 	public Object put(String key, Object value)
 	{
+		Object old = this.get(key);
+		Hierarchical hirch = AsHierarchical(old);
+		if (hirch != null) {
+			hirch.outer(null).entry(null);
+		}
+
 		if (value instanceof Map<?, ?> && !IsJSON(value)) {
 			JSON json = new JSON();
 			json.putAll((Map<? extends String, ? extends Object>) value);
@@ -1742,7 +1757,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 			value = jsan;
 		}
 
-		Hierarchical hirch = AsHierarchical(value);
+		hirch = AsHierarchical(value);
 		if (hirch != null) {
 			if (hirch.context() == null) {
 				hirch.outer(this).entry(key);
