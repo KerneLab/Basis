@@ -1194,6 +1194,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return o instanceof JSON;
 	}
 
+	public static final boolean IsPlainJSON(Object o)
+	{
+		return (o instanceof JSON) && !(o instanceof JSAN);
+	}
+
 	public static final boolean IsQuotation(Object o)
 	{
 		return o instanceof Quotation;
@@ -1684,14 +1689,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 	}
 
 	@Override
-	protected void finalize()
+	protected void finalize() throws Throwable
 	{
 		outer(null).entry(null).clear();
-		try {
-			super.finalize();
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
+		super.finalize();
 	}
 
 	public Object get(Object key)
@@ -1742,8 +1743,9 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public Object put(String key, Object value)
 	{
 		Object old = this.get(key);
+		// Clear the old hierarchical relation.
 		Hierarchical hirch = AsHierarchical(old);
-		if (hirch != null) {
+		if (hirch != null && hirch.outer() == this) {
 			hirch.outer(null).entry(null);
 		}
 
@@ -1759,8 +1761,15 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		hirch = AsHierarchical(value);
 		if (hirch != null) {
-			if (hirch.context() == null) {
-				hirch.outer(this).entry(key);
+			// Build up new hierarchical relation.
+			JSON formalOuter = hirch.outer();
+			String formalEntry = hirch.entry();
+			hirch.outer(this).entry(key);
+			if (formalOuter != null && formalOuter != this) {
+				if (hirch.context() != null && IsJSON(hirch)) {
+					// If in a Context, the formal outer would quote the value.
+					formalOuter.attr(formalEntry, AsJSON(hirch).quote());
+				}
 			}
 		}
 
@@ -1800,7 +1809,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		Hierarchical hirch = AsHierarchical(value);
 		if (hirch != null) {
-			if (context() == hirch.context()) {
+			if (hirch.outer() == this) {
 				hirch.outer(null).entry(null);
 			}
 		}
