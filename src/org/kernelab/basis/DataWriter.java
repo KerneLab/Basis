@@ -57,7 +57,8 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public void close()
 	{
-		if (writing && writer != null) {
+		if (writing && writer != null)
+		{
 			writer.close();
 			writing = false;
 		}
@@ -76,7 +77,8 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 
 	public OutputStream getOutputStream()
 	{
-		if (outputStream == null) {
+		if (outputStream == null)
+		{
 			outputStream = new DataOutputStream();
 		}
 		return outputStream;
@@ -103,21 +105,26 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 * @param sequence
 	 *            The CharSequence of data.
 	 */
-	public void print(CharSequence sequence)
+	public <E extends DataWriter> E print(CharSequence sequence)
 	{
-		if (writing) {
+		if (writing)
+		{
 			int length = sequence.length();
-			for (int i = 0; i < length; i++) {
+			for (int i = 0; i < length; i++)
+			{
 				writer.print(sequence.charAt(i));
 			}
 		}
+		return Tools.cast(this);
 	}
 
-	public void print(Object object)
+	public <E extends DataWriter> E print(Object object)
 	{
-		if (writing) {
+		if (writing)
+		{
 			writer.print(object);
 		}
+		return Tools.cast(this);
 	}
 
 	public void run()
@@ -146,20 +153,22 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 * @return This DataWriter object.
 	 * @see DataWriter#setWriter(Writer, boolean)
 	 */
-	public DataWriter setAutoFlush(boolean autoFlush)
+	public <E extends DataWriter> E setAutoFlush(boolean autoFlush)
 	{
-		if (!writing) {
+		if (!writing)
+		{
 			this.autoFlush = autoFlush;
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
-	public DataWriter setCharSetName(String charSetName)
+	public <E extends DataWriter> E setCharSetName(String charSetName)
 	{
-		if (Charset.isSupported(charSetName)) {
+		if (Charset.isSupported(charSetName))
+		{
 			this.charSetName = charSetName;
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
 	/**
@@ -173,47 +182,54 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 * @see DataWriter#setDataFile(File, boolean)
 	 * @throws FileNotFoundException
 	 */
-	public DataWriter setDataFile(File file) throws FileNotFoundException
+	public <E extends DataWriter> E setDataFile(File file) throws FileNotFoundException
 	{
 		return this.setDataFile(file, false);
 	}
 
-	public DataWriter setDataFile(File file, boolean append) throws FileNotFoundException
+	public <E extends DataWriter> E setDataFile(File file, boolean append) throws FileNotFoundException
 	{
-		try {
+		try
+		{
 			this.setDataFile(file, append, charSetName);
-		} catch (UnsupportedEncodingException e) {
+		}
+		catch (UnsupportedEncodingException e)
+		{
 			e.printStackTrace();
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
-	public DataWriter setDataFile(File file, boolean append, String charSetName) throws UnsupportedEncodingException,
-			FileNotFoundException
+	public <E extends DataWriter> E setDataFile(File file, boolean append, String charSetName)
+			throws UnsupportedEncodingException, FileNotFoundException
 	{
 		return this.setOutputStream(new FileOutputStream(file, append), charSetName);
 	}
 
-	public DataWriter setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
+	public <E extends DataWriter> E setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
 			FileNotFoundException
 	{
 		return this.setDataFile(file, false, charSetName);
 	}
 
-	public DataWriter setOutputStream(OutputStream os)
+	public <E extends DataWriter> E setOutputStream(OutputStream os)
 	{
-		try {
+		try
+		{
 			this.setOutputStream(os, charSetName);
-		} catch (UnsupportedEncodingException e) {
+		}
+		catch (UnsupportedEncodingException e)
+		{
 			e.printStackTrace();
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
-	public DataWriter setOutputStream(OutputStream os, String charSetName) throws UnsupportedEncodingException
+	public <E extends DataWriter> E setOutputStream(OutputStream os, String charSetName)
+			throws UnsupportedEncodingException
 	{
 		this.setWriter(new OutputStreamWriter(os, charSetName));
-		return this;
+		return Tools.cast(this);
 	}
 
 	/**
@@ -224,7 +240,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 *            Writer
 	 * @return This DataWriter object.
 	 */
-	public DataWriter setWriter(Writer writer)
+	public <E extends DataWriter> E setWriter(Writer writer)
 	{
 		return this.setWriter(writer, autoFlush);
 	}
@@ -241,19 +257,21 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 *            the writer.
 	 * @return This DataWriter object.
 	 */
-	public DataWriter setWriter(Writer writer, boolean autoFlush)
+	public <E extends DataWriter> E setWriter(Writer writer, boolean autoFlush)
 	{
-		if (!writing) {
+		if (!writing)
+		{
 			this.writer = new PrintWriter(writer, autoFlush);
 			writing = true;
 			this.resetAccomplishStatus();
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
-	protected void setWriting(boolean writing)
+	protected <E extends DataWriter> E setWriting(boolean writing)
 	{
 		this.writing = writing;
+		return Tools.cast(this);
 	}
 
 	/**
@@ -263,11 +281,13 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 * 
 	 * @see DataWriter#run()
 	 */
-	public void write()
+	public <E extends DataWriter> E write()
 	{
-		if (writing) {
+		if (writing)
+		{
 			writer.println();
 		}
+		return Tools.cast(this);
 	}
 
 	/**
@@ -276,21 +296,26 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 * @param line
 	 *            A line of data.
 	 */
-	public void write(CharSequence line)
+	public <E extends DataWriter> E write(CharSequence line)
 	{
-		if (writing) {
+		if (writing)
+		{
 			int length = line.length();
-			for (int i = 0; i < length; i++) {
+			for (int i = 0; i < length; i++)
+			{
 				writer.print(line.charAt(i));
 			}
 			writer.println();
 		}
+		return Tools.cast(this);
 	}
 
-	public void write(Object object)
+	public <E extends DataWriter> E write(Object object)
 	{
-		if (writing) {
+		if (writing)
+		{
 			writer.println(object);
 		}
+		return Tools.cast(this);
 	}
 }

@@ -60,9 +60,10 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		return reading;
 	}
 
-	public void read()
+	public <E extends DataReader> E read()
 	{
-		if (this.reader != null) {
+		if (this.reader != null)
+		{
 
 			reading = true;
 
@@ -70,32 +71,40 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 			this.readPrepare();
 
-			if (buffer == null) {
+			if (buffer == null)
+			{
 				buffer = new StringBuilder();
-			} else {
+			}
+			else
+			{
 				buffer.delete(0, buffer.length());
 			}
 
-			try {
+			try
+			{
 
 				int i = -1;
 				char c, l = 0;
 
-				do {
+				do
+				{
 					i = reader.read();
 
 					c = (char) i;
 
-					if (c != LF && c != CR && l != CR && i != -1) {
+					if (c != LF && c != CR && l != CR && i != -1)
+					{
 						buffer.append(c);
 					}
 
-					if (c == LF || l == CR || i == -1) {
+					if (c == LF || l == CR || i == -1)
+					{
 						this.readLine(buffer);
 						buffer.delete(0, buffer.length());
 					}
 
-					if (c != LF && c != CR && l == CR) {
+					if (c != LF && c != CR && l == CR)
+					{
 						buffer.append(c);
 					}
 
@@ -107,18 +116,29 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 				// setReading(false), isReading() returns true here.
 				this.readFinished();
 
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				e.printStackTrace();
-			} finally {
-				try {
+			}
+			finally
+			{
+				try
+				{
 					reader.close();
-				} catch (IOException e) {
+				}
+				catch (IOException e)
+				{
 					e.printStackTrace();
-				} finally {
+				}
+				finally
+				{
 					reading = false;
 				}
 			}
 		}
+
+		return Tools.cast(this);
 	}
 
 	/**
@@ -143,56 +163,65 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	public void run()
 	{
-		if (!this.isReading()) {
+		if (!this.isReading())
+		{
 			this.resetAccomplishStatus();
 			this.read();
 			this.accomplished();
 		}
 	}
 
-	protected void setBuffer(StringBuilder buffer)
+	protected <E extends DataReader> E setBuffer(StringBuilder buffer)
 	{
 		this.buffer = buffer;
+		return Tools.cast(this);
 	}
 
-	public DataReader setCharSetName(String charSetName)
+	public <E extends DataReader> E setCharSetName(String charSetName)
 	{
-		if (Charset.isSupported(charSetName)) {
+		if (Charset.isSupported(charSetName))
+		{
 			this.charSetName = charSetName;
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
-	public DataReader setDataFile(File file) throws FileNotFoundException
+	public <E extends DataReader> E setDataFile(File file) throws FileNotFoundException
 	{
-		try {
+		try
+		{
 			this.setDataFile(file, charSetName);
-		} catch (UnsupportedEncodingException e) {
+		}
+		catch (UnsupportedEncodingException e)
+		{
 			e.printStackTrace();
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
-	public DataReader setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
+	public <E extends DataReader> E setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
 			FileNotFoundException
 	{
 		return this.setInputStream(new FileInputStream(file), charSetName);
 	}
 
-	public DataReader setInputStream(InputStream is)
+	public <E extends DataReader> E setInputStream(InputStream is)
 	{
-		try {
+		try
+		{
 			this.setInputStream(is, charSetName);
-		} catch (UnsupportedEncodingException e) {
+		}
+		catch (UnsupportedEncodingException e)
+		{
 			e.printStackTrace();
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
-	public DataReader setInputStream(InputStream is, String charSetName) throws UnsupportedEncodingException
+	public <E extends DataReader> E setInputStream(InputStream is, String charSetName)
+			throws UnsupportedEncodingException
 	{
-		this.setReader(new InputStreamReader(is, charSetName));
-		return this;
+		return this.setReader(new InputStreamReader(is, charSetName));
 	}
 
 	/**
@@ -203,17 +232,18 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	 *            Reader
 	 * @return This DataReader object.
 	 */
-	public DataReader setReader(Reader reader)
+	public <E extends DataReader> E setReader(Reader reader)
 	{
-		if (!reading) {
+		if (!reading)
+		{
 			this.reader = reader;
 		}
-		return this;
+		return Tools.cast(this);
 	}
 
-	protected void setReading(boolean reading)
+	protected <E extends DataReader> E setReading(boolean reading)
 	{
 		this.reading = reading;
+		return Tools.cast(this);
 	}
-
 }
