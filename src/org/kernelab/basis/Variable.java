@@ -375,7 +375,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static boolean isDouble(String string)
 	{
-		return !string.equals(".") && string.matches("^-?\\d*\\.\\d*$");
+		return string != null && !string.equals(".") && string.matches("^-?\\d*\\.\\d*$");
 	}
 
 	/**
@@ -388,7 +388,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static boolean isInteger(String string)
 	{
-		return string.matches("^-?\\d+$");
+		return string != null && string.matches("^-?\\d+$");
 	}
 
 	/**
@@ -422,7 +422,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static boolean isNumber(String string)
 	{
-		return string.length() != 0 && string.matches("^-?\\d*\\.?\\d*$");
+		return string != null && string.length() != 0 && string.matches("^-?\\d*\\.?\\d*$");
 	}
 
 	/**
