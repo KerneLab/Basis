@@ -13,9 +13,8 @@ import java.text.DecimalFormat;
  * @param <N>
  *            The generic type of number.
  */
-public class Variable<N extends java.lang.Number & Comparable<N>> extends
-		java.lang.Number implements Comparable<Variable<N>>, Serializable,
-		Copieable<Variable<N>>
+public class Variable<N extends java.lang.Number & Comparable<N>> extends java.lang.Number implements
+		Comparable<Variable<N>>, Serializable, Copieable<Variable<N>>
 {
 
 	/**
@@ -26,19 +25,280 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	public static final DecimalFormat	DECIMAL_FORMAT		= new DecimalFormat();
 
 	/**
+	 * Try to convert the string to a Byte value, if could not convert then
+	 * return null.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @return The Byte value.
+	 */
+	public static Byte asByte(String string)
+	{
+		return asByte(string, null);
+	}
+
+	/**
+	 * Try to convert the string to a Byte value, if could not convert then use
+	 * the defaultValue instead.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @param defaultValue
+	 *            the default value which would be used if the string could not
+	 *            be converted to a Byte.
+	 * @return The Byte value.
+	 */
+	public static Byte asByte(String string, Byte defaultValue)
+	{
+		Byte value = null;
+		if (isInteger(string))
+		{
+			value = Byte.valueOf(string);
+		}
+		else
+		{
+			value = defaultValue;
+		}
+		return value;
+	}
+
+	/**
+	 * Try to convert the string to a Double value, if could not convert then
+	 * return null.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @return The Double value.
+	 */
+	public static Double asDouble(String string)
+	{
+		return asDouble(string, null);
+	}
+
+	/**
+	 * Try to convert the string to a Double value, if could not convert then
+	 * use the defaultValue instead.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @param defaultValue
+	 *            the default value which would be used if the string could not
+	 *            be converted to a Double.
+	 * @return The Double value.
+	 */
+	public static Double asDouble(String string, Double defaultValue)
+	{
+		Double value = null;
+		if (isDouble(string))
+		{
+			value = Double.valueOf(string);
+		}
+		else
+		{
+			value = defaultValue;
+		}
+		return value;
+	}
+
+	/**
+	 * Try to convert the string to a Float value, if could not convert then
+	 * return null.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @return The Float value.
+	 */
+	public static Float asFloat(String string)
+	{
+		return asFloat(string, null);
+	}
+
+	/**
+	 * Try to convert the string to a Float value, if could not convert then use
+	 * the defaultValue instead.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @param defaultValue
+	 *            the default value which would be used if the string could not
+	 *            be converted to a Float.
+	 * @return The Float value.
+	 */
+	public static Float asFloat(String string, Float defaultValue)
+	{
+		Float value = null;
+		if (isDouble(string))
+		{
+			value = Float.valueOf(string);
+		}
+		else
+		{
+			value = defaultValue;
+		}
+		return value;
+	}
+
+	/**
+	 * Try to convert the string to a Integer value, if could not convert then
+	 * return null.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @return The Integer value.
+	 */
+	public static Integer asInteger(String string)
+	{
+		return asInteger(string, null);
+	}
+
+	/**
+	 * Try to convert the string to an Integer value, if could not convert then
+	 * use the defaultValue instead.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @param defaultValue
+	 *            the default value which would be used if the string could not
+	 *            be converted to an Integer.
+	 * @return The Integer value.
+	 */
+	public static Integer asInteger(String string, Integer defaultValue)
+	{
+		Integer value = null;
+		if (isInteger(string))
+		{
+			value = Integer.valueOf(string);
+		}
+		else
+		{
+			value = defaultValue;
+		}
+		return value;
+	}
+
+	/**
+	 * Try to convert the string to a Long value, if could not convert then
+	 * return null.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @return The Long value.
+	 */
+	public static Long asLong(String string)
+	{
+		return asLong(string, null);
+	}
+
+	/**
+	 * Try to convert the string to a Long value, if could not convert then use
+	 * the defaultValue instead.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @param defaultValue
+	 *            the default value which would be used if the string could not
+	 *            be converted to a Long.
+	 * @return The Long value.
+	 */
+	public static Long asLong(String string, Long defaultValue)
+	{
+		Long value = null;
+		if (isInteger(string))
+		{
+			value = Long.valueOf(string);
+		}
+		else
+		{
+			value = defaultValue;
+		}
+		return value;
+	}
+
+	/**
+	 * Try to convert the string to a Short value, if could not convert then
+	 * return null.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @return The Short value.
+	 */
+	public static Short asShort(String string)
+	{
+		return asShort(string, null);
+	}
+
+	/**
+	 * Try to convert the string to a Short value, if could not convert then use
+	 * the defaultValue instead.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @param defaultValue
+	 *            the default value which would be used if the string could not
+	 *            be converted to a Short.
+	 * @return The Short value.
+	 */
+	public static Short asShort(String string, Short defaultValue)
+	{
+		Short value = null;
+		if (isInteger(string))
+		{
+			value = Short.valueOf(string);
+		}
+		else
+		{
+			value = defaultValue;
+		}
+		return value;
+	}
+
+	/**
+	 * Get the Byte value of a java.lang.Number
+	 * 
+	 * @param number
+	 *            The java.lang.Number
+	 * @return The Byte value
+	 */
+	public static Byte byteValueOfNumber(java.lang.Number number)
+	{
+		Byte value = null;
+
+		if (number instanceof Byte)
+		{
+			value = (Byte) number;
+		}
+		else
+		{
+			try
+			{
+				value = Byte.valueOf(number.toString());
+			}
+			catch (NumberFormatException e)
+			{
+				value = Variable.doubleValueOfNumber(number).byteValue();
+			}
+		}
+
+		return value;
+	}
+
+	/**
 	 * Get the Double value of a java.lang.Number
 	 * 
 	 * @param number
 	 *            The java.lang.Number
 	 * @return The Double value
 	 */
-	public static final Double doubleValueOfNumber(java.lang.Number number)
+	public static Double doubleValueOfNumber(java.lang.Number number)
 	{
 		Double value = null;
 
-		if (number instanceof Double) {
+		if (number instanceof Double)
+		{
 			value = (Double) number;
-		} else {
+		}
+		else
+		{
 			value = Double.valueOf(number.toString());
 		}
 
@@ -52,16 +312,22 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	 *            The java.lang.Number
 	 * @return The Float value
 	 */
-	public static final Float floatValueOfNumber(java.lang.Number number)
+	public static Float floatValueOfNumber(java.lang.Number number)
 	{
 		Float value = null;
 
-		if (number instanceof Float) {
+		if (number instanceof Float)
+		{
 			value = (Float) number;
-		} else {
-			try {
+		}
+		else
+		{
+			try
+			{
 				value = Float.valueOf(number.toString());
-			} catch (NumberFormatException e) {
+			}
+			catch (NumberFormatException e)
+			{
 				value = Variable.doubleValueOfNumber(number).floatValue();
 			}
 		}
@@ -76,16 +342,22 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	 *            The java.lang.Number
 	 * @return The Integer value
 	 */
-	public static final Integer integerValueOfNumber(java.lang.Number number)
+	public static Integer integerValueOfNumber(java.lang.Number number)
 	{
 		Integer value = null;
 
-		if (number instanceof Integer) {
+		if (number instanceof Integer)
+		{
 			value = (Integer) number;
-		} else {
-			try {
+		}
+		else
+		{
+			try
+			{
 				value = Integer.valueOf(number.toString());
-			} catch (NumberFormatException e) {
+			}
+			catch (NumberFormatException e)
+			{
 				value = Variable.doubleValueOfNumber(number).intValue();
 			}
 		}
@@ -101,7 +373,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	 * @return <code>TRUE</code> if the string is Double otherwise
 	 *         <code>FALSE</code>.
 	 */
-	public static final boolean isDouble(String string)
+	public static boolean isDouble(String string)
 	{
 		return !string.equals(".") && string.matches("^-?\\d*\\.\\d*$");
 	}
@@ -114,7 +386,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	 * @return <code>TRUE</code> if the string is Integer otherwise
 	 *         <code>FALSE</code>.
 	 */
-	public static final boolean isInteger(String string)
+	public static boolean isInteger(String string)
 	{
 		return string.matches("^-?\\d+$");
 	}
@@ -160,16 +432,22 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	 *            The java.lang.Number
 	 * @return The Long value
 	 */
-	public static final Long longValueOfNumber(java.lang.Number number)
+	public static Long longValueOfNumber(java.lang.Number number)
 	{
 		Long value = null;
 
-		if (number instanceof Long) {
+		if (number instanceof Long)
+		{
 			value = (Long) number;
-		} else {
-			try {
+		}
+		else
+		{
+			try
+			{
 				value = Long.valueOf(number.toString());
-			} catch (NumberFormatException e) {
+			}
+			catch (NumberFormatException e)
+			{
 				value = Variable.doubleValueOfNumber(number).longValue();
 			}
 		}
@@ -205,8 +483,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	 *            The value of the number.
 	 * @return The instance of Variable.
 	 */
-	public static <N extends java.lang.Number & Comparable<N>> Variable<N> newInstance(
-			N number)
+	public static <N extends java.lang.Number & Comparable<N>> Variable<N> newInstance(N number)
 	{
 		return new Variable<N>(number);
 	}
@@ -255,8 +532,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	 * @return the formatted String.
 	 * @see java.text.DecimalFormat
 	 */
-	public static <N extends java.lang.Number> String numberFormatString(N number,
-			String format)
+	public static <N extends java.lang.Number> String numberFormatString(N number, String format)
 	{
 		Variable.DECIMAL_FORMAT.applyPattern(format);
 		String string = Variable.DECIMAL_FORMAT.format(number);
@@ -288,6 +564,36 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	}
 
 	/**
+	 * Get the Short value of a java.lang.Number
+	 * 
+	 * @param number
+	 *            The java.lang.Number
+	 * @return The Short value
+	 */
+	public static Short shortValueOfNumber(java.lang.Number number)
+	{
+		Short value = null;
+
+		if (number instanceof Short)
+		{
+			value = (Short) number;
+		}
+		else
+		{
+			try
+			{
+				value = Short.valueOf(number.toString());
+			}
+			catch (NumberFormatException e)
+			{
+				value = Variable.doubleValueOfNumber(number).shortValue();
+			}
+		}
+
+		return value;
+	}
+
+	/**
 	 * Parse the Variable value of a String.<br>
 	 * Here, first try Integer value, if not Integer format, then try Double
 	 * format, if still illegal format, then throws a NumberFormatException.
@@ -303,9 +609,12 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 	{
 		N number = null;
 
-		try {
+		try
+		{
 			number = (N) Integer.valueOf(string);
-		} catch (NumberFormatException ei) {
+		}
+		catch (NumberFormatException ei)
+		{
 			number = (N) Double.valueOf(string);
 		}
 
@@ -335,13 +644,11 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 		return this.getValue().compareTo(number.getValue());
 	}
 
-	@Override
 	public double doubleValue()
 	{
 		return Variable.doubleValueOfNumber(value);
 	}
 
-	@Override
 	public float floatValue()
 	{
 		return (float) doubleValue();
@@ -368,13 +675,11 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends
 		return value;
 	}
 
-	@Override
 	public int intValue()
 	{
 		return Variable.integerValueOfNumber(value);
 	}
 
-	@Override
 	public long longValue()
 	{
 		return Variable.longValueOfNumber(value);
