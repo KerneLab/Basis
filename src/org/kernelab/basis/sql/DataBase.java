@@ -3,9 +3,12 @@ package org.kernelab.basis.sql;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.LinkedHashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import org.kernelab.basis.Copieable;
+import org.kernelab.basis.Relation;
 
 /**
  * The DataBase class is an abstract of database support.
@@ -13,21 +16,19 @@ import org.kernelab.basis.Copieable;
  * To support various database, this class can be extended and just override the
  * method getURL().
  * 
- * JDBC3.0 and Java5.0 are required.
+ * At least JDBC3.0 and Java5.0 are required.
  * 
  * @author Dilly King
  */
 public abstract class DataBase implements Copieable<DataBase>
 {
-
 	public static class DB2 extends DataBase
 	{
 		public static String	DRIVER_CLASS_NAME	= "com.ibm.db2.jdbc.app.DB2Driver";
 
 		public static int		DEFAULT_PORT_NUMBER	= 5000;
 
-		public DB2(String serverName, int portNumber, String catalog, String userName,
-				String passWord)
+		public DB2(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 		}
@@ -56,8 +57,8 @@ public abstract class DataBase implements Copieable<DataBase>
 		@Override
 		protected String getURL()
 		{
-			return "jdbc:db2://" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/" + catalog;
+			return "jdbc:db2://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
+					+ catalog;
 		}
 	}
 
@@ -67,8 +68,7 @@ public abstract class DataBase implements Copieable<DataBase>
 
 		public static int		DEFAULT_PORT_NUMBER	= 1527;
 
-		public Derby(String serverName, int portNumber, String catalog, String userName,
-				String passWord)
+		public Derby(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 			this.getInformation().setProperty("create", "true");
@@ -98,8 +98,8 @@ public abstract class DataBase implements Copieable<DataBase>
 		@Override
 		protected String getURL()
 		{
-			return "jdbc:derby://" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/" + catalog;
+			return "jdbc:derby://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
+					+ catalog;
 		}
 	}
 
@@ -107,8 +107,7 @@ public abstract class DataBase implements Copieable<DataBase>
 	{
 		public static String	DRIVER_CLASS_NAME	= "org.apache.derby.jdbc.EmbeddedDriver";
 
-		public EmbeddeDerby(String serverName, int portNumber, String catalog,
-				String userName, String passWord)
+		public EmbeddeDerby(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 			this.getInformation().setProperty("create", "true");
@@ -124,8 +123,7 @@ public abstract class DataBase implements Copieable<DataBase>
 			this("localhost", catalog, userName, passWord);
 		}
 
-		public EmbeddeDerby(String serverName, String catalog, String userName,
-				String passWord)
+		public EmbeddeDerby(String serverName, String catalog, String userName, String passWord)
 		{
 			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
@@ -149,8 +147,7 @@ public abstract class DataBase implements Copieable<DataBase>
 
 		public static int		DEFAULT_PORT_NUMBER	= 1533;
 
-		public Informix(String serverName, int portNumber, String catalog,
-				String userName, String passWord)
+		public Informix(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 		}
@@ -165,8 +162,7 @@ public abstract class DataBase implements Copieable<DataBase>
 			this("localhost", catalog, userName, passWord);
 		}
 
-		public Informix(String serverName, String catalog, String userName,
-				String passWord)
+		public Informix(String serverName, String catalog, String userName, String passWord)
 		{
 			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
@@ -180,9 +176,21 @@ public abstract class DataBase implements Copieable<DataBase>
 		@Override
 		protected String getURL()
 		{
-			return "jdbc:informix-sqli://" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/" + catalog
-					+ ":INFORMIXSERVER=myserver";
+			return "jdbc:informix-sqli://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER)
+					+ "/" + catalog + ":INFORMIXSERVER=myserver";
+		}
+	}
+
+	public static class InvalidDataBaseConnectionException extends RuntimeException
+	{
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 186848770749944602L;
+
+		public InvalidDataBaseConnectionException(Throwable cause)
+		{
+			super(cause);
 		}
 	}
 
@@ -192,8 +200,7 @@ public abstract class DataBase implements Copieable<DataBase>
 
 		public static int		DEFAULT_PORT_NUMBER	= 3306;
 
-		public MySQL(String serverName, int portNumber, String catalog, String userName,
-				String passWord)
+		public MySQL(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 			this.getInformation().setProperty("useUnicode", "true");
@@ -226,8 +233,8 @@ public abstract class DataBase implements Copieable<DataBase>
 		@Override
 		protected String getURL()
 		{
-			return "jdbc:mysql://" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/" + catalog;
+			return "jdbc:mysql://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
+					+ catalog;
 		}
 	}
 
@@ -235,8 +242,7 @@ public abstract class DataBase implements Copieable<DataBase>
 	{
 		public static String	DRIVER_CLASS_NAME	= "sun.jdbc.odbc.JdbcOdbcDriver";
 
-		public ODBC(String serverName, int portNumber, String catalog, String userName,
-				String passWord)
+		public ODBC(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 		}
@@ -271,14 +277,18 @@ public abstract class DataBase implements Copieable<DataBase>
 
 	public static class Oracle extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
+		public static String					DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
 
-		public static int		DEFAULT_PORT_NUMBER	= 1521;
+		public static int						DEFAULT_PORT_NUMBER	= 1521;
 
-		public Oracle(String serverName, int portNumber, String catalog, String userName,
-				String passWord)
+		private String							serverMode			= null;
+
+		private Set<Relation<String, Integer>>	address				= new LinkedHashSet<Relation<String, Integer>>();
+
+		public Oracle(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
+			this.addAddress(serverName, portNumber);
 		}
 
 		public Oracle(String userName, String passWord)
@@ -296,17 +306,73 @@ public abstract class DataBase implements Copieable<DataBase>
 			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
 
+		public Oracle addAddress(String serverName, int portNumber)
+		{
+			address.add(new Relation<String, Integer>(serverName, portNumber));
+			return this;
+		}
+
+		public Set<Relation<String, Integer>> getAddress()
+		{
+			return address;
+		}
+
+		protected String getAddressList()
+		{
+			StringBuilder list = new StringBuilder();
+
+			for (Relation<String, Integer> pair : address)
+			{
+				list.append("(ADDRESS=(PROTOCOL=TCP)(HOST=");
+				list.append(pair.getKey());
+				list.append(")(PORT=");
+				list.append(pair.getValue().toString());
+				list.append("))");
+			}
+
+			return list.toString();
+		}
+
+		protected String getBalanceOption()
+		{
+			return address.size() > 1 ? "(LOAD_BALANCE=YES)(FAILOVER=ON)" : "";
+		}
+
 		@Override
 		public String getDriverName()
 		{
 			return DRIVER_CLASS_NAME;
 		}
 
+		protected String getServerMode()
+		{
+			String mode = "";
+
+			if (serverMode != null)
+			{
+				mode = "(SERVER=" + serverMode.toUpperCase() + ")";
+			}
+
+			return mode;
+		}
+
 		@Override
 		protected String getURL()
 		{
-			return "jdbc:oracle:thin:@" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + ":" + catalog;
+			return "jdbc:oracle:thin:@(DESCRIPTION=" + this.getBalanceOption() + "(ADDRESS_LIST="
+					+ this.getAddressList() + ")(CONNECT_DATA=(SERVICE_NAME=" + catalog + ")" + this.getServerMode()
+					+ "))";
+		}
+
+		public Oracle removeAddress(String serverName, int portNumber)
+		{
+			address.remove(new Relation<String, Integer>(serverName, portNumber));
+			return this;
+		}
+
+		public void setServerMode(String serverMode)
+		{
+			this.serverMode = serverMode;
 		}
 	}
 
@@ -316,8 +382,7 @@ public abstract class DataBase implements Copieable<DataBase>
 
 		public static int		DEFAULT_PORT_NUMBER	= 5432;
 
-		public PostgreSQL(String serverName, int portNumber, String catalog,
-				String userName, String passWord)
+		public PostgreSQL(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 		}
@@ -332,8 +397,7 @@ public abstract class DataBase implements Copieable<DataBase>
 			this("localhost", catalog, userName, passWord);
 		}
 
-		public PostgreSQL(String serverName, String catalog, String userName,
-				String passWord)
+		public PostgreSQL(String serverName, String catalog, String userName, String passWord)
 		{
 			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
@@ -347,8 +411,8 @@ public abstract class DataBase implements Copieable<DataBase>
 		@Override
 		protected String getURL()
 		{
-			return "jdbc:postgresql://" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/" + catalog;
+			return "jdbc:postgresql://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
+					+ catalog;
 		}
 	}
 
@@ -358,8 +422,7 @@ public abstract class DataBase implements Copieable<DataBase>
 
 		public static int		DEFAULT_PORT_NUMBER	= 1433;
 
-		public SqlServer2000(String serverName, int portNumber, String catalog,
-				String userName, String passWord)
+		public SqlServer2000(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 		}
@@ -374,8 +437,7 @@ public abstract class DataBase implements Copieable<DataBase>
 			this("localhost", catalog, userName, passWord);
 		}
 
-		public SqlServer2000(String serverName, String catalog, String userName,
-				String passWord)
+		public SqlServer2000(String serverName, String catalog, String userName, String passWord)
 		{
 			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
@@ -390,8 +452,7 @@ public abstract class DataBase implements Copieable<DataBase>
 		protected String getURL()
 		{
 			return "jdbc:microsoft:sqlserver://" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER)
-					+ ";databaseName=" + catalog;
+					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + ";databaseName=" + catalog;
 		}
 	}
 
@@ -401,8 +462,7 @@ public abstract class DataBase implements Copieable<DataBase>
 
 		public static int		DEFAULT_PORT_NUMBER	= 1433;
 
-		public SqlServer2005(String serverName, int portNumber, String catalog,
-				String userName, String passWord)
+		public SqlServer2005(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 		}
@@ -417,8 +477,7 @@ public abstract class DataBase implements Copieable<DataBase>
 			this("localhost", catalog, userName, passWord);
 		}
 
-		public SqlServer2005(String serverName, String catalog, String userName,
-				String passWord)
+		public SqlServer2005(String serverName, String catalog, String userName, String passWord)
 		{
 			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
@@ -432,8 +491,7 @@ public abstract class DataBase implements Copieable<DataBase>
 		@Override
 		protected String getURL()
 		{
-			return "jdbc:sqlserver://" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER)
+			return "jdbc:sqlserver://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER)
 					+ ";databaseName=" + catalog;
 		}
 	}
@@ -444,8 +502,7 @@ public abstract class DataBase implements Copieable<DataBase>
 
 		public static int		DEFAULT_PORT_NUMBER	= 5007;
 
-		public Sybase(String serverName, int portNumber, String catalog, String userName,
-				String passWord)
+		public Sybase(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
 		}
@@ -474,8 +531,8 @@ public abstract class DataBase implements Copieable<DataBase>
 		@Override
 		protected String getURL()
 		{
-			return "jdbc:sybase:Tds:" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/" + catalog;
+			return "jdbc:sybase:Tds:" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
+					+ catalog;
 		}
 	}
 
@@ -516,8 +573,7 @@ public abstract class DataBase implements Copieable<DataBase>
 		this.setInformation(dataBase.information);
 	}
 
-	public DataBase(String serverName, int portNumber, String catalog,
-			Properties information)
+	public DataBase(String serverName, int portNumber, String catalog, Properties information)
 	{
 		this.setServerName(serverName);
 		this.setPortNumber(portNumber);
@@ -525,8 +581,7 @@ public abstract class DataBase implements Copieable<DataBase>
 		this.setInformation(information);
 	}
 
-	public DataBase(String serverName, int portNumber, String catalog, String userName,
-			String passWord)
+	public DataBase(String serverName, int portNumber, String catalog, String userName, String passWord)
 	{
 		this(serverName, portNumber, catalog, new Properties());
 		this.setUserName(userName);
@@ -570,12 +625,16 @@ public abstract class DataBase implements Copieable<DataBase>
 
 	public void closeConnection()
 	{
-		try {
-			if (this.getConnection() != null) {
+		try
+		{
+			if (this.getConnection() != null)
+			{
 				this.getConnection().close();
 				this.setConnection(null);
 			}
-		} catch (SQLException e) {
+		}
+		catch (SQLException e)
+		{
 			e.printStackTrace();
 		}
 	}
@@ -584,9 +643,12 @@ public abstract class DataBase implements Copieable<DataBase>
 	protected void finalize()
 	{
 		this.closeConnection();
-		try {
+		try
+		{
 			super.finalize();
-		} catch (Throwable e) {
+		}
+		catch (Throwable e)
+		{
 			e.printStackTrace();
 		}
 	}
@@ -626,17 +688,17 @@ public abstract class DataBase implements Copieable<DataBase>
 	public SQLKit getSQLKit()
 	{
 		SQLKit kit = null;
-		try {
-			if (this.isClosed()) {
+		try
+		{
+			if (this.isClosed())
+			{
 				this.openConnection();
 			}
 			kit = new SQLKit(this.getConnection());
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+		}
+		catch (Exception e)
+		{
+			throw new InvalidDataBaseConnectionException(e.getCause());
 		}
 		return kit;
 	}
@@ -657,11 +719,15 @@ public abstract class DataBase implements Copieable<DataBase>
 	{
 		boolean is = true;
 
-		if (this.getConnection() != null) {
+		if (this.getConnection() != null)
+		{
 
-			try {
+			try
+			{
 				is = this.getConnection().isClosed();
-			} catch (SQLException e) {
+			}
+			catch (SQLException e)
+			{
 				e.printStackTrace();
 			}
 
@@ -670,21 +736,23 @@ public abstract class DataBase implements Copieable<DataBase>
 		return is;
 	}
 
-	public void openConnection() throws InstantiationException, IllegalAccessException,
-			ClassNotFoundException
+	public void openConnection() throws InstantiationException, IllegalAccessException, ClassNotFoundException
 	{
-		try {
+		try
+		{
 
-			if (this.isClosed()) {
+			if (this.isClosed())
+			{
 				// No need for JDBC4.0 with Java6.0
 
 				Class.forName(this.getDriverName()).newInstance();
 
-				this.setConnection(DriverManager.getConnection(this.getURL(),
-						this.getInformation()));
+				this.setConnection(DriverManager.getConnection(this.getURL(), this.getInformation()));
 			}
 
-		} catch (SQLException e) {
+		}
+		catch (SQLException e)
+		{
 			e.printStackTrace();
 		}
 	}

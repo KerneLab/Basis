@@ -21,7 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The Entrance of Basis.
+ * The Entrance of Basis or other project.
  * 
  * @author Dilly King
  * 
@@ -30,19 +30,22 @@ public class Entrance
 {
 	private static final Calendar		CALENDAR		= new GregorianCalendar();
 
-	protected static final DateFormat	VERSION_FORMAT	= new SimpleDateFormat(
-																"yyyy.MM.dd");
+	protected static final DateFormat	VERSION_FORMAT	= new SimpleDateFormat("yyyy.MM.dd");
 
 	public static final JarFile BelongingJarFile(Class<?> cls)
 	{
 		JarFile jarFile = null;
 
-		try {
-			jarFile = new JarFile(new File(cls.getProtectionDomain().getCodeSource()
-					.getLocation().toURI()));
-		} catch (URISyntaxException e) {
+		try
+		{
+			jarFile = new JarFile(new File(cls.getProtectionDomain().getCodeSource().getLocation().toURI()));
+		}
+		catch (URISyntaxException e)
+		{
 			e.printStackTrace();
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			e.printStackTrace();
 		}
 
@@ -61,14 +64,17 @@ public class Entrance
 	{
 		Map<String, String> map = new TreeMap<String, String>();
 
-		if (jarFile != null) {
+		if (jarFile != null)
+		{
 
 			Enumeration<JarEntry> entries = jarFile.entries();
 
-			while (entries.hasMoreElements()) {
+			while (entries.hasMoreElements())
+			{
 				JarEntry entry = entries.nextElement();
 				String name = entry.getName();
-				if (name.endsWith(".class")) {
+				if (name.endsWith(".class"))
+				{
 					name = name.substring(0, name.lastIndexOf('.')).replace('/', '.');
 					map.put(name, UpdateVersion(entry.getTime()));
 				}
@@ -111,9 +117,12 @@ public class Entrance
 
 	public Entrance(File file)
 	{
-		try {
+		try
+		{
 			initiate(new JarFile(file));
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			e.printStackTrace();
 		}
 	}
@@ -123,69 +132,91 @@ public class Entrance
 		return updates = Collections.unmodifiableMap(Updates(file));
 	}
 
-	protected void present(String... args)
+	public void present(String... args)
 	{
 		Map<String, String> map = new LinkedHashMap<String, String>();
 
 		String key = null;
 		String value = null;
-		for (String arg : args) {
-			if (arg.startsWith("-")) {
+		for (String arg : args)
+		{
+			if (arg.startsWith("-"))
+			{
 				key = arg.substring(1);
-			} else {
+			}
+			else
+			{
 				value = arg;
 			}
 			map.put(key, value);
-			if (value != null) {
+			if (value != null)
+			{
 				key = null;
 				value = null;
 			}
 		}
 
 		JarFile file = null;
-		if (map.get("f") == null) {
+		if (map.get("f") == null)
+		{
 			file = BelongingJarFile(this.getClass());
-		} else {
-			try {
+		}
+		else
+		{
+			try
+			{
 				file = new JarFile(new File(map.get("f")));
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				e.printStackTrace();
 			}
 		}
 
 		initiate(file);
 
-		if ((!map.containsKey("u") && !map.containsKey("v"))
-				|| (map.containsKey("v") && map.get("v") == null))
+		if ((!map.containsKey("u") && !map.containsKey("v")) || (map.containsKey("v") && map.get("v") == null))
 		{
 			Tools.debug(version());
-		} else {
+		}
+		else
+		{
 			Set<String> filter = new HashSet<String>();
 
-			if (map.containsKey("u")) {
-				if (map.get("u") != null) {
+			if (map.containsKey("u"))
+			{
+				if (map.get("u") != null)
+				{
 					Matcher matcher = Pattern.compile(map.get("u")).matcher("");
-					for (Entry<String, String> entry : updates().entrySet()) {
-						if (!matcher.reset(entry.getKey()).find()) {
+					for (Entry<String, String> entry : updates().entrySet())
+					{
+						if (!matcher.reset(entry.getKey()).find())
+						{
 							filter.add(entry.getKey());
 						}
 					}
 				}
 			}
 
-			if (map.containsKey("v")) {
-				if (map.get("v") != null) {
+			if (map.containsKey("v"))
+			{
+				if (map.get("v") != null)
+				{
 					Matcher matcher = Pattern.compile(map.get("v")).matcher("");
-					for (Entry<String, String> entry : updates().entrySet()) {
-						if (!matcher.reset(entry.getValue()).find()) {
+					for (Entry<String, String> entry : updates().entrySet())
+					{
+						if (!matcher.reset(entry.getValue()).find())
+						{
 							filter.add(entry.getKey());
 						}
 					}
 				}
 			}
 
-			for (Entry<String, String> entry : updates().entrySet()) {
-				if (!filter.contains(entry.getKey())) {
+			for (Entry<String, String> entry : updates().entrySet())
+			{
+				if (!filter.contains(entry.getKey()))
+				{
 					Tools.debug(entry.getValue() + '\t' + entry.getKey());
 				}
 			}
