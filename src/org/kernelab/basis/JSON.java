@@ -79,8 +79,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 				{
 					buffer.append(line);
 
-					if (entry == null) {
-						if (VAR_ENTRY_MATCHER.reset(buffer).lookingAt()) {
+					if (entry == null)
+					{
+						if (VAR_ENTRY_MATCHER.reset(buffer).lookingAt())
+						{
 							entry = VAR_ENTRY_MATCHER.group(2);
 							line = VAR_ENTRY_MATCHER.group(3);
 							Tools.clearStringBuilder(buffer);
@@ -88,9 +90,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 						}
 					}
 
-					if (entry != null) {
+					if (entry != null)
+					{
 
-						if (VAR_EXIT_MATCHER.reset(buffer).lookingAt()) {
+						if (VAR_EXIT_MATCHER.reset(buffer).lookingAt())
+						{
 
 							line = VAR_EXIT_MATCHER.group(1);
 							Tools.clearStringBuilder(buffer);
@@ -98,11 +102,13 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 							Object object = JSON.Value(buffer.toString());
 
-							if (object == JSON.NOT_A_VALUE) {
+							if (object == JSON.NOT_A_VALUE)
+							{
 								object = JSON.Parse(buffer, null, Context.this);
 							}
 
-							if (object != JSON.NOT_A_VALUE) {
+							if (object != JSON.NOT_A_VALUE)
+							{
 								Quotation.Quote(Context.this, entry, object);
 								entry = null;
 								Tools.clearStringBuilder(buffer);
@@ -132,9 +138,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public Context read(File file)
 		{
-			try {
+			try
+			{
 				reader.setDataFile(file).read();
-			} catch (FileNotFoundException e) {
+			}
+			catch (FileNotFoundException e)
+			{
 				e.printStackTrace();
 			}
 			return this;
@@ -142,11 +151,16 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public Context read(File file, String charSetName)
 		{
-			try {
+			try
+			{
 				reader.setDataFile(file, charSetName).read();
-			} catch (UnsupportedEncodingException e) {
+			}
+			catch (UnsupportedEncodingException e)
+			{
 				e.printStackTrace();
-			} catch (FileNotFoundException e) {
+			}
+			catch (FileNotFoundException e)
+			{
 				e.printStackTrace();
 			}
 			return this;
@@ -160,9 +174,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public Context read(InputStream is, String charSetName)
 		{
-			try {
+			try
+			{
 				reader.setInputStream(is, charSetName).read();
-			} catch (UnsupportedEncodingException e) {
+			}
+			catch (UnsupportedEncodingException e)
+			{
 				e.printStackTrace();
 			}
 			return this;
@@ -255,7 +272,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 		public static final String Index(int i)
 		{
 			String index = INDEX.get(i);
-			if (index == null) {
+			if (index == null)
+			{
 				index = String.valueOf(i);
 				INDEX.put(i, index);
 			}
@@ -322,8 +340,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 		@SuppressWarnings("unchecked")
 		public <E, T extends Collection<E>> T addTo(T collection)
 		{
-			if (collection != null) {
-				for (Object o : this) {
+			if (collection != null)
+			{
+				for (Object o : this)
+				{
 					collection.add((E) o);
 				}
 			}
@@ -397,10 +417,13 @@ public class JSON implements Map<String, Object>, Hierarchical
 		public boolean containsAll(Iterable<Object> iterable)
 		{
 			boolean contains = false;
-			if (iterable != null) {
+			if (iterable != null)
+			{
 				contains = true;
-				for (Object o : iterable) {
-					if (!this.contains(o)) {
+				for (Object o : iterable)
+				{
+					if (!this.contains(o))
+					{
 						contains = false;
 						break;
 					}
@@ -418,7 +441,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 		{
 			index = index(index);
 
-			if (!has(index)) {
+			if (!has(index))
+			{
 				throw new IndexOutOfBoundsException(Index(index));
 			}
 
@@ -438,19 +462,26 @@ public class JSON implements Map<String, Object>, Hierarchical
 		public int indexOf(Object object)
 		{
 			int index = -1;
-			if (object == null) {
+			if (object == null)
+			{
 				int i = 0;
-				for (Object o : this) {
-					if (o == null) {
+				for (Object o : this)
+				{
+					if (o == null)
+					{
 						index = i;
 						break;
 					}
 					i++;
 				}
-			} else {
+			}
+			else
+			{
 				int i = 0;
-				for (Object o : this) {
-					if (object.equals(o)) {
+				for (Object o : this)
+				{
+					if (object.equals(o))
+					{
 						index = i;
 						break;
 					}
@@ -468,22 +499,29 @@ public class JSON implements Map<String, Object>, Hierarchical
 		public int lastIndexOf(Object object)
 		{
 			int index = -1;
-			if (object == null) {
+			if (object == null)
+			{
 				int i = size();
 				ArrayIterator iter = new ArrayIterator(size());
-				while (iter.hasPrevious()) {
+				while (iter.hasPrevious())
+				{
 					i--;
-					if (iter.previous() == null) {
+					if (iter.previous() == null)
+					{
 						index = i;
 						break;
 					}
 				}
-			} else {
+			}
+			else
+			{
 				int i = size();
 				ArrayIterator iter = new ArrayIterator(size());
-				while (iter.hasPrevious()) {
+				while (iter.hasPrevious())
+				{
 					i--;
-					if (object.equals(iter.previous())) {
+					if (object.equals(iter.previous()))
+					{
 						index = i;
 						break;
 					}
@@ -511,9 +549,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 		{
 			int index = indexOf(object);
 
-			if (index == -1) {
+			if (index == -1)
+			{
 				return null;
-			} else {
+			}
+			else
+			{
 				return this.remove(index);
 			}
 		}
@@ -521,9 +562,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 		@Override
 		public JSAN removeAll(Iterable<? extends Object> iterable)
 		{
-			if (iterable != null) {
-				for (Object o : iterable) {
-					if (super.containsValue(o)) {
+			if (iterable != null)
+			{
+				for (Object o : iterable)
+				{
+					if (super.containsValue(o))
+					{
 						this.remove(o);
 					}
 				}
@@ -533,10 +577,13 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public JSAN retainAll(Collection<Object> collection)
 		{
-			if (collection != null && !collection.isEmpty()) {
+			if (collection != null && !collection.isEmpty())
+			{
 				List<Object> temp = new LinkedList<Object>();
-				for (Object o : this) {
-					if (!collection.contains(o)) {
+				for (Object o : this)
+				{
+					if (!collection.contains(o))
+					{
 						temp.add(o);
 					}
 				}
@@ -547,10 +594,13 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public JSAN retainAll(JSAN jsan)
 		{
-			if (jsan != null && !jsan.isEmpty()) {
+			if (jsan != null && !jsan.isEmpty())
+			{
 				List<Object> temp = new LinkedList<Object>();
-				for (Object o : this) {
-					if (!jsan.contains(o)) {
+				for (Object o : this)
+				{
+					if (!jsan.contains(o))
+					{
 						temp.add(o);
 					}
 				}
@@ -585,14 +635,16 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public JSAN slice(JSAN jsan, int start, int end)
 		{
-			if (jsan == null) {
+			if (jsan == null)
+			{
 				jsan = new JSAN();
 			}
 
 			start = bound(start);
 			end = bound(end);
 
-			for (int i = start; i < end; i++) {
+			for (int i = start; i < end; i++)
+			{
 				jsan.add(this.get(i));
 			}
 
@@ -612,21 +664,28 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 			int i = 0;
 
-			if (delta > 0) {
-				for (i = trace; i >= tail; i--) {
+			if (delta > 0)
+			{
+				for (i = trace; i >= tail; i--)
+				{
 					this.put(i + delta, this.get(i));
 				}
-			} else if (delta < 0) {
-				for (i = tail; i <= trace; i++) {
+			}
+			else if (delta < 0)
+			{
+				for (i = tail; i <= trace; i++)
+				{
 					this.put(i + delta, this.get(i));
 				}
-				for (i = trace + delta + 1; i <= trace; i++) {
+				for (i = trace + delta + 1; i <= trace; i++)
+				{
 					super.remove(Index(i));
 				}
 			}
 
 			i = 0;
-			for (T object : collection) {
+			for (T object : collection)
+			{
 				this.put(index + i++, object);
 			}
 
@@ -646,20 +705,27 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 			int i = 0;
 
-			if (delta > 0) {
-				for (i = trace; i >= tail; i--) {
+			if (delta > 0)
+			{
+				for (i = trace; i >= tail; i--)
+				{
 					this.put(i + delta, this.get(i));
 				}
-			} else if (delta < 0) {
-				for (i = tail; i <= trace; i++) {
+			}
+			else if (delta < 0)
+			{
+				for (i = tail; i <= trace; i++)
+				{
 					this.put(i + delta, this.get(i));
 				}
-				for (i = trace + delta + 1; i <= trace; i++) {
+				for (i = trace + delta + 1; i <= trace; i++)
+				{
 					super.remove(Index(i));
 				}
 			}
 
-			for (i = 0; i < fills; i++) {
+			for (i = 0; i < fills; i++)
+			{
 				this.put(index + i, jsan.get(i));
 			}
 
@@ -679,20 +745,27 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 			int i = 0;
 
-			if (delta > 0) {
-				for (i = trace; i >= tail; i--) {
+			if (delta > 0)
+			{
+				for (i = trace; i >= tail; i--)
+				{
 					this.put(i + delta, this.get(i));
 				}
-			} else if (delta < 0) {
-				for (i = tail; i <= trace; i++) {
+			}
+			else if (delta < 0)
+			{
+				for (i = tail; i <= trace; i++)
+				{
 					this.put(i + delta, this.get(i));
 				}
-				for (i = trace + delta + 1; i <= trace; i++) {
+				for (i = trace + delta + 1; i <= trace; i++)
+				{
 					super.remove(Index(i));
 				}
 			}
 
-			for (i = 0; i < fills; i++) {
+			for (i = 0; i < fills; i++)
+			{
 				this.put(index + i, objects[i]);
 			}
 
@@ -704,7 +777,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 			Object[] array = new Object[size()];
 
 			int i = 0;
-			for (Object o : this) {
+			for (Object o : this)
+			{
 				array[i++] = o;
 			}
 
@@ -713,16 +787,19 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public Object[] toArray(Object[] array)
 		{
-			if (array.length < size()) {
+			if (array.length < size())
+			{
 				array = (Object[]) java.lang.reflect.Array.newInstance(Object.class, size());
 			}
 
 			int i = 0;
-			for (Object o : this) {
+			for (Object o : this)
+			{
 				array[i++] = o;
 			}
 
-			for (; i < array.length;) {
+			for (; i < array.length;)
+			{
 				array[i++] = null;
 			}
 
@@ -742,7 +819,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public static Object Quote(Context context, String quote)
 		{
-			if (context == null) {
+			if (context == null)
+			{
 				return null;
 			}
 
@@ -755,54 +833,75 @@ public class JSON implements Map<String, Object>, Hierarchical
 			int i = 0;
 			String entry;
 
-			i: for (i = 0; i < quote.length(); i++) {
+			i: for (i = 0; i < quote.length(); i++)
+			{
 				c = quote.charAt(i);
 
-				if (c == LINEAR_ATTRIBUTE) {
-					if (nail != i) {
+				if (c == LINEAR_ATTRIBUTE)
+				{
+					if (nail != i)
+					{
 						map = JSON.AsMap(object);
-						if (map == null) {
+						if (map == null)
+						{
 							return null;
-						} else {
+						}
+						else
+						{
 							entry = quote.substring(nail, i).trim();
 							object = map.get(entry);
 							nail = i + 1;
 						}
-					} else {
+					}
+					else
+					{
 						nail = i + 1;
 					}
 				}
 
-				if (c == NESTED_ATTRIBUTE_BEGIN) {
-					if (nail != i) {
+				if (c == NESTED_ATTRIBUTE_BEGIN)
+				{
+					if (nail != i)
+					{
 						map = JSON.AsMap(object);
-						if (map == null) {
+						if (map == null)
+						{
 							return null;
-						} else {
+						}
+						else
+						{
 							entry = quote.substring(nail, i).trim();
 							object = map.get(entry);
 							nail = i + 1;
 						}
-					} else {
+					}
+					else
+					{
 						nail = i + 1;
 					}
 					i = JSON.DualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, i) - 1;
 					continue i;
 				}
 
-				if (c == NESTED_ATTRIBUTE_QUOTE) {
+				if (c == NESTED_ATTRIBUTE_QUOTE)
+				{
 					nail = i + 1;
-					do {
+					do
+					{
 						i = Tools.seekIndex(quote, NESTED_ATTRIBUTE_QUOTE, i + 1);
 					} while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
 					break;
 				}
 
-				if (c == NESTED_ATTRIBUTE_END) {
+				if (c == NESTED_ATTRIBUTE_END)
+				{
 					map = JSON.AsMap(object);
-					if (map == null) {
+					if (map == null)
+					{
 						return null;
-					} else {
+					}
+					else
+					{
 						entry = Quote(context, quote.substring(nail, i)).toString();
 						object = map.get(entry);
 						nail = i + 1;
@@ -810,13 +909,19 @@ public class JSON implements Map<String, Object>, Hierarchical
 				}
 			}
 
-			if (c == NESTED_ATTRIBUTE_QUOTE || Variable.isInteger(quote)) {
+			if (c == NESTED_ATTRIBUTE_QUOTE || Variable.isInteger(quote))
+			{
 				object = quote.substring(nail, i);
-			} else if (c != NESTED_ATTRIBUTE_END) {
+			}
+			else if (c != NESTED_ATTRIBUTE_END)
+			{
 				map = JSON.AsMap(object);
-				if (map == null) {
+				if (map == null)
+				{
 					return null;
-				} else {
+				}
+				else
+				{
 					entry = quote.substring(nail, i).trim();
 					object = map.get(entry);
 				}
@@ -831,27 +936,36 @@ public class JSON implements Map<String, Object>, Hierarchical
 			String entry = null;
 
 			int quoteLength = quote.length() - 1;
-			if (quote.charAt(quoteLength) == NESTED_ATTRIBUTE_END) {
+			if (quote.charAt(quoteLength) == NESTED_ATTRIBUTE_END)
+			{
 				int begin = JSON
 						.ReverseDualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, quoteLength);
 				outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
-				if (outer != null) {
+				if (outer != null)
+				{
 					entry = Quote(context, quote.substring(begin + 1, quoteLength)).toString();
 				}
-			} else {
+			}
+			else
+			{
 				int begin = quote.lastIndexOf(LINEAR_ATTRIBUTE);
-				if (begin == -1) {
+				if (begin == -1)
+				{
 					outer = context;
 					entry = quote;
-				} else {
+				}
+				else
+				{
 					outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
-					if (outer != null) {
+					if (outer != null)
+					{
 						entry = quote.substring(begin + 1);
 					}
 				}
 			}
 
-			if (outer != null && entry != null) {
+			if (outer != null && entry != null)
+			{
 				Object temp = object;
 				object = outer.get(entry);
 				outer.put(entry, temp);
@@ -867,18 +981,23 @@ public class JSON implements Map<String, Object>, Hierarchical
 			JSON outer = json.outer();
 			String entry = null;
 
-			do {
+			do
+			{
 				entry = json.entry();
 
-				if (outer.outer() != null) {
+				if (outer.outer() != null)
+				{
 					buffer.insert(0, NESTED_ATTRIBUTE_END);
-					if (!JSON.IsJSAN(outer)) {
+					if (!JSON.IsJSAN(outer))
+					{
 						buffer.insert(0, NESTED_ATTRIBUTE_QUOTE);
 					}
 				}
 				buffer.insert(0, entry);
-				if (outer.outer() != null) {
-					if (!JSON.IsJSAN(outer)) {
+				if (outer.outer() != null)
+				{
+					if (!JSON.IsJSAN(outer))
+					{
 						buffer.insert(0, NESTED_ATTRIBUTE_QUOTE);
 					}
 					buffer.insert(0, NESTED_ATTRIBUTE_BEGIN);
@@ -1020,7 +1139,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public static String							LINE_WRAP				= "\n";
 
-	static {
+	static
+	{
 		ESCAPING_CHAR.put('"', '"');
 		ESCAPING_CHAR.put('\\', '\\');
 		ESCAPING_CHAR.put('/', '/');
@@ -1049,7 +1169,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public static final Iterable<Object> AsIterable(Object o)
 	{
 		Iterable<Object> iter = null;
-		if (o instanceof Iterable<?>) {
+		if (o instanceof Iterable<?>)
+		{
 			iter = (Iterable<Object>) o;
 		}
 		return iter;
@@ -1069,7 +1190,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public static final Map<String, Object> AsMap(Object o)
 	{
 		Map<String, Object> map = null;
-		if (o instanceof Map<?, ?>) {
+		if (o instanceof Map<?, ?>)
+		{
 			map = (Map<String, Object>) o;
 		}
 		return map;
@@ -1092,32 +1214,43 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		boolean inString = false;
 
-		i: for (int i = Math.max(0, from); i < sequence.length(); i++) {
+		i: for (int i = Math.max(0, from); i < sequence.length(); i++)
+		{
 
 			char c = sequence.charAt(i);
 
-			if (c == ESCAPE_CHAR) {
+			if (c == ESCAPE_CHAR)
+			{
 				c = sequence.charAt(i + 1);
-				if (ESCAPING_CHAR.containsKey(c)) {
+				if (ESCAPING_CHAR.containsKey(c))
+				{
 					i++;
-				} else if (c == UNICODE_ESCAPING_CHAR) {
+				}
+				else if (c == UNICODE_ESCAPING_CHAR)
+				{
 					i += UNICODE_ESCAPED_LENGTH + 1;
 				}
 				continue i;
 			}
 
-			if (c == QUOTE_CHAR) {
+			if (c == QUOTE_CHAR)
+			{
 				inString = !inString;
 			}
-			if (inString) {
+			if (inString)
+			{
 				continue i;
 			}
 
-			if (c == a) {
+			if (c == a)
+			{
 				match++;
-			} else if (c == b) {
+			}
+			else if (c == b)
+			{
 				match--;
-				if (match == 0) {
+				if (match == 0)
+				{
 					index = i;
 					break;
 				}
@@ -1133,9 +1266,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		char c;
 		String escape;
-		for (int i = 0; i < buffer.length(); i++) {
+		for (int i = 0; i < buffer.length(); i++)
+		{
 			c = buffer.charAt(i);
-			if (CharacterNeedToEscape(c)) {
+			if (CharacterNeedToEscape(c))
+			{
 				buffer.deleteCharAt(i);
 				escape = ESCAPED_CHAR.get(c);
 				buffer.insert(i, escape);
@@ -1150,8 +1285,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 	{
 		int index = -1;
 
-		for (int i = from; i < sequence.length(); i++) {
-			if (!Character.isWhitespace(sequence.charAt(i))) {
+		for (int i = from; i < sequence.length(); i++)
+		{
+			if (!Character.isWhitespace(sequence.charAt(i)))
+			{
 				index = i;
 				break;
 			}
@@ -1164,8 +1301,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 	{
 		int index = -1;
 
-		for (int i = from; i < sequence.length(); i++) {
-			if (Character.isWhitespace(sequence.charAt(i))) {
+		for (int i = from; i < sequence.length(); i++)
+		{
+			if (Character.isWhitespace(sequence.charAt(i)))
+			{
 				index = i;
 				break;
 			}
@@ -1210,11 +1349,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public static void main(String[] args)
 	{
 		JSON j = new JSON();
-		JSON i = new JSON();
-		JSON k = new JSON();
-		j.attr("k", i);
-		j.attr("k", k);
-		Tools.debug(j.toString());
+		Tools.debug(j.val("k", "1"));
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -1239,12 +1374,18 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		StringBuilder json = new StringBuilder(string);
 
-		if (object == null) {
-			if (string.startsWith(ARRAY_BEGIN_MARK) && string.endsWith(ARRAY_END_MARK)) {
+		if (object == null)
+		{
+			if (string.startsWith(ARRAY_BEGIN_MARK) && string.endsWith(ARRAY_END_MARK))
+			{
 				object = new JSAN();
-			} else if (string.startsWith(OBJECT_BEGIN_MARK) && string.endsWith(OBJECT_END_MARK)) {
+			}
+			else if (string.startsWith(OBJECT_BEGIN_MARK) && string.endsWith(OBJECT_END_MARK))
+			{
 				object = new JSON();
-			} else {
+			}
+			else
+			{
 				return null;
 			}
 		}
@@ -1260,21 +1401,28 @@ public class JSON implements Map<String, Object>, Hierarchical
 		int i = 0;
 		char c;
 
-		try {
+		try
+		{
 
-			i: for (i = 0; i < json.length(); i++) {
+			i: for (i = 0; i < json.length(); i++)
+			{
 
 				c = json.charAt(i);
 
-				if (inString) {
+				if (inString)
+				{
 
-					if (c == ESCAPE_CHAR) {
+					if (c == ESCAPE_CHAR)
+					{
 						json.deleteCharAt(i);
 						c = json.charAt(i);
-						if (ESCAPING_CHAR.containsKey(c)) {
+						if (ESCAPING_CHAR.containsKey(c))
+						{
 							json.deleteCharAt(i);
 							json.insert(i, ESCAPING_CHAR.get(c));
-						} else if (c == UNICODE_ESCAPING_CHAR) {
+						}
+						else if (c == UNICODE_ESCAPING_CHAR)
+						{
 							json.deleteCharAt(i);
 							String unicode = json.substring(i, i + UNICODE_ESCAPED_LENGTH);
 							json.delete(i, i + UNICODE_ESCAPED_LENGTH);
@@ -1282,28 +1430,37 @@ public class JSON implements Map<String, Object>, Hierarchical
 						}
 						continue i;
 
-					} else if (c == QUOTE_CHAR) {
+					}
+					else if (c == QUOTE_CHAR)
+					{
 						inString = !inString;
 					}
 
-				} else {
+				}
+				else
+				{
 
 					switch (c)
 					{
 						case OBJECT_BEGIN_CHAR:
-							if (i != 0) {
+							if (i != 0)
+							{
 								int match = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i);
 								value = Parse(json.substring(i, match + 1), new JSON(), context);
 								i = match;
 								nail = NOT_BEGIN;
-							} else {
+							}
+							else
+							{
 								nail = FirstNonWhitespaceIndex(json, i + 1);
 							}
 							break;
 
 						case OBJECT_END_CHAR:
-							if (entry != null) {
-								if (nail != NOT_BEGIN) {
+							if (entry != null)
+							{
+								if (nail != NOT_BEGIN)
+								{
 									value = Value(json.substring(nail, i));
 								}
 								object.put(entry, value);
@@ -1311,33 +1468,42 @@ public class JSON implements Map<String, Object>, Hierarchical
 							break i;
 
 						case ARRAY_BEGIN_CHAR:
-							if (nail != NOT_BEGIN && nail != i) {
+							if (nail != NOT_BEGIN && nail != i)
+							{
 								i = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i);
-							} else if (i != 0) {
+							}
+							else if (i != 0)
+							{
 								int match = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i);
 								value = Parse(json.substring(i, match + 1), new JSAN(), context);
 								i = match;
 								nail = NOT_BEGIN;
-							} else {
+							}
+							else
+							{
 								nail = FirstNonWhitespaceIndex(json, i + 1);
 								arrayIndex++;
 							}
 							break;
 
 						case ARRAY_END_CHAR:
-							if (nail != NOT_BEGIN && nail != i) {
+							if (nail != NOT_BEGIN && nail != i)
+							{
 								value = Value(json.substring(nail, i));
 							}
-							if (value != null) {
+							if (value != null)
+							{
 								object.put(JSAN.Index(arrayIndex), value);
 							}
 							break i;
 
 						case PAIR_CHAR:
-							if (nail != NOT_BEGIN) {
+							if (nail != NOT_BEGIN)
+							{
 								value = Value(json.substring(nail, i));
 							}
-							if (arrayIndex > NOT_BEGIN) {
+							if (arrayIndex > NOT_BEGIN)
+							{
 								entry = JSAN.Index(arrayIndex);
 								arrayIndex++;
 							}
@@ -1359,7 +1525,9 @@ public class JSON implements Map<String, Object>, Hierarchical
 				}
 			}
 
-		} catch (RuntimeException e) {
+		}
+		catch (RuntimeException e)
+		{
 			throw new SyntaxErrorException(json, i);
 		}
 
@@ -1373,7 +1541,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public static Object Quote(Object o)
 	{
-		while (o instanceof Quotation) {
+		while (o instanceof Quotation)
+		{
 			o = ((Quotation) o).quote();
 		}
 
@@ -1387,22 +1556,29 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		boolean inString = false;
 
-		i: for (int i = Math.min(sequence.length() - 1, from); i >= 0; i--) {
+		i: for (int i = Math.min(sequence.length() - 1, from); i >= 0; i--)
+		{
 
 			char c = sequence.charAt(i);
 
-			if (c == QUOTE_CHAR && i > 0 && sequence.charAt(i - 1) != ESCAPE_CHAR) {
+			if (c == QUOTE_CHAR && i > 0 && sequence.charAt(i - 1) != ESCAPE_CHAR)
+			{
 				inString = !inString;
 			}
-			if (inString) {
+			if (inString)
+			{
 				continue i;
 			}
 
-			if (c == b) {
+			if (c == b)
+			{
 				match++;
-			} else if (c == a) {
+			}
+			else if (c == a)
+			{
 				match--;
-				if (match == 0) {
+				if (match == 0)
+				{
 					index = i;
 					break;
 				}
@@ -1414,13 +1590,16 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public static StringBuilder Serialize(JSON json, StringBuilder buffer, int indent)
 	{
-		if (buffer == null) {
+		if (buffer == null)
+		{
 			buffer = new StringBuilder();
 		}
 
 		int inner = indent;
-		if (inner > -1) {
-			if (!JSON.IsContext(json)) {
+		if (inner > -1)
+		{
+			if (!JSON.IsContext(json))
+			{
 				inner++;
 			}
 		}
@@ -1432,76 +1611,106 @@ public class JSON implements Map<String, Object>, Hierarchical
 		Object object;
 		String value;
 
-		for (Entry<String, Object> entry : json.entrySet()) {
+		for (Entry<String, Object> entry : json.entrySet())
+		{
 
 			key = entry.getKey();
 			object = entry.getValue();
 
-			if (!JSON.IsContext(json)) {
-				if (isFirst) {
+			if (!JSON.IsContext(json))
+			{
+				if (isFirst)
+				{
 					isFirst = false;
-				} else {
+				}
+				else
+				{
 					buffer.append(PAIR_CHAR);
 				}
-				if (indent > -1) {
+				if (indent > -1)
+				{
 					buffer.append(LINE_WRAP);
 					Tools.repeat(buffer, LINE_INDENT, indent + 1);
 				}
 			}
 
-			if (!isJSAN) {
-				if (key == null) {
+			if (!isJSAN)
+			{
+				if (key == null)
+				{
 					buffer.append(NULL_STRING);
-				} else {
+				}
+				else
+				{
 
-					if (JSON.IsContext(json)) {
+					if (JSON.IsContext(json))
+					{
 						buffer.append(Context.VAR_DEFINE_MARK);
 						buffer.append(' ');
-					} else {
+					}
+					else
+					{
 						buffer.append(QUOTE_CHAR);
 					}
 
 					buffer.append(EscapeString(entry.getKey()));
 
-					if (JSON.IsContext(json)) {
+					if (JSON.IsContext(json))
+					{
 						buffer.append(Context.VAR_ASSIGN_CHAR);
-					} else {
+					}
+					else
+					{
 						buffer.append(QUOTE_CHAR);
 						buffer.append(ATTR_CHAR);
 					}
 				}
 			}
 
-			if (object == null) {
+			if (object == null)
+			{
 				value = NULL_STRING;
-			} else if (IsJSON(object)) {
+			}
+			else if (IsJSON(object))
+			{
 				value = Serialize((JSON) object, null, inner).toString();
-			} else if (object instanceof String) {
+			}
+			else if (object instanceof String)
+			{
 				value = QUOTE_CHAR + EscapeString(object.toString()) + QUOTE_CHAR;
-			} else {
+			}
+			else
+			{
 				value = object.toString();
 			}
 
 			buffer.append(value);
 
-			if (JSON.IsContext(json)) {
+			if (JSON.IsContext(json))
+			{
 				buffer.append(Context.VAR_END_CHAR);
 				buffer.append(LINE_WRAP);
 			}
 		}
 
-		if (!JSON.IsContext(json)) {
+		if (!JSON.IsContext(json))
+		{
 
-			if (isJSAN) {
+			if (isJSAN)
+			{
 				buffer.insert(0, ARRAY_BEGIN_CHAR);
-				if (indent > -1) {
+				if (indent > -1)
+				{
 					buffer.append(LINE_WRAP);
 					Tools.repeat(buffer, LINE_INDENT, indent);
 				}
 				buffer.append(ARRAY_END_CHAR);
-			} else {
+			}
+			else
+			{
 				buffer.insert(0, OBJECT_BEGIN_CHAR);
-				if (indent > -1) {
+				if (indent > -1)
+				{
 					buffer.append(LINE_WRAP);
 					Tools.repeat(buffer, LINE_INDENT, indent);
 				}
@@ -1515,9 +1724,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public static String TrimQuotes(String string)
 	{
 		string = string.trim();
-		if (string.equals(NULL_STRING)) {
+		if (string.equals(NULL_STRING))
+		{
 			string = null;
-		} else {
+		}
+		else
+		{
 			string = string.replaceFirst("^" + QUOTE_CHAR + "([\\d\\D]*)" + QUOTE_CHAR + "$", "$1");
 		}
 		return string;
@@ -1529,23 +1741,39 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		Object value = null;
 
-		try {
-			if (string.startsWith(QUOTE_MARK) && string.endsWith(QUOTE_MARK)) {
+		try
+		{
+			if (string.startsWith(QUOTE_MARK) && string.endsWith(QUOTE_MARK))
+			{
 				value = TrimQuotes(string);
-			} else if (Variable.isInteger(string)) {
+			}
+			else if (Variable.isInteger(string))
+			{
 				value = Integer.valueOf(string);
-			} else if (Variable.isDouble(string)) {
+			}
+			else if (Variable.isDouble(string))
+			{
 				value = Double.valueOf(string);
-			} else if (string.equals(TRUE_STRING) || string.equals(FALSE_STRING)) {
+			}
+			else if (string.equals(TRUE_STRING) || string.equals(FALSE_STRING))
+			{
 				value = Boolean.valueOf(string);
-			} else if (string.equals(NULL_STRING)) {
+			}
+			else if (string.equals(NULL_STRING))
+			{
 				value = null;
-			} else if (!string.startsWith(OBJECT_BEGIN_MARK) && !string.startsWith(ARRAY_BEGIN_MARK)) {
+			}
+			else if (!string.startsWith(OBJECT_BEGIN_MARK) && !string.startsWith(ARRAY_BEGIN_MARK))
+			{
 				value = new Quotation(string);
-			} else {
+			}
+			else
+			{
 				value = NOT_A_VALUE;
 			}
-		} catch (NumberFormatException e) {
+		}
+		catch (NumberFormatException e)
+		{
 			value = NOT_A_VALUE;
 		}
 
@@ -1632,11 +1860,13 @@ public class JSON implements Map<String, Object>, Hierarchical
 		Object object = null;
 		Hierarchical hirch = null;
 
-		for (Entry<String, Object> entry : source.entrySet()) {
+		for (Entry<String, Object> entry : source.entrySet())
+		{
 			key = entry.getKey();
 			object = entry.getValue();
 
-			if ((hirch = JSON.AsHierarchical(object)) != null) {
+			if ((hirch = JSON.AsHierarchical(object)) != null)
+			{
 				object = hirch.clone().outer(this).entry(key);
 			}
 
@@ -1661,9 +1891,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 		Context context = null;
 		JSON outer = this;
 
-		do {
+		do
+		{
 			outer = outer.outer();
-			if (IsContext(outer)) {
+			if (IsContext(outer))
+			{
 				context = (Context) outer;
 				break;
 			}
@@ -1733,7 +1965,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	protected JSON prototype(Map<String, Object> map)
 	{
-		if (map != null) {
+		if (map != null)
+		{
 			this.map = map;
 		}
 		return this;
@@ -1745,28 +1978,35 @@ public class JSON implements Map<String, Object>, Hierarchical
 		Object old = this.get(key);
 		// Clear the old hierarchical relation.
 		Hierarchical hirch = AsHierarchical(old);
-		if (hirch != null && hirch.outer() == this) {
+		if (hirch != null && hirch.outer() == this)
+		{
 			hirch.outer(null).entry(null);
 		}
 
-		if (value instanceof Map<?, ?> && !IsJSON(value)) {
+		if (value instanceof Map<?, ?> && !IsJSON(value))
+		{
 			JSON json = new JSON();
 			json.putAll((Map<? extends String, ? extends Object>) value);
 			value = json;
-		} else if (value instanceof Collection<?> && !IsJSAN(value)) {
+		}
+		else if (value instanceof Collection<?> && !IsJSAN(value))
+		{
 			JSAN jsan = new JSAN();
 			jsan.addAll((Collection<? extends Object>) value);
 			value = jsan;
 		}
 
 		hirch = AsHierarchical(value);
-		if (hirch != null) {
+		if (hirch != null)
+		{
 			// Build up new hierarchical relation.
 			JSON formalOuter = hirch.outer();
 			String formalEntry = hirch.entry();
 			hirch.outer(this).entry(key);
-			if (formalOuter != null && formalOuter != this) {
-				if (hirch.context() != null && IsJSON(hirch)) {
+			if (formalOuter != null && formalOuter != this)
+			{
+				if (hirch.context() != null && IsJSON(hirch))
+				{
 					// If in a Context, the formal outer would quote the value.
 					formalOuter.attr(formalEntry, AsJSON(hirch).quote());
 				}
@@ -1792,11 +2032,13 @@ public class JSON implements Map<String, Object>, Hierarchical
 	{
 		String quote = Quotation.Quote(this);
 		quote += Quotation.NESTED_ATTRIBUTE_BEGIN;
-		if (JSON.IsJSAN(this)) {
+		if (JSON.IsJSAN(this))
+		{
 			quote += Quotation.NESTED_ATTRIBUTE_QUOTE;
 		}
 		quote += entry;
-		if (JSON.IsJSAN(this)) {
+		if (JSON.IsJSAN(this))
+		{
 			quote += Quotation.NESTED_ATTRIBUTE_QUOTE;
 		}
 		quote += Quotation.NESTED_ATTRIBUTE_END;
@@ -1808,8 +2050,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 		Object value = map.remove(key);
 
 		Hierarchical hirch = AsHierarchical(value);
-		if (hirch != null) {
-			if (hirch.outer() == this) {
+		if (hirch != null)
+		{
+			if (hirch.outer() == this)
+			{
 				hirch.outer(null).entry(null);
 			}
 		}
@@ -1819,7 +2063,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public JSON removeAll(Iterable<? extends Object> keys)
 	{
-		for (Object key : keys) {
+		for (Object key : keys)
+		{
 			this.remove(key);
 		}
 		return this;
@@ -1833,9 +2078,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 	protected JSON rescind()
 	{
 		Hierarchical hirch = null;
-		for (Object o : values()) {
-			if ((hirch = AsHierarchical(o)) != null) {
-				if (hirch.outer() == this) {
+		for (Object o : values())
+		{
+			if ((hirch = AsHierarchical(o)) != null)
+			{
+				if (hirch.outer() == this)
+				{
 					hirch.outer(null).entry(null);
 				}
 			}
@@ -1855,11 +2103,13 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public JSON swap(JSON json)
 	{
-		if (json == null) {
+		if (json == null)
+		{
 			json = new JSON();
 		}
 
-		for (String key : this.keySet()) {
+		for (String key : this.keySet())
+		{
 			json.put(this.attr(key).toString(), key);
 		}
 
@@ -1870,9 +2120,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 	{
 		JSAN jsan = null;
 
-		if (IsJSAN(this)) {
+		if (IsJSAN(this))
+		{
 			jsan = (JSAN) this;
-		} else if (IsJSON(this)) {
+		}
+		else if (IsJSON(this))
+		{
 			jsan = new JSAN();
 			jsan.addAll(this.values());
 		}
@@ -1889,6 +2142,17 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public String toString(int indent)
 	{
 		return Serialize(this, null, indent).insert(0, Tools.repeat(LINE_INDENT, indent)).toString();
+	}
+
+	public <E> E val(String key)
+	{
+		return this.val(key, null);
+	}
+
+	public <E> E val(String key, E defaultValue)
+	{
+		E val = this.attr(key);
+		return val == null ? defaultValue : val;
 	}
 
 	public Collection<Object> values()

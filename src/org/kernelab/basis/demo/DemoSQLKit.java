@@ -3,13 +3,17 @@ package org.kernelab.basis.demo;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.kernelab.basis.sql.DataBase;
 import org.kernelab.basis.sql.DataBase.MySQL;
 import org.kernelab.basis.sql.SQLKit;
 
 /**
+ * SQLKit类是对Connection、Statement等的封装。<br />
+ * 
  * 测试表格信息如下<br />
  * CREATE TABLE `table` ( <br />
  * `id` int(10) unsigned NOT NULL auto_increment, <br />
@@ -40,13 +44,15 @@ public class DemoSQLKit
 		ResultSet rs = null;
 		String sql = null;
 
-		try {
+		try
+		{
 			kit = database.getSQLKit(); // 获取kit
 
 			// 执行查询
 			sql = "SELECT * FROM `table` WHERE `id`<10";
 			rs = kit.query(sql);
-			while (rs.next()) {
+			while (rs.next())
+			{
 				// 在这里遍历每一条记录
 			}
 
@@ -69,18 +75,36 @@ public class DemoSQLKit
 			kit.setAutoCommit(false);
 			kit.clearBatch();
 			kit.prepareStatement(sql);
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < 10; i++)
+			{
 				kit.addBatch(SQLKit.NULL, String.valueOf(i));
 			}
 			kit.executeBatch();
 			kit.commit(); // 提交批量操作
 
-		} catch (SQLException e) {
+			// 在SQL语句中嵌入参数名
+			sql = "SELECT * FROM `table` WHERE `id`>?i? AND `text`<?tx?";
+
+			// 在Map<String,Object>对象中指定参数
+			Map<String, Object> data = new HashMap<String, Object>();
+			data.put("i", 5);
+			data.put("tx", "8");
+
+			// 以data作为参数查询，将其中的i与tx值填充至SQL中的相应位置
+			rs = kit.query(sql, data);
+			while (rs.next())
+			{
+				// 在这里遍历每一条记录
+			}
+		}
+		catch (SQLException e)
+		{
 			e.printStackTrace();
-		} finally {
+		}
+		finally
+		{
 			kit.close(); // !!必需在finally这里关闭kit
 			// 在关闭后，需要重新通过database.getSQLKit()来获取新的kit
 		}
 	}
-
 }
