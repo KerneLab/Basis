@@ -1349,7 +1349,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public static void main(String[] args)
 	{
 		JSON j = new JSON();
-		Tools.debug(j.val("k", "1"));
+		j.attr("k", "i");
+		Tools.debug(j.valInteger("k", 2));
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -2152,6 +2153,83 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public <E> E val(String key, E defaultValue)
 	{
 		E val = this.attr(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public Boolean valBoolean(String key)
+	{
+		return valCast(key, Boolean.class);
+	}
+
+	public Boolean valBoolean(String key, Boolean defaultValue)
+	{
+		Boolean val = valBoolean(key);
+		return val == null ? defaultValue : val;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <E> E valCast(String key, Class<E> cls)
+	{
+		Object val = this.attr(key);
+		if (!cls.isInstance(val))
+		{
+			val = null;
+		}
+		return (E) val;
+	}
+
+	public Double valDouble(String key)
+	{
+		return valCast(key, Double.class);
+	}
+
+	public Double valDouble(String key, Double defaultValue)
+	{
+		Double val = valDouble(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public Integer valInteger(String key)
+	{
+		return valCast(key, Integer.class);
+	}
+
+	public Integer valInteger(String key, Integer defaultValue)
+	{
+		Integer val = valInteger(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public JSAN valJSAN(String key)
+	{
+		return valCast(key, JSAN.class);
+	}
+
+	public JSAN valJSAN(String key, JSAN defaultValue)
+	{
+		JSAN val = valJSAN(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public JSON valJSON(String key)
+	{
+		return valCast(key, JSON.class);
+	}
+
+	public JSON valJSON(String key, JSON defaultValue)
+	{
+		JSON val = valJSON(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public String valString(String key)
+	{
+		return valCast(key, String.class);
+	}
+
+	public String valString(String key, String defaultValue)
+	{
+		String val = valString(key);
 		return val == null ? defaultValue : val;
 	}
 
