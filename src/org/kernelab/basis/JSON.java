@@ -5,10 +5,14 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -1343,6 +1347,27 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return o instanceof Quotation;
 	}
 
+	public static Object JSONValueOf(Object object)
+	{
+		Object result = null;
+
+		if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
+				|| object instanceof JSON)
+		{
+			result = object;
+		}
+		else if (object instanceof CharSequence || object instanceof Character)
+		{
+			result = object.toString();
+		}
+		else
+		{
+			result = Reflect(object);
+		}
+
+		return result;
+	}
+
 	/**
 	 * @param args
 	 */
@@ -1548,6 +1573,129 @@ public class JSON implements Map<String, Object>, Hierarchical
 		}
 
 		return o;
+	}
+
+	public static JSON Reflect(Object object)
+	{
+		Field[] fields = object.getClass().getDeclaredFields();
+		Set<String> names = new LinkedHashSet<String>();
+		for (Field field : fields)
+		{
+			names.add(field.getName());
+		}
+		return Reflect(object, names);
+	}
+
+	public static JSON Reflect(Object object, Iterable<String> fields)
+	{
+		Map<String, String> map = new LinkedHashMap<String, String>();
+
+		for (String field : fields)
+		{
+			map.put(field, field);
+		}
+
+		return Reflect(object, map);
+	}
+
+	public static JSON Reflect(Object object, Map<String, ?> fieldsMap)
+	{
+		JSON json = null;
+
+		if (object != null)
+		{
+			if (IsJSON(object))
+			{
+				json = (JSON) object;
+			}
+			else if (object instanceof Map)
+			{
+				json = new JSON();
+				for (Entry<?, ?> entry : ((Map<?, ?>) object).entrySet())
+				{
+					json.put(entry.getKey() == null ? null : entry.getKey().toString(), entry.getValue());
+				}
+			}
+			else if (object instanceof Iterable)
+			{
+				JSAN jsan = new JSAN();
+				for (Object element : (Iterable<?>) object)
+				{
+					jsan.add(element);
+				}
+				json = jsan;
+			}
+			else
+			{
+				json = new JSON();
+
+				// Java Reflect
+				Class<?> cls = object.getClass();
+
+				for (Entry<String, ?> entry : fieldsMap.entrySet())
+				{
+					if (entry.getKey() != null && entry.getValue() != null)
+					{
+						String name = entry.getValue().toString();
+
+						if (name.length() > 0)
+						{
+							try
+							{
+								String methodName = name.substring(0, 1).toUpperCase() + name.substring(1);
+
+								Method method = null;
+
+								try
+								{
+									method = cls.getMethod("is" + methodName);
+								}
+								catch (NoSuchMethodException e)
+								{
+									try
+									{
+										method = cls.getMethod("get" + methodName);
+									}
+									catch (NoSuchMethodException ex)
+									{
+									}
+								}
+
+								if (method != null)
+								{
+									Object value = method.invoke(object);
+									json.attr(entry.getKey(), value);
+								}
+							}
+							catch (IllegalArgumentException e)
+							{
+							}
+							catch (IllegalAccessException e)
+							{
+							}
+							catch (InvocationTargetException e)
+							{
+							}
+							catch (SecurityException e)
+							{
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return json;
+	}
+
+	public static JSON Reflect(Object object, String... fields)
+	{
+		Set<String> names = new LinkedHashSet<String>();
+		for (String field : fields)
+		{
+			names.add(field);
+		}
+		return Reflect(object, names);
 	}
 
 	public static int ReverseDualMatchIndex(CharSequence sequence, char a, char b, int from)
@@ -1973,7 +2121,6 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	public Object put(String key, Object value)
 	{
 		Object old = this.get(key);
@@ -1984,18 +2131,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 			hirch.outer(null).entry(null);
 		}
 
-		if (value instanceof Map<?, ?> && !IsJSON(value))
-		{
-			JSON json = new JSON();
-			json.putAll((Map<? extends String, ? extends Object>) value);
-			value = json;
-		}
-		else if (value instanceof Collection<?> && !IsJSAN(value))
-		{
-			JSAN jsan = new JSAN();
-			jsan.addAll((Collection<? extends Object>) value);
-			value = jsan;
-		}
+		value = JSONValueOf(value);
 
 		hirch = AsHierarchical(value);
 		if (hirch != null)
