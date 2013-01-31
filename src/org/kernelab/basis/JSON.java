@@ -104,7 +104,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 							Tools.clearStringBuilder(buffer);
 							buffer.append(line);
 
-							Object object = JSON.Value(buffer.toString());
+							Object object = JSON.ParseValueOf(buffer.toString());
 
 							if (object == JSON.NOT_A_VALUE)
 							{
@@ -1487,7 +1487,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 							{
 								if (nail != NOT_BEGIN)
 								{
-									value = Value(json.substring(nail, i));
+									value = ParseValueOf(json.substring(nail, i));
 								}
 								object.put(entry, value);
 							}
@@ -1515,7 +1515,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 						case ARRAY_END_CHAR:
 							if (nail != NOT_BEGIN && nail != i)
 							{
-								value = Value(json.substring(nail, i));
+								value = ParseValueOf(json.substring(nail, i));
 							}
 							if (value != null)
 							{
@@ -1526,7 +1526,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 						case PAIR_CHAR:
 							if (nail != NOT_BEGIN)
 							{
-								value = Value(json.substring(nail, i));
+								value = ParseValueOf(json.substring(nail, i));
 							}
 							if (arrayIndex > NOT_BEGIN)
 							{
@@ -1563,6 +1563,51 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public static JSON Parse(Reader reader)
 	{
 		return Parse(Tools.readerToStringBuilder(reader));
+	}
+
+	public static Object ParseValueOf(String string)
+	{
+		string = string.trim();
+
+		Object value = null;
+
+		try
+		{
+			if (string.startsWith(QUOTE_MARK) && string.endsWith(QUOTE_MARK))
+			{
+				value = TrimQuotes(string);
+			}
+			else if (Variable.isInteger(string))
+			{
+				value = Integer.valueOf(string);
+			}
+			else if (Variable.isDouble(string))
+			{
+				value = Double.valueOf(string);
+			}
+			else if (string.equals(TRUE_STRING) || string.equals(FALSE_STRING))
+			{
+				value = Boolean.valueOf(string);
+			}
+			else if (string.equals(NULL_STRING))
+			{
+				value = null;
+			}
+			else if (!string.startsWith(OBJECT_BEGIN_MARK) && !string.startsWith(ARRAY_BEGIN_MARK))
+			{
+				value = new Quotation(string);
+			}
+			else
+			{
+				value = NOT_A_VALUE;
+			}
+		}
+		catch (NumberFormatException e)
+		{
+			value = NOT_A_VALUE;
+		}
+
+		return value;
 	}
 
 	public static Object Quote(Object o)
@@ -1882,51 +1927,6 @@ public class JSON implements Map<String, Object>, Hierarchical
 			string = string.replaceFirst("^" + QUOTE_CHAR + "([\\d\\D]*)" + QUOTE_CHAR + "$", "$1");
 		}
 		return string;
-	}
-
-	public static Object Value(String string)
-	{
-		string = string.trim();
-
-		Object value = null;
-
-		try
-		{
-			if (string.startsWith(QUOTE_MARK) && string.endsWith(QUOTE_MARK))
-			{
-				value = TrimQuotes(string);
-			}
-			else if (Variable.isInteger(string))
-			{
-				value = Integer.valueOf(string);
-			}
-			else if (Variable.isDouble(string))
-			{
-				value = Double.valueOf(string);
-			}
-			else if (string.equals(TRUE_STRING) || string.equals(FALSE_STRING))
-			{
-				value = Boolean.valueOf(string);
-			}
-			else if (string.equals(NULL_STRING))
-			{
-				value = null;
-			}
-			else if (!string.startsWith(OBJECT_BEGIN_MARK) && !string.startsWith(ARRAY_BEGIN_MARK))
-			{
-				value = new Quotation(string);
-			}
-			else
-			{
-				value = NOT_A_VALUE;
-			}
-		}
-		catch (NumberFormatException e)
-		{
-			value = NOT_A_VALUE;
-		}
-
-		return value;
 	}
 
 	private Map<String, Object>	map;
