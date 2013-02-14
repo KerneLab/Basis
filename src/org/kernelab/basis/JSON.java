@@ -22,11 +22,9 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.kernelab.basis.JSON.Context;
-
 interface Hierarchical extends Copieable<Hierarchical>
 {
-	public Context context();
+	public JSON context();
 
 	public String entry();
 
@@ -198,6 +196,33 @@ public class JSON implements Map<String, Object>, Hierarchical
 		protected void setReader(DataReader reader)
 		{
 			this.reader = reader;
+		}
+	}
+
+	public class Entry implements Map.Entry<String, Object>
+	{
+		private String	key;
+
+		public Entry(String key)
+		{
+			this.key = key;
+		}
+
+		public String getKey()
+		{
+			return key;
+		}
+
+		public Object getValue()
+		{
+			return attr(key);
+		}
+
+		public Object setValue(Object value)
+		{
+			Object old = getValue();
+			attr(key, value);
+			return old;
 		}
 	}
 
@@ -821,7 +846,87 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		public static final char	NESTED_ATTRIBUTE_QUOTE	= '"';
 
-		public static Object Quote(Context context, String quote)
+		public static Object Quote(Context context, String quote, Object object)
+		{
+			JSON outer = null;
+			String entry = null;
+
+			int quoteLength = quote.length() - 1;
+			if (quote.charAt(quoteLength) == NESTED_ATTRIBUTE_END)
+			{
+				int begin = JSON
+						.ReverseDualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, quoteLength);
+				outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
+				if (outer != null)
+				{
+					entry = Quote(context, quote.substring(begin + 1, quoteLength)).toString();
+				}
+			}
+			else
+			{
+				int begin = quote.lastIndexOf(LINEAR_ATTRIBUTE);
+				if (begin == -1)
+				{
+					outer = context;
+					entry = quote;
+				}
+				else
+				{
+					outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
+					if (outer != null)
+					{
+						entry = quote.substring(begin + 1);
+					}
+				}
+			}
+
+			if (outer != null && entry != null)
+			{
+				Object temp = object;
+				object = outer.get(entry);
+				outer.put(entry, temp);
+			}
+
+			return object;
+		}
+
+		public static String Quote(JSON json)
+		{
+			StringBuilder buffer = new StringBuilder();
+
+			JSON outer = json.outer();
+			String entry = null;
+
+			while (outer != null)
+			{
+				entry = json.entry();
+
+				if (outer.outer() != null)
+				{
+					buffer.insert(0, NESTED_ATTRIBUTE_END);
+					if (!JSON.IsJSAN(outer))
+					{
+						buffer.insert(0, NESTED_ATTRIBUTE_QUOTE);
+					}
+				}
+				buffer.insert(0, entry);
+				if (outer.outer() != null)
+				{
+					if (!JSON.IsJSAN(outer))
+					{
+						buffer.insert(0, NESTED_ATTRIBUTE_QUOTE);
+					}
+					buffer.insert(0, NESTED_ATTRIBUTE_BEGIN);
+				}
+
+				json = outer;
+				outer = json.outer();
+			}
+
+			return buffer.toString();
+		}
+
+		public static Object Quote(JSON context, String quote)
 		{
 			if (context == null)
 			{
@@ -934,86 +1039,6 @@ public class JSON implements Map<String, Object>, Hierarchical
 			return object;
 		}
 
-		public static Object Quote(Context context, String quote, Object object)
-		{
-			JSON outer = null;
-			String entry = null;
-
-			int quoteLength = quote.length() - 1;
-			if (quote.charAt(quoteLength) == NESTED_ATTRIBUTE_END)
-			{
-				int begin = JSON
-						.ReverseDualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, quoteLength);
-				outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
-				if (outer != null)
-				{
-					entry = Quote(context, quote.substring(begin + 1, quoteLength)).toString();
-				}
-			}
-			else
-			{
-				int begin = quote.lastIndexOf(LINEAR_ATTRIBUTE);
-				if (begin == -1)
-				{
-					outer = context;
-					entry = quote;
-				}
-				else
-				{
-					outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
-					if (outer != null)
-					{
-						entry = quote.substring(begin + 1);
-					}
-				}
-			}
-
-			if (outer != null && entry != null)
-			{
-				Object temp = object;
-				object = outer.get(entry);
-				outer.put(entry, temp);
-			}
-
-			return object;
-		}
-
-		public static String Quote(JSON json)
-		{
-			StringBuilder buffer = new StringBuilder();
-
-			JSON outer = json.outer();
-			String entry = null;
-
-			do
-			{
-				entry = json.entry();
-
-				if (outer.outer() != null)
-				{
-					buffer.insert(0, NESTED_ATTRIBUTE_END);
-					if (!JSON.IsJSAN(outer))
-					{
-						buffer.insert(0, NESTED_ATTRIBUTE_QUOTE);
-					}
-				}
-				buffer.insert(0, entry);
-				if (outer.outer() != null)
-				{
-					if (!JSON.IsJSAN(outer))
-					{
-						buffer.insert(0, NESTED_ATTRIBUTE_QUOTE);
-					}
-					buffer.insert(0, NESTED_ATTRIBUTE_BEGIN);
-				}
-
-				json = outer;
-				outer = json.outer();
-			} while (outer != null);
-
-			return buffer.toString();
-		}
-
 		private JSON	outer;
 
 		private String	entry;
@@ -1036,7 +1061,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 			return new Quotation(this).outer(null).entry(null);
 		}
 
-		public Context context()
+		public JSON context()
 		{
 			return outer == null ? null : outer.context();
 		}
@@ -1656,7 +1681,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 			else if (object instanceof Map)
 			{
 				json = new JSON();
-				for (Entry<?, ?> entry : ((Map<?, ?>) object).entrySet())
+				for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet())
 				{
 					json.put(entry.getKey() == null ? null : entry.getKey().toString(), entry.getValue());
 				}
@@ -1677,7 +1702,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 				// Java Reflect
 				Class<?> cls = object.getClass();
 
-				for (Entry<String, ?> entry : fieldsMap.entrySet())
+				for (Map.Entry<String, ?> entry : fieldsMap.entrySet())
 				{
 					if (entry.getKey() != null && entry.getValue() != null)
 					{
@@ -1805,9 +1830,8 @@ public class JSON implements Map<String, Object>, Hierarchical
 		Object object;
 		String value;
 
-		for (Entry<String, Object> entry : json.entrySet())
+		for (Map.Entry<String, Object> entry : json.entrySet())
 		{
-
 			key = entry.getKey();
 			object = entry.getValue();
 
@@ -1836,7 +1860,6 @@ public class JSON implements Map<String, Object>, Hierarchical
 				}
 				else
 				{
-
 					if (JSON.IsContext(json))
 					{
 						buffer.append(Context.VAR_DEFINE_MARK);
@@ -1889,7 +1912,6 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		if (!JSON.IsContext(json))
 		{
-
 			if (isJSAN)
 			{
 				buffer.insert(0, ARRAY_BEGIN_CHAR);
@@ -2009,7 +2031,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 		Object object = null;
 		Hierarchical hirch = null;
 
-		for (Entry<String, Object> entry : source.entrySet())
+		for (Map.Entry<String, Object> entry : source.entrySet())
 		{
 			key = entry.getKey();
 			object = entry.getValue();
@@ -2035,9 +2057,9 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return map.containsValue(value);
 	}
 
-	public Context context()
+	public JSON context()
 	{
-		Context context = null;
+		JSON context = this;
 		JSON outer = this;
 
 		do
@@ -2045,7 +2067,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 			outer = outer.outer();
 			if (IsContext(outer))
 			{
-				context = (Context) outer;
+				context = outer;
 				break;
 			}
 		} while (outer != null);
@@ -2064,7 +2086,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return this;
 	}
 
-	public Set<Entry<String, Object>> entrySet()
+	public Set<Map.Entry<String, Object>> entrySet()
 	{
 		return map.entrySet();
 	}
@@ -2105,6 +2127,26 @@ public class JSON implements Map<String, Object>, Hierarchical
 	{
 		this.outer = outer;
 		return this;
+	}
+
+	public Set<Entry> pairs()
+	{
+		return pairs(null);
+	}
+
+	public Set<Entry> pairs(Set<Entry> set)
+	{
+		if (set == null)
+		{
+			set = new LinkedHashSet<Entry>();
+		}
+
+		for (String key : this.keySet())
+		{
+			set.add(new Entry(key));
+		}
+
+		return set;
 	}
 
 	protected Map<String, Object> prototype()
@@ -2169,17 +2211,17 @@ public class JSON implements Map<String, Object>, Hierarchical
 	{
 		String quote = Quotation.Quote(this);
 		quote += Quotation.NESTED_ATTRIBUTE_BEGIN;
-		if (JSON.IsJSAN(this))
+		if (!JSON.IsJSAN(this))
 		{
 			quote += Quotation.NESTED_ATTRIBUTE_QUOTE;
 		}
 		quote += entry;
-		if (JSON.IsJSAN(this))
+		if (!JSON.IsJSAN(this))
 		{
 			quote += Quotation.NESTED_ATTRIBUTE_QUOTE;
 		}
 		quote += Quotation.NESTED_ATTRIBUTE_END;
-		return new Quotation(quote);
+		return new Quotation(quote).outer(this);
 	}
 
 	public Object remove(Object key)
