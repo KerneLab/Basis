@@ -2181,15 +2181,15 @@ public class JSON implements Map<String, Object>, Hierarchical
 			// Build up new hierarchical relation.
 			JSON formalOuter = hirch.outer();
 			String formalEntry = hirch.entry();
-			hirch.outer(this).entry(key);
 			if (formalOuter != null && formalOuter != this)
 			{
-				if (hirch.context() != null && IsJSON(hirch))
+				if (IsContext(hirch.context()) && IsJSON(hirch))
 				{
 					// If in a Context, the formal outer would quote the value.
-					formalOuter.attr(formalEntry, AsJSON(hirch).quote());
+					formalOuter.put(formalEntry, AsJSON(hirch).quote());
 				}
 			}
+			hirch.outer(this).entry(key);
 		}
 
 		map.put(key, value);
@@ -2221,7 +2221,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 			quote += Quotation.NESTED_ATTRIBUTE_QUOTE;
 		}
 		quote += Quotation.NESTED_ATTRIBUTE_END;
-		return new Quotation(quote).outer(this);
+		return new Quotation(quote).outer(this).entry(entry);
 	}
 
 	public Object remove(Object key)
