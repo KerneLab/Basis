@@ -2,6 +2,8 @@ package org.kernelab.basis;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -66,7 +68,6 @@ public class Entrance
 
 		if (jarFile != null)
 		{
-
 			Enumeration<JarEntry> entries = jarFile.entries();
 
 			while (entries.hasMoreElements())
@@ -134,6 +135,46 @@ public class Entrance
 
 	public void present(String... args)
 	{
+		if (args.length >= 2 && "-main".equals(args[0]))
+		{
+			String className = args[1];
+			try
+			{
+				Class<?> cls = Class.forName(className);
+				for (Method m : cls.getDeclaredMethods())
+				{
+					if (m.getName().equals("main") && m.getParameterTypes().length == 1
+							&& "java.lang.String[]".equals(m.getParameterTypes()[0].getCanonicalName()))
+					{
+						String[] argv = new String[args.length - 2];
+						for (int i = 0; i < argv.length; i++)
+						{
+							argv[i] = args[i + 2];
+						}
+						m.invoke(null, new Object[] { argv });
+						break;
+					}
+				}
+			}
+			catch (ClassNotFoundException e)
+			{
+				e.printStackTrace();
+			}
+			catch (IllegalArgumentException e)
+			{
+				e.printStackTrace();
+			}
+			catch (IllegalAccessException e)
+			{
+				e.printStackTrace();
+			}
+			catch (InvocationTargetException e)
+			{
+				e.printStackTrace();
+			}
+			return;
+		}
+
 		Map<String, String> map = new LinkedHashMap<String, String>();
 
 		String key = null;

@@ -1385,6 +1385,10 @@ public class JSON implements Map<String, Object>, Hierarchical
 		{
 			result = object.toString();
 		}
+		else if (object instanceof Quotation)
+		{
+			result = object;
+		}
 		else
 		{
 			result = Reflect(object);
@@ -1454,15 +1458,12 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 		try
 		{
-
 			i: for (i = 0; i < json.length(); i++)
 			{
-
 				c = json.charAt(i);
 
 				if (inString)
 				{
-
 					if (c == ESCAPE_CHAR)
 					{
 						json.deleteCharAt(i);
@@ -1486,11 +1487,9 @@ public class JSON implements Map<String, Object>, Hierarchical
 					{
 						inString = !inString;
 					}
-
 				}
 				else
 				{
-
 					switch (c)
 					{
 						case OBJECT_BEGIN_CHAR:
@@ -2181,9 +2180,9 @@ public class JSON implements Map<String, Object>, Hierarchical
 			// Build up new hierarchical relation.
 			JSON formalOuter = hirch.outer();
 			String formalEntry = hirch.entry();
-			if (formalOuter != null && formalOuter != this)
+			if (formalOuter != null && formalOuter != this && IsJSON(hirch))
 			{
-				if (IsContext(hirch.context()) && IsJSON(hirch))
+				if (IsContext(hirch.context()))
 				{
 					// If in a Context, the formal outer would quote the value.
 					formalOuter.put(formalEntry, AsJSON(hirch).quote());
@@ -2204,7 +2203,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public Quotation quote()
 	{
-		return new Quotation(Quotation.Quote(this));
+		return new Quotation(Quotation.Quote(this)).outer(this.outer()).entry(this.entry());
 	}
 
 	public Quotation quote(String entry)
