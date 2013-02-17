@@ -141,7 +141,7 @@ public class Entrance
 			try
 			{
 				Class<?> cls = Class.forName(className);
-				for (Method m : cls.getDeclaredMethods())
+				for (Method m : cls.getMethods())
 				{
 					if (m.getName().equals("main") && m.getParameterTypes().length == 1
 							&& "java.lang.String[]".equals(m.getParameterTypes()[0].getCanonicalName()))
