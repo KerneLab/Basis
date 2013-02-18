@@ -1377,7 +1377,7 @@ public class JSON implements Map<String, Object>, Hierarchical
 		Object result = null;
 
 		if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
-				|| object instanceof JSON)
+				|| object instanceof JSON || object instanceof Quotation)
 		{
 			result = object;
 		}
@@ -1385,9 +1385,13 @@ public class JSON implements Map<String, Object>, Hierarchical
 		{
 			result = object.toString();
 		}
-		else if (object instanceof Quotation)
+		else if (object instanceof java.util.Calendar)
 		{
-			result = object;
+			result = ((java.util.Calendar) object).getTimeInMillis();
+		}
+		else if (object instanceof java.util.Date)
+		{
+			result = ((java.util.Date) object).getTime();
 		}
 		else
 		{
@@ -1694,6 +1698,75 @@ public class JSON implements Map<String, Object>, Hierarchical
 				}
 				json = jsan;
 			}
+			else if (object.getClass().isArray())
+			{
+				JSAN jsan = new JSAN();
+				String type = object.getClass().getComponentType().getCanonicalName();
+				if ("boolean".equals(type))
+				{
+					for (boolean e : (boolean[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				else if ("char".equals(type))
+				{
+					for (char e : (char[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				else if ("byte".equals(type))
+				{
+					for (byte e : (byte[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				else if ("short".equals(type))
+				{
+					for (short e : (short[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				else if ("int".equals(type))
+				{
+					for (int e : (int[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				else if ("long".equals(type))
+				{
+					for (long e : (long[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				else if ("float".equals(type))
+				{
+					for (float e : (float[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				else if ("double".equals(type))
+				{
+					for (double e : (double[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				else
+				{
+					for (Object e : (Object[]) object)
+					{
+						jsan.add(e);
+					}
+				}
+				json = jsan;
+			}
 			else
 			{
 				json = new JSON();
@@ -1978,6 +2051,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return attrCast(key, Boolean.class);
 	}
 
+	public Byte attrByte(String key)
+	{
+		return attrCast(key, Byte.class);
+	}
+
 	@SuppressWarnings("unchecked")
 	public <E> E attrCast(String key, Class<E> cls)
 	{
@@ -1987,6 +2065,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public Double attrDouble(String key)
 	{
 		return attrCast(key, Double.class);
+	}
+
+	public Float attrFloat(String key)
+	{
+		return attrCast(key, Float.class);
 	}
 
 	public Integer attrInteger(String key)
@@ -2002,6 +2085,16 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public JSON attrJSON(String key)
 	{
 		return attrCast(key, JSON.class);
+	}
+
+	public Long attrLong(String key)
+	{
+		return attrCast(key, Long.class);
+	}
+
+	public Short attrShort(String key)
+	{
+		return attrCast(key, Short.class);
 	}
 
 	public String attrString(String key)
@@ -2180,15 +2273,18 @@ public class JSON implements Map<String, Object>, Hierarchical
 			// Build up new hierarchical relation.
 			JSON formalOuter = hirch.outer();
 			String formalEntry = hirch.entry();
-			if (formalOuter != null && formalOuter != this && IsJSON(hirch))
-			{
-				if (IsContext(hirch.context()))
-				{
-					// If in a Context, the formal outer would quote the value.
+			JSON formalContext = hirch.context();
+
+			hirch.outer(this).entry(key);
+
+			// If in a Context.
+			if (formalOuter != null && IsContext(formalContext) && IsJSON(hirch))
+			{ // The formal outer would quote the value at its new location.
+				if (formalContext == this.context())
+				{ // A quote would be made only in the same Context.
 					formalOuter.put(formalEntry, AsJSON(hirch).quote());
 				}
 			}
-			hirch.outer(this).entry(key);
 		}
 
 		map.put(key, value);
@@ -2344,6 +2440,17 @@ public class JSON implements Map<String, Object>, Hierarchical
 		return val == null ? defaultValue : val;
 	}
 
+	public Byte valByte(String key)
+	{
+		return valCast(key, Byte.class);
+	}
+
+	public Byte valByte(String key, Byte defaultValue)
+	{
+		Byte val = valByte(key);
+		return val == null ? defaultValue : val;
+	}
+
 	@SuppressWarnings("unchecked")
 	public <E> E valCast(String key, Class<E> cls)
 	{
@@ -2363,6 +2470,17 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public Double valDouble(String key, Double defaultValue)
 	{
 		Double val = valDouble(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public Float valFloat(String key)
+	{
+		return valCast(key, Float.class);
+	}
+
+	public Float valFloat(String key, Float defaultValue)
+	{
+		Float val = valFloat(key);
 		return val == null ? defaultValue : val;
 	}
 
@@ -2396,6 +2514,28 @@ public class JSON implements Map<String, Object>, Hierarchical
 	public JSON valJSON(String key, JSON defaultValue)
 	{
 		JSON val = valJSON(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public Long valLong(String key)
+	{
+		return valCast(key, Long.class);
+	}
+
+	public Long valLong(String key, Long defaultValue)
+	{
+		Long val = valLong(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public Short valShort(String key)
+	{
+		return valCast(key, Short.class);
+	}
+
+	public Short valShort(String key, Short defaultValue)
+	{
+		Short val = valShort(key);
 		return val == null ? defaultValue : val;
 	}
 
