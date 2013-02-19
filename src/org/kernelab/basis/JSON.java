@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -40,11 +41,15 @@ interface Hierarchical extends Copieable<Hierarchical>
  * 
  * @author Dilly King
  */
-public class JSON implements Map<String, Object>, Hierarchical
+public class JSON implements Map<String, Object>, Serializable, Hierarchical
 {
-
 	public static class Context extends JSON
 	{
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -7912039879626749853L;
+
 		public static final String	VAR_DEFINE_MARK		= "var";
 
 		public static final char	VAR_ASSIGN_CHAR		= '=';
@@ -294,9 +299,14 @@ public class JSON implements Map<String, Object>, Hierarchical
 			}
 		}
 
-		public static final int						LAST	= -1;
+		/**
+		 * 
+		 */
+		private static final long					serialVersionUID	= 2156642568827950757L;
 
-		private static final Map<Integer, String>	INDEX	= new HashMap<Integer, String>();
+		public static final int						LAST				= -1;
+
+		private static final Map<Integer, String>	INDEX				= new HashMap<Integer, String>();
 
 		public static final String Index(int i)
 		{
@@ -1108,7 +1118,6 @@ public class JSON implements Map<String, Object>, Hierarchical
 
 	public static class SyntaxErrorException extends RuntimeException
 	{
-
 		/**
 		 * 
 		 */
@@ -1119,6 +1128,11 @@ public class JSON implements Map<String, Object>, Hierarchical
 			super("Near\n" + source.subSequence(Math.max(index - 30, 0), Math.min(index + 30, source.length())));
 		}
 	}
+
+	/**
+	 * 
+	 */
+	private static final long						serialVersionUID		= 6090747632739206720L;
 
 	public static final char						OBJECT_BEGIN_CHAR		= '{';
 	public static final String						OBJECT_BEGIN_MARK		= String.valueOf(OBJECT_BEGIN_CHAR);
