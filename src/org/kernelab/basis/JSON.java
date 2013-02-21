@@ -1391,11 +1391,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		Object result = null;
 
 		if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
-				|| object instanceof JSON || object instanceof Quotation)
+				|| object instanceof Character || object instanceof JSON || object instanceof Quotation)
 		{
 			result = object;
 		}
-		else if (object instanceof CharSequence || object instanceof Character)
+		else if (object instanceof CharSequence)
 		{
 			result = object.toString();
 		}
@@ -1978,7 +1978,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				value = Serialize((JSON) object, null, inner).toString();
 			}
-			else if (object instanceof String)
+			else if (object instanceof String || object instanceof Character)
 			{
 				value = QUOTE_CHAR + EscapeString(object.toString()) + QUOTE_CHAR;
 			}
@@ -2074,6 +2074,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public <E> E attrCast(String key, Class<E> cls)
 	{
 		return (E) this.attr(key);
+	}
+
+	public Character attrCharacter(String key)
+	{
+		return attrCast(key, Character.class);
 	}
 
 	public Double attrDouble(String key)
@@ -2474,6 +2479,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			val = null;
 		}
 		return (E) val;
+	}
+
+	public Character valCharacter(String key)
+	{
+		return valCast(key, Character.class);
+	}
+
+	public Character valCharacter(String key, Character defaultValue)
+	{
+		Character val = valCharacter(key);
+		return val == null ? defaultValue : val;
 	}
 
 	public Double valDouble(String key)
