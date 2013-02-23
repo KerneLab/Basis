@@ -1621,17 +1621,24 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (Variable.isInteger(string))
 			{
-				value = Integer.valueOf(string);
+				try
+				{
+					value = Integer.valueOf(string);
+				}
+				catch (NumberFormatException e)
+				{
+					value = Long.valueOf(string);
+				}
 			}
 			else if (Variable.isDouble(string))
 			{
 				value = Double.valueOf(string);
 			}
-			else if (string.equals(TRUE_STRING) || string.equals(FALSE_STRING))
+			else if (TRUE_STRING.equals(string) || FALSE_STRING.equals(string))
 			{
 				value = Boolean.valueOf(string);
 			}
-			else if (string.equals(NULL_STRING))
+			else if (NULL_STRING.equals(string))
 			{
 				value = null;
 			}
@@ -2051,7 +2058,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	@SuppressWarnings("unchecked")
 	public <E> E attr(String key)
 	{
-		return (E) Quote(this.get(key));
+		E value = null;
+
+		try
+		{
+			value = (E) Quote(this.get(key));
+		}
+		catch (ClassCastException e)
+		{
+		}
+
+		return value;
 	}
 
 	public JSON attr(String key, Object value)
@@ -2062,38 +2079,157 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Boolean attrBoolean(String key)
 	{
-		return attrCast(key, Boolean.class);
+		Boolean value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Boolean.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			String str = obj.toString();
+			if (TRUE_STRING.equals(str) || FALSE_STRING.equals(str))
+			{
+				value = Boolean.valueOf(str);
+			}
+		}
+
+		return value;
 	}
 
 	public Byte attrByte(String key)
 	{
-		return attrCast(key, Byte.class);
+		Byte value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Byte.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			try
+			{
+				value = Byte.valueOf(obj.toString());
+			}
+			catch (NumberFormatException ex)
+			{
+			}
+		}
+
+		return value;
 	}
 
 	@SuppressWarnings("unchecked")
 	public <E> E attrCast(String key, Class<E> cls)
 	{
-		return (E) this.attr(key);
+		Object value = this.attr(key);
+
+		if (!cls.isInstance(value))
+		{
+			value = null;
+		}
+
+		return (E) value;
 	}
 
 	public Character attrCharacter(String key)
 	{
-		return attrCast(key, Character.class);
+		Character value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Character.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			try
+			{
+				value = obj.toString().charAt(0);
+			}
+			catch (StringIndexOutOfBoundsException ex)
+			{
+			}
+		}
+
+		return value;
 	}
 
 	public Double attrDouble(String key)
 	{
-		return attrCast(key, Double.class);
+		Double value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Double.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			try
+			{
+				value = Double.valueOf(obj.toString());
+			}
+			catch (NumberFormatException ex)
+			{
+			}
+		}
+
+		return value;
 	}
 
 	public Float attrFloat(String key)
 	{
-		return attrCast(key, Float.class);
+		Float value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Float.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			try
+			{
+				value = Float.valueOf(obj.toString());
+			}
+			catch (NumberFormatException ex)
+			{
+			}
+		}
+
+		return value;
 	}
 
 	public Integer attrInteger(String key)
 	{
-		return attrCast(key, Integer.class);
+		Integer value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Integer.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			try
+			{
+				value = Integer.valueOf(obj.toString());
+			}
+			catch (NumberFormatException ex)
+			{
+			}
+		}
+
+		return value;
 	}
 
 	public JSAN attrJSAN(String key)
@@ -2108,17 +2244,68 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Long attrLong(String key)
 	{
-		return attrCast(key, Long.class);
+		Long value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Long.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			try
+			{
+				value = Long.valueOf(obj.toString());
+			}
+			catch (NumberFormatException ex)
+			{
+			}
+		}
+
+		return value;
 	}
 
 	public Short attrShort(String key)
 	{
-		return attrCast(key, Short.class);
+		Short value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Short.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			try
+			{
+				value = Short.valueOf(obj.toString());
+			}
+			catch (NumberFormatException ex)
+			{
+			}
+		}
+
+		return value;
 	}
 
 	public String attrString(String key)
 	{
-		return attrCast(key, String.class);
+		String value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = String.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			value = obj.toString();
+		}
+
+		return value;
 	}
 
 	public void clear()
@@ -2439,18 +2626,18 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public <E> E val(String key)
 	{
-		return this.val(key, null);
+		return val(key, null);
 	}
 
 	public <E> E val(String key, E defaultValue)
 	{
-		E val = this.attr(key);
+		E val = attr(key);
 		return val == null ? defaultValue : val;
 	}
 
 	public Boolean valBoolean(String key)
 	{
-		return valCast(key, Boolean.class);
+		return attrBoolean(key);
 	}
 
 	public Boolean valBoolean(String key, Boolean defaultValue)
@@ -2461,7 +2648,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Byte valByte(String key)
 	{
-		return valCast(key, Byte.class);
+		return attrByte(key);
 	}
 
 	public Byte valByte(String key, Byte defaultValue)
@@ -2470,20 +2657,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return val == null ? defaultValue : val;
 	}
 
-	@SuppressWarnings("unchecked")
-	public <E> E valCast(String key, Class<E> cls)
-	{
-		Object val = this.attr(key);
-		if (!cls.isInstance(val))
-		{
-			val = null;
-		}
-		return (E) val;
-	}
-
 	public Character valCharacter(String key)
 	{
-		return valCast(key, Character.class);
+		return attrCharacter(key);
 	}
 
 	public Character valCharacter(String key, Character defaultValue)
@@ -2494,7 +2670,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Double valDouble(String key)
 	{
-		return valCast(key, Double.class);
+		return attrDouble(key);
 	}
 
 	public Double valDouble(String key, Double defaultValue)
@@ -2505,7 +2681,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Float valFloat(String key)
 	{
-		return valCast(key, Float.class);
+		return attrFloat(key);
 	}
 
 	public Float valFloat(String key, Float defaultValue)
@@ -2516,7 +2692,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Integer valInteger(String key)
 	{
-		return valCast(key, Integer.class);
+		return attrInteger(key);
 	}
 
 	public Integer valInteger(String key, Integer defaultValue)
@@ -2527,7 +2703,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSAN valJSAN(String key)
 	{
-		return valCast(key, JSAN.class);
+		return attrJSAN(key);
 	}
 
 	public JSAN valJSAN(String key, JSAN defaultValue)
@@ -2538,7 +2714,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSON valJSON(String key)
 	{
-		return valCast(key, JSON.class);
+		return attrJSON(key);
 	}
 
 	public JSON valJSON(String key, JSON defaultValue)
@@ -2549,7 +2725,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Long valLong(String key)
 	{
-		return valCast(key, Long.class);
+		return attrLong(key);
 	}
 
 	public Long valLong(String key, Long defaultValue)
@@ -2560,7 +2736,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Short valShort(String key)
 	{
-		return valCast(key, Short.class);
+		return attrShort(key);
 	}
 
 	public Short valShort(String key, Short defaultValue)
@@ -2571,7 +2747,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public String valString(String key)
 	{
-		return valCast(key, String.class);
+		return attrString(key);
 	}
 
 	public String valString(String key, String defaultValue)
