@@ -1921,7 +1921,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		String key;
 		Object object;
-		String value;
+		CharSequence value;
 
 		for (Map.Entry<String, Object> entry : json.entrySet())
 		{
@@ -1983,9 +1983,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (IsJSON(object))
 			{
-				value = Serialize((JSON) object, null, inner).toString();
+				value = Serialize((JSON) object, null, inner);
 			}
-			else if (object instanceof String || object instanceof Character)
+			else if (object instanceof CharSequence || object instanceof Character)
 			{
 				value = QUOTE_CHAR + EscapeString(object.toString()) + QUOTE_CHAR;
 			}
