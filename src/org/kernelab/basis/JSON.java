@@ -319,6 +319,205 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return index;
 		}
 
+		public static JSAN Reflect(JSAN jsan, Object object)
+		{
+			List<String> fields = new LinkedList<String>();
+
+			for (Field field : object.getClass().getDeclaredFields())
+			{
+				fields.add(field.getName());
+			}
+
+			return JSAN.Reflect(jsan, object, fields);
+		}
+
+		public static JSAN Reflect(JSAN jsan, Object object, Iterable<String> fields)
+		{
+			if (object != null)
+			{
+				if (jsan == null)
+				{
+					jsan = new JSAN();
+				}
+
+				if (JSON.IsJSAN(object))
+				{
+					if (jsan == object)
+					{
+						jsan = (JSAN) object;
+					}
+					else
+					{
+						jsan.addAll((JSAN) object);
+					}
+				}
+				else if (IsJSON(object))
+				{
+					for (Entry entry : ((JSON) object).pairs())
+					{
+						jsan.add(entry.getValue());
+					}
+				}
+				else if (object instanceof Map)
+				{
+					jsan.addAll(((Map<?, ?>) object).values());
+				}
+				else if (object instanceof Iterable)
+				{
+					for (Object element : (Iterable<?>) object)
+					{
+						jsan.add(element);
+					}
+				}
+				else if (object.getClass().isArray())
+				{
+					String type = object.getClass().getComponentType().getCanonicalName();
+					if ("boolean".equals(type))
+					{
+						for (boolean e : (boolean[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+					else if ("char".equals(type))
+					{
+						for (char e : (char[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+					else if ("byte".equals(type))
+					{
+						for (byte e : (byte[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+					else if ("short".equals(type))
+					{
+						for (short e : (short[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+					else if ("int".equals(type))
+					{
+						for (int e : (int[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+					else if ("long".equals(type))
+					{
+						for (long e : (long[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+					else if ("float".equals(type))
+					{
+						for (float e : (float[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+					else if ("double".equals(type))
+					{
+						for (double e : (double[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+					else
+					{
+						for (Object e : (Object[]) object)
+						{
+							jsan.add(e);
+						}
+					}
+				}
+				else
+				{
+					// Java Reflect
+					Class<?> cls = object.getClass();
+
+					for (String field : fields)
+					{
+						if (field != null && field.length() > 0)
+						{
+							try
+							{
+								String methodName = field.substring(0, 1).toUpperCase() + field.substring(1);
+
+								Method method = null;
+
+								try
+								{
+									method = cls.getMethod("get" + methodName);
+								}
+								catch (NoSuchMethodException e)
+								{
+									try
+									{
+										method = cls.getMethod("is" + methodName);
+									}
+									catch (NoSuchMethodException ex)
+									{
+									}
+								}
+
+								if (method != null && method.getParameterTypes().length == 0)
+								{
+									jsan.add(method.invoke(object));
+								}
+							}
+							catch (IllegalArgumentException e)
+							{
+							}
+							catch (IllegalAccessException e)
+							{
+							}
+							catch (InvocationTargetException e)
+							{
+							}
+							catch (SecurityException e)
+							{
+							}
+						}
+					}
+				}
+			}
+
+			return jsan;
+		}
+
+		public static JSAN Reflect(JSAN jsan, Object object, String... fields)
+		{
+			List<String> names = new LinkedList<String>();
+
+			for (String field : fields)
+			{
+				names.add(field);
+			}
+
+			return JSAN.Reflect(jsan, object, names);
+		}
+
+		public static JSAN Reflect(Object object)
+		{
+			return JSAN.Reflect(null, object);
+		}
+
+		public static JSAN Reflect(Object object, Iterable<String> fields)
+		{
+			return JSAN.Reflect(null, object, fields);
+		}
+
+		public static JSAN Reflect(Object object, String... fields)
+		{
+			return JSAN.Reflect(null, object, fields);
+		}
+
 		public JSAN()
 		{
 			prototype(new TreeMap<String, Object>(new Comparator<String>() {
@@ -1409,7 +1608,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 		else
 		{
-			result = Reflect(object);
+			result = JSON.Reflect(object);
 		}
 
 		return result;
@@ -1669,18 +1868,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return o;
 	}
 
-	public static JSON Reflect(Object object)
+	public static JSON Reflect(JSON json, Object object)
 	{
-		Field[] fields = object.getClass().getDeclaredFields();
-		Set<String> names = new LinkedHashSet<String>();
-		for (Field field : fields)
+		List<String> fields = new LinkedList<String>();
+
+		for (Field field : object.getClass().getDeclaredFields())
 		{
-			names.add(field.getName());
+			fields.add(field.getName());
 		}
-		return Reflect(object, names);
+
+		return JSON.Reflect(json, object, fields);
 	}
 
-	public static JSON Reflect(Object object, Iterable<String> fields)
+	public static JSON Reflect(JSON json, Object object, Iterable<String> fields)
 	{
 		Map<String, String> map = new LinkedHashMap<String, String>();
 
@@ -1689,18 +1889,28 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			map.put(field, field);
 		}
 
-		return Reflect(object, map);
+		return JSON.Reflect(json, object, map);
 	}
 
-	public static JSON Reflect(Object object, Map<String, ?> fieldsMap)
+	public static JSON Reflect(JSON json, Object object, Map<String, ?> fieldsMap)
 	{
-		JSON json = null;
-
 		if (object != null)
 		{
+			if (json == null)
+			{
+				json = new JSON();
+			}
+
 			if (IsJSON(object))
 			{
-				json = (JSON) object;
+				if (json == object)
+				{
+					json = (JSON) object;
+				}
+				else
+				{
+					json.putAll((JSON) object);
+				}
 			}
 			else if (object instanceof Map)
 			{
@@ -1811,23 +2021,22 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 								try
 								{
-									method = cls.getMethod("is" + methodName);
+									method = cls.getMethod("get" + methodName);
 								}
 								catch (NoSuchMethodException e)
 								{
 									try
 									{
-										method = cls.getMethod("get" + methodName);
+										method = cls.getMethod("is" + methodName);
 									}
 									catch (NoSuchMethodException ex)
 									{
 									}
 								}
 
-								if (method != null)
+								if (method != null && method.getParameterTypes().length == 0)
 								{
-									Object value = method.invoke(object);
-									json.attr(entry.getKey(), value);
+									json.attr(entry.getKey(), method.invoke(object));
 								}
 							}
 							catch (IllegalArgumentException e)
@@ -1851,14 +2060,34 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return json;
 	}
 
-	public static JSON Reflect(Object object, String... fields)
+	public static JSON Reflect(JSON json, Object object, String... fields)
 	{
 		Set<String> names = new LinkedHashSet<String>();
 		for (String field : fields)
 		{
 			names.add(field);
 		}
-		return Reflect(object, names);
+		return JSON.Reflect(json, object, names);
+	}
+
+	public static JSON Reflect(Object object)
+	{
+		return JSON.Reflect(null, object);
+	}
+
+	public static JSON Reflect(Object object, Iterable<String> fields)
+	{
+		return JSON.Reflect(null, object, fields);
+	}
+
+	public static JSON Reflect(Object object, Map<String, ?> fieldsMap)
+	{
+		return JSON.Reflect(null, object, fieldsMap);
+	}
+
+	public static JSON Reflect(Object object, String... fields)
+	{
+		return JSON.Reflect(null, object, fields);
 	}
 
 	public static int ReverseDualMatchIndex(CharSequence sequence, char a, char b, int from)
