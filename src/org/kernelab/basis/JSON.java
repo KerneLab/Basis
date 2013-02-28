@@ -1914,7 +1914,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (object instanceof Map)
 			{
-				json = new JSON();
 				for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet())
 				{
 					json.put(entry.getKey() == null ? null : entry.getKey().toString(), entry.getValue());
@@ -2000,8 +1999,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else
 			{
-				json = new JSON();
-
 				// Java Reflect
 				Class<?> cls = object.getClass();
 
