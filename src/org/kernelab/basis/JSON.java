@@ -345,7 +345,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				{
 					template = ((Map<?, ?>) template).values();
 				}
-
 			}
 
 			return JSAN.Reflect(jsan, object, (Iterable<String>) template);
@@ -517,7 +516,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			if (object != null)
 			{
-				Object template = templates.get(object.getClass());
+				Object template = null;
+
+				if (templates != null)
+				{
+					template = templates.get(object.getClass());
+				}
 
 				if (template instanceof Map)
 				{
@@ -2203,45 +2207,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				}
 				else if (object.getClass().isArray())
 				{
-					JSAN jsan = new JSAN().templates(json);
-					String type = object.getClass().getComponentType().getCanonicalName();
-					if ("boolean".equals(type))
-					{
-						jsan.addAll((boolean[]) object);
-					}
-					else if ("char".equals(type))
-					{
-						jsan.addAll((char[]) object);
-					}
-					else if ("byte".equals(type))
-					{
-						jsan.addAll((byte[]) object);
-					}
-					else if ("short".equals(type))
-					{
-						jsan.addAll((short[]) object);
-					}
-					else if ("int".equals(type))
-					{
-						jsan.addAll((int[]) object);
-					}
-					else if ("long".equals(type))
-					{
-						jsan.addAll((long[]) object);
-					}
-					else if ("float".equals(type))
-					{
-						jsan.addAll((float[]) object);
-					}
-					else if ("double".equals(type))
-					{
-						jsan.addAll((double[]) object);
-					}
-					else
-					{
-						jsan.addAll((Object[]) object);
-					}
-					json = jsan;
+					json = JSAN.Reflect(new JSAN().templates(json), object);
 				}
 				else
 				{
@@ -2337,7 +2303,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		if (object != null)
 		{
-			Object template = templates.get(object.getClass());
+			Object template = null;
+
+			if (templates != null)
+			{
+				template = templates.get(object.getClass());
+			}
 
 			if (template instanceof Map)
 			{
