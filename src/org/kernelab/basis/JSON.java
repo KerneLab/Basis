@@ -298,6 +298,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 		}
 
+		public static interface Reflector<T> extends Serializable
+		{
+			public JSAN reflect(JSAN jsan, T obj);
+		}
+
 		/**
 		 * 
 		 */
@@ -467,6 +472,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return jsan;
 		}
 
+		@SuppressWarnings("unchecked")
+		public static <T> JSAN Reflect(JSAN jsan, Object object, JSAN.Reflector<T> reflector)
+		{
+			try
+			{
+				jsan = reflector.reflect(jsan, (T) object);
+			}
+			catch (ClassCastException e)
+			{
+			}
+			return jsan;
+		}
+
 		public static JSAN Reflect(JSAN jsan, Object object, Map<String, ?> template)
 		{
 			return JSAN.Reflect(jsan, object, template.values());
@@ -475,17 +493,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@SuppressWarnings("unchecked")
 		public static JSAN Reflect(JSAN jsan, Object object, Object template)
 		{
-			if (template instanceof Map<?, ?>)
+			if (template instanceof Map)
 			{
 				jsan = JSAN.Reflect(jsan, object, (Map<String, String>) template);
 			}
-			else if (template instanceof Iterable<?>)
+			else if (template instanceof Iterable)
 			{
 				jsan = JSAN.Reflect(jsan, object, (Iterable<String>) template);
 			}
 			else if (template instanceof String[])
 			{
 				jsan = JSAN.Reflect(jsan, object, (String[]) template);
+			}
+			else if (template instanceof JSAN.Reflector)
+			{
+				jsan = JSAN.Reflect(jsan, object, (JSAN.Reflector<?>) template);
 			}
 			else
 			{
@@ -531,6 +553,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				{
 					json = JSAN.Reflect(new JSAN().templates(templates), object, template);
 				}
+				else if (template instanceof JSON.Reflector)
+				{
+					json = JSON.Reflect(new JSON().templates(templates), object, template);
+				}
+				else if (template instanceof JSAN.Reflector)
+				{
+					json = JSAN.Reflect(new JSAN().templates(templates), object, template);
+				}
 				else
 				{
 					json = JSAN.Reflect(new JSAN().templates(templates), object);
@@ -547,6 +577,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public static JSAN Reflect(Object object, Iterable<?> fields)
 		{
 			return JSAN.Reflect((JSAN) null, object, fields);
+		}
+
+		public static <T> JSAN Reflect(Object object, JSAN.Reflector<T> reflector)
+		{
+			return JSAN.Reflect((JSAN) null, object, reflector);
 		}
 
 		public static JSAN Reflect(Object object, Map<String, ?> template)
@@ -1222,6 +1257,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
+		public <T> JSAN template(Class<T> cls, JSAN.Reflector<T> reflector)
+		{
+			if (cls != null && reflector != null)
+			{
+				templatesSingleton();
+				templates().put(cls, reflector);
+			}
+			return this;
+		}
+
 		@Override
 		public JSAN templateJSAN(Class<?> cls, String... fields)
 		{
@@ -1562,6 +1607,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
+	public static interface Reflector<T> extends Serializable
+	{
+		public JSON reflect(JSON json, T obj);
+	}
+
 	public static class SyntaxErrorException extends RuntimeException
 	{
 		/**
@@ -1830,40 +1880,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public static final boolean IsQuotation(Object o)
 	{
 		return o instanceof Quotation;
-	}
-
-	public static Object JSONValueOf(Object object)
-	{
-		return JSONValueOf(object, null);
-	}
-
-	public static Object JSONValueOf(Object object, Map<Class<?>, Object> templates)
-	{
-		Object result = null;
-
-		if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
-				|| object instanceof Character || object instanceof JSON || object instanceof Quotation)
-		{
-			result = object;
-		}
-		else if (object instanceof CharSequence)
-		{
-			result = object.toString();
-		}
-		else if (object instanceof java.util.Calendar)
-		{
-			result = ((java.util.Calendar) object).getTimeInMillis();
-		}
-		else if (object instanceof java.util.Date)
-		{
-			result = ((java.util.Date) object).getTime();
-		}
-		else
-		{
-			result = JSON.Reflect(templates, object);
-		}
-
-		return result;
 	}
 
 	/**
@@ -2167,6 +2183,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return JSON.Reflect(json, object, template);
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T> JSON Reflect(JSON json, Object object, JSON.Reflector<T> reflector)
+	{
+		try
+		{
+			json = reflector.reflect(json, (T) object);
+		}
+		catch (ClassCastException e)
+		{
+		}
+		return json;
+	}
+
 	public static JSON Reflect(JSON json, Object object, Map<String, ?> template)
 	{
 		if (object != null)
@@ -2262,17 +2291,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	@SuppressWarnings("unchecked")
 	public static JSON Reflect(JSON json, Object object, Object template)
 	{
-		if (template instanceof Map<?, ?>)
+		if (template instanceof Map)
 		{
 			json = JSON.Reflect(json, object, (Map<String, String>) template);
 		}
-		else if (template instanceof Iterable<?>)
+		else if (template instanceof Iterable)
 		{
 			json = JSON.Reflect(json, object, (Iterable<String>) template);
 		}
 		else if (template instanceof String[])
 		{
 			json = JSON.Reflect(json, object, (String[]) template);
+		}
+		else if (template instanceof JSON.Reflector)
+		{
+			json = JSON.Reflect(json, object, (JSON.Reflector<?>) template);
 		}
 		else
 		{
@@ -2318,6 +2351,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				json = JSAN.Reflect(new JSAN().templates(templates), object, template);
 			}
+			else if (template instanceof JSON.Reflector)
+			{
+				json = JSON.Reflect(new JSON().templates(templates), object, template);
+			}
+			else if (template instanceof JSAN.Reflector)
+			{
+				json = JSAN.Reflect(new JSAN().templates(templates), object, template);
+			}
 			else
 			{
 				json = JSON.Reflect(new JSON().templates(templates), object);
@@ -2334,6 +2375,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public static JSON Reflect(Object object, Iterable<?> fields)
 	{
 		return JSON.Reflect((JSON) null, object, fields);
+	}
+
+	public static <T> JSON Reflect(Object object, JSON.Reflector<T> reflector)
+	{
+		return JSON.Reflect((JSON) null, object, reflector);
 	}
 
 	public static JSON Reflect(Object object, Map<String, ?> template)
@@ -2527,6 +2573,40 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			string = string.replaceFirst("^" + QUOTE_CHAR + "([\\d\\D]*)" + QUOTE_CHAR + "$", "$1");
 		}
 		return string;
+	}
+
+	public static Object ValueOf(Object object)
+	{
+		return ValueOf(object, null);
+	}
+
+	public static Object ValueOf(Object object, Map<Class<?>, Object> templates)
+	{
+		Object result = null;
+
+		if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
+				|| object instanceof Character || object instanceof JSON || object instanceof Quotation)
+		{
+			result = object;
+		}
+		else if (object instanceof CharSequence)
+		{
+			result = object.toString();
+		}
+		else if (object instanceof java.util.Calendar)
+		{
+			result = ((java.util.Calendar) object).getTimeInMillis();
+		}
+		else if (object instanceof java.util.Date)
+		{
+			result = ((java.util.Date) object).getTime();
+		}
+		else
+		{
+			result = JSON.Reflect(templates, object);
+		}
+
+		return result;
 	}
 
 	private Map<String, Object>		map;
@@ -2958,7 +3038,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			hirch.outer(null).entry(null);
 		}
 
-		value = JSONValueOf(value, templates());
+		value = ValueOf(value, templates());
 
 		hirch = AsHierarchical(value);
 		if (hirch != null)
@@ -3099,6 +3179,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			templatesSingleton();
 			templates().put(cls, template);
+		}
+		return this;
+	}
+
+	public <T> JSON template(Class<T> cls, JSON.Reflector<T> reflector)
+	{
+		if (cls != null && reflector != null)
+		{
+			templatesSingleton();
+			templates().put(cls, reflector);
 		}
 		return this;
 	}
