@@ -1257,7 +1257,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
+		@Override
 		public <T> JSAN template(Class<T> cls, JSAN.Reflector<T> reflector)
+		{
+			if (cls != null && reflector != null)
+			{
+				templatesSingleton();
+				templates().put(cls, reflector);
+			}
+			return this;
+		}
+
+		@Override
+		public <T> JSAN template(Class<T> cls, JSON.Reflector<T> reflector)
 		{
 			if (cls != null && reflector != null)
 			{
@@ -3179,6 +3191,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			templatesSingleton();
 			templates().put(cls, template);
+		}
+		return this;
+	}
+
+	public <T> JSON template(Class<T> cls, JSAN.Reflector<T> reflector)
+	{
+		if (cls != null && reflector != null)
+		{
+			templatesSingleton();
+			templates().put(cls, reflector);
 		}
 		return this;
 	}
