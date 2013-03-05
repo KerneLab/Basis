@@ -542,7 +542,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				if (templates != null)
 				{
-					template = templates.get(object.getClass());
+					for (Class<?> cls : templates.keySet())
+					{
+						if (cls != null && cls.isInstance(object) && (template = templates.get(cls)) != null)
+						{
+							break;
+						}
+					}
 				}
 
 				if (template instanceof Map)
@@ -566,6 +572,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					json = JSAN.Reflect(new JSAN().templates(templates), object);
 				}
 			}
+
 			return json;
 		}
 
@@ -2352,7 +2359,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			if (templates != null)
 			{
-				template = templates.get(object.getClass());
+				for (Class<?> cls : templates.keySet())
+				{
+					if (cls != null && cls.isInstance(object) && (template = templates.get(cls)) != null)
+					{
+						break;
+					}
+				}
 			}
 
 			if (template instanceof Map)
@@ -2376,6 +2389,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				json = JSON.Reflect(new JSON().templates(templates), object);
 			}
 		}
+
 		return json;
 	}
 
@@ -2621,13 +2635,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return result;
 	}
 
-	private Map<String, Object>		map;
+	private Map<String, Object>				map;
 
-	private JSON					outer;
+	private JSON							outer;
 
-	private String					entry;
+	private String							entry;
 
-	private Map<Class<?>, Object>	templates;
+	private transient Map<Class<?>, Object>	templates;
 
 	public JSON()
 	{
@@ -3077,9 +3091,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return value;
 	}
 
-	public void putAll(Map<? extends String, ? extends Object> m)
+	public void putAll(Map<? extends String, ? extends Object> map)
 	{
-		map.putAll(m);
+		for (Map.Entry<?, ?> entry : map.entrySet())
+		{
+			this.put((String) entry.getKey(), entry.getValue());
+		}
 	}
 
 	public Quotation quote()
@@ -3305,7 +3322,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		if (templates() == null)
 		{
-			templates(new HashMap<Class<?>, Object>());
+			templates(new LinkedHashMap<Class<?>, Object>());
 		}
 		return this;
 	}
