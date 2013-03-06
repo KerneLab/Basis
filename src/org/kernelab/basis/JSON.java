@@ -19,6 +19,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -310,16 +311,18 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static final int						LAST				= -1;
 
-		private static final Map<Integer, String>	INDEX				= new HashMap<Integer, String>();
+		private static final Map<Integer, String>	INDEX				= new WeakHashMap<Integer, String>();
 
 		public static final String Index(int i)
 		{
 			String index = INDEX.get(i);
+
 			if (index == null)
 			{
 				index = String.valueOf(i);
 				INDEX.put(i, index);
 			}
+
 			return index;
 		}
 
@@ -339,9 +342,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				{
 					List<String> temp = new LinkedList<String>();
 
-					for (Field field : object.getClass().getDeclaredFields())
+					for (String field : FieldsOf(object))
 					{
-						temp.add(field.getName());
+						temp.add(field);
 					}
 
 					template = temp;
@@ -1251,14 +1254,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		@Override
-		public JSAN template(Class<?> cls, Iterable<String> template)
+		public JSAN template(Class<?> cls, Iterable<?> template)
 		{
 			super.template(cls, template);
 			return this;
 		}
 
 		@Override
-		public JSAN template(Class<?> cls, Map<String, String> template)
+		public JSAN template(Class<?> cls, Map<String, ?> template)
 		{
 			super.template(cls, template);
 			return this;
@@ -1267,22 +1270,28 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public <T> JSAN template(Class<T> cls, JSAN.Reflector<T> reflector)
 		{
-			if (cls != null && reflector != null)
-			{
-				templatesSingleton();
-				templates().put(cls, reflector);
-			}
+			super.template(cls, reflector);
 			return this;
 		}
 
 		@Override
 		public <T> JSAN template(Class<T> cls, JSON.Reflector<T> reflector)
 		{
-			if (cls != null && reflector != null)
-			{
-				templatesSingleton();
-				templates().put(cls, reflector);
-			}
+			super.template(cls, reflector);
+			return this;
+		}
+
+		@Override
+		public JSAN templateJSAN(Class<?> cls, Iterable<?> template)
+		{
+			super.templateJSAN(cls, template);
+			return this;
+		}
+
+		@Override
+		public JSAN templateJSAN(Class<?> cls, Map<String, ?> template)
+		{
+			super.templateJSAN(cls, template);
 			return this;
 		}
 
@@ -1290,6 +1299,20 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public JSAN templateJSAN(Class<?> cls, String... fields)
 		{
 			super.templateJSAN(cls, fields);
+			return this;
+		}
+
+		@Override
+		public JSAN templateJSON(Class<?> cls, Iterable<?> template)
+		{
+			super.templateJSON(cls, template);
+			return this;
+		}
+
+		@Override
+		public JSAN templateJSON(Class<?> cls, Map<String, ?> template)
+		{
+			super.templateJSON(cls, template);
 			return this;
 		}
 
@@ -1839,6 +1862,38 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return buffer.toString();
 	}
 
+	public static Collection<String> FieldsOf(Class<?> cls, Collection<String> fields)
+	{
+		if (cls != null)
+		{
+			if (fields == null)
+			{
+				fields = new LinkedHashSet<String>();
+			}
+
+			fields = FieldsOf(cls.getSuperclass(), fields);
+
+			for (Field field : cls.getDeclaredFields())
+			{
+				fields.add(field.getName());
+			}
+		}
+
+		return fields;
+	}
+
+	public static <T> Collection<String> FieldsOf(T object)
+	{
+		Collection<String> fields = null;
+
+		if (object != null)
+		{
+			fields = FieldsOf(object.getClass(), fields);
+		}
+
+		return fields;
+	}
+
 	public static final int FirstNonWhitespaceIndex(CharSequence sequence, int from)
 	{
 		int index = -1;
@@ -2170,9 +2225,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				Map<String, String> temp = new LinkedHashMap<String, String>();
 
-				for (Field field : object.getClass().getDeclaredFields())
+				for (String field : FieldsOf(object))
 				{
-					temp.put(field.getName(), field.getName());
+					temp.put(field, field);
 				}
 
 				template = temp;
@@ -3192,7 +3247,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return json;
 	}
 
-	public JSON template(Class<?> cls, Iterable<String> template)
+	public JSON template(Class<?> cls, Iterable<?> template)
 	{
 		if (cls != null && template != null)
 		{
@@ -3202,7 +3257,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
-	public JSON template(Class<?> cls, Map<String, String> template)
+	public JSON template(Class<?> cls, Map<String, ?> template)
 	{
 		if (cls != null && template != null)
 		{
@@ -3232,6 +3287,20 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
+	public JSON templateJSAN(Class<?> cls, Iterable<?> template)
+	{
+		return this.template(cls, template);
+	}
+
+	public JSON templateJSAN(Class<?> cls, Map<String, ?> template)
+	{
+		if (cls != null && template != null)
+		{
+			this.template(cls, template.values());
+		}
+		return this;
+	}
+
 	public JSON templateJSAN(Class<?> cls, String... fields)
 	{
 		if (cls != null && fields != null)
@@ -3240,7 +3309,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			for (String field : fields)
 			{
-				template.add(field);
+				if (field != null)
+				{
+					template.add(field);
+				}
 			}
 
 			template(cls, template);
@@ -3248,15 +3320,42 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
+	public JSON templateJSON(Class<?> cls, Iterable<?> template)
+	{
+		if (cls != null && template != null)
+		{
+			Map<String, Object> map = new LinkedHashMap<String, Object>();
+
+			for (Object field : template)
+			{
+				if (field != null)
+				{
+					map.put(field.toString(), field);
+				}
+			}
+
+			this.template(cls, map);
+		}
+		return this;
+	}
+
+	public JSON templateJSON(Class<?> cls, Map<String, ?> template)
+	{
+		return this.template(cls, template);
+	}
+
 	public JSON templateJSON(Class<?> cls, String... fields)
 	{
 		if (cls != null && fields != null)
 		{
-			Map<String, String> template = new LinkedHashMap<String, String>();
+			Map<String, Object> template = new LinkedHashMap<String, Object>();
 
 			for (String field : fields)
 			{
-				template.put(field, field);
+				if (field != null)
+				{
+					template.put(field, field);
+				}
 			}
 
 			template(cls, template);
