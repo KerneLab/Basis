@@ -299,7 +299,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 		}
 
-		public static interface Reflector<T> extends Serializable
+		public static interface Reflector<T>
 		{
 			public JSAN reflect(JSAN jsan, T obj);
 		}
@@ -1005,6 +1005,23 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		@Override
+		public JSAN pairs(Iterable<Object> pairs)
+		{
+			for (Object o : pairs)
+			{
+				this.add(o);
+			}
+			return this;
+		}
+
+		@Override
+		public JSAN pairs(Object... pairs)
+		{
+			this.addAll(pairs);
+			return this;
+		}
+
+		@Override
 		protected JSAN prototype(Map<String, Object> map)
 		{
 			super.prototype(map);
@@ -1649,7 +1666,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
-	public static interface Reflector<T> extends Serializable
+	public static interface Reflector<T>
 	{
 		public JSON reflect(JSON json, T obj);
 	}
@@ -3077,7 +3094,59 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Set<Entry> pairs()
 	{
-		return pairs(null);
+		return pairs((Set<Entry>) null);
+	}
+
+	public JSON pairs(Iterable<Object> pairs)
+	{
+		Object key = null;
+		Object value = null;
+		int index = 0;
+		for (Object o : pairs)
+		{
+			if (index % 2 == 0)
+			{
+				key = o;
+			}
+			else
+			{
+				value = o;
+				if (key != null)
+				{
+					this.attr(key.toString(), value);
+				}
+				key = null;
+				value = null;
+			}
+			index++;
+		}
+		if (key != null)
+		{
+			this.attr(key.toString(), value);
+		}
+		return this;
+	}
+
+	public JSON pairs(Object... pairs)
+	{
+		for (int i = 0; i < pairs.length; i += 2)
+		{
+			Object key = pairs[i];
+			Object value = null;
+			try
+			{
+				value = pairs[i + 1];
+			}
+			catch (ArrayIndexOutOfBoundsException e)
+			{
+			}
+
+			if (key != null)
+			{
+				this.attr(key.toString(), value);
+			}
+		}
+		return this;
 	}
 
 	public Set<Entry> pairs(Set<Entry> set)
@@ -3111,37 +3180,40 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Object put(String key, Object value)
 	{
-		Object old = this.get(key);
-		// Clear the old hierarchical relation.
-		Hierarchical hirch = AsHierarchical(old);
-		if (hirch != null && hirch.outer() == this)
+		if (key != null)
 		{
-			hirch.outer(null).entry(null);
-		}
+			Object old = this.get(key);
+			// Clear the old hierarchical relation.
+			Hierarchical hirch = AsHierarchical(old);
+			if (hirch != null && hirch.outer() == this)
+			{
+				hirch.outer(null).entry(null);
+			}
 
-		value = ValueOf(value, templates());
+			value = ValueOf(value, templates());
 
-		hirch = AsHierarchical(value);
-		if (hirch != null)
-		{
-			// Build up new hierarchical relation.
-			JSON formalOuter = hirch.outer();
-			String formalEntry = hirch.entry();
-			JSON formalContext = hirch.context();
+			hirch = AsHierarchical(value);
+			if (hirch != null)
+			{
+				// Build up new hierarchical relation.
+				JSON formalOuter = hirch.outer();
+				String formalEntry = hirch.entry();
+				JSON formalContext = hirch.context();
 
-			hirch.outer(this).entry(key);
+				hirch.outer(this).entry(key);
 
-			// If in a Context.
-			if (formalOuter != null && IsContext(formalContext) && IsJSON(hirch))
-			{ // The formal outer would quote the value at its new location.
-				if (formalContext == this.context())
-				{ // A quote would be made only in the same Context.
-					formalOuter.put(formalEntry, AsJSON(hirch).quote());
+				// If in a Context.
+				if (formalOuter != null && IsContext(formalContext) && IsJSON(hirch))
+				{ // The formal outer would quote the value at its new location.
+					if (formalContext == this.context())
+					{ // A quote would be made only in the same Context.
+						formalOuter.put(formalEntry, AsJSON(hirch).quote());
+					}
 				}
 			}
-		}
 
-		map.put(key, value);
+			map.put(key, value);
+		}
 
 		return value;
 	}
