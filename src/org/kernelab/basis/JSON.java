@@ -1005,11 +1005,22 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		@Override
-		public JSAN pairs(Iterable<Object> pairs)
+		public JSAN pairs(Iterable<? extends Object> pairs)
 		{
 			for (Object o : pairs)
 			{
 				this.add(o);
+			}
+			return this;
+		}
+
+		@Override
+		public JSAN pairs(Map<? extends String, ? extends Object> map)
+		{
+			for (Map.Entry<?, ?> entry : map.entrySet())
+			{
+				this.add(entry.getKey());
+				this.add(entry.getValue());
 			}
 			return this;
 		}
@@ -3097,7 +3108,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return pairs((Set<Entry>) null);
 	}
 
-	public JSON pairs(Iterable<Object> pairs)
+	public JSON pairs(Iterable<? extends Object> pairs)
 	{
 		Object key = null;
 		Object value = null;
@@ -3127,6 +3138,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
+	public JSON pairs(Map<? extends String, ? extends Object> map)
+	{
+		this.putAll(map);
+		return this;
+	}
+
 	public JSON pairs(Object... pairs)
 	{
 		for (int i = 0; i < pairs.length; i += 2)
@@ -3149,19 +3166,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
-	public Set<Entry> pairs(Set<Entry> set)
+	public Set<Entry> pairs(Set<Entry> result)
 	{
-		if (set == null)
+		if (result == null)
 		{
-			set = new LinkedHashSet<Entry>();
+			result = new LinkedHashSet<Entry>();
 		}
 
 		for (String key : this.keySet())
 		{
-			set.add(new Entry(key));
+			result.add(new Entry(key));
 		}
 
-		return set;
+		return result;
 	}
 
 	protected Map<String, Object> prototype()
