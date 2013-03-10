@@ -1044,6 +1044,41 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return super.put(Index(index), value);
 		}
 
+		@Override
+		public JSAN reflect(Object object)
+		{
+			return JSAN.Reflect(this, object);
+		}
+
+		@Override
+		public JSAN reflect(Object object, Iterable<?> template)
+		{
+			return JSAN.Reflect(this, object, template);
+		}
+
+		public <T> JSAN reflect(Object object, JSAN.Reflector<T> reflector)
+		{
+			return JSAN.Reflect(this, object, reflector);
+		}
+
+		@Override
+		public JSAN reflect(Object object, Map<String, ?> template)
+		{
+			return JSAN.Reflect(this, object, template.values());
+		}
+
+		@Override
+		public JSAN reflect(Object object, Object template)
+		{
+			return JSAN.Reflect(this, object, template);
+		}
+
+		@Override
+		public JSAN reflect(Object object, String... fields)
+		{
+			return JSAN.Reflect(this, object, fields);
+		}
+
 		public Object remove(int index)
 		{
 			Object object = this.get(index);
@@ -3263,6 +3298,36 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 		quote += Quotation.NESTED_ATTRIBUTE_END;
 		return new Quotation(quote).outer(this).entry(entry);
+	}
+
+	public JSON reflect(Object object)
+	{
+		return JSON.Reflect(this, object);
+	}
+
+	public JSON reflect(Object object, Iterable<?> fields)
+	{
+		return JSON.Reflect(this, object, fields);
+	}
+
+	public <T> JSON reflect(Object object, JSON.Reflector<T> reflector)
+	{
+		return JSON.Reflect(this, object, reflector);
+	}
+
+	public JSON reflect(Object object, Map<String, ?> template)
+	{
+		return JSON.Reflect(this, object, template);
+	}
+
+	public JSON reflect(Object object, Object template)
+	{
+		return JSON.Reflect(this, object, template);
+	}
+
+	public JSON reflect(Object object, String... fields)
+	{
+		return JSON.Reflect(this, object, fields);
 	}
 
 	public Object remove(Object key)
