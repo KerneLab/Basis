@@ -1068,12 +1068,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		@Override
-		public JSAN reflect(Object object, Object template)
-		{
-			return JSAN.Reflect(this, object, template);
-		}
-
-		@Override
 		public JSAN reflect(Object object, String... fields)
 		{
 			return JSAN.Reflect(this, object, fields);
@@ -3316,11 +3310,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	}
 
 	public JSON reflect(Object object, Map<String, ?> template)
-	{
-		return JSON.Reflect(this, object, template);
-	}
-
-	public JSON reflect(Object object, Object template)
 	{
 		return JSON.Reflect(this, object, template);
 	}
