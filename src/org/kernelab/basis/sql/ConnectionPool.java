@@ -43,7 +43,7 @@ import javax.sql.DataSource;
  * @version 1.1.0
  * @update 2010-02-18
  */
-public class ConnectionPool
+public class ConnectionPool implements SQLSource
 {
 	/**
 	 * @param args
@@ -69,24 +69,41 @@ public class ConnectionPool
 
 		DataSource dataSource = null;
 
-		try {
+		try
+		{
 			InitialContext initialContext = new InitialContext();
-			dataSource = (DataSource) initialContext.lookup("java:comp/env/"
-					+ this.getDataSourceName());
-		} catch (NamingException e) {
+			dataSource = (DataSource) initialContext.lookup("java:comp/env/" + this.getDataSourceName());
+		}
+		catch (NamingException e)
+		{
 			e.printStackTrace();
 		}
 
 		this.setDataSource(dataSource);
 	}
 
+	public void close(SQLKit kit)
+	{
+		try
+		{
+			kit.getConnection().close();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
 	public Connection getConnection()
 	{
 		Connection connection = null;
 
-		try {
+		try
+		{
 			connection = this.getDataSource().getConnection();
-		} catch (SQLException e) {
+		}
+		catch (SQLException e)
+		{
 			e.printStackTrace();
 		}
 
@@ -105,7 +122,12 @@ public class ConnectionPool
 
 	public SQLKit getSQLKit()
 	{
-		return new SQLKit(this.getConnection());
+		return new SQLKit(this);
+	}
+
+	public boolean isClosed()
+	{
+		return false;
 	}
 
 	public void setDataSource(DataSource dataSource)
@@ -117,5 +139,4 @@ public class ConnectionPool
 	{
 		this.dataSourceName = dataSourceName;
 	}
-
 }

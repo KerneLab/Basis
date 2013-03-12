@@ -335,7 +335,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				if (jsan != null)
 				{
-					template = jsan.templateOfClass(object.getClass());
+					template = jsan.templateOfObject(object);
 				}
 
 				if (template == null)
@@ -2275,7 +2275,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			if (json != null)
 			{
-				template = json.templateOfClass(object.getClass());
+				template = json.templateOfObject(object);
 			}
 
 			if (template == null)
@@ -3522,9 +3522,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		Object template = null;
 
-		if (object != null)
+		if (object != null && templates() != null)
 		{
-			template = templateOfClass(object.getClass());
+			for (Class<?> cls : templates().keySet())
+			{
+				if (cls != null && cls.isInstance(object) && (template = templateOfClass(cls)) != null)
+				{
+					break;
+				}
+			}
 		}
 
 		return template;

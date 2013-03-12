@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.kernelab.basis.sql.DataBase;
-import org.kernelab.basis.sql.DataBase.MySQL;
+import org.kernelab.basis.sql.DataBase.Oracle;
 import org.kernelab.basis.sql.SQLKit;
 
 /**
@@ -37,7 +37,7 @@ public class DemoSQLKit
 		String passWord = "root";
 		String catalog = "test";
 		// 数据库名称为test
-		DataBase database = new MySQL(serverName, catalog, userName, passWord);
+		DataBase database = new Oracle(serverName, catalog, userName, passWord);
 
 		// 准备工作
 		SQLKit kit = null;

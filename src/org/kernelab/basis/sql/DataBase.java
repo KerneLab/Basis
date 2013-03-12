@@ -3,6 +3,7 @@ package org.kernelab.basis.sql;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -20,7 +21,7 @@ import org.kernelab.basis.Relation;
  * 
  * @author Dilly King
  */
-public abstract class DataBase implements Copieable<DataBase>
+public abstract class DataBase implements SQLSource, Copieable<DataBase>
 {
 	public static class DB2 extends DataBase
 	{
@@ -277,18 +278,13 @@ public abstract class DataBase implements Copieable<DataBase>
 
 	public static class Oracle extends DataBase
 	{
-		public static String					DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
+		public static String	DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
 
-		public static int						DEFAULT_PORT_NUMBER	= 1521;
-
-		private String							serverMode			= null;
-
-		private Set<Relation<String, Integer>>	address				= new LinkedHashSet<Relation<String, Integer>>();
+		public static int		DEFAULT_PORT_NUMBER	= 1521;
 
 		public Oracle(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
-			this.addAddress(serverName, portNumber);
 		}
 
 		public Oracle(String userName, String passWord)
@@ -306,7 +302,51 @@ public abstract class DataBase implements Copieable<DataBase>
 			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
 
-		public Oracle addAddress(String serverName, int portNumber)
+		@Override
+		public String getDriverName()
+		{
+			return DRIVER_CLASS_NAME;
+		}
+
+		@Override
+		protected String getURL()
+		{
+			return "jdbc:oracle:thin:@" + this.getServerName() + ":" + this.getPortNumber() + ":" + this.getCatalog();
+		}
+	}
+
+	public static class OracleClassic extends DataBase
+	{
+		public static String					DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
+
+		public static int						DEFAULT_PORT_NUMBER	= 1521;
+
+		private String							serverMode			= null;
+
+		private Set<Relation<String, Integer>>	address				= new LinkedHashSet<Relation<String, Integer>>();
+
+		public OracleClassic(String serverName, int portNumber, String catalog, String userName, String passWord)
+		{
+			super(serverName, portNumber, catalog, userName, passWord);
+			this.addAddress(serverName, portNumber);
+		}
+
+		public OracleClassic(String userName, String passWord)
+		{
+			this("", userName, passWord);
+		}
+
+		public OracleClassic(String catalog, String userName, String passWord)
+		{
+			this("localhost", catalog, userName, passWord);
+		}
+
+		public OracleClassic(String serverName, String catalog, String userName, String passWord)
+		{
+			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
+		}
+
+		public OracleClassic addAddress(String serverName, int portNumber)
 		{
 			address.add(new Relation<String, Integer>(serverName, portNumber));
 			return this;
@@ -364,7 +404,7 @@ public abstract class DataBase implements Copieable<DataBase>
 					+ "))";
 		}
 
-		public Oracle removeAddress(String serverName, int portNumber)
+		public OracleClassic removeAddress(String serverName, int portNumber)
 		{
 			address.remove(new Relation<String, Integer>(serverName, portNumber));
 			return this;
@@ -565,6 +605,8 @@ public abstract class DataBase implements Copieable<DataBase>
 
 	private Connection		connection;
 
+	private Set<SQLKit>		kits		= new HashSet<SQLKit>();
+
 	protected DataBase(DataBase dataBase)
 	{
 		this.setServerName(dataBase.serverName);
@@ -623,6 +665,16 @@ public abstract class DataBase implements Copieable<DataBase>
 		};
 	}
 
+	public synchronized void close(SQLKit kit)
+	{
+		this.getKits().remove(kit);
+
+		if (this.getKits().isEmpty())
+		{
+			this.closeConnection();
+		}
+	}
+
 	public void closeConnection()
 	{
 		try
@@ -639,20 +691,6 @@ public abstract class DataBase implements Copieable<DataBase>
 		}
 	}
 
-	@Override
-	protected void finalize()
-	{
-		this.closeConnection();
-		try
-		{
-			super.finalize();
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace();
-		}
-	}
-
 	public String getCatalog()
 	{
 		return catalog;
@@ -663,11 +701,30 @@ public abstract class DataBase implements Copieable<DataBase>
 		return connection;
 	}
 
+	// @Override
+	// protected void finalize()
+	// {
+	// this.closeConnection();
+	// try
+	// {
+	// super.finalize();
+	// }
+	// catch (Throwable e)
+	// {
+	// e.printStackTrace();
+	// }
+	// }
+
 	public abstract String getDriverName();
 
 	public Properties getInformation()
 	{
 		return information;
+	}
+
+	protected Set<SQLKit> getKits()
+	{
+		return kits;
 	}
 
 	protected String getPassWord()
@@ -685,7 +742,7 @@ public abstract class DataBase implements Copieable<DataBase>
 		return serverName;
 	}
 
-	public SQLKit getSQLKit()
+	public synchronized SQLKit getSQLKit()
 	{
 		SQLKit kit = null;
 		try
@@ -694,7 +751,8 @@ public abstract class DataBase implements Copieable<DataBase>
 			{
 				this.openConnection();
 			}
-			kit = new SQLKit(this.getConnection());
+			kit = new SQLKit(this);
+			this.getKits().add(kit);
 		}
 		catch (Exception e)
 		{
@@ -715,13 +773,12 @@ public abstract class DataBase implements Copieable<DataBase>
 		return information.getProperty(USER);
 	}
 
-	public boolean isClosed()
+	public synchronized boolean isClosed()
 	{
 		boolean is = true;
 
 		if (this.getConnection() != null)
 		{
-
 			try
 			{
 				is = this.getConnection().isClosed();
@@ -730,7 +787,6 @@ public abstract class DataBase implements Copieable<DataBase>
 			{
 				e.printStackTrace();
 			}
-
 		}
 
 		return is;
@@ -740,16 +796,13 @@ public abstract class DataBase implements Copieable<DataBase>
 	{
 		try
 		{
-
 			if (this.isClosed())
 			{
 				// No need for JDBC4.0 with Java6.0
-
 				Class.forName(this.getDriverName()).newInstance();
 
 				this.setConnection(DriverManager.getConnection(this.getURL(), this.getInformation()));
 			}
-
 		}
 		catch (SQLException e)
 		{
@@ -770,6 +823,11 @@ public abstract class DataBase implements Copieable<DataBase>
 	protected void setInformation(Properties information)
 	{
 		this.information = information;
+	}
+
+	protected void setKits(Set<SQLKit> kits)
+	{
+		this.kits = kits;
 	}
 
 	public void setPassWord(String passWord)
