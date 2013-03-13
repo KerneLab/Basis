@@ -665,13 +665,16 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		};
 	}
 
-	public synchronized void close(SQLKit kit)
+	public void close(SQLKit kit)
 	{
-		this.getKits().remove(kit);
-
-		if (this.getKits().isEmpty())
+		synchronized (this.getKits())
 		{
-			this.closeConnection();
+			this.getKits().remove(kit);
+
+			if (this.getKits().isEmpty())
+			{
+				this.closeConnection();
+			}
 		}
 	}
 
@@ -701,20 +704,6 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		return connection;
 	}
 
-	// @Override
-	// protected void finalize()
-	// {
-	// this.closeConnection();
-	// try
-	// {
-	// super.finalize();
-	// }
-	// catch (Throwable e)
-	// {
-	// e.printStackTrace();
-	// }
-	// }
-
 	public abstract String getDriverName();
 
 	public Properties getInformation()
@@ -722,7 +711,7 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		return information;
 	}
 
-	protected Set<SQLKit> getKits()
+	private Set<SQLKit> getKits()
 	{
 		return kits;
 	}
@@ -742,22 +731,26 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		return serverName;
 	}
 
-	public synchronized SQLKit getSQLKit()
+	public SQLKit getSQLKit()
 	{
 		SQLKit kit = null;
+
 		try
 		{
-			if (this.isClosed())
-			{
-				this.openConnection();
-			}
+			this.openConnection();
+
 			kit = new SQLKit(this);
-			this.getKits().add(kit);
+
+			synchronized (this.getKits())
+			{
+				this.getKits().add(kit);
+			}
 		}
 		catch (Exception e)
 		{
 			throw new InvalidDataBaseConnectionException(e.getCause());
 		}
+
 		return kit;
 	}
 
@@ -773,7 +766,7 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		return information.getProperty(USER);
 	}
 
-	public synchronized boolean isClosed()
+	public boolean isClosed()
 	{
 		boolean is = true;
 
@@ -792,7 +785,8 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		return is;
 	}
 
-	public void openConnection() throws InstantiationException, IllegalAccessException, ClassNotFoundException
+	public synchronized void openConnection() throws InstantiationException, IllegalAccessException,
+			ClassNotFoundException
 	{
 		try
 		{
@@ -825,11 +819,6 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		this.information = information;
 	}
 
-	protected void setKits(Set<SQLKit> kits)
-	{
-		this.kits = kits;
-	}
-
 	public void setPassWord(String passWord)
 	{
 		information.setProperty(PASSWORD, passWord);
@@ -849,5 +838,4 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 	{
 		information.setProperty(USER, userName);
 	}
-
 }
