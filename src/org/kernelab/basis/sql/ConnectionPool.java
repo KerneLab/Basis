@@ -130,6 +130,11 @@ public class ConnectionPool implements SQLSource
 		return false;
 	}
 
+	public boolean isClosed(SQLKit kit)
+	{
+		return false;
+	}
+
 	public void setDataSource(DataSource dataSource)
 	{
 		this.dataSource = dataSource;

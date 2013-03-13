@@ -10,5 +10,5 @@ public interface SQLSource
 
 	public SQLKit getSQLKit();
 
-	public boolean isClosed();
+	public boolean isClosed(SQLKit kit);
 }

@@ -785,6 +785,18 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		return is;
 	}
 
+	public boolean isClosed(SQLKit kit)
+	{
+		boolean is = true;
+
+		synchronized (this.getKits())
+		{
+			is = !this.getKits().contains(kit);
+		}
+
+		return is;
+	}
+
 	public synchronized void openConnection() throws InstantiationException, IllegalAccessException,
 			ClassNotFoundException
 	{

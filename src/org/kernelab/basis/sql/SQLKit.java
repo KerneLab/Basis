@@ -676,21 +676,7 @@ public class SQLKit
 
 	public boolean isClosed()
 	{
-		boolean is = false;
-
-		if (this.getConnection() != null)
-		{
-			try
-			{
-				is = this.getConnection().isClosed();
-			}
-			catch (SQLException e)
-			{
-				e.printStackTrace();
-			}
-		}
-
-		return is;
+		return this.getSource().isClosed(this);
 	}
 
 	public SQLKit optimizingAs(byte i)
