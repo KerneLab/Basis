@@ -737,12 +737,12 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 
 		try
 		{
-			this.openConnection();
-
-			kit = new SQLKit(this);
-
 			synchronized (this.getKits())
 			{
+				this.openConnection();
+
+				kit = new SQLKit(this);
+
 				this.getKits().add(kit);
 			}
 		}
@@ -797,8 +797,7 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		return is;
 	}
 
-	public synchronized void openConnection() throws InstantiationException, IllegalAccessException,
-			ClassNotFoundException
+	public void openConnection() throws InstantiationException, IllegalAccessException, ClassNotFoundException
 	{
 		try
 		{

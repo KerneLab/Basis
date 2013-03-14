@@ -2,6 +2,8 @@ package org.kernelab.basis.sql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -57,6 +59,8 @@ public class ConnectionPool implements SQLSource
 
 	private DataSource	dataSource;
 
+	private Set<SQLKit>	kits	= new HashSet<SQLKit>();
+
 	/**
 	 * Create a connection pool with the given data source name.
 	 * 
@@ -84,13 +88,17 @@ public class ConnectionPool implements SQLSource
 
 	public void close(SQLKit kit)
 	{
-		try
+		synchronized (this.getKits())
 		{
-			kit.getConnection().close();
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
+			this.getKits().remove(kit);
+			try
+			{
+				kit.getConnection().close();
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -120,19 +128,34 @@ public class ConnectionPool implements SQLSource
 		return dataSourceName;
 	}
 
-	public SQLKit getSQLKit()
+	private Set<SQLKit> getKits()
 	{
-		return new SQLKit(this);
+		return kits;
 	}
 
-	public boolean isClosed()
+	public SQLKit getSQLKit()
 	{
-		return false;
+		SQLKit kit = null;
+
+		synchronized (this.getKits())
+		{
+			kit = new SQLKit(this);
+			this.getKits().add(kit);
+		}
+
+		return kit;
 	}
 
 	public boolean isClosed(SQLKit kit)
 	{
-		return false;
+		boolean is = true;
+
+		synchronized (this.getKits())
+		{
+			is = !this.getKits().contains(kit);
+		}
+
+		return is;
 	}
 
 	public void setDataSource(DataSource dataSource)
