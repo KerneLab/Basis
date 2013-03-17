@@ -204,33 +204,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
-	public class Entry implements Map.Entry<String, Object>
-	{
-		private String	key;
-
-		public Entry(String key)
-		{
-			this.key = key;
-		}
-
-		public String getKey()
-		{
-			return key;
-		}
-
-		public Object getValue()
-		{
-			return attr(key);
-		}
-
-		public Object setValue(Object value)
-		{
-			Object old = getValue();
-			attr(key, value);
-			return old;
-		}
-	}
-
 	/**
 	 * A class to describe Array object using JSON format.
 	 * 
@@ -340,18 +313,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				if (template == null)
 				{
-					List<String> temp = new LinkedList<String>();
+					Collection<String> fields = FieldsOf(object);
 
-					for (String field : FieldsOf(object))
+					if (fields != null)
 					{
-						temp.add(field);
-					}
+						List<String> temp = new LinkedList<String>();
 
-					template = temp;
-				}
-				else if (template instanceof Map)
-				{
-					template = ((Map<?, ?>) template).values();
+						for (String field : FieldsOf(object))
+						{
+							temp.add(field);
+						}
+
+						template = temp;
+					}
 				}
 			}
 
@@ -363,121 +337,31 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			if (object != null)
 			{
-				if (template != null)
+				if (jsan == null)
 				{
-					if (jsan == null)
-					{
-						jsan = new JSAN();
-					}
+					jsan = new JSAN();
+				}
 
-					if (IsJSAN(object))
+				if (IsJSAN(object))
+				{
+					JSAN obj = (JSAN) object;
+					if (jsan == object)
 					{
-						if (jsan == object)
-						{
-							jsan = (JSAN) object;
-						}
-						else
-						{
-							JSAN obj = (JSAN) object;
-							for (Object e : template)
-							{
-								if (e != null)
-								{
-									jsan.add(obj.attr(e.toString()));
-								}
-							}
-						}
+						jsan = (JSAN) object;
 					}
-					else if (object instanceof Map)
+					else if (template == null)
 					{
-						Map<String, ?> map = (Map<String, ?>) object;
-						for (Object e : template)
-						{
-							jsan.add(map.get(e));
-						}
-					}
-					else if (object instanceof Iterable)
-					{
-						JSAN temp = new JSAN().templates(jsan);
-						for (Object element : (Iterable<?>) object)
-						{
-							temp.add(element);
-						}
-						for (Object e : template)
-						{
-							if (e != null)
-							{
-								jsan.add(temp.attr(e.toString()));
-							}
-						}
-					}
-					else if (object.getClass().isArray())
-					{
-						String type = object.getClass().getComponentType().getCanonicalName();
-						if ("boolean".equals(type))
-						{
-							jsan.addAll((boolean[]) object);
-						}
-						else if ("char".equals(type))
-						{
-							jsan.addAll((char[]) object);
-						}
-						else if ("byte".equals(type))
-						{
-							jsan.addAll((byte[]) object);
-						}
-						else if ("short".equals(type))
-						{
-							jsan.addAll((short[]) object);
-						}
-						else if ("int".equals(type))
-						{
-							jsan.addAll((int[]) object);
-						}
-						else if ("long".equals(type))
-						{
-							jsan.addAll((long[]) object);
-						}
-						else if ("float".equals(type))
-						{
-							jsan.addAll((float[]) object);
-						}
-						else if ("double".equals(type))
-						{
-							jsan.addAll((double[]) object);
-						}
-						else
-						{
-							jsan.addAll((Object[]) object);
-						}
+						jsan.putAll(obj);
 					}
 					else
 					{
-						// Java Reflect
-						Class<?> cls = object.getClass();
-
-						for (Object obj : template)
+						for (Object o : template)
 						{
 							try
 							{
-								String field = obj.toString();
-
-								String methodName = field.substring(0, 1).toUpperCase() + field.substring(1);
-
-								Method method = null;
-
-								try
+								if (obj.containsKey(o.toString()))
 								{
-									method = cls.getMethod("get" + methodName);
-								}
-								catch (NoSuchMethodException e)
-								{
-									method = cls.getMethod("is" + methodName);
-								}
-
-								if (method != null && method.getParameterTypes().length == 0)
-								{
-									jsan.add(method.invoke(object));
+									jsan.add(obj.attr(o.toString()));
 								}
 							}
 							catch (Exception e)
@@ -486,10 +370,179 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 						}
 					}
 				}
-				else
-				{ // Template is null.
-					jsan = JSAN.Reflect(jsan, object);
+				else if (IsJSON(object))
+				{
+					JSON obj = (JSON) object;
+					if (template == null)
+					{
+						jsan.addAll(obj.values());
+					}
+					else
+					{
+						for (Object o : template)
+						{
+							try
+							{
+								if (obj.containsKey(o.toString()))
+								{
+									jsan.add(obj.attr(o.toString()));
+								}
+							}
+							catch (Exception e)
+							{
+							}
+						}
+					}
 				}
+				else if (object instanceof Map)
+				{
+					Map<String, ?> obj = (Map<String, ?>) object;
+					if (template == null)
+					{
+						jsan.addAll(obj.values());
+					}
+					else
+					{
+						for (Object o : template)
+						{
+							try
+							{
+								if (obj.containsKey(o.toString()))
+								{
+									jsan.add(obj.get(o.toString()));
+								}
+							}
+							catch (Exception e)
+							{
+							}
+						}
+					}
+				}
+				else if (object instanceof Iterable)
+				{
+					Iterable<Object> obj = (Iterable<Object>) object;
+					if (template == null)
+					{
+						jsan.pairs(obj);
+					}
+					else
+					{
+						JSAN temp = new JSAN().templates(jsan).pairs(obj);
+						for (Object o : template)
+						{
+							try
+							{
+								if (temp.containsKey(o.toString()))
+								{
+									jsan.add(temp.attr(o.toString()));
+								}
+							}
+							catch (Exception e)
+							{
+							}
+						}
+					}
+				}
+				else if (IsArray(object))
+				{
+					String type = object.getClass().getComponentType().getCanonicalName();
+					JSAN temp = new JSAN().templates(jsan);
+					if ("boolean".equals(type))
+					{
+						temp.addAll((boolean[]) object);
+					}
+					else if ("char".equals(type))
+					{
+						temp.addAll((char[]) object);
+					}
+					else if ("byte".equals(type))
+					{
+						temp.addAll((byte[]) object);
+					}
+					else if ("short".equals(type))
+					{
+						temp.addAll((short[]) object);
+					}
+					else if ("int".equals(type))
+					{
+						temp.addAll((int[]) object);
+					}
+					else if ("long".equals(type))
+					{
+						temp.addAll((long[]) object);
+					}
+					else if ("float".equals(type))
+					{
+						temp.addAll((float[]) object);
+					}
+					else if ("double".equals(type))
+					{
+						temp.addAll((double[]) object);
+					}
+					else
+					{
+						temp.addAll((Object[]) object);
+					}
+
+					if (template == null)
+					{
+						jsan.putAll(temp);
+					}
+					else
+					{
+						for (Object o : template)
+						{
+							try
+							{
+								if (temp.containsKey(o.toString()))
+								{
+									jsan.add(temp.attr(o.toString()));
+								}
+							}
+							catch (Exception e)
+							{
+							}
+						}
+					}
+				}
+				else if (template != null)
+				{
+					// Reflect Object using template
+					Class<?> cls = object.getClass();
+
+					for (Object obj : template)
+					{
+						try
+						{
+							String field = obj.toString();
+
+							String methodName = field.substring(0, 1).toUpperCase() + field.substring(1);
+
+							Method method = null;
+
+							try
+							{
+								method = cls.getMethod("get" + methodName);
+							}
+							catch (NoSuchMethodException e)
+							{
+								method = cls.getMethod("is" + methodName);
+							}
+
+							if (method != null && method.getParameterTypes().length == 0)
+							{
+								jsan.add(method.invoke(object));
+							}
+						}
+						catch (Exception e)
+						{
+						}
+					}
+				}
+			}
+			else
+			{ // Template is null.
+				jsan = JSAN.Reflect(jsan, object);
 			}
 
 			return jsan;
@@ -510,7 +563,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static JSAN Reflect(JSAN jsan, Object object, Map<String, ?> template)
 		{
-			return JSAN.Reflect(jsan, object, template.values());
+			Iterable<?> temp = null;
+			if (template != null)
+			{
+				temp = template.values();
+			}
+			return JSAN.Reflect(jsan, object, temp);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -531,6 +589,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			else if (template instanceof JSAN.Reflector)
 			{
 				jsan = JSAN.Reflect(jsan, object, (JSAN.Reflector<?>) template);
+			}
+			else if (object instanceof Map || object instanceof Iterable || IsArray(object))
+			{
+				jsan = JSAN.Reflect(jsan, object, (Iterable<Object>) template);
 			}
 			else
 			{
@@ -1456,6 +1518,33 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
+	public class Pair implements Entry<String, Object>
+	{
+		private String	key;
+
+		public Pair(String key)
+		{
+			this.key = key;
+		}
+
+		public String getKey()
+		{
+			return key;
+		}
+
+		public Object getValue()
+		{
+			return attr(key);
+		}
+
+		public Object setValue(Object value)
+		{
+			Object old = getValue();
+			attr(key, value);
+			return old;
+		}
+	}
+
 	public static class Quotation implements Hierarchical
 	{
 		public static final char	LINEAR_ATTRIBUTE		= '.';
@@ -1959,26 +2048,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return fields;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <T> Collection<String> FieldsOf(T object)
 	{
 		Collection<String> fields = null;
 
-		if (object instanceof Map<?, ?>)
-		{
-			fields = ((Map<String, ?>) object).keySet();
-		}
-		else if (object instanceof Iterable<?>)
-		{
-			int i = 0;
-			fields = new LinkedList<String>();
-			for (@SuppressWarnings("unused")
-			Object e : (Iterable<?>) object)
-			{
-				fields.add(JSAN.Index(i++));
-			}
-		}
-		else if (object != null)
+		if (object != null && !(object instanceof Map) && !(object instanceof Iterable) && !IsArray(object))
 		{
 			fields = FieldsOf(object.getClass(), fields);
 		}
@@ -2016,6 +2090,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		return index;
+	}
+
+	public static final boolean IsArray(Object o)
+	{
+		return o != null && o.getClass().isArray();
 	}
 
 	public static final boolean IsContext(Object o)
@@ -2315,14 +2394,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			if (template == null)
 			{
-				Map<String, String> temp = new LinkedHashMap<String, String>();
+				Collection<String> fields = FieldsOf(object);
 
-				for (String field : FieldsOf(object))
+				if (fields != null)
 				{
-					temp.put(field, field);
-				}
+					Map<String, String> temp = new LinkedHashMap<String, String>();
 
-				template = temp;
+					for (String field : fields)
+					{
+						temp.put(field, field);
+					}
+
+					template = temp;
+				}
 			}
 		}
 
@@ -2367,96 +2451,123 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		if (object != null)
 		{
-			if (template != null)
+			if (json == null)
 			{
-				if (json == null)
-				{
-					json = new JSON();
-				}
+				json = new JSON();
+			}
 
-				if (IsJSON(object))
+			if (IsJSON(object))
+			{
+				JSON obj = (JSON) object;
+				if (json == object)
 				{
-					if (json == object)
-					{
-						json = (JSON) object;
-					}
-					else
-					{
-						JSON obj = (JSON) object;
-						for (Map.Entry<String, ?> entry : template.entrySet())
-						{
-							json.put(entry.getKey(), obj.attr((String) entry.getValue()));
-						}
-					}
+					json = obj;
 				}
-				else if (object instanceof Map)
+				else if (template == null)
 				{
-					Map<String, ?> map = (Map<String, ?>) object;
-					for (Map.Entry<String, ?> entry : template.entrySet())
-					{
-						json.put(entry.getKey(), map.get(entry.getValue()));
-					}
-				}
-				else if (object instanceof Iterable)
-				{
-					JSAN jsan = new JSAN().templates(json);
-					for (Object element : (Iterable<?>) object)
-					{
-						jsan.add(element);
-					}
-					for (Map.Entry<String, ?> entry : template.entrySet())
-					{
-						try
-						{
-							json.put(entry.getKey(), jsan.attr((String) entry.getValue()));
-						}
-						catch (NumberFormatException e)
-						{
-						}
-					}
-				}
-				else if (object.getClass().isArray())
-				{
-					json = JSAN.Reflect(new JSAN().templates(json), object);
+					json.putAll(obj);
 				}
 				else
 				{
-					// Java Reflect
-					Class<?> cls = object.getClass();
-
 					for (Map.Entry<String, ?> entry : template.entrySet())
 					{
 						try
 						{
-							if (entry.getKey() != null)
+							if (obj.containsKey(entry.getValue()))
 							{
-								String name = entry.getValue().toString();
-
-								if (name.length() > 0)
-								{
-									String methodName = name.substring(0, 1).toUpperCase() + name.substring(1);
-
-									Method method = null;
-
-									try
-									{
-										method = cls.getMethod("get" + methodName);
-									}
-									catch (NoSuchMethodException e)
-									{
-										method = cls.getMethod("is" + methodName);
-									}
-
-									if (method != null && method.getParameterTypes().length == 0)
-									{
-										json.attr(entry.getKey(), method.invoke(object));
-									}
-								}
+								json.put(entry.getKey(), obj.attr(entry.getValue().toString()));
 							}
 						}
 						catch (Exception e)
 						{
 						}
+					}
+				}
+			}
+			else if (object instanceof Map)
+			{
+				Map<String, ?> obj = (Map<String, ?>) object;
+				if (template == null)
+				{
+					json.putAll(obj);
+				}
+				else
+				{
+					for (Map.Entry<String, ?> entry : template.entrySet())
+					{
+						if (obj.containsKey(entry.getValue()))
+						{
+							json.put(entry.getKey(), obj.get(entry.getValue()));
+						}
+					}
+				}
+			}
+			else if (object instanceof Iterable)
+			{
+				Iterable<Object> obj = (Iterable<Object>) object;
+				JSAN jsan = new JSAN().templates(json);
+				jsan.pairs(obj);
+				if (template == null)
+				{
+					json.putAll(jsan);
+				}
+				else
+				{
+					for (Map.Entry<String, ?> entry : template.entrySet())
+					{
+						try
+						{
+							if (jsan.containsKey(entry.getValue().toString()))
+							{
+								json.put(entry.getKey(), jsan.attr(entry.getValue().toString()));
+							}
+						}
+						catch (Exception e)
+						{
+						}
+					}
+				}
+			}
+			else if (IsArray(object))
+			{
+				json.putAll(JSAN.Reflect(new JSAN().templates(json), object, template));
+			}
+			else if (template != null)
+			{
+				// Reflect Object using template
+				Class<?> cls = object.getClass();
+				for (Map.Entry<String, ?> entry : template.entrySet())
+				{
+					try
+					{
+						if (entry.getKey() != null)
+						{
+							String name = entry.getValue().toString();
+
+							if (name.length() > 0)
+							{
+								String methodName = name.substring(0, 1).toUpperCase() + name.substring(1);
+
+								Method method = null;
+
+								try
+								{
+									method = cls.getMethod("get" + methodName);
+								}
+								catch (NoSuchMethodException e)
+								{
+									method = cls.getMethod("is" + methodName);
+								}
+
+								if (method != null && method.getParameterTypes().length == 0)
+								{
+									json.attr(entry.getKey(), method.invoke(object));
+								}
+							}
+						}
+					}
+					catch (Exception e)
+					{
 					}
 				}
 			}
@@ -2487,6 +2598,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		else if (template instanceof JSON.Reflector)
 		{
 			json = JSON.Reflect(json, object, (JSON.Reflector<?>) template);
+		}
+		else if (object instanceof Map || object instanceof Iterable || IsArray(object))
+		{
+			json = JSON.Reflect(json, object, (Map<String, Object>) template);
 		}
 		else
 		{
@@ -3182,9 +3297,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
-	public Set<Entry> pairs()
+	public Set<Pair> pairs()
 	{
-		return pairs((Set<Entry>) null);
+		return pairs((Set<Pair>) null);
 	}
 
 	public JSON pairs(Iterable<? extends Object> pairs)
@@ -3245,16 +3360,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
-	public Set<Entry> pairs(Set<Entry> result)
+	public Set<Pair> pairs(Set<Pair> result)
 	{
 		if (result == null)
 		{
-			result = new LinkedHashSet<Entry>();
+			result = new LinkedHashSet<Pair>();
 		}
 
 		for (String key : this.keySet())
 		{
-			result.add(new Entry(key));
+			result.add(new Pair(key));
 		}
 
 		return result;
