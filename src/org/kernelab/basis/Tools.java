@@ -1040,6 +1040,36 @@ public class Tools
 	}
 
 	/**
+	 * To decide whether two object is equal or not. It would also be recognized
+	 * as equal if two parameter are both null.
+	 * 
+	 * @param a
+	 *            one object.
+	 * @param b
+	 *            another object.
+	 * @return true if two object is equal.
+	 */
+	public static boolean equals(Object a, Object b)
+	{
+		boolean is = false;
+
+		if (a == b)
+		{
+			is = true;
+		}
+		else if (a != null)
+		{
+			is = a.equals(b);
+		}
+		else
+		{
+			is = false;
+		}
+
+		return is;
+	}
+
+	/**
 	 * Get the excerpt of a string with certain length.
 	 * 
 	 * <pre>
