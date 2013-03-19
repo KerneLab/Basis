@@ -1102,34 +1102,34 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public JSAN reflect(Object object)
 		{
-			this.putAll(JSAN.Reflect(object));
+			this.putAll(JSAN.Reflect(templates(), object, (Object) null));
 			return this;
 		}
 
 		@Override
 		public JSAN reflect(Object object, Iterable<?> template)
 		{
-			this.putAll(JSAN.Reflect(object, template));
+			this.putAll(JSAN.Reflect(templates(), object, template));
 			return this;
 		}
 
 		public <T> JSAN reflect(Object object, JSAN.Reflector<T> reflector)
 		{
-			this.putAll(JSAN.Reflect(object, reflector));
+			this.putAll(JSAN.Reflect(templates(), object, reflector));
 			return this;
 		}
 
 		@Override
 		public JSAN reflect(Object object, Map<String, ?> template)
 		{
-			this.putAll(JSAN.Reflect(object, template.values()));
+			this.putAll(JSAN.Reflect(templates(), object, template.values()));
 			return this;
 		}
 
 		@Override
 		public JSAN reflect(Object object, String... fields)
 		{
-			this.putAll(JSAN.Reflect(object, fields));
+			this.putAll(JSAN.Reflect(templates(), object, fields));
 			return this;
 		}
 
@@ -3446,31 +3446,31 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSON reflect(Object object)
 	{
-		this.putAll(JSON.Reflect(object));
+		this.putAll(JSON.Reflect(templates(), object, (Object) null));
 		return this;
 	}
 
 	public JSON reflect(Object object, Iterable<?> fields)
 	{
-		this.putAll(JSON.Reflect(object, fields));
+		this.putAll(JSON.Reflect(templates(), object, fields));
 		return this;
 	}
 
 	public <T> JSON reflect(Object object, JSON.Reflector<T> reflector)
 	{
-		this.putAll(JSON.Reflect(object, reflector));
+		this.putAll(JSON.Reflect(templates(), object, reflector));
 		return this;
 	}
 
 	public JSON reflect(Object object, Map<String, ?> template)
 	{
-		this.putAll(JSON.Reflect(object, template));
+		this.putAll(JSON.Reflect(templates(), object, template));
 		return this;
 	}
 
 	public JSON reflect(Object object, String... fields)
 	{
-		this.putAll(JSON.Reflect(object, fields));
+		this.putAll(JSON.Reflect(templates(), object, fields));
 		return this;
 	}
 
