@@ -1061,10 +1061,6 @@ public class Tools
 		{
 			is = a.equals(b);
 		}
-		else
-		{
-			is = false;
-		}
 
 		return is;
 	}
