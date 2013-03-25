@@ -1102,7 +1102,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public JSAN reflect(Object object)
 		{
-			this.putAll(JSAN.Reflect(templates(), object, (Object) null));
+			this.putAll(JSAN.Reflect(templates(), object));
 			return this;
 		}
 
@@ -3446,7 +3446,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSON reflect(Object object)
 	{
-		this.putAll(JSON.Reflect(templates(), object, (Object) null));
+		this.putAll(JSON.Reflect(templates(), object));
 		return this;
 	}
 
