@@ -2600,7 +2600,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else
 			{ // Template is null.
-				json = JSON.Reflect(templates, object);
+				json = JSON.Reflect(templates, object, (Object) null);
 			}
 		}
 
