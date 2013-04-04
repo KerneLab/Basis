@@ -2114,6 +2114,68 @@ public class Tools
 	}
 
 	/**
+	 * Joint each CharSequence to a String.
+	 * 
+	 * @param delimiter
+	 *            A delimiter which would split these CharSequences.
+	 * @param sequences
+	 *            the CharSequences.
+	 * @return the whole String.
+	 */
+	public static String jointCharSequences(CharSequence delimiter, CharSequence... sequences)
+	{
+		StringBuilder buffer = new StringBuilder();
+
+		boolean first = true;
+
+		for (CharSequence seq : sequences)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				buffer.append(delimiter);
+			}
+			buffer.append(seq);
+		}
+
+		return buffer.toString();
+	}
+
+	/**
+	 * Joint each CharSequence in an Iterable object to a String.
+	 * 
+	 * @param delimiter
+	 *            A delimiter which would split these CharSequences.
+	 * @param sequences
+	 *            the Iterable object which contains CharSequences.
+	 * @return the whole String.
+	 */
+	public static String jointCharSequences(CharSequence delimiter, Iterable<CharSequence> sequences)
+	{
+		StringBuilder buffer = new StringBuilder();
+
+		boolean first = true;
+
+		for (CharSequence seq : sequences)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				buffer.append(delimiter);
+			}
+			buffer.append(seq);
+		}
+
+		return buffer.toString();
+	}
+
+	/**
 	 * Joint each CharSequence in an Iterable object to a String.
 	 * 
 	 * @param iter
@@ -2168,6 +2230,68 @@ public class Tools
 		}
 
 		return builder.toString();
+	}
+
+	/**
+	 * Joint each Strings in an Iterable object to a String.
+	 * 
+	 * @param delimiter
+	 *            A delimiter which would split these Strings.
+	 * @param strings
+	 *            the Iterable object which contains Strings.
+	 * @return the whole String.
+	 */
+	public static String jointStrings(CharSequence delimiter, Iterable<String> strings)
+	{
+		StringBuilder buffer = new StringBuilder();
+
+		boolean first = true;
+
+		for (String string : strings)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				buffer.append(delimiter);
+			}
+			buffer.append(string);
+		}
+
+		return buffer.toString();
+	}
+
+	/**
+	 * Joint each Strings to a String.
+	 * 
+	 * @param delimiter
+	 *            A delimiter which would split these Strings.
+	 * @param strings
+	 *            the Strings.
+	 * @return the whole String.
+	 */
+	public static String jointStrings(CharSequence delimiter, String... strings)
+	{
+		StringBuilder buffer = new StringBuilder();
+
+		boolean first = true;
+
+		for (String string : strings)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				buffer.append(delimiter);
+			}
+			buffer.append(string);
+		}
+
+		return buffer.toString();
 	}
 
 	/**
