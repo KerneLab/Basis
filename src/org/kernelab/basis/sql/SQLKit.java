@@ -669,9 +669,19 @@ public class SQLKit
 		return statements;
 	}
 
-	public boolean isAutoCommit() throws SQLException
+	public Boolean isAutoCommit()
 	{
-		return this.getConnection().getAutoCommit();
+		Boolean is = null;
+
+		try
+		{
+			is = this.getConnection().getAutoCommit();
+		}
+		catch (Exception e)
+		{
+		}
+
+		return is;
 	}
 
 	public boolean isClosed()
@@ -1022,9 +1032,18 @@ public class SQLKit
 		return this.getConnection().setSavepoint(name);
 	}
 
-	public void setAutoCommit(boolean autoCommit) throws SQLException
+	public void setAutoCommit(Boolean autoCommit)
 	{
-		this.getConnection().setAutoCommit(autoCommit);
+		if (autoCommit != null)
+		{
+			try
+			{
+				this.getConnection().setAutoCommit(autoCommit);
+			}
+			catch (Exception e)
+			{
+			}
+		}
 	}
 
 	public void setConnection(Connection connection)
