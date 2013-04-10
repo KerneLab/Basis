@@ -890,6 +890,20 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
+		@Override
+		public JSAN attr(String key, Object value)
+		{
+			try
+			{
+				this.attr(Integer.parseInt(key), value);
+			}
+			catch (NumberFormatException e)
+			{
+				this.add(value);
+			}
+			return this;
+		}
+
 		public Boolean attrBoolean(int index)
 		{
 			return attrCast(index, Boolean.class);
