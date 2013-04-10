@@ -893,14 +893,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public JSAN attr(String key, Object value)
 		{
-			try
-			{
-				this.attr(Integer.parseInt(key), value);
-			}
-			catch (NumberFormatException e)
-			{
-				this.add(value);
-			}
+			this.put(key, value);
 			return this;
 		}
 
@@ -1111,6 +1104,23 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		protected Object put(int index, Object value)
 		{
 			return super.put(Index(index), value);
+		}
+
+		@Override
+		public Object put(String key, Object value)
+		{
+			Object old = null;
+
+			try
+			{
+				old = this.put(Integer.parseInt(key), value);
+			}
+			catch (NumberFormatException e)
+			{
+				this.add(value);
+			}
+
+			return old;
 		}
 
 		@Override
