@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -214,24 +215,37 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		private class ArrayIterator implements ListIterator<Object>
 		{
-			private int	cursor;
+			private Map<Integer, String>	keys	= new HashMap<Integer, String>();
 
-			private int	last;
+			private int						cursor;
+
+			private int						last;
 
 			public ArrayIterator(int index)
 			{
+				int i = 0;
+				for (String key : keySet())
+				{
+					keys.put(i++, key);
+				}
+
 				cursor = index;
 				last = cursor - 1;
 			}
 
 			public void add(Object object)
 			{
-				JSAN.this.add(last, object);
+				JSAN.this.add(index(), object);
+			}
+
+			protected String cursor()
+			{
+				return keys.get(last);
 			}
 
 			public boolean hasNext()
 			{
-				return cursor < JSAN.this.size();
+				return cursor < keys.size();
 			}
 
 			public boolean hasPrevious()
@@ -239,10 +253,25 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				return cursor > 0;
 			}
 
+			protected int index()
+			{
+				int index = LAST;
+
+				try
+				{
+					index = Integer.parseInt(keys.get(last));
+				}
+				catch (NumberFormatException e)
+				{
+				}
+
+				return index;
+			}
+
 			public Object next()
 			{
 				last = cursor++;
-				return JSAN.this.attr(last);
+				return JSAN.this.attr(cursor());
 			}
 
 			public int nextIndex()
@@ -253,12 +282,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			public Object previous()
 			{
 				last = --cursor;
-				return JSAN.this.attr(last);
+				return JSAN.this.attr(cursor());
 			}
 
 			public int previousIndex()
 			{
-				return cursor - 1;
+				return last;
 			}
 
 			public void remove()
@@ -268,7 +297,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			public void set(Object object)
 			{
-				JSAN.this.set(last, object);
+				JSAN.this.put(last, object);
 			}
 		}
 
@@ -294,6 +323,28 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				index = String.valueOf(i);
 				INDEX.put(i, index);
+			}
+
+			return index;
+		}
+
+		public static final Integer Index(String key)
+		{
+			Integer index = null;
+
+			if (key != null)
+			{
+				try
+				{
+					index = Integer.parseInt(key);
+					if (index < 0)
+					{
+						index = null;
+					}
+				}
+				catch (NumberFormatException e)
+				{
+				}
 			}
 
 			return index;
@@ -672,15 +723,22 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return JSAN.Reflect(null, object, fields);
 		}
 
+		private int					length	= 0;
+
+		private Map<String, Object>	list;
+
 		public JSAN()
 		{
-			prototype(new TreeMap<String, Object>(new Comparator<String>() {
+			super();
+
+			list = new TreeMap<String, Object>(new Comparator<String>() {
 
 				public int compare(String a, String b)
 				{
 					return Integer.parseInt(a) - Integer.parseInt(b);
 				}
-			}));
+
+			});
 		}
 
 		public JSAN(Object... values)
@@ -701,17 +759,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN addAll(boolean[] array)
 		{
-			return addAll(size(), array);
+			return addAll(length(), array);
 		}
 
 		public JSAN addAll(byte[] array)
 		{
-			return addAll(size(), array);
+			return addAll(length(), array);
 		}
 
 		public JSAN addAll(char[] array)
 		{
-			return addAll(size(), array);
+			return addAll(length(), array);
 		}
 
 		public JSAN addAll(Collection<? extends Object> collection)
@@ -721,12 +779,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN addAll(double[] array)
 		{
-			return addAll(size(), array);
+			return addAll(length(), array);
 		}
 
 		public JSAN addAll(float[] array)
 		{
-			return addAll(size(), array);
+			return addAll(length(), array);
 		}
 
 		public JSAN addAll(int index, boolean[] array)
@@ -842,7 +900,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN addAll(int[] array)
 		{
-			return addAll(size(), array);
+			return addAll(length(), array);
 		}
 
 		public JSAN addAll(JSAN jsan)
@@ -852,7 +910,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN addAll(long[] array)
 		{
-			return addAll(size(), array);
+			return addAll(length(), array);
 		}
 
 		public JSAN addAll(Object[] array)
@@ -862,7 +920,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN addAll(short[] array)
 		{
-			return addAll(size(), array);
+			return addAll(length(), array);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -871,7 +929,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			if (collection != null)
 			{
 				for (Object o : this)
-				{
+				{ // TODO test
 					collection.add((E) o);
 				}
 			}
@@ -880,19 +938,51 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		@SuppressWarnings("unchecked")
 		public <E> E attr(int index)
-		{
+		{ // TODO test
 			return (E) Quote(this.get(index));
 		}
 
 		public JSAN attr(int index, Object value)
-		{
-			this.set(index, value);
+		{ // TODO test
+			this.put(index, value);
 			return this;
+		}
+
+		public <E> E attr(Object index)
+		{
+			E element = null;
+
+			if (index != null)
+			{
+				if (index instanceof Integer)
+				{
+					element = attr((Integer) index);
+				}
+				else
+				{
+					element = attr(index.toString());
+				}
+			}
+
+			return element;
+		}
+
+		@Override
+		public <E> E attr(String key)
+		{
+			try
+			{
+				return this.attr(Integer.parseInt(key));
+			}
+			catch (NumberFormatException e)
+			{
+				return super.attr(key);
+			}
 		}
 
 		@Override
 		public JSAN attr(String key, Object value)
-		{
+		{ // TODO test
 			this.put(key, value);
 			return this;
 		}
@@ -935,7 +1025,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		protected int bound(int index)
 		{
-			return Tools.limitNumber(index(index) + (index < 0 ? 1 : 0), 0, this.size());
+			return Tools.limitNumber(index(index) + (index < 0 ? 1 : 0), 0, length());
 		}
 
 		@Override
@@ -974,59 +1064,92 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
-		public boolean equalValues(JSAN jsan)
+		@Override
+		public Set<Map.Entry<String, Object>> entrySet()
 		{
+			Set<Map.Entry<String, Object>> set = new LinkedHashSet<Map.Entry<String, Object>>();
+
+			set.addAll(list.entrySet());
+			set.addAll(super.entrySet());
+
+			return set;
+		}
+
+		public boolean equalValues(JSAN jsan)
+		{ // TODO
 			return this.size() == jsan.size() && this.containsAll(jsan) && jsan.containsAll(this);
 		}
 
 		public Object get(int index)
 		{
-			index = index(index);
+			return list.get(Index(index));
+		}
 
-			if (!has(index))
+		@Override
+		public Object get(Object key)
+		{
+			Object element = null;
+
+			if (key != null)
 			{
-				throw new IndexOutOfBoundsException(Index(index));
+				try
+				{
+					element = this.get(Integer.parseInt(key.toString()));
+				}
+				catch (NumberFormatException e)
+				{
+					element = super.get(key);
+				}
 			}
 
-			return super.get(Index(index));
+			return element;
 		}
 
 		public boolean has(int index)
 		{
-			return index >= 0 && index < this.size();
+			return list.containsKey(index);
 		}
 
 		protected int index(int index)
 		{
-			return index >= 0 ? index : index + this.size();
+			return index >= 0 ? index : index + length();
 		}
 
-		public int indexOf(Object object)
+		public Object indexOf(Object object)
 		{
-			int index = -1;
+			Object index = LAST;
 
-			int i = 0;
-
-			for (Object o : this)
+			for (Pair pair : pairs())
 			{
-				if (Tools.equals(object, o))
+				if (Tools.equals(object, pair.getValue()))
 				{
-					index = i;
+					index = pair.getKey();
 					break;
 				}
-				i++;
 			}
 
 			return index;
 		}
 
-		public ArrayIterator iterator()
+		public Iterator<Object> iterator()
 		{
 			return new ArrayIterator(0);
 		}
 
-		public int lastIndexOf(Object object)
+		@Override
+		public Set<String> keySet()
 		{
+			Set<String> set = new LinkedHashSet<String>();
+
+			set.addAll(list.keySet());
+
+			set.addAll(super.keySet());
+
+			return set;
+		}
+
+		public int lastIndexOf(Object object)
+		{ // TODO
 			int index = -1;
 			if (object == null)
 			{
@@ -1059,11 +1182,31 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return index;
 		}
 
+		public int length()
+		{
+			return length;
+		}
+
+		protected JSAN length(int length)
+		{
+			if (length > this.length)
+			{
+				this.length = length;
+			}
+			return this;
+		}
+
 		@Override
 		public JSAN outer(JSON outer)
 		{
 			super.outer(outer);
 			return this;
+		}
+
+		@Override
+		public Set<Pair> pairs()
+		{
+			return pairs((Set<Pair>) null);
 		}
 
 		@Override
@@ -1095,15 +1238,24 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		@Override
-		protected JSAN prototype(Map<String, Object> map)
+		public Set<Pair> pairs(Set<Pair> result)
 		{
-			super.prototype(map);
-			return this;
+			if (result == null)
+			{
+				result = new LinkedHashSet<Pair>();
+			}
+
+			for (String key : this.keySet())
+			{
+				result.add(new Pair(key));
+			}
+
+			return result;
 		}
 
-		protected Object put(int index, Object value)
+		public Object put(int index, Object value)
 		{
-			return super.put(Index(index), value);
+			return put(Index(index), value);
 		}
 
 		@Override
@@ -1111,16 +1263,63 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			Object old = null;
 
-			try
+			if (key != null)
 			{
-				old = this.put(Integer.parseInt(key), value);
-			}
-			catch (NumberFormatException e)
-			{
-				this.add(value);
+				Integer index = Index(key);
+
+				if (index == null)
+				{
+					old = super.put(key, value);
+				}
+				else
+				{
+					old = this.get(key);
+					// Clear the old hierarchical relation.
+					Hierarchical hirch = AsHierarchical(old);
+					if (hirch != null && hirch.outer() == this)
+					{
+						hirch.outer(null).entry(null);
+					}
+
+					value = ValueOf(value, templates());
+
+					hirch = AsHierarchical(value);
+					if (hirch != null)
+					{
+						// Build up new hierarchical relation.
+						JSON formalOuter = hirch.outer();
+						String formalEntry = hirch.entry();
+						JSON formalContext = hirch.context();
+
+						hirch.outer(this).entry(key);
+
+						// If in a Context.
+						if (formalOuter != null && IsContext(formalContext) && IsJSON(hirch))
+						{ // The formal outer would quote the value at its new
+							// location.
+							if (formalContext == this.context())
+							{ // A quote would be made only in the same Context.
+								formalOuter.put(formalEntry, AsJSON(hirch).quote());
+							}
+						}
+					}
+
+					list.put(key, value);
+
+					length(index + 1);
+				}
 			}
 
 			return old;
+		}
+
+		@Override
+		public void putAll(Map<? extends String, ? extends Object> map)
+		{
+			for (Map.Entry<?, ?> entry : map.entrySet())
+			{
+				this.put((String) entry.getKey(), entry.getValue());
+			}
 		}
 
 		@Override
@@ -1159,17 +1358,24 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		@Override
 		public Object remove(Object object)
-		{
-			int index = indexOf(object);
+		{ // TODO
+			Object element = null;
 
-			if (index == -1)
+			Object index = indexOf(object);
+
+			if (index != null)
 			{
-				return null;
+				if (index.equals(LAST))
+				{
+					element = null;
+				}
+				else
+				{
+					element = this.removeByIndex(index);
+				}
 			}
-			else
-			{
-				return this.removeByIndex(index);
-			}
+
+			return element;
 		}
 
 		@Override
@@ -1195,18 +1401,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
-		public JSAN removeAllByIndex(int... indexes)
-		{
-			for (int index : indexes)
-			{
-				this.removeByIndex(index);
-			}
-			return this;
-		}
-
-		public JSAN removeAllByIndex(Iterable<Integer> indexes)
-		{
-			for (Integer index : indexes)
+		public JSAN removeAllByIndex(Iterable<Object> indexes)
+		{ // TODO test
+			for (Object index : indexes)
 			{
 				if (index != null)
 				{
@@ -1216,11 +1413,47 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
-		public Object removeByIndex(int index)
-		{
-			Object object = this.attr(index);
+		public JSAN removeAllByIndex(Object... indexes)
+		{ // TODO test
+			for (Object index : indexes)
+			{
+				this.removeByIndex(index);
+			}
+			return this;
+		}
 
-			splice(index, 1);
+		public Object removeByIndex(Object index)
+		{ // TODO test
+			Object object = null;
+
+			if (index != null)
+			{
+				object = this.attr(index);
+
+				if (object instanceof Integer)
+				{
+					splice((Integer) index, 1);
+				}
+				else
+				{
+					try
+					{
+						int i = Integer.parseInt(index.toString());
+						if (i >= 0)
+						{
+							splice(i, 1);
+						}
+						else
+						{
+							super.remove(index);
+						}
+					}
+					catch (NumberFormatException e)
+					{
+						super.remove(index);
+					}
+				}
+			}
 
 			return object;
 		}
@@ -1259,13 +1492,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
-		public Object set(int index, Object object)
+		@Override
+		public int size()
 		{
-			Object old = this.get(index);
-
-			super.put(Index(index), object);
-
-			return old;
+			return list.size() + super.size();
 		}
 
 		public JSAN slice(int start)
@@ -1302,8 +1532,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		public <T extends Object> JSAN splice(int index, int cover, Collection<T> collection)
-		{
-			int trace = this.size();
+		{ // TODO
+			int trace = length();
 			index = bound(index);
 			cover = Tools.limitNumber(cover, 0, trace - index);
 			trace--;
@@ -1344,7 +1574,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN splice(int index, int cover, JSAN jsan)
 		{
-			int trace = this.size();
+			int trace = length();
 			index = bound(index);
 			cover = Tools.limitNumber(cover, 0, trace - index);
 			trace--;
@@ -1384,7 +1614,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public <T extends Object> JSAN splice(int index, int cover, T... objects)
 		{
-			int trace = this.size();
+			int trace = length();
 			index = bound(index);
 			cover = Tools.limitNumber(cover, 0, trace - index);
 			trace--;
@@ -1545,6 +1775,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 
 			return array;
+		}
+
+		@Override
+		public Collection<Object> values()
+		{
+			Collection<Object> values = new LinkedList<Object>();
+
+			values.addAll(list.values());
+			values.addAll(super.values());
+
+			return values;
 		}
 	}
 
@@ -3400,9 +3641,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public Object put(String key, Object value)
 	{
+		Object old = null;
+
 		if (key != null)
 		{
-			Object old = this.get(key);
+			old = this.get(key);
 			// Clear the old hierarchical relation.
 			Hierarchical hirch = AsHierarchical(old);
 			if (hirch != null && hirch.outer() == this)
@@ -3435,7 +3678,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			map.put(key, value);
 		}
 
-		return value;
+		return old;
 	}
 
 	public void putAll(Map<? extends String, ? extends Object> map)
