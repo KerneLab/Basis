@@ -427,6 +427,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					for (Map.Entry<Class<?>, ?> entry : jsan.templates().entrySet())
 					{
 						Class<?> cls = entry.getKey();
+
 						if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
 						{
 							break;
@@ -444,7 +445,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				}
 				else if (template instanceof Reflector)
 				{
-					jsan = (JSAN) JSON.Reflect(jsan, object, (Reflector<?>) template);
+					jsan = JSAN.Reflect(jsan, object, (Reflector<?>) template);
 				}
 				else
 				{
@@ -752,7 +753,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@SuppressWarnings("unchecked")
 		public static <T> JSAN Reflect(JSAN jsan, Object object, Reflector<T> reflector)
 		{
-			if (object != null)
+			if (object != null && reflector != null)
 			{
 				if (jsan == null)
 				{
@@ -829,7 +830,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public JSAN(Object... values)
 		{
 			this();
-			addAll(values);
+			addAll(LAST, values);
 		}
 
 		public JSAN add(int index, Object object)
@@ -998,23 +999,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return addAll(LAST, array);
 		}
 
-		public JSAN addAll(Object... array)
-		{
-			return addAll(LAST, array);
-		}
-
 		public JSAN addAll(short[] array)
 		{
 			return addAll(LAST, array);
 		}
 
-		public <T extends Collection<Object>> T addTo(T collection)
+		@SuppressWarnings("unchecked")
+		public <E extends Object, T extends Collection<E>> T addTo(T collection)
 		{
 			if (collection != null)
 			{
 				for (Object o : this)
 				{
-					collection.add(o);
+					collection.add((E) o);
 				}
 			}
 			return collection;
@@ -1080,7 +1077,50 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public Boolean attrBoolean(int index)
 		{
-			return attrCast(index, Boolean.class);
+			Boolean value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Boolean.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = Boolean.parseBoolean(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return value;
+		}
+
+		public Byte attrByte(int index)
+		{
+			Byte value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Byte.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = Byte.parseByte(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return value;
 		}
 
 		@SuppressWarnings("unchecked")
@@ -1089,14 +1129,100 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return (E) attr(index);
 		}
 
+		public Character attrCharacter(int index)
+		{
+			Character value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Character.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = obj.toString().charAt(0);
+				}
+				catch (StringIndexOutOfBoundsException ex)
+				{
+				}
+			}
+
+			return value;
+		}
+
 		public Double attrDouble(int index)
 		{
-			return attrCast(index, Double.class);
+			Double value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Double.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = Double.parseDouble(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return value;
+		}
+
+		public Float attrFloat(int index)
+		{
+			Float value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Float.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = Float.parseFloat(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return value;
 		}
 
 		public Integer attrInteger(int index)
 		{
-			return attrCast(index, Integer.class);
+			Integer value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Integer.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = Integer.parseInt(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return value;
 		}
 
 		public JSAN attrJSAN(int index)
@@ -1109,9 +1235,70 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return attrCast(index, JSON.class);
 		}
 
+		public Long attrLong(int index)
+		{
+			Long value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Long.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = Long.parseLong(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return value;
+		}
+
+		public Short attrShort(int index)
+		{
+			Short value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Short.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = Short.parseShort(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return value;
+		}
+
 		public String attrString(int index)
 		{
-			return attrCast(index, String.class);
+			String value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = String.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				value = obj.toString();
+			}
+
+			return value;
 		}
 
 		protected int bound(int index)
@@ -1145,7 +1332,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this.containsValue(value);
 		}
 
-		public boolean containsAll(Iterable<Object> iterable)
+		public boolean containsAll(Iterable<? extends Object> iterable)
 		{
 			boolean contains = false;
 			if (iterable != null)
@@ -1187,9 +1374,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
-		public JSAN deleteAll(Collection<Object> collection)
+		public JSAN deleteAll(Iterable<? extends Object> iterable)
 		{
-			for (Object o : collection)
+			for (Object o : iterable)
 			{
 				this.deleteAll(o);
 			}
@@ -1274,6 +1461,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		protected int index(int index)
 		{
 			return index >= 0 ? index : index + length();
+		}
+
+		@Override
+		public boolean isEmpty()
+		{
+			return array().isEmpty() && super.isEmpty();
 		}
 
 		public ArrayIterator iterator()
@@ -1561,16 +1754,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public JSAN removeAll()
 		{
-			super.removeAll();
-			return this;
+			return clean();
 		}
 
 		@Override
-		public JSAN removeAll(Iterable<? extends Object> iterable)
+		public JSAN removeAll(Iterable<? extends Object> keys)
 		{
-			if (iterable != null)
+			if (keys != null)
 			{
-				for (Object o : iterable)
+				for (Object o : keys)
 				{
 					this.remove(o);
 				}
@@ -1578,7 +1770,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
-		public JSAN retainAll(Collection<Object> collection)
+		public JSAN retainAll(Collection<? extends Object> collection)
 		{
 			if (collection != null && !collection.isEmpty())
 			{
@@ -1997,6 +2189,150 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public JSAN toJSAN()
 		{
 			return this;
+		}
+
+		public <E> E val(int index)
+		{
+			return val(index, null);
+		}
+
+		public <E> E val(int index, E defaultValue)
+		{
+			E val = attr(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Boolean valBoolean(int index)
+		{
+			return attrBoolean(index);
+		}
+
+		public Boolean valBoolean(int index, Boolean defaultValue)
+		{
+			Boolean val = valBoolean(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Byte valByte(int index)
+		{
+			return attrByte(index);
+		}
+
+		public Byte valByte(int index, Byte defaultValue)
+		{
+			Byte val = valByte(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Character valCharacter(int index)
+		{
+			return attrCharacter(index);
+		}
+
+		public Character valCharacter(int index, Character defaultValue)
+		{
+			Character val = valCharacter(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Double valDouble(int index)
+		{
+			return attrDouble(index);
+		}
+
+		public Double valDouble(int index, Double defaultValue)
+		{
+			Double val = valDouble(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Float valFloat(int index)
+		{
+			return attrFloat(index);
+		}
+
+		public Float valFloat(int index, Float defaultValue)
+		{
+			Float val = valFloat(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Integer valInteger(int index)
+		{
+			return attrInteger(index);
+		}
+
+		public Integer valInteger(int index, Integer defaultValue)
+		{
+			Integer val = valInteger(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public JSAN valJSAN(int index)
+		{
+			return attrJSAN(index);
+		}
+
+		public JSAN valJSAN(int index, boolean newIfNull)
+		{
+			JSAN val = valJSAN(index);
+			return val == null && newIfNull ? new JSAN() : val;
+		}
+
+		public JSAN valJSAN(int index, JSAN defaultValue)
+		{
+			JSAN val = valJSAN(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public JSON valJSON(int index)
+		{
+			return attrJSON(index);
+		}
+
+		public JSON valJSON(int index, boolean newIfNull)
+		{
+			JSON val = valJSON(index);
+			return val == null && newIfNull ? new JSON() : val;
+		}
+
+		public JSON valJSON(int index, JSON defaultValue)
+		{
+			JSON val = valJSON(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Long valLong(int index)
+		{
+			return attrLong(index);
+		}
+
+		public Long valLong(int index, Long defaultValue)
+		{
+			Long val = valLong(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Short valShort(int index)
+		{
+			return attrShort(index);
+		}
+
+		public Short valShort(int index, Short defaultValue)
+		{
+			Short val = valShort(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public String valString(int index)
+		{
+			return attrString(index);
+		}
+
+		public String valString(int index, String defaultValue)
+		{
+			String val = valString(index);
+			return val == null ? defaultValue : val;
 		}
 
 		@Override
@@ -2891,6 +3227,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				for (Map.Entry<Class<?>, Object> entry : json.templates().entrySet())
 				{
 					Class<?> cls = entry.getKey();
+
 					if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
 					{
 						break;
@@ -3130,7 +3467,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	@SuppressWarnings("unchecked")
 	public static <T> JSON Reflect(JSON json, Object object, Reflector<T> reflector)
 	{
-		if (object != null)
+		if (object != null && reflector != null)
 		{
 			if (json == null)
 			{
@@ -3401,6 +3738,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			result = ((java.util.Date) object).getTime();
 		}
 		else if (object instanceof Iterable || IsArray(object))
+		{
+			result = JSAN.Reflect(new JSAN().templates(templates), object);
+		}
+		else if (templates != null && templates.get(object.getClass()) instanceof Iterable)
 		{
 			result = JSAN.Reflect(new JSAN().templates(templates), object);
 		}
@@ -4016,8 +4357,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSON removeAll()
 	{
-		this.clear();
-		return this;
+		return clean();
 	}
 
 	public JSON removeAll(Iterable<? extends Object> keys)
@@ -4302,6 +4642,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return attrJSAN(key);
 	}
 
+	public JSAN valJSAN(String key, boolean newIfNull)
+	{
+		JSAN val = valJSAN(key);
+		return val == null && newIfNull ? new JSAN() : val;
+	}
+
 	public JSAN valJSAN(String key, JSAN defaultValue)
 	{
 		JSAN val = valJSAN(key);
@@ -4311,6 +4657,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public JSON valJSON(String key)
 	{
 		return attrJSON(key);
+	}
+
+	public JSON valJSON(String key, boolean newIfNull)
+	{
+		JSON val = valJSON(key);
+		return val == null && newIfNull ? new JSON() : val;
 	}
 
 	public JSON valJSON(String key, JSON defaultValue)
