@@ -1484,16 +1484,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return new ArrayIterator(key);
 		}
 
-		public String keyOf(Object object)
+		public String keyOf(Object value)
 		{
 			String key = null;
 
-			for (Pair pair : pairs())
+			if (containsValue(value))
 			{
-				if (Tools.equals(object, pair.getValue()))
+				for (Pair pair : pairs())
 				{
-					key = pair.getKey();
-					break;
+					if (Tools.equals(value, pair.getValue()))
+					{
+						key = pair.getKey();
+						break;
+					}
 				}
 			}
 
@@ -1512,19 +1515,22 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return set;
 		}
 
-		public String lastKeyOf(Object object)
+		public String lastKeyOf(Object value)
 		{
 			String key = null;
 
-			ArrayIterator iter = new ArrayIterator(size());
-			while (iter.hasPrevious())
+			if (containsValue(value))
 			{
-				iter.previous();
-
-				if (Tools.equals(object, iter.get()))
+				ArrayIterator iter = new ArrayIterator(size());
+				while (iter.hasPrevious())
 				{
-					key = iter.key();
-					break;
+					iter.previous();
+
+					if (Tools.equals(value, iter.get()))
+					{
+						key = iter.key();
+						break;
+					}
 				}
 			}
 
@@ -3737,11 +3743,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			result = ((java.util.Date) object).getTime();
 		}
-		else if (object instanceof Iterable || IsArray(object))
-		{
-			result = JSAN.Reflect(new JSAN().templates(templates), object);
-		}
-		else if (templates != null && templates.get(object.getClass()) instanceof Iterable)
+		else if (IsArray(object) || object instanceof Iterable)
 		{
 			result = JSAN.Reflect(new JSAN().templates(templates), object);
 		}
