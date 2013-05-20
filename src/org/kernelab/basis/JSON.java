@@ -9,8 +9,12 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -415,6 +419,25 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return index;
 		}
 
+		public static JSAN Reflect(JSAN jsan, Object object)
+		{
+			JSAN template = null;
+
+			Collection<String> fields = FieldsOf(object);
+
+			if (fields != null)
+			{
+				template = new JSAN();
+
+				for (String field : fields)
+				{
+					template.add(field);
+				}
+			}
+
+			return JSAN.Reflect(jsan, object, template);
+		}
+
 		public static JSAN Reflect(JSAN jsan, Object object, Iterable<?> fields)
 		{
 			JSAN template = null;
@@ -681,7 +704,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				else
 				{
 					// Template is null.
-					jsan = JSAN.Reflect(jsan, object, (Object) null);
+					jsan = JSAN.Reflect(jsan, object);
 				}
 			}
 
@@ -724,25 +747,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					{
 						template.put(entry.getKey(), entry.getValue());
 					}
-				}
-			}
-
-			return JSAN.Reflect(jsan, object, template);
-		}
-
-		public static JSAN Reflect(JSAN jsan, Object object, Object placeholder)
-		{
-			JSAN template = null;
-
-			Collection<String> fields = FieldsOf(object);
-
-			if (fields != null)
-			{
-				template = new JSAN();
-
-				for (String field : fields)
-				{
-					template.add(field);
 				}
 			}
 
@@ -810,7 +814,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				}
 				else
 				{
-					jsan = (JSAN) JSON.Reflect(jsan, object, (Object) null);
+					jsan = (JSAN) JSON.Reflect(jsan, object);
 				}
 			}
 
@@ -819,7 +823,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static JSAN Reflect(Object object)
 		{
-			return JSAN.Reflect(null, object, (Object) null);
+			return JSAN.Reflect((JSAN) null, object);
 		}
 
 		public static JSAN Reflect(Object object, Iterable<?> fields)
@@ -1160,6 +1164,30 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
+		public BigDecimal attrBigDecimal(int index)
+		{
+			BigDecimal value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = BigDecimal.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					value = new BigDecimal(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return value;
+		}
+
 		public Boolean attrBoolean(int index)
 		{
 			Boolean value = null;
@@ -1208,6 +1236,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return value;
 		}
 
+		public Calendar attrCalendar(int index)
+		{
+			Calendar value = null;
+
+			Long obj = this.attrLong(index);
+
+			if (obj != null)
+			{
+				value = new GregorianCalendar();
+				value.setTimeInMillis(obj);
+			}
+
+			return value;
+		}
+
 		@SuppressWarnings("unchecked")
 		public <E> E attrCast(int index, Class<E> cls)
 		{
@@ -1233,6 +1276,20 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				catch (StringIndexOutOfBoundsException ex)
 				{
 				}
+			}
+
+			return value;
+		}
+
+		public Date attrDate(int index)
+		{
+			Date value = null;
+
+			Long obj = this.attrLong(index);
+
+			if (obj != null)
+			{
+				value = new Date(obj);
 			}
 
 			return value;
@@ -2313,6 +2370,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return val == null ? defaultValue : val;
 		}
 
+		public BigDecimal valBigDecimal(int index)
+		{
+			return attrBigDecimal(index);
+		}
+
+		public BigDecimal valBigDecimal(int index, String defaultValue)
+		{
+			BigDecimal val = valBigDecimal(index);
+			return val == null ? new BigDecimal(defaultValue) : val;
+		}
+
 		public Boolean valBoolean(int index)
 		{
 			return attrBoolean(index);
@@ -2335,6 +2403,24 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return val == null ? defaultValue : val;
 		}
 
+		public Calendar valCalendar(int index)
+		{
+			return attrCalendar(index);
+		}
+
+		public Calendar valCalendar(int index, long defaultValue)
+		{
+			Calendar val = valCalendar(index);
+
+			if (val == null)
+			{
+				val = new GregorianCalendar();
+				val.setTimeInMillis(defaultValue);
+			}
+
+			return val;
+		}
+
 		public Character valCharacter(int index)
 		{
 			return attrCharacter(index);
@@ -2344,6 +2430,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			Character val = valCharacter(index);
 			return val == null ? defaultValue : val;
+		}
+
+		public Date valDate(int index)
+		{
+			return attrDate(index);
+		}
+
+		public Date valDate(int index, long defaultValue)
+		{
+			Date val = valDate(index);
+			return val == null ? new Date(defaultValue) : val;
 		}
 
 		public Double valDouble(int index)
@@ -3321,6 +3418,25 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return o;
 	}
 
+	public static JSON Reflect(JSON json, Object object)
+	{
+		JSON template = null;
+
+		Collection<String> fields = FieldsOf(object);
+
+		if (fields != null)
+		{
+			template = new JSON();
+
+			for (String field : fields)
+			{
+				template.put(field, field);
+			}
+		}
+
+		return JSON.Reflect(json, object, template);
+	}
+
 	public static JSON Reflect(JSON json, Object object, Iterable<?> fields)
 	{
 		JSON template = null;
@@ -3407,7 +3523,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (object instanceof Iterable)
 			{
-				JSAN temp = JSAN.Reflect(new JSAN().templates(json), object, (Object) null);
+				JSAN temp = JSAN.Reflect(new JSAN().templates(json), object);
 
 				if (template == null)
 				{
@@ -3434,7 +3550,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (IsArray(object))
 			{
-				JSAN temp = JSAN.Reflect(new JSAN().templates(json), object, (Object) null);
+				JSAN temp = JSAN.Reflect(new JSAN().templates(json), object);
 
 				if (template == null)
 				{
@@ -3502,7 +3618,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			else
 			{
 				// Template is null.
-				json = JSON.Reflect(json, object, (Object) null);
+				json = JSON.Reflect(json, object);
 			}
 		}
 
@@ -3545,25 +3661,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				{
 					template.put(entry.getKey(), entry.getValue());
 				}
-			}
-		}
-
-		return JSON.Reflect(json, object, template);
-	}
-
-	public static JSON Reflect(JSON json, Object object, Object placeholder)
-	{
-		JSON template = null;
-
-		Collection<String> fields = FieldsOf(object);
-
-		if (fields != null)
-		{
-			template = new JSON();
-
-			for (String field : fields)
-			{
-				template.put(field, field);
 			}
 		}
 
@@ -3629,25 +3726,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else
 			{
-				json = JSON.Reflect(new JSON().templates(templates), object, (Object) null);
+				json = JSON.Reflect(new JSON().templates(templates), object);
 			}
-
-			// if (template instanceof Map)
-			// {
-			// json = JSON.Reflect(json, object, (Map<String, ?>) template);
-			// }
-			// else if (template instanceof Iterable)
-			// {
-			// json = JSON.Reflect(json, object, (Iterable<?>) template);
-			// }
-			// else if (template instanceof Reflector)
-			// {
-			// json = JSON.Reflect(json, object, (Reflector<?>) template);
-			// }
-			// else
-			// {
-			// json = JSON.Reflect(json, object, (Object) null);
-			// }
 		}
 
 		return json;
@@ -3655,7 +3735,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static JSON Reflect(Object object)
 	{
-		return JSON.Reflect(null, object, (Object) null);
+		return JSON.Reflect((JSON) null, object);
 	}
 
 	public static JSON Reflect(Object object, Iterable<?> fields)
@@ -3884,6 +3964,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			result = object.toString();
 		}
+		else if (object instanceof BigDecimal)
+		{
+			result = (BigDecimal) object;
+		}
 		else if (object instanceof java.util.Calendar)
 		{
 			result = ((java.util.Calendar) object).getTimeInMillis();
@@ -3892,9 +3976,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			result = ((java.util.Date) object).getTime();
 		}
-		else if (IsArray(object))
+		else if (IsArray(object) || object instanceof Iterable)
 		{
-			result = JSAN.Reflect(new JSAN().templates(templates), object);
+			result = JSAN.Reflect(templates, object);
 		}
 		else
 		{
@@ -3945,6 +4029,30 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
+	public BigDecimal attrBigDecimal(String key)
+	{
+		BigDecimal value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = BigDecimal.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
+			try
+			{
+				value = new BigDecimal(obj.toString());
+			}
+			catch (NumberFormatException ex)
+			{
+			}
+		}
+
+		return value;
+	}
+
 	public Boolean attrBoolean(String key)
 	{
 		Boolean value = null;
@@ -3991,6 +4099,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return value;
 	}
 
+	public Calendar attrCalendar(String key)
+	{
+		Calendar value = null;
+
+		Long obj = this.attrLong(key);
+
+		if (obj != null)
+		{
+			value = new GregorianCalendar();
+			value.setTimeInMillis(obj);
+		}
+
+		return value;
+	}
+
 	@SuppressWarnings("unchecked")
 	public <E> E attrCast(String key, Class<E> cls)
 	{
@@ -4023,6 +4146,20 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			catch (StringIndexOutOfBoundsException ex)
 			{
 			}
+		}
+
+		return value;
+	}
+
+	public Date attrDate(String key)
+	{
+		Date value = null;
+
+		Long obj = this.attrLong(key);
+
+		if (obj != null)
+		{
+			value = new Date(obj);
 		}
 
 		return value;
@@ -4835,6 +4972,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return val == null ? defaultValue : val;
 	}
 
+	public BigDecimal valBigDecimal(String key)
+	{
+		return attrBigDecimal(key);
+	}
+
+	public BigDecimal valBigDecimal(String key, String defaultValue)
+	{
+		BigDecimal val = valBigDecimal(key);
+		return val == null ? new BigDecimal(defaultValue) : val;
+	}
+
 	public Boolean valBoolean(String key)
 	{
 		return attrBoolean(key);
@@ -4857,6 +5005,24 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return val == null ? defaultValue : val;
 	}
 
+	public Calendar valCalendar(String key)
+	{
+		return attrCalendar(key);
+	}
+
+	public Calendar valCalendar(String key, long defaultValue)
+	{
+		Calendar val = valCalendar(key);
+
+		if (val == null)
+		{
+			val = new GregorianCalendar();
+			val.setTimeInMillis(defaultValue);
+		}
+
+		return val;
+	}
+
 	public Character valCharacter(String key)
 	{
 		return attrCharacter(key);
@@ -4866,6 +5032,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		Character val = valCharacter(key);
 		return val == null ? defaultValue : val;
+	}
+
+	public Date valDate(String key)
+	{
+		return attrDate(key);
+	}
+
+	public Date valDate(String key, long defaultValue)
+	{
+		Date val = valDate(key);
+		return val == null ? new Date(defaultValue) : val;
 	}
 
 	public Double valDouble(String key)
