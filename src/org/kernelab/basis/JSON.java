@@ -2375,6 +2375,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return attrBigDecimal(index);
 		}
 
+		public BigDecimal valBigDecimal(int index, double defaultValue)
+		{
+			BigDecimal val = valBigDecimal(index);
+			return val == null ? new BigDecimal(defaultValue) : val;
+		}
+
 		public BigDecimal valBigDecimal(int index, String defaultValue)
 		{
 			BigDecimal val = valBigDecimal(index);
@@ -4975,6 +4981,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public BigDecimal valBigDecimal(String key)
 	{
 		return attrBigDecimal(key);
+	}
+
+	public BigDecimal valBigDecimal(String key, double defaultValue)
+	{
+		BigDecimal val = valBigDecimal(key);
+		return val == null ? new BigDecimal(defaultValue) : val;
 	}
 
 	public BigDecimal valBigDecimal(String key, String defaultValue)
