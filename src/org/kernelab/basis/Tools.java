@@ -980,7 +980,6 @@ public class Tools
 
 		for (int i = Math.max(0, from); i < sequence.length(); i++)
 		{
-
 			char c = sequence.charAt(i);
 
 			if (c == a)

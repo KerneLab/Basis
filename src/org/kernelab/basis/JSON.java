@@ -209,6 +209,86 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
+	public static class Function implements Hierarchical
+	{
+		public static final String	DEFINE_MARK			= "function";
+
+		public static final char	DEFINE_FIRST_CHAR	= 'f';
+
+		public static final String	DEFINE_REGEX		= "^(function)\\s*?([^(]*?)(\\()";
+
+		private JSON				outer;
+
+		private String				entry;
+
+		private String				expression;
+
+		protected Function(Function f)
+		{
+			expression(f.expression()).outer(f.outer()).entry(f.entry());
+		}
+
+		public Function(String expression)
+		{
+			expression(expression);
+		}
+
+		@Override
+		public Function clone()
+		{
+			return new Function(this);
+		}
+
+		public JSON context()
+		{
+			return outer == null ? null : outer.context();
+		}
+
+		public String entry()
+		{
+			return entry;
+		}
+
+		public Function entry(String entry)
+		{
+			this.entry = entry;
+			return this;
+		}
+
+		public String expression()
+		{
+			return expression;
+		}
+
+		protected Function expression(String expression)
+		{
+			this.expression = expression;
+			return this;
+		}
+
+		public JSON outer()
+		{
+			return outer;
+		}
+
+		public Function outer(JSON json)
+		{
+			this.outer = json;
+			return this;
+		}
+
+		@Override
+		public String toString()
+		{
+			return expression();
+		}
+
+		public String toString(String name)
+		{
+			return expression().replaceFirst(DEFINE_REGEX, "$1 " + (name == null ? entry() : name.trim()) + "$3");
+		}
+	}
+
 	/**
 	 * A class to describe Array object using JSON format.
 	 * 
@@ -417,6 +497,55 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 
 			return index;
+		}
+
+		public static JSAN Reflect(JSAN jsan, Map<Class<?>, Object> templates, Object object)
+		{
+			if (object != null)
+			{
+				if (jsan == null)
+				{
+					jsan = new JSAN().templates(templates);
+				}
+
+				Object template = null;
+
+				if (templates != null)
+				{
+					for (Map.Entry<Class<?>, Object> entry : templates.entrySet())
+					{
+						Class<?> cls = entry.getKey();
+
+						if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
+						{
+							break;
+						}
+					}
+				}
+
+				if (template instanceof JSAN.Reflector)
+				{
+					jsan = JSAN.Reflect(jsan, object, (JSAN.Reflector<?>) template);
+				}
+				else if (template instanceof JSON.Reflector)
+				{
+					jsan = (JSAN) JSON.Reflect(jsan, object, (JSON.Reflector<?>) template);
+				}
+				else if (JSAN.IsJSAN(template))
+				{
+					jsan = JSAN.Reflect(jsan, object, (JSAN) template);
+				}
+				else if (JSON.IsJSON(template))
+				{
+					jsan = (JSAN) JSON.Reflect(jsan, object, (JSON) template);
+				}
+				else
+				{
+					jsan = (JSAN) JSAN.Reflect(jsan, object);
+				}
+			}
+
+			return jsan;
 		}
 
 		public static JSAN Reflect(JSAN jsan, Object object)
@@ -775,50 +904,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static JSAN Reflect(Map<Class<?>, Object> templates, Object object)
 		{
-			JSAN jsan = null;
-
-			if (object != null)
-			{
-				jsan = new JSAN().templates(templates);
-
-				Object template = null;
-
-				if (templates != null)
-				{
-					for (Map.Entry<Class<?>, Object> entry : templates.entrySet())
-					{
-						Class<?> cls = entry.getKey();
-
-						if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
-						{
-							break;
-						}
-					}
-				}
-
-				if (template instanceof JSAN.Reflector)
-				{
-					jsan = JSAN.Reflect(jsan, object, (JSAN.Reflector<?>) template);
-				}
-				else if (template instanceof JSON.Reflector)
-				{
-					jsan = (JSAN) JSON.Reflect(jsan, object, (JSON.Reflector<?>) template);
-				}
-				else if (JSAN.IsJSAN(template))
-				{
-					jsan = JSAN.Reflect(jsan, object, (JSAN) template);
-				}
-				else if (JSON.IsJSON(template))
-				{
-					jsan = (JSAN) JSON.Reflect(jsan, object, (JSON) template);
-				}
-				else
-				{
-					jsan = (JSAN) JSON.Reflect(jsan, object);
-				}
-			}
-
-			return jsan;
+			return JSAN.Reflect(null, templates, object);
 		}
 
 		public static JSAN Reflect(Object object)
@@ -1343,6 +1429,23 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return value;
 		}
 
+		public Function attrFunction(int index)
+		{
+			Function value = null;
+
+			Object obj = this.attr(index);
+
+			try
+			{
+				value = Function.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+			}
+
+			return value;
+		}
+
 		public Integer attrInteger(int index)
 		{
 			Integer value = null;
@@ -1564,6 +1667,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public Object get(int index)
 		{
 			return array().get(Index(bound(index)));
+		}
+
+		public Object get(Integer index)
+		{
+			return get((int) index);
 		}
 
 		@Override
@@ -1841,7 +1949,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public JSAN reflect(Object object)
 		{
-			JSAN.Reflect(this, object);
+			JSAN.Reflect(this, this.templates(), object);
 			return this;
 		}
 
@@ -2471,6 +2579,23 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return val == null ? defaultValue : val;
 		}
 
+		public Function valFunction(int index)
+		{
+			return attrFunction(index);
+		}
+
+		public Function valFunction(int index, Function defaultValue)
+		{
+			Function val = valFunction(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Function valFunction(int index, String defaultValue)
+		{
+			Function val = valFunction(index);
+			return val == null ? new Function(defaultValue) : val;
+		}
+
 		public Integer valInteger(int index)
 		{
 			return attrInteger(index);
@@ -2950,6 +3075,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		ESCAPED_CHAR.put('\t', "\\t");
 	}
 
+	public static final Function AsFunction(Object o)
+	{
+		return Tools.as(o, Function.class);
+	}
+
 	public static final Hierarchical AsHierarchical(Object o)
 	{
 		return Tools.as(o, Hierarchical.class);
@@ -3006,7 +3136,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		i: for (int i = Math.max(0, from); i < sequence.length(); i++)
 		{
-
 			char c = sequence.charAt(i);
 
 			if (c == ESCAPE_CHAR)
@@ -3143,6 +3272,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public static final boolean IsContext(Object o)
 	{
 		return o instanceof Context;
+	}
+
+	public static final boolean IsFunction(Object o)
+	{
+		return o instanceof Function;
 	}
 
 	public static final boolean IsHierarchical(Object o)
@@ -3344,6 +3478,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 						case QUOTE_CHAR:
 							inString = !inString;
 							break;
+
+						case Function.DEFINE_FIRST_CHAR:
+							if (nail == i
+									&& Function.DEFINE_MARK.equals(json.substring(i,
+											Math.min(json.length(), i + Function.DEFINE_MARK.length()))))
+							{
+								i = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i);
+							}
+							break;
 					}
 				}
 			}
@@ -3397,6 +3540,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				value = null;
 			}
+			else if (string.startsWith(Function.DEFINE_MARK))
+			{
+				value = new Function(string);
+			}
 			else if (!string.startsWith(OBJECT_BEGIN_MARK) && !string.startsWith(ARRAY_BEGIN_MARK))
 			{
 				value = new Quotation(string);
@@ -3422,6 +3569,53 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		return o;
+	}
+
+	public static JSON Reflect(JSON json, Map<Class<?>, Object> templates, Object object)
+	{
+		if (object != null)
+		{
+			Object template = null;
+
+			if (templates != null)
+			{
+				for (Map.Entry<Class<?>, Object> entry : templates.entrySet())
+				{
+					Class<?> cls = entry.getKey();
+
+					if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
+					{
+						break;
+					}
+				}
+			}
+
+			if (template instanceof JSAN.Reflector)
+			{
+				json = JSAN.Reflect((JSAN) (json == null ? new JSAN().templates(templates) : json), object,
+						(JSAN.Reflector<?>) template);
+			}
+			else if (template instanceof JSON.Reflector)
+			{
+				json = JSON.Reflect((json == null ? new JSON().templates(templates) : json), object,
+						(JSON.Reflector<?>) template);
+			}
+			else if (JSAN.IsJSAN(template))
+			{
+				json = JSAN.Reflect((JSAN) (json == null ? new JSAN().templates(templates) : json), object,
+						(JSAN) template);
+			}
+			else if (JSON.IsJSON(template))
+			{
+				json = JSON.Reflect((json == null ? new JSON().templates(templates) : json), object, (JSON) template);
+			}
+			else
+			{
+				json = JSON.Reflect((json == null ? new JSON().templates(templates) : json), object);
+			}
+		}
+
+		return json;
 	}
 
 	public static JSON Reflect(JSON json, Object object)
@@ -3695,48 +3889,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static JSON Reflect(Map<Class<?>, Object> templates, Object object)
 	{
-		JSON json = null;
-
-		if (object != null)
-		{
-			Object template = null;
-
-			if (templates != null)
-			{
-				for (Map.Entry<Class<?>, Object> entry : templates.entrySet())
-				{
-					Class<?> cls = entry.getKey();
-
-					if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
-					{
-						break;
-					}
-				}
-			}
-
-			if (template instanceof JSAN.Reflector)
-			{
-				json = JSAN.Reflect(new JSAN().templates(templates), object, (JSAN.Reflector<?>) template);
-			}
-			else if (template instanceof JSON.Reflector)
-			{
-				json = JSON.Reflect(new JSON().templates(templates), object, (JSON.Reflector<?>) template);
-			}
-			else if (JSAN.IsJSAN(template))
-			{
-				json = JSAN.Reflect(new JSAN().templates(templates), object, (JSAN) template);
-			}
-			else if (JSON.IsJSON(template))
-			{
-				json = JSON.Reflect(new JSON().templates(templates), object, (JSON) template);
-			}
-			else
-			{
-				json = JSON.Reflect(new JSON().templates(templates), object);
-			}
-		}
-
-		return json;
+		return JSON.Reflect(null, templates, object);
 	}
 
 	public static JSON Reflect(Object object)
@@ -3962,7 +4115,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		Object result = null;
 
 		if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
-				|| object instanceof Character || object instanceof JSON || object instanceof Quotation)
+				|| object instanceof Character || object instanceof JSON || object instanceof Function
+				|| object instanceof Quotation)
 		{
 			result = object;
 		}
@@ -4214,6 +4368,23 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			catch (NumberFormatException ex)
 			{
 			}
+		}
+
+		return value;
+	}
+
+	public Function attrFunction(String key)
+	{
+		Function value = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			value = Function.class.cast(obj);
+		}
+		catch (ClassCastException e)
+		{
 		}
 
 		return value;
@@ -4610,7 +4781,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSON reflect(Object object)
 	{
-		JSON.Reflect(this, object);
+		JSON.Reflect(this, this.templates(), object);
 		return this;
 	}
 
@@ -5077,6 +5248,23 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		Float val = valFloat(key);
 		return val == null ? defaultValue : val;
+	}
+
+	public Function valFunction(String key)
+	{
+		return attrFunction(key);
+	}
+
+	public Function valFunction(String key, Function defaultValue)
+	{
+		Function val = valFunction(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public Function valFunction(String key, String defaultValue)
+	{
+		Function val = valFunction(key);
+		return val == null ? new Function(defaultValue) : val;
 	}
 
 	public Integer valInteger(String key)
