@@ -217,11 +217,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static final String	DEFINE_REGEX		= "^(function)\\s*?([^(]*?)(\\()";
 
+		public static final String	DEFAULT_NAME_PREFIX	= "_";
+
 		private JSON				outer;
 
 		private String				entry;
 
 		private String				expression;
+
+		private String				name;
 
 		protected Function(Function f)
 		{
@@ -252,6 +256,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public Function entry(String entry)
 		{
 			this.entry = entry;
+			name(null);
 			return this;
 		}
 
@@ -263,6 +268,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		protected Function expression(String expression)
 		{
 			this.expression = expression;
+			return this;
+		}
+
+		public String name()
+		{
+			if (name == null)
+			{
+				name = DEFAULT_NAME_PREFIX + (entry() == null ? "" : entry().trim());
+			}
+			return name;
+		}
+
+		protected Function name(String name)
+		{
+			this.name = name;
 			return this;
 		}
 
@@ -285,7 +305,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public String toString(String name)
 		{
-			return expression().replaceFirst(DEFINE_REGEX, "$1 " + (name == null ? entry() : name.trim()) + "$3");
+			return expression().replaceFirst(DEFINE_REGEX, "$1 " + (name == null ? name() : name.trim()) + "$3");
 		}
 	}
 
