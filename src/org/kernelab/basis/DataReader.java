@@ -4,12 +4,9 @@ import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 /**
@@ -25,7 +22,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	public static String		DEFAULT_CHARSET_NAME	= Charset.defaultCharset().name();
 
-	private String				charSetName				= DEFAULT_CHARSET_NAME;
+	private String				charsetName				= DEFAULT_CHARSET_NAME;
 
 	protected Reader			reader;
 
@@ -45,9 +42,9 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		return null;
 	}
 
-	public String getCharSetName()
+	public String getCharsetName()
 	{
-		return charSetName;
+		return charsetName;
 	}
 
 	public Reader getReader()
@@ -64,7 +61,6 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	{
 		if (this.reader != null)
 		{
-
 			reading = true;
 
 			BufferedReader reader = new BufferedReader(this.reader);
@@ -82,7 +78,6 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 			try
 			{
-
 				int i = -1;
 				char c, l = 0;
 
@@ -115,7 +110,6 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 				// If the reading process was not terminated by
 				// setReading(false), isReading() returns true here.
 				this.readFinished();
-
 			}
 			catch (IOException e)
 			{
@@ -177,51 +171,35 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		return Tools.cast(this);
 	}
 
-	public <E extends DataReader> E setCharSetName(String charSetName)
+	public <E extends DataReader> E setCharsetName(String charsetName)
 	{
-		if (Charset.isSupported(charSetName))
+		if (Charset.isSupported(charsetName))
 		{
-			this.charSetName = charSetName;
+			this.charsetName = charsetName;
 		}
 		return Tools.cast(this);
 	}
 
-	public <E extends DataReader> E setDataFile(File file) throws FileNotFoundException
+	public <E extends DataReader> E setDataFile(File file) throws IOException
 	{
-		try
-		{
-			this.setDataFile(file, charSetName);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			e.printStackTrace();
-		}
+		this.setDataFile(file, charsetName);
 		return Tools.cast(this);
 	}
 
-	public <E extends DataReader> E setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
-			FileNotFoundException
+	public <E extends DataReader> E setDataFile(File file, String charsetName) throws IOException
 	{
-		return this.setInputStream(new FileInputStream(file), charSetName);
+		return this.setInputStream(new FileInputStream(file), charsetName);
 	}
 
-	public <E extends DataReader> E setInputStream(InputStream is)
+	public <E extends DataReader> E setInputStream(InputStream is) throws IOException
 	{
-		try
-		{
-			this.setInputStream(is, charSetName);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			e.printStackTrace();
-		}
+		this.setInputStream(is, charsetName);
 		return Tools.cast(this);
 	}
 
-	public <E extends DataReader> E setInputStream(InputStream is, String charSetName)
-			throws UnsupportedEncodingException
+	public <E extends DataReader> E setInputStream(InputStream is, String charsetName) throws IOException
 	{
-		return this.setReader(new InputStreamReader(is, charSetName));
+		return this.setReader(ByteOrderMarkScanner.readerOfInputStream(is, charsetName));
 	}
 
 	/**

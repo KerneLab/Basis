@@ -1,11 +1,10 @@
 package org.kernelab.basis;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -148,52 +147,27 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return reader;
 		}
 
-		public Context read(File file)
+		public Context read(File file) throws IOException
 		{
-			try
-			{
-				reader.setDataFile(file).read();
-			}
-			catch (FileNotFoundException e)
-			{
-				e.printStackTrace();
-			}
+			reader.setDataFile(file).read();
 			return this;
 		}
 
-		public Context read(File file, String charSetName)
+		public Context read(File file, String charsetName) throws IOException
 		{
-			try
-			{
-				reader.setDataFile(file, charSetName).read();
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				e.printStackTrace();
-			}
-			catch (FileNotFoundException e)
-			{
-				e.printStackTrace();
-			}
+			reader.setDataFile(file, charsetName).read();
 			return this;
 		}
 
-		public Context read(InputStream is)
+		public Context read(InputStream is) throws IOException
 		{
 			reader.setInputStream(is).read();
 			return this;
 		}
 
-		public Context read(InputStream is, String charSetName)
+		public Context read(InputStream is, String charsetName) throws IOException
 		{
-			try
-			{
-				reader.setInputStream(is, charSetName).read();
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				e.printStackTrace();
-			}
+			reader.setInputStream(is, charsetName).read();
 			return this;
 		}
 

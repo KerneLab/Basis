@@ -2,6 +2,7 @@ package org.kernelab.basis.demo;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,7 +52,8 @@ public class DemoDataReader
 			{
 				// 对于文本中的每一行，以"\t"分割成2列
 				String[] pair = Tools.splitCharSequence(line, "\t", 2);
-				if (pair.length == 2) {
+				if (pair.length == 2)
+				{
 					a.add(pair[0]); // 第一列的元素加入到列表a的末尾
 					b.add(pair[1]); // 第二列的元素加入到列表b的末尾
 				}
@@ -64,14 +66,23 @@ public class DemoDataReader
 			}
 		};
 
-		try {
+		try
+		{
 			// 为reader设置要读取的文件"data.txt"，并使用“链式”调用方式开始读取。
 			reader.setDataFile(new File("data.txt"), "GBK").read();
 
 			// 到这里已经将两列数据读到a、b两个列表中了
-		} catch (FileNotFoundException e) {
+		}
+		catch (FileNotFoundException e)
+		{
 			e.printStackTrace(); // 如果文件不存在则会执行这里
-		} catch (UnsupportedEncodingException e) {
+		}
+		catch (UnsupportedEncodingException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
 			e.printStackTrace();
 		}
 	}
