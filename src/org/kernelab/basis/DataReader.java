@@ -16,13 +16,13 @@ import java.nio.charset.Charset;
  */
 public abstract class DataReader extends AbstractAccomplishable implements Runnable
 {
-	private static final char	LF						= '\n';
+	private static final char	LF				= '\n';
 
-	private static final char	CR						= '\r';
+	private static final char	CR				= '\r';
 
-	public static String		DEFAULT_CHARSET_NAME	= Charset.defaultCharset().name();
+	public static Charset		DEFAULT_CHARSET	= Charset.defaultCharset();
 
-	private String				charsetName				= DEFAULT_CHARSET_NAME;
+	private Charset				charset			= DEFAULT_CHARSET;
 
 	protected Reader			reader;
 
@@ -42,9 +42,14 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		return null;
 	}
 
+	public Charset getCharset()
+	{
+		return charset;
+	}
+
 	public String getCharsetName()
 	{
-		return charsetName;
+		return charset.name();
 	}
 
 	public Reader getReader()
@@ -171,19 +176,26 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		return Tools.cast(this);
 	}
 
+	public <E extends DataReader> E setCharset(Charset charset)
+	{
+		this.charset = charset == null ? DEFAULT_CHARSET : charset;
+		return Tools.cast(this);
+	}
+
 	public <E extends DataReader> E setCharsetName(String charsetName)
 	{
-		if (Charset.isSupported(charsetName))
-		{
-			this.charsetName = charsetName;
-		}
-		return Tools.cast(this);
+		return this.setCharset(charsetName == null ? DEFAULT_CHARSET : Charset.forName(charsetName));
 	}
 
 	public <E extends DataReader> E setDataFile(File file) throws IOException
 	{
-		this.setDataFile(file, charsetName);
+		this.setDataFile(file, charset);
 		return Tools.cast(this);
+	}
+
+	public <E extends DataReader> E setDataFile(File file, Charset charset) throws IOException
+	{
+		return this.setInputStream(new FileInputStream(file), charset);
 	}
 
 	public <E extends DataReader> E setDataFile(File file, String charsetName) throws IOException
@@ -193,13 +205,19 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	public <E extends DataReader> E setInputStream(InputStream is) throws IOException
 	{
-		this.setInputStream(is, charsetName);
+		this.setInputStream(is, charset);
 		return Tools.cast(this);
+	}
+
+	public <E extends DataReader> E setInputStream(InputStream is, Charset charset) throws IOException
+	{
+		ByteOrderMarkScanner scanner = new ByteOrderMarkScanner().scan(is, charset);
+		return this.setCharset(scanner.getCharset()).setReader(scanner.getReader());
 	}
 
 	public <E extends DataReader> E setInputStream(InputStream is, String charsetName) throws IOException
 	{
-		return this.setReader(ByteOrderMarkScanner.readerOfInputStream(is, charsetName));
+		return this.setInputStream(is, Charset.forName(charsetName));
 	}
 
 	/**

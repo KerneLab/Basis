@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
@@ -29,18 +28,21 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 			buffer[0] = (byte) b;
 			print(new String(buffer));
 		}
-
 	}
 
-	public static String	DEFAULT_CHARSET_NAME	= Charset.defaultCharset().name();
+	public static Charset	DEFAULT_CHARSET	= Charset.defaultCharset();
 
-	private String			charSetName				= DEFAULT_CHARSET_NAME;
+	private Charset			charset			= DEFAULT_CHARSET;
 
 	protected PrintWriter	writer;
+
+	private boolean			append;
 
 	private boolean			autoFlush;
 
 	private boolean			writing;
+
+	private boolean			written;
 
 	private OutputStream	outputStream;
 
@@ -49,6 +51,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		super();
 		autoFlush = true;
 		writing = false;
+		append = false;
 	}
 
 	/**
@@ -70,9 +73,14 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		return null;
 	}
 
-	public String getCharSetName()
+	public Charset getCharset()
 	{
-		return charSetName;
+		return charset;
+	}
+
+	public String getCharsetName()
+	{
+		return charset.name();
 	}
 
 	public OutputStream getOutputStream()
@@ -89,6 +97,11 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		return writer;
 	}
 
+	public boolean isAppend()
+	{
+		return append;
+	}
+
 	public boolean isAutoFlush()
 	{
 		return autoFlush;
@@ -99,6 +112,11 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		return writing;
 	}
 
+	public boolean isWritten()
+	{
+		return written;
+	}
+
 	/**
 	 * Print CharSequence data into file but doesn't terminate the line.
 	 * 
@@ -107,22 +125,54 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E print(CharSequence sequence)
 	{
-		if (writing)
+		if (this.isWriting())
 		{
 			int length = sequence.length();
 			for (int i = 0; i < length; i++)
 			{
 				writer.print(sequence.charAt(i));
 			}
+			this.setWritten(true);
 		}
 		return Tools.cast(this);
 	}
 
 	public <E extends DataWriter> E print(Object object)
 	{
-		if (writing)
+		if (this.isWriting())
 		{
 			writer.print(object);
+			this.setWritten(true);
+		}
+		return Tools.cast(this);
+	}
+
+	/**
+	 * To print BOM bytes according to the given Charset. If the writer was
+	 * append or did not ready to write or had already written some content,
+	 * then this method would do nothing.
+	 * 
+	 * @return This DataWriter object.
+	 * @throws IOException
+	 */
+	public <E extends DataWriter> E printBOM()
+	{
+		if (this.isWriting() && !this.isAppend() && !this.isWritten())
+		{
+			byte[] bom = ByteOrderMarkScanner.getBOM(charset);
+
+			if (bom != null)
+			{
+				try
+				{
+					this.getOutputStream().write(bom);
+					this.setWritten(true);
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
 		}
 		return Tools.cast(this);
 	}
@@ -136,6 +186,12 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		this.close();
 
 		this.accomplished();
+	}
+
+	public <E extends DataWriter> E setAppend(boolean append)
+	{
+		this.append = append;
+		return Tools.cast(this);
 	}
 
 	/**
@@ -162,13 +218,15 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		return Tools.cast(this);
 	}
 
-	public <E extends DataWriter> E setCharSetName(String charSetName)
+	public <E extends DataWriter> E setCharset(Charset charset)
 	{
-		if (Charset.isSupported(charSetName))
-		{
-			this.charSetName = charSetName;
-		}
+		this.charset = charset == null ? DEFAULT_CHARSET : charset;
 		return Tools.cast(this);
+	}
+
+	public <E extends DataWriter> E setCharsetName(String charsetName)
+	{
+		return this.setCharset(charsetName == null ? DEFAULT_CHARSET : Charset.forName(charsetName));
 	}
 
 	/**
@@ -184,52 +242,51 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E setDataFile(File file) throws FileNotFoundException
 	{
-		return this.setDataFile(file, false);
+		return this.setDataFile(file, append);
 	}
 
 	public <E extends DataWriter> E setDataFile(File file, boolean append) throws FileNotFoundException
 	{
-		try
-		{
-			this.setDataFile(file, append, charSetName);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			e.printStackTrace();
-		}
+		this.setDataFile(file, append, charset);
 		return Tools.cast(this);
 	}
 
-	public <E extends DataWriter> E setDataFile(File file, boolean append, String charSetName)
-			throws UnsupportedEncodingException, FileNotFoundException
+	public <E extends DataWriter> E setDataFile(File file, boolean append, Charset charset)
+			throws FileNotFoundException
 	{
-		return this.setOutputStream(new FileOutputStream(file, append), charSetName);
+		return this.setAppend(append).setOutputStream(new FileOutputStream(file, append), charset);
 	}
 
-	public <E extends DataWriter> E setDataFile(File file, String charSetName) throws UnsupportedEncodingException,
-			FileNotFoundException
+	public <E extends DataWriter> E setDataFile(File file, boolean append, String charsetName)
+			throws FileNotFoundException
 	{
-		return this.setDataFile(file, false, charSetName);
+		return this.setAppend(append).setOutputStream(new FileOutputStream(file, append), charsetName);
+	}
+
+	public <E extends DataWriter> E setDataFile(File file, Charset charset) throws FileNotFoundException
+	{
+		return this.setDataFile(file, append, charset);
+	}
+
+	public <E extends DataWriter> E setDataFile(File file, String charsetName) throws FileNotFoundException
+	{
+		return this.setDataFile(file, append, charsetName);
 	}
 
 	public <E extends DataWriter> E setOutputStream(OutputStream os)
 	{
-		try
-		{
-			this.setOutputStream(os, charSetName);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			e.printStackTrace();
-		}
-		return Tools.cast(this);
+		return this.setOutputStream(os, charset);
 	}
 
-	public <E extends DataWriter> E setOutputStream(OutputStream os, String charSetName)
-			throws UnsupportedEncodingException
+	public <E extends DataWriter> E setOutputStream(OutputStream os, Charset charset)
 	{
-		this.setWriter(new OutputStreamWriter(os, charSetName));
-		return Tools.cast(this);
+		this.outputStream = os;
+		return this.setCharset(charset).setWriter(new OutputStreamWriter(os, charset));
+	}
+
+	public <E extends DataWriter> E setOutputStream(OutputStream os, String charsetName)
+	{
+		return this.setOutputStream(os, Charset.forName(charsetName));
 	}
 
 	/**
@@ -259,10 +316,11 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E setWriter(Writer writer, boolean autoFlush)
 	{
-		if (!writing)
+		if (!this.isWriting())
 		{
 			this.writer = new PrintWriter(writer, autoFlush);
-			writing = true;
+			this.setWriting(true);
+			this.setWritten(false);
 			this.resetAccomplishStatus();
 		}
 		return Tools.cast(this);
@@ -271,6 +329,12 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	protected <E extends DataWriter> E setWriting(boolean writing)
 	{
 		this.writing = writing;
+		return Tools.cast(this);
+	}
+
+	protected <E extends DataWriter> E setWritten(boolean written)
+	{
+		this.written = written;
 		return Tools.cast(this);
 	}
 
@@ -283,9 +347,10 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E write()
 	{
-		if (writing)
+		if (this.isWriting())
 		{
 			writer.println();
+			this.setWritten(true);
 		}
 		return Tools.cast(this);
 	}
@@ -298,7 +363,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E write(CharSequence line)
 	{
-		if (writing)
+		if (this.isWriting())
 		{
 			int length = line.length();
 			for (int i = 0; i < length; i++)
@@ -306,15 +371,17 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 				writer.print(line.charAt(i));
 			}
 			writer.println();
+			this.setWritten(true);
 		}
 		return Tools.cast(this);
 	}
 
 	public <E extends DataWriter> E write(Object object)
 	{
-		if (writing)
+		if (this.isWriting())
 		{
 			writer.println(object);
+			this.setWritten(true);
 		}
 		return Tools.cast(this);
 	}
