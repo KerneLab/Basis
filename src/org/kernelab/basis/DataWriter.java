@@ -30,21 +30,33 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		}
 	}
 
-	public static Charset	DEFAULT_CHARSET	= Charset.defaultCharset();
+	public static final String	MAC_LINE_SEPARATOR		= "\r";
 
-	private Charset			charset			= DEFAULT_CHARSET;
+	public static final String	UNIX_LINE_SEPARATOR		= "\n";
 
-	protected PrintWriter	writer;
+	public static final String	DOS_LINE_SEPARATOR		= "\r\n";
 
-	private boolean			append;
+	public static String		DEFAULT_LINE_SEPARATOR	= System.getProperty("line.separator", UNIX_LINE_SEPARATOR);
 
-	private boolean			autoFlush;
+	public static Charset		DEFAULT_CHARSET			= Charset.defaultCharset();
 
-	private boolean			writing;
+	private String				lineSeparator			= DEFAULT_LINE_SEPARATOR;
 
-	private boolean			written;
+	private Charset				charset					= DEFAULT_CHARSET;
 
-	private OutputStream	outputStream;
+	private OutputStream		outputStream;
+
+	protected PrintWriter		writer;
+
+	private boolean				append;
+
+	private boolean				autoFlush;
+
+	private boolean				writing;
+
+	private boolean				written;
+
+	private boolean				bommed;
 
 	public DataWriter()
 	{
@@ -52,6 +64,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		autoFlush = true;
 		writing = false;
 		append = false;
+		bommed = false;
 	}
 
 	/**
@@ -60,11 +73,33 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public void close()
 	{
-		if (writing && writer != null)
+		if (this.isWriting() && this.getWriter() != null)
 		{
-			writer.close();
-			writing = false;
+			if (!this.isWritten() && this.isBommed())
+			{
+				try
+				{
+					if ("UTF-7".equals(this.getCharsetName()))
+					{
+						this.getOutputStream().write(0x2D);
+					}
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+			this.getWriter().close();
+			this.setWriting(false);
+			this.setWriter(null);
 		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable
+	{
+		this.close();
+		super.finalize();
 	}
 
 	@Override
@@ -81,6 +116,11 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	public String getCharsetName()
 	{
 		return charset.name();
+	}
+
+	public String getLineSeparator()
+	{
+		return lineSeparator;
 	}
 
 	public OutputStream getOutputStream()
@@ -105,6 +145,11 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	public boolean isAutoFlush()
 	{
 		return autoFlush;
+	}
+
+	public boolean isBommed()
+	{
+		return bommed;
 	}
 
 	public boolean isWriting()
@@ -157,7 +202,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E printBOM()
 	{
-		if (this.isWriting() && !this.isAppend() && !this.isWritten())
+		if (this.isWriting() && !this.isAppend() && !this.isBommed() && !this.isWritten())
 		{
 			byte[] bom = ByteOrderMarkScanner.getBOM(charset);
 
@@ -166,7 +211,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 				try
 				{
 					this.getOutputStream().write(bom);
-					this.setWritten(true);
+					this.setBommed(true);
 				}
 				catch (IOException e)
 				{
@@ -215,6 +260,12 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		{
 			this.autoFlush = autoFlush;
 		}
+		return Tools.cast(this);
+	}
+
+	private <E extends DataWriter> E setBommed(boolean bommed)
+	{
+		this.bommed = bommed;
 		return Tools.cast(this);
 	}
 
@@ -273,6 +324,12 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		return this.setDataFile(file, append, charsetName);
 	}
 
+	public <E extends DataWriter> DataWriter setLineSeparator(String lineSeparator)
+	{
+		this.lineSeparator = lineSeparator;
+		return Tools.cast(this);
+	}
+
 	public <E extends DataWriter> E setOutputStream(OutputStream os)
 	{
 		return this.setOutputStream(os, charset);
@@ -318,10 +375,18 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	{
 		if (!this.isWriting())
 		{
-			this.writer = new PrintWriter(writer, autoFlush);
-			this.setWriting(true);
-			this.setWritten(false);
-			this.resetAccomplishStatus();
+			if (writer == null)
+			{
+				this.writer = null;
+			}
+			else
+			{
+				this.writer = new PrintWriter(writer, autoFlush);
+				this.setWriting(true);
+				this.setWritten(false);
+				this.setBommed(false);
+				this.resetAccomplishStatus();
+			}
 		}
 		return Tools.cast(this);
 	}
@@ -349,7 +414,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	{
 		if (this.isWriting())
 		{
-			writer.println();
+			writer.print(lineSeparator);
 			this.setWritten(true);
 		}
 		return Tools.cast(this);
@@ -370,7 +435,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 			{
 				writer.print(line.charAt(i));
 			}
-			writer.println();
+			writer.print(lineSeparator);
 			this.setWritten(true);
 		}
 		return Tools.cast(this);
@@ -380,7 +445,8 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	{
 		if (this.isWriting())
 		{
-			writer.println(object);
+			writer.print(object);
+			writer.print(lineSeparator);
 			this.setWritten(true);
 		}
 		return Tools.cast(this);

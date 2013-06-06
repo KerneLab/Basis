@@ -97,6 +97,8 @@ public class ByteOrderMarkScanner
 
 	private InputStreamReader	reader;
 
+	private boolean				bommed;
+
 	public Charset getCharset()
 	{
 		return charset;
@@ -105,6 +107,11 @@ public class ByteOrderMarkScanner
 	public InputStreamReader getReader()
 	{
 		return reader;
+	}
+
+	public boolean isBommed()
+	{
+		return bommed;
 	}
 
 	public ByteOrderMarkScanner scan(InputStream is) throws IOException
@@ -124,10 +131,14 @@ public class ByteOrderMarkScanner
 
 		String charsetName = null;
 
+		boolean bommed = false;
+
 		for (Entry<String, byte[]> entry : BOMS.entrySet())
 		{
 			if (samePrefix(bytes, entry.getValue()))
 			{
+				bommed = true;
+
 				int len = entry.getValue().length;
 
 				scanner.unread(bytes, len, reads - len);
@@ -154,12 +165,18 @@ public class ByteOrderMarkScanner
 			}
 		}
 
-		return this.setCharset(charset).setReader(scanner);
+		return this.setBommed(bommed).setCharset(charset).setReader(scanner);
 	}
 
 	public ByteOrderMarkScanner scan(InputStream is, String defaultCharsetName) throws IOException
 	{
 		return scan(is, Charset.forName(defaultCharsetName));
+	}
+
+	private ByteOrderMarkScanner setBommed(boolean bommed)
+	{
+		this.bommed = bommed;
+		return this;
 	}
 
 	private ByteOrderMarkScanner setCharset(Charset charset)

@@ -24,6 +24,8 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	private Charset				charset			= DEFAULT_CHARSET;
 
+	private boolean				bommed;
+
 	protected Reader			reader;
 
 	private boolean				reading;
@@ -55,6 +57,11 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	public Reader getReader()
 	{
 		return reader;
+	}
+
+	public boolean isBommed()
+	{
+		return bommed;
 	}
 
 	public boolean isReading()
@@ -170,6 +177,12 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		}
 	}
 
+	private <E extends DataReader> E setBommed(boolean bommed)
+	{
+		this.bommed = bommed;
+		return Tools.cast(this);
+	}
+
 	protected <E extends DataReader> E setBuffer(StringBuilder buffer)
 	{
 		this.buffer = buffer;
@@ -212,7 +225,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	public <E extends DataReader> E setInputStream(InputStream is, Charset charset) throws IOException
 	{
 		ByteOrderMarkScanner scanner = new ByteOrderMarkScanner().scan(is, charset);
-		return this.setCharset(scanner.getCharset()).setReader(scanner.getReader());
+		return this.setBommed(scanner.isBommed()).setCharset(scanner.getCharset()).setReader(scanner.getReader());
 	}
 
 	public <E extends DataReader> E setInputStream(InputStream is, String charsetName) throws IOException
@@ -230,7 +243,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	 */
 	public <E extends DataReader> E setReader(Reader reader)
 	{
-		if (!reading)
+		if (!this.isReading())
 		{
 			this.reader = reader;
 		}
