@@ -170,13 +170,9 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E print(CharSequence sequence)
 	{
-		if (this.isWriting())
+		if (sequence != null && writing)
 		{
-			int length = sequence.length();
-			for (int i = 0; i < length; i++)
-			{
-				writer.print(sequence.charAt(i));
-			}
+			writer.print(sequence.toString());
 			this.setWritten(true);
 		}
 		return Tools.cast(this);
@@ -184,7 +180,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 
 	public <E extends DataWriter> E print(Object object)
 	{
-		if (this.isWriting())
+		if (object != null && writing)
 		{
 			writer.print(object);
 			this.setWritten(true);
@@ -235,7 +231,10 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 
 	public <E extends DataWriter> E setAppend(boolean append)
 	{
-		this.append = append;
+		if (!this.isWriting())
+		{
+			this.append = append;
+		}
 		return Tools.cast(this);
 	}
 
@@ -256,7 +255,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E setAutoFlush(boolean autoFlush)
 	{
-		if (!writing)
+		if (!this.isWriting())
 		{
 			this.autoFlush = autoFlush;
 		}
@@ -271,7 +270,10 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 
 	public <E extends DataWriter> E setCharset(Charset charset)
 	{
-		this.charset = charset == null ? DEFAULT_CHARSET : charset;
+		if (!this.isWriting())
+		{
+			this.charset = charset == null ? DEFAULT_CHARSET : charset;
+		}
 		return Tools.cast(this);
 	}
 
@@ -298,8 +300,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 
 	public <E extends DataWriter> E setDataFile(File file, boolean append) throws FileNotFoundException
 	{
-		this.setDataFile(file, append, charset);
-		return Tools.cast(this);
+		return this.setDataFile(file, append, charset);
 	}
 
 	public <E extends DataWriter> E setDataFile(File file, boolean append, Charset charset)
@@ -412,7 +413,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E write()
 	{
-		if (this.isWriting())
+		if (writing)
 		{
 			writer.print(lineSeparator);
 			this.setWritten(true);
@@ -428,13 +429,9 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	 */
 	public <E extends DataWriter> E write(CharSequence line)
 	{
-		if (this.isWriting())
+		if (line != null && writing)
 		{
-			int length = line.length();
-			for (int i = 0; i < length; i++)
-			{
-				writer.print(line.charAt(i));
-			}
+			writer.print(line.toString());
 			writer.print(lineSeparator);
 			this.setWritten(true);
 		}
@@ -443,7 +440,7 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 
 	public <E extends DataWriter> E write(Object object)
 	{
-		if (this.isWriting())
+		if (object != null && writing)
 		{
 			writer.print(object);
 			writer.print(lineSeparator);

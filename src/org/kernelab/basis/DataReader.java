@@ -202,8 +202,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	public <E extends DataReader> E setDataFile(File file) throws IOException
 	{
-		this.setDataFile(file, charset);
-		return Tools.cast(this);
+		return this.setDataFile(file, charset);
 	}
 
 	public <E extends DataReader> E setDataFile(File file, Charset charset) throws IOException
@@ -218,8 +217,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	public <E extends DataReader> E setInputStream(InputStream is) throws IOException
 	{
-		this.setInputStream(is, charset);
-		return Tools.cast(this);
+		return this.setInputStream(is, charset);
 	}
 
 	public <E extends DataReader> E setInputStream(InputStream is, Charset charset) throws IOException
