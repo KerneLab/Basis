@@ -933,7 +933,25 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				public int compare(String a, String b)
 				{
-					return Integer.parseInt(a) - Integer.parseInt(b);
+					Integer va = Index(a);
+					Integer vb = Index(b);
+
+					if (va != null && vb != null)
+					{
+						return va - vb;
+					}
+					else if (va == null && vb == null)
+					{
+						return a.compareTo(b);
+					}
+					else if (va == null)
+					{
+						return 1;
+					}
+					else
+					{
+						return -1;
+					}
 				}
 
 			}));
@@ -1482,6 +1500,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public boolean has(int index)
 		{
 			return array().containsKey(Index(index));
+		}
+
+		@Override
+		public boolean has(String entry)
+		{
+			return array().containsKey(entry) || super.has(entry);
 		}
 
 		protected int index(int index)
