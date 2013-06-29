@@ -940,17 +940,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					{
 						return va - vb;
 					}
-					else if (va == null && vb == null)
-					{
-						return a.compareTo(b);
-					}
-					else if (va == null)
+					else if (va == null && vb != null)
 					{
 						return 1;
 					}
-					else
+					else if (va != null && vb == null)
 					{
 						return -1;
+					}
+					else
+					{
+						return a.compareTo(b);
 					}
 				}
 
