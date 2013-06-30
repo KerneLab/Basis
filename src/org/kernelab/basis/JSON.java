@@ -470,6 +470,18 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return index;
 		}
 
+		protected static final Integer Index(Object o)
+		{
+			Integer index = null;
+
+			if (o != null)
+			{
+				index = Index(o.toString());
+			}
+
+			return index;
+		}
+
 		protected static final Integer Index(String key)
 		{
 			Integer index = null;
@@ -1392,7 +1404,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public boolean containsKey(Object key)
 		{
-			return array().containsKey(key) || super.containsKey(key);
+			Integer index = Index(key);
+			return index != null ? array().containsKey(key) : super.containsKey(key);
 		}
 
 		@Override
@@ -1505,7 +1518,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public boolean has(String entry)
 		{
-			return array().containsKey(entry) || super.has(entry);
+			Integer index = Index(entry);
+			return index != null ? has(index) : super.has(entry);
 		}
 
 		protected int index(int index)
