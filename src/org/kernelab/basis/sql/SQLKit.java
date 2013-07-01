@@ -3,18 +3,22 @@ package org.kernelab.basis.sql;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON;
+import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.TextFiller;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.sql.DataBase.MySQL;
@@ -304,6 +308,145 @@ public class SQLKit
 		}
 
 		return index;
+	}
+
+	/**
+	 * To convert the current single row in ResultSet to a JSAN object according
+	 * to a given map which must not be null.
+	 * 
+	 * @param rs
+	 *            the ResultSet.
+	 * @param map
+	 *            the Map<String,Object> which describe the relationship of each
+	 *            column between the ResultSet and JSON object.
+	 * @return the JSAN object.
+	 * @throws SQLException
+	 */
+	public static final JSAN jsanOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
+	{
+		return (JSAN) jsonOfResultRow(rs, new JSAN(), map);
+	}
+
+	/**
+	 * To read each row in a ResultSet into a JSAN object.
+	 * 
+	 * @param rs
+	 *            the ResultSet.
+	 * @param jsan
+	 *            the JSAN object to hold the ResultSet. If null then an empty
+	 *            JSAN would be created instead.
+	 * @param map
+	 *            the Map<String,Object> which describe the relationship of each
+	 *            column between the ResultSet and JSON object.
+	 * @param cls
+	 *            the Class which indicates what data type that each row would
+	 *            be converted to.
+	 * @return the JSAN object.
+	 * @throws SQLException
+	 */
+	public static final JSAN jsanOfResultSet(ResultSet rs, JSAN jsan, Map<String, Object> map, Class<? extends JSON> cls)
+			throws SQLException
+	{
+		if (rs != null)
+		{
+			if (jsan == null)
+			{
+				jsan = new JSAN();
+			}
+
+			if (map == null)
+			{
+				map = new LinkedHashMap<String, Object>();
+				ResultSetMetaData meta = rs.getMetaData();
+				int columns = meta.getColumnCount();
+				String name;
+				for (int column = 1; column <= columns; column++)
+				{
+					name = meta.getColumnName(column);
+					map.put(name, name);
+				}
+			}
+
+			try
+			{
+				while (rs.next())
+				{
+					jsan.add(jsonOfResultRow(rs, cls.newInstance(), map));
+				}
+			}
+			catch (InstantiationException e)
+			{
+				e.printStackTrace();
+			}
+			catch (IllegalAccessException e)
+			{
+				e.printStackTrace();
+			}
+		}
+
+		return jsan;
+	}
+
+	/**
+	 * To convert the current single row in ResultSet to a JSON object according
+	 * to a given map which must not be null.
+	 * 
+	 * @param rs
+	 *            the ResultSet.
+	 * @param json
+	 *            the JSON object to hold the data. If null then an empty JSON
+	 *            object would be created instead.
+	 * @param map
+	 *            the Map<String,Object> which describe the relationship of each
+	 *            column between the ResultSet and JSON object.
+	 * @return the JSON object.
+	 * @throws SQLException
+	 */
+	public static final JSON jsonOfResultRow(ResultSet rs, JSON json, Map<String, Object> map) throws SQLException
+	{
+		if (rs != null && map != null)
+		{
+			if (json == null)
+			{
+				json = new JSON();
+			}
+
+			for (Entry<String, Object> entry : map.entrySet())
+			{
+				String key = entry.getKey();
+				Object val = entry.getValue();
+				if (key != null && val != null)
+				{
+					if (val instanceof Integer)
+					{
+						json.attr(key, rs.getObject((Integer) val));
+					}
+					else
+					{
+						json.attr(key, rs.getObject(val.toString()));
+					}
+				}
+			}
+		}
+
+		return json;
+	}
+
+	/**
+	 * To convert the current single row in ResultSet to a JSON object according
+	 * to a given map which must not be null.
+	 * 
+	 * @param rs
+	 *            the ResultSet.
+	 * @param map
+	 *            the Map<String,Object> which describe the relationship of each
+	 *            column between the ResultSet and JSON object.
+	 * @return the JSON object.
+	 * @throws SQLException
+	 */
+	public static final JSON jsonOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
+	{
+		return jsonOfResultRow(rs, new JSON(), map);
 	}
 
 	/**
