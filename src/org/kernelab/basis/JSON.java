@@ -3265,9 +3265,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		int index = -1;
 
+		int code;
+
 		for (int i = from; i < sequence.length(); i++)
 		{
-			if (!Character.isWhitespace(sequence.charAt(i)))
+			code = sequence.charAt(i);
+			if (!Character.isWhitespace(code) && !Character.isSpaceChar(code))
 			{
 				index = i;
 				break;
@@ -3281,9 +3284,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		int index = -1;
 
+		int code;
+
 		for (int i = from; i < sequence.length(); i++)
 		{
-			if (Character.isWhitespace(sequence.charAt(i)))
+			code = sequence.charAt(i);
+			if (Character.isWhitespace(code) || Character.isSpaceChar(code))
 			{
 				index = i;
 				break;
