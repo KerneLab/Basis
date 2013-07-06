@@ -3339,6 +3339,44 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return o instanceof Quotation;
 	}
 
+	public static final int LastNonWhitespaceIndex(CharSequence sequence, int from)
+	{
+		int index = -1;
+
+		int code;
+
+		for (int i = from; i >= 0; i--)
+		{
+			code = sequence.charAt(i);
+			if (!Character.isWhitespace(code) && !Character.isSpaceChar(code))
+			{
+				index = i;
+				break;
+			}
+		}
+
+		return index;
+	}
+
+	public static final int LastWhitespaceIndex(CharSequence sequence, int from)
+	{
+		int index = -1;
+
+		int code;
+
+		for (int i = from; i >= 0; i--)
+		{
+			code = sequence.charAt(i);
+			if (Character.isWhitespace(code) || Character.isSpaceChar(code))
+			{
+				index = i;
+				break;
+			}
+		}
+
+		return index;
+	}
+
 	/**
 	 * @param args
 	 */
@@ -3361,10 +3399,20 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static JSON Parse(CharSequence source, JSON object, Context context)
 	{
-		String string = source.toString().trim();
+		String string = null;
 
-		if (!(string.startsWith(OBJECT_BEGIN_MARK) && string.endsWith(OBJECT_END_MARK))
-				&& !(string.startsWith(ARRAY_BEGIN_MARK) && string.endsWith(ARRAY_END_MARK)))
+		try
+		{
+			string = source.subSequence(FirstNonWhitespaceIndex(source, 0),
+					LastNonWhitespaceIndex(source, source.length() - 1) + 1).toString();
+		}
+		catch (StringIndexOutOfBoundsException e)
+		{
+		}
+
+		if (string == null
+				|| (!(string.startsWith(OBJECT_BEGIN_MARK) && string.endsWith(OBJECT_END_MARK)) && !(string
+						.startsWith(ARRAY_BEGIN_MARK) && string.endsWith(ARRAY_END_MARK))))
 		{
 			return null;
 		}
