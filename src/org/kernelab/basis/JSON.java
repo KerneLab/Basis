@@ -1362,7 +1362,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public JSAN clone()
 		{
-			return new JSAN().templates(this).clone(this);
+			return new JSAN().templates(this).transformers(this).clone(this);
 		}
 
 		public boolean contains(Object value)
@@ -1685,6 +1685,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			value = ValueOf(value, templates());
 
+			Transformer transformer = this.transformerOf(key);
+			if (transformer != null)
+			{
+				value = transformer.transform(this, key, value);
+			}
+
 			hirch = AsHierarchical(value);
 			if (hirch != null)
 			{
@@ -1891,7 +1897,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			if (jsan == null)
 			{
-				jsan = new JSAN().templates(this);
+				jsan = new JSAN().templates(this).transformers(this);
 			}
 			else
 			{
@@ -2265,6 +2271,41 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public JSAN toJSAN()
 		{
+			return this;
+		}
+
+		@Override
+		public JSAN transformer(String entry, Transformer transformer)
+		{
+			super.transformer(entry, transformer);
+			return this;
+		}
+
+		@Override
+		public JSAN transformers(JSON json)
+		{
+			super.transformers(json);
+			return this;
+		}
+
+		@Override
+		public JSAN transformers(Map<String, Transformer> transformers)
+		{
+			super.transformers(transformers);
+			return this;
+		}
+
+		@Override
+		public JSAN transformersRemove(String entry)
+		{
+			super.transformersRemove(entry);
+			return this;
+		}
+
+		@Override
+		protected JSAN transformersSingleton()
+		{
+			super.transformersSingleton();
 			return this;
 		}
 
@@ -3015,6 +3056,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			super("Near\n" + source.subSequence(Math.max(index - 30, 0), Math.min(index + 30, source.length())));
 		}
+	}
+
+	public static interface Transformer
+	{
+		public Object transform(JSON json, String entry, Object value);
 	}
 
 	/**
@@ -3780,7 +3826,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (object instanceof Iterable)
 			{
-				JSAN temp = JSAN.Reflect(new JSAN().templates(json), object);
+				JSAN temp = JSAN.Reflect(new JSAN().templates(json).transformers(json), object);
 
 				if (template == null)
 				{
@@ -3807,7 +3853,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (IsArray(object))
 			{
-				JSAN temp = JSAN.Reflect(new JSAN().templates(json), object);
+				JSAN temp = JSAN.Reflect(new JSAN().templates(json).transformers(json), object);
 
 				if (template == null)
 				{
@@ -4248,13 +4294,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return result;
 	}
 
-	private Map<String, Object>				object;
+	private Map<String, Object>					object;
 
-	private JSON							outer;
+	private JSON								outer;
 
-	private String							entry;
+	private String								entry;
 
-	private transient Map<Class<?>, Object>	templates;
+	private transient Map<Class<?>, Object>		templates;
+
+	private transient Map<String, Transformer>	transformers;
 
 	public JSON()
 	{
@@ -4382,7 +4430,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	@Override
 	public JSON clone()
 	{
-		return new JSON().templates(this).clone(this);
+		return new JSON().templates(this).transformers(this).clone(this);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -4600,6 +4648,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			value = ValueOf(value, templates());
 
+			Transformer transformer = this.transformerOf(key);
+			if (transformer != null)
+			{
+				value = transformer.transform(this, key, value);
+			}
+
 			hirch = AsHierarchical(value);
 			if (hirch != null)
 			{
@@ -4767,7 +4821,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		if (json == null)
 		{
-			json = new JSON().templates(this);
+			json = new JSON().templates(this).transformers(this);
 		}
 
 		for (String key : this.keySet())
@@ -4980,9 +5034,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSON templatesRemove(Class<?> cls)
 	{
-		if (cls != null)
+		if (cls != null && templates() != null)
 		{
-			templatesSingleton();
 			templates().remove(cls);
 		}
 		return this;
@@ -4999,7 +5052,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSAN toJSAN()
 	{
-		JSAN jsan = new JSAN().templates(this);
+		JSAN jsan = new JSAN().templates(this).transformers(this);
 		jsan.addAll(this.values());
 		return jsan;
 	}
@@ -5013,6 +5066,66 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public String toString(int indent)
 	{
 		return Serialize(this, null, indent).insert(0, Tools.repeat(LINE_INDENT, indent)).toString();
+	}
+
+	public JSON transformer(String entry, Transformer transformer)
+	{
+		if (entry != null && transformer != null)
+		{
+			transformersSingleton();
+			transformers().put(entry, transformer);
+		}
+		return this;
+	}
+
+	public Transformer transformerOf(String entry)
+	{
+		Transformer transformer = null;
+
+		if (entry != null && transformers() != null)
+		{
+			transformer = transformers().get(entry);
+		}
+
+		return transformer;
+	}
+
+	public Map<String, Transformer> transformers()
+	{
+		return transformers;
+	}
+
+	public JSON transformers(JSON json)
+	{
+		if (json != null)
+		{
+			transformers(json.transformers());
+		}
+		return this;
+	}
+
+	public JSON transformers(Map<String, Transformer> transformers)
+	{
+		this.transformers = transformers;
+		return this;
+	}
+
+	public JSON transformersRemove(String entry)
+	{
+		if (entry != null && transformers() != null)
+		{
+			transformers().remove(entry);
+		}
+		return this;
+	}
+
+	protected JSON transformersSingleton()
+	{
+		if (transformers() == null)
+		{
+			transformers(new LinkedHashMap<String, Transformer>());
+		}
+		return this;
 	}
 
 	public <E> E val(String key)
