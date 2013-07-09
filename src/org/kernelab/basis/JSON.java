@@ -514,20 +514,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					jsan = new JSAN().templates(templates);
 				}
 
-				Object template = null;
-
-				if (templates != null)
-				{
-					for (Map.Entry<Class<?>, Object> entry : templates.entrySet())
-					{
-						Class<?> cls = entry.getKey();
-
-						if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
-						{
-							break;
-						}
-					}
-				}
+				Object template = TemplateOf(object, templates);
 
 				if (template instanceof JSAN.Reflector)
 				{
@@ -3658,20 +3645,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		if (object != null)
 		{
-			Object template = null;
-
-			if (templates != null)
-			{
-				for (Map.Entry<Class<?>, Object> entry : templates.entrySet())
-				{
-					Class<?> cls = entry.getKey();
-
-					if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
-					{
-						break;
-					}
-				}
-			}
+			Object template = TemplateOf(object, templates);
 
 			if (template instanceof JSAN.Reflector)
 			{
@@ -4174,6 +4148,26 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return buffer;
 	}
 
+	public static Object TemplateOf(Object object, Map<Class<?>, Object> templates)
+	{
+		Object template = null;
+
+		if (object != null && templates != null)
+		{
+			for (Map.Entry<Class<?>, Object> entry : templates.entrySet())
+			{
+				Class<?> cls = entry.getKey();
+
+				if (cls != null && cls.isInstance(object) && (template = entry.getValue()) != null)
+				{
+					break;
+				}
+			}
+		}
+
+		return template;
+	}
+
 	public static String TrimQuotes(String string)
 	{
 		string = string.trim();
@@ -4197,37 +4191,60 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		Object result = null;
 
-		if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
-				|| object instanceof Character || object instanceof JSON || object instanceof Function
-				|| object instanceof Quotation)
+		if (TemplateOf(object, templates) != null)
 		{
-			result = object;
-		}
-		else if (object instanceof CharSequence)
-		{
-			result = object.toString();
-		}
-		else if (object instanceof BigDecimal)
-		{
-			result = (BigDecimal) object;
-		}
-		else if (object instanceof java.util.Calendar)
-		{
-			result = ((java.util.Calendar) object).getTimeInMillis();
-		}
-		else if (object instanceof java.util.Date)
-		{
-			result = ((java.util.Date) object).getTime();
-		}
-		else if (IsArray(object) || object instanceof Iterable)
-		{
-			result = JSAN.Reflect(templates, object);
+			if (IsArray(object) || object instanceof Iterable)
+			{
+				result = JSAN.Reflect(templates, object);
+			}
+			else
+			{
+				result = JSON.Reflect(templates, object);
+			}
 		}
 		else
 		{
-			result = JSON.Reflect(templates, object);
+			if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
+					|| object instanceof Character || object instanceof JSON || object instanceof Function
+					|| object instanceof Quotation)
+			{
+				result = object;
+			}
+			else if (object instanceof CharSequence)
+			{
+				result = object.toString();
+			}
+			else if (object instanceof BigDecimal)
+			{
+				result = (BigDecimal) object;
+			}
+			else if (object instanceof java.util.Calendar)
+			{
+				result = ((java.util.Calendar) object).getTimeInMillis();
+			}
+			else if (object instanceof java.util.Date)
+			{
+				result = ((java.util.Date) object).getTime();
+			}
+			else if (object instanceof java.sql.Clob)
+			{
+				try
+				{
+					result = Tools.readerToStringBuilder(((java.sql.Clob) object).getCharacterStream()).toString();
+				}
+				catch (Exception e)
+				{
+				}
+			}
+			else if (IsArray(object) || object instanceof Iterable)
+			{
+				result = JSAN.Reflect(templates, object);
+			}
+			else
+			{
+				result = JSON.Reflect(templates, object);
+			}
 		}
-
 		return result;
 	}
 
