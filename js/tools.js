@@ -63,16 +63,33 @@ Tools.Clean = function(obj)
 	}
 };
 
-Tools.Get = function(obj, key)
+Tools.EscapeRegex = function(str)
 {
-	var val = obj[key];
-	if (val == null && arguments.length > 2
-			&& $.type(arguments[2]) == "function")
+	return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+};
+
+Tools.EscapeText = function(text)
+{
+	text = "" + text;
+	var buffer = [];
+	for ( var i = 0; i < text.length; i++)
 	{
-		val = arguments[2](key, obj);
-		obj[key] = val;
+		buffer.push("&#" + text.charCodeAt(i) + ";");
 	}
-	return val;
+	return buffer.join("");
+};
+
+Tools.FillTemplate = function(template, data)
+{
+	if (data != null)
+	{
+		for ( var k in data)
+		{
+			template = template.replace(new RegExp(Tools.EscapeRegex("?" + k + "?"), "g"), Tools.EscapeText(Tools
+					.NullEmpty(data[k])));
+		}
+	}
+	return template;
 };
 
 Tools.Find = function(contain, object)
@@ -91,6 +108,17 @@ Tools.Find = function(contain, object)
 		}
 	}
 	return index;
+};
+
+Tools.Get = function(obj, key)
+{
+	var val = obj[key];
+	if (val == null && arguments.length > 2 && $.type(arguments[2]) == "function")
+	{
+		val = arguments[2](key, obj);
+		obj[key] = val;
+	}
+	return val;
 };
 
 Tools.Keys = function(object)
@@ -123,6 +151,11 @@ Tools.Multiple = function(factor, vector)
 Tools.Negative = function(vector)
 {
 	return [ -vector[0], -vector[1] ];
+};
+
+Tools.NullEmpty = function(string)
+{
+	return string == null ? "" : string;
 };
 
 Tools.Orth = function(vector)
