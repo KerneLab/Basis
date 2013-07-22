@@ -34,7 +34,7 @@
 
 		this.renderData = function(jsan, index) {
 			if (index >= 0 && index < jsan.length) {
-				self.append(Tools.FillTemplate(opts.templateBody, jsan[index]));
+				self.append(Tools.fillTemplate(opts.templateBody, jsan[index]));
 				row = self.find("tr:last").hide().data(jsan[index]);
 				if ($.type(opts.onRenderRow) == "function") {
 					opts.onRenderRow(self.find("tr:last").hide(), index + 1);
