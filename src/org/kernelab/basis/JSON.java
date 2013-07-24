@@ -3536,7 +3536,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 								{
 									value = ParseValueOf(json.substring(nail, i));
 								}
-								object.put(entry, value);
+								if (value != NOT_A_VALUE)
+								{
+									object.put(entry, value);
+								}
 							}
 							break i;
 
@@ -3564,7 +3567,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							{
 								value = ParseValueOf(json.substring(nail, i));
 							}
-							if (value != null)
+							if (value != NOT_A_VALUE)
 							{
 								object.put(JSAN.Index(arrayIndex), value);
 							}
@@ -3575,12 +3578,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							{
 								value = ParseValueOf(json.substring(nail, i));
 							}
-							if (arrayIndex > NOT_BEGIN)
+							if (value != NOT_A_VALUE)
 							{
-								entry = JSAN.Index(arrayIndex);
-								arrayIndex++;
+								if (arrayIndex > NOT_BEGIN)
+								{
+									entry = JSAN.Index(arrayIndex);
+									arrayIndex++;
+								}
+								object.put(entry, value);
 							}
-							object.put(entry, value);
 							nail = FirstNonWhitespaceIndex(json, i + 1);
 							entry = null;
 							value = null;
