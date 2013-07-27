@@ -1190,10 +1190,66 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				for (Object o : this)
 				{
-					collection.add((E) o);
+					try
+					{
+						collection.add((E) o);
+					}
+					catch (ClassCastException e)
+					{
+					}
 				}
 			}
 			return collection;
+		}
+
+		public <E extends Object, T extends Collection<E>> T addTo(T collection, Class<E> cls)
+		{
+			if (cls == null)
+			{
+				return addTo(collection);
+			}
+			else
+			{
+				if (collection != null)
+				{
+					for (Object o : this)
+					{
+						try
+						{
+							collection.add(cls.cast(o));
+						}
+						catch (ClassCastException e)
+						{
+						}
+					}
+				}
+				return collection;
+			}
+		}
+
+		public <E extends Object, T extends Collection<E>> T addTo(T collection, Mapper<Object, E> mapper)
+		{
+			if (mapper == null)
+			{
+				return addTo(collection);
+			}
+			else
+			{
+				if (collection != null)
+				{
+					for (Object o : this)
+					{
+						try
+						{
+							collection.add(mapper.map(o));
+						}
+						catch (Exception e)
+						{
+						}
+					}
+				}
+				return collection;
+			}
 		}
 
 		protected Map<String, Object> array()
