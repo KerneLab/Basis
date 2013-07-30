@@ -4750,6 +4750,61 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public <E extends Object, T extends Map<String, E>> T putTo(T map)
+	{
+		if (map != null)
+		{
+			for (Pair pair : this.pairs())
+			{
+				try
+				{
+					map.put(pair.getKey(), (E) pair.getValue());
+				}
+				catch (ClassCastException e)
+				{
+				}
+			}
+		}
+		return map;
+	}
+
+	public <E extends Object, T extends Map<String, E>> T putTo(T map, Class<E> cls)
+	{
+		if (map != null)
+		{
+			for (Pair pair : this.pairs())
+			{
+				try
+				{
+					map.put(pair.getKey(), cls.cast(pair.getValue()));
+				}
+				catch (ClassCastException e)
+				{
+				}
+			}
+		}
+		return map;
+	}
+
+	public <E extends Object, T extends Map<String, E>> T putTo(T map, Mapper<Object, E> mapper)
+	{
+		if (map != null)
+		{
+			for (Pair pair : this.pairs())
+			{
+				try
+				{
+					map.put(pair.getKey(), mapper.map(pair.getValue()));
+				}
+				catch (Exception e)
+				{
+				}
+			}
+		}
+		return map;
+	}
+
 	public Quotation quote()
 	{
 		return new Quotation(Quotation.Quote(this)).outer(this.outer()).entry(this.entry());
