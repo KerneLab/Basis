@@ -7,12 +7,14 @@ import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -30,9 +32,11 @@ import java.util.regex.Pattern;
  */
 public class Entrance
 {
-	private static final Calendar		CALENDAR		= new GregorianCalendar();
+	private static final Calendar		CALENDAR			= new GregorianCalendar();
 
-	protected static final DateFormat	VERSION_FORMAT	= new SimpleDateFormat("yyyy.MM.dd");
+	protected static final DateFormat	VERSION_FORMAT		= new SimpleDateFormat("yyyy.MM.dd");
+
+	public static final char			PARAMETER_PREFIX	= '-';
 
 	public static final JarFile BelongingJarFile(Class<?> cls)
 	{
@@ -59,7 +63,7 @@ public class Entrance
 	 */
 	public static void main(String[] args)
 	{
-		new Entrance().present(args);
+		new Entrance().gather(args).present();
 	}
 
 	public static final Map<String, String> Updates(JarFile jarFile)
@@ -104,7 +108,11 @@ public class Entrance
 		return version;
 	}
 
-	private Map<String, String>	updates;
+	private String[]					arguments;
+
+	private Map<String, List<String>>	parameters;
+
+	private Map<String, String>			updates;
 
 	public Entrance()
 	{
@@ -128,77 +136,172 @@ public class Entrance
 		}
 	}
 
-	protected Map<String, String> initiate(JarFile file)
+	public String argument(int index)
 	{
-		return updates = Collections.unmodifiableMap(Updates(file));
+		return arguments()[index];
 	}
 
-	public void present(String... args)
+	public String argument(int index, String defaultValue)
 	{
-		if (args.length >= 2 && "-main".equals(args[0]))
+		String value = argument(index);
+		return value == null ? defaultValue : value;
+	}
+
+	public String[] arguments()
+	{
+		return arguments;
+	}
+
+	protected Entrance delegate()
+	{
+		String className = this.parameter("main");
+		try
 		{
-			String className = args[1];
-			try
+			Class<?> cls = Class.forName(className);
+			for (Method m : cls.getMethods())
 			{
-				Class<?> cls = Class.forName(className);
-				for (Method m : cls.getMethods())
+				if ("main".equals(m.getName()) && m.getParameterTypes().length == 1
+						&& "java.lang.String[]".equals(m.getParameterTypes()[0].getCanonicalName()))
 				{
-					if (m.getName().equals("main") && m.getParameterTypes().length == 1
-							&& "java.lang.String[]".equals(m.getParameterTypes()[0].getCanonicalName()))
+					String[] argv = new String[arguments().length - 2];
+					for (int i = 0; i < argv.length; i++)
 					{
-						String[] argv = new String[args.length - 2];
-						for (int i = 0; i < argv.length; i++)
-						{
-							argv[i] = args[i + 2];
-						}
-						m.invoke(null, new Object[] { argv });
-						break;
+						argv[i] = argument(i + 2);
 					}
+					m.invoke(null, new Object[] { argv });
+					break;
 				}
 			}
-			catch (ClassNotFoundException e)
-			{
-				e.printStackTrace();
-			}
-			catch (IllegalArgumentException e)
-			{
-				e.printStackTrace();
-			}
-			catch (IllegalAccessException e)
-			{
-				e.printStackTrace();
-			}
-			catch (InvocationTargetException e)
-			{
-				e.printStackTrace();
-			}
-			return;
 		}
+		catch (ClassNotFoundException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IllegalArgumentException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IllegalAccessException e)
+		{
+			e.printStackTrace();
+		}
+		catch (InvocationTargetException e)
+		{
+			e.printStackTrace();
+		}
+		return this;
+	}
 
-		Map<String, String> map = new LinkedHashMap<String, String>();
+	public Entrance gather(String... args)
+	{
+		arguments = args;
+
+		parameters = new LinkedHashMap<String, List<String>>();
 
 		String key = null;
-		String value = null;
-		for (String arg : args)
+
+		List<String> values = null;
+
+		for (String arg : arguments)
 		{
-			if (arg.startsWith("-"))
+			if (arg.length() > 1 && arg.charAt(0) == PARAMETER_PREFIX)
 			{
 				key = arg.substring(1);
+				values = new ArrayList<String>();
+				parameters.put(key, values);
 			}
 			else
 			{
-				value = arg;
-			}
-			map.put(key, value);
-			if (value != null)
-			{
-				key = null;
-				value = null;
+				values.add(arg);
 			}
 		}
 
+		return this;
+	}
+
+	public boolean hasParameter(String key)
+	{
+		return parameters(key) != null;
+	}
+
+	protected Entrance initiate(JarFile file)
+	{
+		updates = Collections.unmodifiableMap(Updates(file));
+		return this;
+	}
+
+	public String parameter(String key)
+	{
+		List<String> values = this.parameters(key);
+		return values == null || values.isEmpty() ? null : values.get(0);
+	}
+
+	public String parameter(String key, String defaultValue)
+	{
+		String value = this.parameter(key);
+		return value == null ? defaultValue : value;
+	}
+
+	public Map<String, List<String>> parameters()
+	{
+		return parameters;
+	}
+
+	public List<String> parameters(String key)
+	{
+		return this.parameters().get(key);
+	}
+
+	public List<String> parameters(String key, boolean newIfNull)
+	{
+		List<String> values = this.parameters(key);
+
+		if (values == null && newIfNull)
+		{
+			values = new ArrayList<String>();
+		}
+
+		return values;
+	}
+
+	public List<String> parameters(String key, List<String> defaultValues)
+	{
+		List<String> values = this.parameters(key);
+
+		if (values == null)
+		{
+			values = defaultValues;
+		}
+
+		return values;
+	}
+
+	public List<String> parameters(String key, String... defaultValues)
+	{
+		List<String> values = this.parameters(key);
+
+		if (values == null)
+		{
+			values = new ArrayList<String>();
+			for (String value : defaultValues)
+			{
+				values.add(value);
+			}
+		}
+
+		return values;
+	}
+
+	public Entrance present()
+	{
+		if (this.parameter("main") != null)
+		{
+			return this.delegate();
+		}
+
+		String f = parameter("f");
 		JarFile file = null;
-		if (map.get("f") == null)
+		if (f == null)
 		{
 			file = BelongingJarFile(this.getClass());
 		}
@@ -206,7 +309,7 @@ public class Entrance
 		{
 			try
 			{
-				file = new JarFile(new File(map.get("f")));
+				file = new JarFile(new File(f));
 			}
 			catch (IOException e)
 			{
@@ -216,7 +319,10 @@ public class Entrance
 
 		initiate(file);
 
-		if ((!map.containsKey("u") && !map.containsKey("v")) || (map.containsKey("v") && map.get("v") == null))
+		List<String> u = parameters("u");
+		List<String> v = parameters("v");
+
+		if ((u == null && v == null) || (v != null && v.isEmpty()))
 		{
 			Tools.debug(version());
 		}
@@ -224,32 +330,26 @@ public class Entrance
 		{
 			Set<String> filter = new HashSet<String>();
 
-			if (map.containsKey("u"))
+			if (u != null && !u.isEmpty())
 			{
-				if (map.get("u") != null)
+				Matcher matcher = Pattern.compile(u.get(0)).matcher("");
+				for (Entry<String, String> entry : updates().entrySet())
 				{
-					Matcher matcher = Pattern.compile(map.get("u")).matcher("");
-					for (Entry<String, String> entry : updates().entrySet())
+					if (!matcher.reset(entry.getKey()).find())
 					{
-						if (!matcher.reset(entry.getKey()).find())
-						{
-							filter.add(entry.getKey());
-						}
+						filter.add(entry.getKey());
 					}
 				}
 			}
 
-			if (map.containsKey("v"))
+			if (v != null && !v.isEmpty())
 			{
-				if (map.get("v") != null)
+				Matcher matcher = Pattern.compile(v.get(0)).matcher("");
+				for (Entry<String, String> entry : updates().entrySet())
 				{
-					Matcher matcher = Pattern.compile(map.get("v")).matcher("");
-					for (Entry<String, String> entry : updates().entrySet())
+					if (!matcher.reset(entry.getValue()).find())
 					{
-						if (!matcher.reset(entry.getValue()).find())
-						{
-							filter.add(entry.getKey());
-						}
+						filter.add(entry.getKey());
 					}
 				}
 			}
@@ -262,6 +362,8 @@ public class Entrance
 				}
 			}
 		}
+
+		return this;
 	}
 
 	public Map<String, String> updates()
