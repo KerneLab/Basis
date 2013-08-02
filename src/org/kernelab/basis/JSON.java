@@ -2818,11 +2818,431 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return attr(key);
 		}
 
+		public String key()
+		{
+			return key;
+		}
+
 		public Object setValue(Object value)
 		{
 			Object old = getValue();
 			attr(key, value);
 			return old;
+		}
+
+		@SuppressWarnings("unchecked")
+		public <E> E val()
+		{
+			return (E) this.getValue();
+		}
+
+		public BigDecimal valBigDecimal(String key)
+		{
+			BigDecimal val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = BigDecimal.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = new BigDecimal(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return val;
+		}
+
+		public BigDecimal valBigDecimal(String key, double defaultValue)
+		{
+			BigDecimal val = valBigDecimal(key);
+			return val == null ? new BigDecimal(defaultValue) : val;
+		}
+
+		public BigDecimal valBigDecimal(String key, String defaultValue)
+		{
+			BigDecimal val = valBigDecimal(key);
+			return val == null ? new BigDecimal(defaultValue) : val;
+		}
+
+		public Boolean valBoolean(String key)
+		{
+			Boolean val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Boolean.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				String str = obj.toString();
+				if (TRUE_STRING.equals(str) || FALSE_STRING.equals(str))
+				{
+					val = Boolean.parseBoolean(str);
+				}
+			}
+
+			return val;
+		}
+
+		public Boolean valBoolean(String key, Boolean defaultValue)
+		{
+			Boolean val = valBoolean(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public Byte valByte(String key)
+		{
+			Byte val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Byte.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = Byte.parseByte(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return val;
+		}
+
+		public Byte valByte(String key, Byte defaultValue)
+		{
+			Byte val = valByte(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public Calendar valCalendar(String key)
+		{
+			Calendar val = null;
+
+			Long obj = this.valLong(key);
+
+			if (obj != null)
+			{
+				val = new GregorianCalendar();
+				val.setTimeInMillis(obj);
+			}
+
+			return val;
+		}
+
+		public Calendar valCalendar(String key, long defaultValue)
+		{
+			Calendar val = valCalendar(key);
+
+			if (val == null)
+			{
+				val = new GregorianCalendar();
+				val.setTimeInMillis(defaultValue);
+			}
+
+			return val;
+		}
+
+		public Character valCharacter(String key)
+		{
+			Character val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Character.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = obj.toString().charAt(0);
+				}
+				catch (StringIndexOutOfBoundsException ex)
+				{
+				}
+			}
+
+			return val;
+		}
+
+		public Character valCharacter(String key, Character defaultValue)
+		{
+			Character val = valCharacter(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public Date valDate(String key)
+		{
+			Date val = null;
+
+			Long obj = this.valLong(key);
+
+			if (obj != null)
+			{
+				val = new Date(obj);
+			}
+
+			return val;
+		}
+
+		public Date valDate(String key, long defaultValue)
+		{
+			Date val = valDate(key);
+			return val == null ? new Date(defaultValue) : val;
+		}
+
+		public Double valDouble(String key)
+		{
+			Double val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Double.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = Double.parseDouble(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return val;
+		}
+
+		public Double valDouble(String key, Double defaultValue)
+		{
+			Double val = valDouble(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public Float valFloat(String key)
+		{
+			Float val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Float.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = Float.parseFloat(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return val;
+		}
+
+		public Float valFloat(String key, Float defaultValue)
+		{
+			Float val = valFloat(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public Function valFunction(String key)
+		{
+			Function val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Function.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+			}
+
+			return val;
+		}
+
+		public Function valFunction(String key, Function defaultValue)
+		{
+			Function val = valFunction(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public Function valFunction(String key, String defaultValue)
+		{
+			Function val = valFunction(key);
+			return val == null ? new Function(defaultValue) : val;
+		}
+
+		public Integer valInteger(String key)
+		{
+			Integer val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Integer.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = Integer.parseInt(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return val;
+		}
+
+		public Integer valInteger(String key, Integer defaultValue)
+		{
+			Integer val = valInteger(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public JSAN valJSAN(String key)
+		{
+			return attrJSAN(key);
+		}
+
+		public JSAN valJSAN(String key, boolean newIfNull)
+		{
+			JSAN val = valJSAN(key);
+			return val == null && newIfNull ? new JSAN() : val;
+		}
+
+		public JSAN valJSAN(String key, JSAN defaultValue)
+		{
+			JSAN val = valJSAN(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public JSON valJSON(String key)
+		{
+			return attrJSON(key);
+		}
+
+		public JSON valJSON(String key, boolean newIfNull)
+		{
+			JSON val = valJSON(key);
+			return val == null && newIfNull ? new JSON() : val;
+		}
+
+		public JSON valJSON(String key, JSON defaultValue)
+		{
+			JSON val = valJSON(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public Long valLong(String key)
+		{
+			Long val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Long.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = Long.parseLong(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return val;
+		}
+
+		public Long valLong(String key, Long defaultValue)
+		{
+			Long val = valLong(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public Short valShort(String key)
+		{
+			Short val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = Short.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = Short.parseShort(obj.toString());
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+
+			return val;
+		}
+
+		public Short valShort(String key, Short defaultValue)
+		{
+			Short val = valShort(key);
+			return val == null ? defaultValue : val;
+		}
+
+		public String valString(String key)
+		{
+			String val = null;
+
+			Object obj = this.getValue();
+
+			try
+			{
+				val = String.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				val = obj.toString();
+			}
+
+			return val;
+		}
+
+		public String valString(String key, String defaultValue)
+		{
+			String val = valString(key);
+			return val == null ? defaultValue : val;
 		}
 	}
 
