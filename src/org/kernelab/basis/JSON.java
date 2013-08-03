@@ -2830,419 +2830,184 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return old;
 		}
 
-		@SuppressWarnings("unchecked")
 		public <E> E val()
 		{
-			return (E) this.getValue();
+			return JSON.this.val(key);
 		}
 
-		public BigDecimal valBigDecimal(String key)
+		public <E> E val(E defaultValue)
 		{
-			BigDecimal val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = BigDecimal.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				try
-				{
-					val = new BigDecimal(obj.toString());
-				}
-				catch (NumberFormatException ex)
-				{
-				}
-			}
-
-			return val;
+			return JSON.this.val(key, defaultValue);
 		}
 
-		public BigDecimal valBigDecimal(String key, double defaultValue)
+		public BigDecimal valBigDecimal()
 		{
-			BigDecimal val = valBigDecimal(key);
-			return val == null ? new BigDecimal(defaultValue) : val;
+			return JSON.this.valBigDecimal(key);
 		}
 
-		public BigDecimal valBigDecimal(String key, String defaultValue)
+		public BigDecimal valBigDecimal(double defaultValue)
 		{
-			BigDecimal val = valBigDecimal(key);
-			return val == null ? new BigDecimal(defaultValue) : val;
+			return JSON.this.valBigDecimal(key, defaultValue);
 		}
 
-		public Boolean valBoolean(String key)
+		public BigDecimal valBigDecimal(String defaultValue)
 		{
-			Boolean val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Boolean.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				String str = obj.toString();
-				if (TRUE_STRING.equals(str) || FALSE_STRING.equals(str))
-				{
-					val = Boolean.parseBoolean(str);
-				}
-			}
-
-			return val;
+			return JSON.this.valBigDecimal(key, defaultValue);
 		}
 
-		public Boolean valBoolean(String key, Boolean defaultValue)
+		public Boolean valBoolean()
 		{
-			Boolean val = valBoolean(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valBoolean(key);
 		}
 
-		public Byte valByte(String key)
+		public Boolean valBoolean(Boolean defaultValue)
 		{
-			Byte val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Byte.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				try
-				{
-					val = Byte.parseByte(obj.toString());
-				}
-				catch (NumberFormatException ex)
-				{
-				}
-			}
-
-			return val;
+			return JSON.this.valBoolean(key, defaultValue);
 		}
 
-		public Byte valByte(String key, Byte defaultValue)
+		public Byte valByte()
 		{
-			Byte val = valByte(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valByte(key);
 		}
 
-		public Calendar valCalendar(String key)
+		public Byte valByte(Byte defaultValue)
 		{
-			Calendar val = null;
-
-			Long obj = this.valLong(key);
-
-			if (obj != null)
-			{
-				val = new GregorianCalendar();
-				val.setTimeInMillis(obj);
-			}
-
-			return val;
+			return JSON.this.valByte(key, defaultValue);
 		}
 
-		public Calendar valCalendar(String key, long defaultValue)
+		public Calendar valCalendar()
 		{
-			Calendar val = valCalendar(key);
-
-			if (val == null)
-			{
-				val = new GregorianCalendar();
-				val.setTimeInMillis(defaultValue);
-			}
-
-			return val;
+			return JSON.this.valCalendar(key);
 		}
 
-		public Character valCharacter(String key)
+		public Calendar valCalendar(long defaultValue)
 		{
-			Character val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Character.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				try
-				{
-					val = obj.toString().charAt(0);
-				}
-				catch (StringIndexOutOfBoundsException ex)
-				{
-				}
-			}
-
-			return val;
+			return JSON.this.valCalendar(key, defaultValue);
 		}
 
-		public Character valCharacter(String key, Character defaultValue)
+		public Character valCharacter()
 		{
-			Character val = valCharacter(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valCharacter(key);
 		}
 
-		public Date valDate(String key)
+		public Character valCharacter(Character defaultValue)
 		{
-			Date val = null;
-
-			Long obj = this.valLong(key);
-
-			if (obj != null)
-			{
-				val = new Date(obj);
-			}
-
-			return val;
+			return JSON.this.valCharacter(key, defaultValue);
 		}
 
-		public Date valDate(String key, long defaultValue)
+		public Date valDate()
 		{
-			Date val = valDate(key);
-			return val == null ? new Date(defaultValue) : val;
+			return JSON.this.valDate(key);
 		}
 
-		public Double valDouble(String key)
+		public Date valDate(long defaultValue)
 		{
-			Double val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Double.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				try
-				{
-					val = Double.parseDouble(obj.toString());
-				}
-				catch (NumberFormatException ex)
-				{
-				}
-			}
-
-			return val;
+			return JSON.this.valDate(key, defaultValue);
 		}
 
-		public Double valDouble(String key, Double defaultValue)
+		public Double valDouble()
 		{
-			Double val = valDouble(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valDouble(key);
 		}
 
-		public Float valFloat(String key)
+		public Double valDouble(Double defaultValue)
 		{
-			Float val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Float.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				try
-				{
-					val = Float.parseFloat(obj.toString());
-				}
-				catch (NumberFormatException ex)
-				{
-				}
-			}
-
-			return val;
+			return JSON.this.valDouble(key, defaultValue);
 		}
 
-		public Float valFloat(String key, Float defaultValue)
+		public Float valFloat()
 		{
-			Float val = valFloat(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valFloat(key);
 		}
 
-		public Function valFunction(String key)
+		public Float valFloat(Float defaultValue)
 		{
-			Function val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Function.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-			}
-
-			return val;
+			return JSON.this.valFloat(key, defaultValue);
 		}
 
-		public Function valFunction(String key, Function defaultValue)
+		public Function valFunction()
 		{
-			Function val = valFunction(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valFunction(key);
 		}
 
-		public Function valFunction(String key, String defaultValue)
+		public Function valFunction(Function defaultValue)
 		{
-			Function val = valFunction(key);
-			return val == null ? new Function(defaultValue) : val;
+			return JSON.this.valFunction(key, defaultValue);
 		}
 
-		public Integer valInteger(String key)
+		public Function valFunction(String defaultValue)
 		{
-			Integer val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Integer.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				try
-				{
-					val = Integer.parseInt(obj.toString());
-				}
-				catch (NumberFormatException ex)
-				{
-				}
-			}
-
-			return val;
+			return JSON.this.valFunction(key, defaultValue);
 		}
 
-		public Integer valInteger(String key, Integer defaultValue)
+		public Integer valInteger()
 		{
-			Integer val = valInteger(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valInteger(key);
 		}
 
-		public JSAN valJSAN(String key)
+		public Integer valInteger(Integer defaultValue)
 		{
-			return attrJSAN(key);
+			return JSON.this.valInteger(key, defaultValue);
 		}
 
-		public JSAN valJSAN(String key, boolean newIfNull)
+		public JSAN valJSAN()
 		{
-			JSAN val = valJSAN(key);
-			return val == null && newIfNull ? new JSAN() : val;
+			return JSON.this.valJSAN(key);
 		}
 
-		public JSAN valJSAN(String key, JSAN defaultValue)
+		public JSAN valJSAN(boolean newIfNull)
 		{
-			JSAN val = valJSAN(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valJSAN(key, newIfNull);
 		}
 
-		public JSON valJSON(String key)
+		public JSAN valJSAN(JSAN defaultValue)
 		{
-			return attrJSON(key);
+			return JSON.this.valJSAN(key, defaultValue);
 		}
 
-		public JSON valJSON(String key, boolean newIfNull)
+		public JSON valJSON()
 		{
-			JSON val = valJSON(key);
-			return val == null && newIfNull ? new JSON() : val;
+			return JSON.this.valJSON(key);
 		}
 
-		public JSON valJSON(String key, JSON defaultValue)
+		public JSON valJSON(boolean newIfNull)
 		{
-			JSON val = valJSON(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valJSON(key, newIfNull);
 		}
 
-		public Long valLong(String key)
+		public JSON valJSON(JSON defaultValue)
 		{
-			Long val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Long.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				try
-				{
-					val = Long.parseLong(obj.toString());
-				}
-				catch (NumberFormatException ex)
-				{
-				}
-			}
-
-			return val;
+			return JSON.this.valJSON(key, defaultValue);
 		}
 
-		public Long valLong(String key, Long defaultValue)
+		public Long valLong()
 		{
-			Long val = valLong(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valLong(key);
 		}
 
-		public Short valShort(String key)
+		public Long valLong(Long defaultValue)
 		{
-			Short val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = Short.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				try
-				{
-					val = Short.parseShort(obj.toString());
-				}
-				catch (NumberFormatException ex)
-				{
-				}
-			}
-
-			return val;
+			return JSON.this.valLong(key, defaultValue);
 		}
 
-		public Short valShort(String key, Short defaultValue)
+		public Short valShort()
 		{
-			Short val = valShort(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valShort(key);
 		}
 
-		public String valString(String key)
+		public Short valShort(Short defaultValue)
 		{
-			String val = null;
-
-			Object obj = this.getValue();
-
-			try
-			{
-				val = String.class.cast(obj);
-			}
-			catch (ClassCastException e)
-			{
-				val = obj.toString();
-			}
-
-			return val;
+			return JSON.this.valShort(key, defaultValue);
 		}
 
-		public String valString(String key, String defaultValue)
+		public String valString()
 		{
-			String val = valString(key);
-			return val == null ? defaultValue : val;
+			return JSON.this.valString(key);
+		}
+
+		public String valString(String defaultValue)
+		{
+			return JSON.this.valString(key, defaultValue);
 		}
 	}
 
