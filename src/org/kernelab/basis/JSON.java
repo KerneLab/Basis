@@ -2365,14 +2365,27 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
+		@SuppressWarnings("unchecked")
 		public <E> E val(int index)
 		{
-			return val(index, null);
+			E val = null;
+
+			Object obj = attr(index);
+
+			try
+			{
+				val = (E) obj;
+			}
+			catch (ClassCastException e)
+			{
+			}
+
+			return val;
 		}
 
 		public <E> E val(int index, E defaultValue)
 		{
-			E val = attr(index);
+			E val = val(index);
 			return val == null ? defaultValue : val;
 		}
 
@@ -2498,6 +2511,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 
 			return val;
+		}
+
+		public <E> E valCast(int index, Class<E> cls)
+		{
+			return this.attrCast(index, cls);
+		}
+
+		public <E> E valCast(int index, Class<E> cls, E defaultValue)
+		{
+			E val = valCast(index, cls);
+			return val == null ? defaultValue : val;
 		}
 
 		public Character valCharacter(int index)
@@ -2883,6 +2907,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public Calendar valCalendar(long defaultValue)
 		{
 			return JSON.this.valCalendar(key, defaultValue);
+		}
+
+		public <E> E valCast(Class<E> cls)
+		{
+			return JSON.this.valCast(key, cls);
+		}
+
+		public <E> E valCast(Class<E> cls, E defaultValue)
+		{
+			return JSON.this.valCast(key, cls, defaultValue);
 		}
 
 		public Character valCharacter()
@@ -5430,14 +5464,27 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
+	@SuppressWarnings("unchecked")
 	public <E> E val(String key)
 	{
-		return val(key, null);
+		E val = null;
+
+		Object obj = this.attr(key);
+
+		try
+		{
+			val = (E) obj;
+		}
+		catch (ClassCastException e)
+		{
+		}
+
+		return val;
 	}
 
 	public <E> E val(String key, E defaultValue)
 	{
-		E val = attr(key);
+		E val = val(key);
 		return val == null ? defaultValue : val;
 	}
 
@@ -5561,6 +5608,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		return val;
+	}
+
+	public <E> E valCast(String key, Class<E> cls)
+	{
+		return this.attrCast(key, cls);
+	}
+
+	public <E> E valCast(String key, Class<E> cls, E defaultValue)
+	{
+		E val = valCast(key, cls);
+		return val == null ? defaultValue : val;
 	}
 
 	public Character valCharacter(String key)
