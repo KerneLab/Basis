@@ -4008,7 +4008,6 @@ public class Tools
 
 		for (int i = Math.min(sequence.length() - 1, from); i >= 0; i--)
 		{
-
 			char c = sequence.charAt(i);
 
 			if (c == b)
@@ -4114,7 +4113,6 @@ public class Tools
 
 		if (sub.length() < seq.length())
 		{
-
 			int small = sub.length();
 			int length = seq.length() - small + 1;
 
@@ -4124,7 +4122,6 @@ public class Tools
 
 			for (int i = from; i < length; i++)
 			{
-
 				found = true;
 
 				for (int j = 0; j < small && found; j++)
@@ -4225,7 +4222,6 @@ public class Tools
 
 		if (sub.length() < seq.length())
 		{
-
 			int small = sub.length();
 			int length = seq.length() - small;
 
@@ -4235,7 +4231,6 @@ public class Tools
 
 			for (int i = from; i > -1; i--)
 			{
-
 				found = true;
 
 				for (int j = 0; j < small && found; j++)
@@ -4352,7 +4347,6 @@ public class Tools
 
 		while (index > -1)
 		{
-
 			if (limit > 0 && splitString.size() == limit - 1)
 			{
 				break;
@@ -4441,7 +4435,6 @@ public class Tools
 
 		if (split.equals(""))
 		{
-
 			result = new String[length];
 
 			for (int i = 0; i < length; i++)
@@ -4458,7 +4451,6 @@ public class Tools
 
 			while (index > -1)
 			{
-
 				if (limit > 0 && splitString.size() == limit - 1)
 				{
 					break;
@@ -4503,19 +4495,14 @@ public class Tools
 
 		if (stringLength == 0 || eachLength < 0)
 		{
-
 			split = new String[] {};
-
 		}
 		else if (eachLength == stringLength || eachLength == 0)
 		{
-
 			split = new String[] { sequence.toString() };
-
 		}
 		else
 		{
-
 			split = new String[(stringLength - 1) / eachLength + 1];
 
 			int begin = 0;

@@ -152,6 +152,51 @@ public class Entrance
 		return arguments;
 	}
 
+	/**
+	 * To handle the given parameters like below
+	 * 
+	 * <pre>
+	 * key1=val1 key2=val2
+	 * </pre>
+	 * 
+	 * @param args
+	 * @return
+	 */
+	public Entrance assign(String... args)
+	{
+		arguments = args;
+
+		parameters = new LinkedHashMap<String, List<String>>();
+
+		for (String arg : arguments)
+		{
+			if (arg != null)
+			{
+				String[] pair = Tools.splitCharSequence(arg, '=', 2);
+
+				String key = pair[0];
+
+				if (key.length() > 0)
+				{
+					List<String> values = parameters.get(key);
+
+					if (values == null)
+					{
+						values = new ArrayList<String>(1);
+						parameters.put(key, values);
+					}
+
+					if (pair.length > 1)
+					{
+						values.add(pair[1]);
+					}
+				}
+			}
+		}
+
+		return this;
+	}
+
 	protected Entrance delegate()
 	{
 		String className = this.parameter("main");
@@ -192,6 +237,16 @@ public class Entrance
 		return this;
 	}
 
+	/**
+	 * To handle the given parameters like below
+	 * 
+	 * <pre>
+	 * -key1 val1 -key2 val21 val22
+	 * </pre>
+	 * 
+	 * @param args
+	 * @return
+	 */
 	public Entrance gather(String... args)
 	{
 		arguments = args;
@@ -204,15 +259,18 @@ public class Entrance
 
 		for (String arg : arguments)
 		{
-			if (arg.length() > 1 && arg.charAt(0) == PARAMETER_PREFIX)
+			if (arg != null)
 			{
-				key = arg.substring(1);
-				values = new ArrayList<String>();
-				parameters.put(key, values);
-			}
-			else
-			{
-				values.add(arg);
+				if (arg.length() > 1 && arg.charAt(0) == PARAMETER_PREFIX)
+				{
+					key = arg.substring(1);
+					values = new ArrayList<String>(1);
+					parameters.put(key, values);
+				}
+				else if (values != null)
+				{
+					values.add(arg);
+				}
 			}
 		}
 
