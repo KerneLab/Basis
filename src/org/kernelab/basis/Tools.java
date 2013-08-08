@@ -1308,6 +1308,16 @@ public class Tools
 	}
 
 	/**
+	 * Get the String of a current time form as "yyyy-MM-dd HH:mm:ss".
+	 * 
+	 * @return The String of the long type variable.
+	 */
+	public static String getDateTimeString()
+	{
+		return getDateTimeString(System.currentTimeMillis());
+	}
+
+	/**
 	 * Get the String of a Calendar form as "yyyy-MM-dd HH:mm:ss".
 	 * 
 	 * @param calendar
@@ -1393,7 +1403,19 @@ public class Tools
 	}
 
 	/**
-	 * Get the String of a Calendar form as "yyyy-MM-dd HH:mm:ss".
+	 * Get the String of a current time form as a given Date format.
+	 * 
+	 * @param dateFormat
+	 *            The Date format object.
+	 * @return The String of the Date Time.
+	 */
+	public static String getDateTimeString(DateFormat dateFormat)
+	{
+		return getDateTimeString(System.currentTimeMillis(), dateFormat);
+	}
+
+	/**
+	 * Get the String of a long time variable form as "yyyy-MM-dd HH:mm:ss".
 	 * 
 	 * @param timeStamp
 	 *            The long type variable, may be given by
@@ -1438,6 +1460,19 @@ public class Tools
 	{
 		DATE.setTime(timeStamp);
 		return getDateTimeString(DATE, format);
+	}
+
+	/**
+	 * Get the String of a current time form as a given Date format string.
+	 * 
+	 * @param format
+	 *            The Date format string.
+	 * @return The String of the Date Time.
+	 * @see java.text.SimpleDateFormat
+	 */
+	public static String getDateTimeString(String format)
+	{
+		return getDateTimeString(System.currentTimeMillis(), format);
 	}
 
 	/**
@@ -2123,24 +2158,7 @@ public class Tools
 	 */
 	public static String jointCharSequences(CharSequence delimiter, CharSequence... sequences)
 	{
-		StringBuilder buffer = new StringBuilder();
-
-		boolean first = true;
-
-		for (CharSequence seq : sequences)
-		{
-			if (first)
-			{
-				first = false;
-			}
-			else
-			{
-				buffer.append(delimiter);
-			}
-			buffer.append(seq);
-		}
-
-		return buffer.toString();
+		return jointCharSequences(null, delimiter, sequences).toString();
 	}
 
 	/**
@@ -2154,24 +2172,7 @@ public class Tools
 	 */
 	public static String jointCharSequences(CharSequence delimiter, Iterable<CharSequence> sequences)
 	{
-		StringBuilder buffer = new StringBuilder();
-
-		boolean first = true;
-
-		for (CharSequence seq : sequences)
-		{
-			if (first)
-			{
-				first = false;
-			}
-			else
-			{
-				buffer.append(delimiter);
-			}
-			buffer.append(seq);
-		}
-
-		return buffer.toString();
+		return jointCharSequences(null, delimiter, sequences).toString();
 	}
 
 	/**
@@ -2183,14 +2184,7 @@ public class Tools
 	 */
 	public static String jointCharSequences(Iterable<CharSequence> iter)
 	{
-		StringBuilder builder = new StringBuilder();
-
-		for (CharSequence s : iter)
-		{
-			builder.append(s);
-		}
-
-		return builder.toString();
+		return jointCharSequences(null, iter).toString();
 	}
 
 	/**
@@ -2205,7 +2199,126 @@ public class Tools
 	 */
 	public static String jointCharSequences(Iterable<CharSequence> iter, CharSequence... delimiter)
 	{
-		StringBuilder builder = new StringBuilder();
+		return jointCharSequences(null, iter, delimiter).toString();
+	}
+
+	/**
+	 * Joint each CharSequence to a String.
+	 * 
+	 * @param buffer
+	 *            the buffer to hold the joint.
+	 * @param delimiter
+	 *            A delimiter which would split these CharSequences.
+	 * @param sequences
+	 *            the CharSequences.
+	 * @return the buffer.
+	 */
+	public static StringBuilder jointCharSequences(StringBuilder buffer, CharSequence delimiter,
+			CharSequence... sequences)
+	{
+		if (buffer == null)
+		{
+			buffer = new StringBuilder();
+		}
+
+		boolean first = true;
+
+		for (CharSequence seq : sequences)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				buffer.append(delimiter);
+			}
+			buffer.append(seq);
+		}
+
+		return buffer;
+	}
+
+	/**
+	 * Joint each CharSequence in an Iterable object to a String.
+	 * 
+	 * @param buffer
+	 *            the buffer to hold the joint.
+	 * @param delimiter
+	 *            A delimiter which would split these CharSequences.
+	 * @param sequences
+	 *            the Iterable object which contains CharSequences.
+	 * @return the buffer.
+	 */
+	public static StringBuilder jointCharSequences(StringBuilder buffer, CharSequence delimiter,
+			Iterable<CharSequence> sequences)
+	{
+		if (buffer == null)
+		{
+			buffer = new StringBuilder();
+		}
+
+		boolean first = true;
+
+		for (CharSequence seq : sequences)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				buffer.append(delimiter);
+			}
+			buffer.append(seq);
+		}
+
+		return buffer;
+	}
+
+	/**
+	 * Joint each CharSequence in an Iterable object to a String.
+	 * 
+	 * @param buffer
+	 *            the buffer to hold the joint.
+	 * @param iter
+	 *            the Iterable object which contains CharSequences.
+	 * @return the buffer.
+	 */
+	public static StringBuilder jointCharSequences(StringBuilder buffer, Iterable<CharSequence> iter)
+	{
+		if (buffer == null)
+		{
+			buffer = new StringBuilder();
+		}
+
+		for (CharSequence s : iter)
+		{
+			buffer.append(s);
+		}
+
+		return buffer;
+	}
+
+	/**
+	 * Joint each CharSequence in an Iterable object to a String with a special
+	 * delimiter.
+	 * 
+	 * @param buffer
+	 *            the buffer to hold the joint.
+	 * @param iter
+	 *            the Iterable object which contains CharSequences.
+	 * @param delimiter
+	 *            a series of delimiter which would split these CharSequences.
+	 * @return the buffer.
+	 */
+	public static StringBuilder jointCharSequences(StringBuilder buffer, Iterable<CharSequence> iter,
+			CharSequence... delimiter)
+	{
+		if (buffer == null)
+		{
+			buffer = new StringBuilder();
+		}
 
 		boolean first = true;
 		int index = 0;
@@ -2219,16 +2332,16 @@ public class Tools
 			}
 			else
 			{
-				builder.append(delimiter[index]);
+				buffer.append(delimiter[index]);
 			}
-			builder.append(s);
+			buffer.append(s);
 			if (length == ++index)
 			{
 				index = 0;
 			}
 		}
 
-		return builder.toString();
+		return buffer;
 	}
 
 	/**
@@ -2242,24 +2355,7 @@ public class Tools
 	 */
 	public static String jointStrings(CharSequence delimiter, Iterable<String> strings)
 	{
-		StringBuilder buffer = new StringBuilder();
-
-		boolean first = true;
-
-		for (String string : strings)
-		{
-			if (first)
-			{
-				first = false;
-			}
-			else
-			{
-				buffer.append(delimiter);
-			}
-			buffer.append(string);
-		}
-
-		return buffer.toString();
+		return jointStrings(null, delimiter, strings).toString();
 	}
 
 	/**
@@ -2273,24 +2369,7 @@ public class Tools
 	 */
 	public static String jointStrings(CharSequence delimiter, String... strings)
 	{
-		StringBuilder buffer = new StringBuilder();
-
-		boolean first = true;
-
-		for (String string : strings)
-		{
-			if (first)
-			{
-				first = false;
-			}
-			else
-			{
-				buffer.append(delimiter);
-			}
-			buffer.append(string);
-		}
-
-		return buffer.toString();
+		return jointStrings(null, delimiter, strings).toString();
 	}
 
 	/**
@@ -2302,14 +2381,7 @@ public class Tools
 	 */
 	public static String jointStrings(Iterable<String> iter)
 	{
-		StringBuilder builder = new StringBuilder();
-
-		for (String s : iter)
-		{
-			builder.append(s);
-		}
-
-		return builder.toString();
+		return jointStrings(null, iter).toString();
 	}
 
 	/**
@@ -2324,7 +2396,123 @@ public class Tools
 	 */
 	public static String jointStrings(Iterable<String> iter, CharSequence... delimiter)
 	{
-		StringBuilder builder = new StringBuilder();
+		return jointStrings(null, iter, delimiter).toString();
+	}
+
+	/**
+	 * Joint each Strings in an Iterable object to a String.
+	 * 
+	 * @param buffer
+	 *            the buffer to hold the joint.
+	 * @param delimiter
+	 *            A delimiter which would split these Strings.
+	 * @param strings
+	 *            the Iterable object which contains Strings.
+	 * @return the buffer.
+	 */
+	public static StringBuilder jointStrings(StringBuilder buffer, CharSequence delimiter, Iterable<String> strings)
+	{
+		if (buffer == null)
+		{
+			buffer = new StringBuilder();
+		}
+
+		boolean first = true;
+
+		for (String string : strings)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				buffer.append(delimiter);
+			}
+			buffer.append(string);
+		}
+
+		return buffer;
+	}
+
+	/**
+	 * Joint each Strings to a String.
+	 * 
+	 * @param buffer
+	 *            the buffer to hold the joint.
+	 * @param delimiter
+	 *            A delimiter which would split these Strings.
+	 * @param strings
+	 *            the Strings.
+	 * @return the buffer.
+	 */
+	public static StringBuilder jointStrings(StringBuilder buffer, CharSequence delimiter, String... strings)
+	{
+		if (buffer == null)
+		{
+			buffer = new StringBuilder();
+		}
+
+		boolean first = true;
+
+		for (String string : strings)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				buffer.append(delimiter);
+			}
+			buffer.append(string);
+		}
+
+		return buffer;
+	}
+
+	/**
+	 * Joint each Strings in an Iterable object to a String.
+	 * 
+	 * @param buffer
+	 *            the buffer to hold the joint.
+	 * @param iter
+	 *            the Iterable object which contains Strings.
+	 * @return the buffer.
+	 */
+	public static StringBuilder jointStrings(StringBuilder buffer, Iterable<String> iter)
+	{
+		if (buffer == null)
+		{
+			buffer = new StringBuilder();
+		}
+
+		for (String s : iter)
+		{
+			buffer.append(s);
+		}
+
+		return buffer;
+	}
+
+	/**
+	 * Joint each String in an Iterable object to a String with a special
+	 * delimiter.
+	 * 
+	 * @param buffer
+	 *            the buffer to hold the joint.
+	 * @param iter
+	 *            the Iterable object which contains Strings.
+	 * @param delimiter
+	 *            a series of delimiter which would split these Strings.
+	 * @return the buffer.
+	 */
+	public static StringBuilder jointStrings(StringBuilder buffer, Iterable<String> iter, CharSequence... delimiter)
+	{
+		if (buffer == null)
+		{
+			buffer = new StringBuilder();
+		}
 
 		boolean first = true;
 		int index = 0;
@@ -2338,16 +2526,16 @@ public class Tools
 			}
 			else
 			{
-				builder.append(delimiter[index]);
+				buffer.append(delimiter[index]);
 			}
-			builder.append(s);
+			buffer.append(s);
 			if (length == ++index)
 			{
 				index = 0;
 			}
 		}
 
-		return builder.toString();
+		return buffer;
 	}
 
 	/**

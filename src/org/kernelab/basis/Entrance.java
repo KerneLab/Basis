@@ -164,31 +164,32 @@ public class Entrance
 	 */
 	public Entrance assign(String... args)
 	{
-		arguments = args;
+		this.reset(args);
 
-		parameters = new LinkedHashMap<String, List<String>>();
-
-		for (String arg : arguments)
+		if (arguments != null)
 		{
-			if (arg != null)
+			for (String arg : arguments)
 			{
-				String[] pair = Tools.splitCharSequence(arg, '=', 2);
-
-				String key = pair[0];
-
-				if (key.length() > 0)
+				if (arg != null)
 				{
-					List<String> values = parameters.get(key);
+					String[] pair = Tools.splitCharSequence(arg, '=', 2);
 
-					if (values == null)
-					{
-						values = new ArrayList<String>(1);
-						parameters.put(key, values);
-					}
+					String key = pair[0];
 
-					if (pair.length > 1)
+					if (key.length() > 0)
 					{
-						values.add(pair[1]);
+						List<String> values = parameters.get(key);
+
+						if (values == null)
+						{
+							values = new ArrayList<String>(1);
+							parameters.put(key, values);
+						}
+
+						if (pair.length > 1)
+						{
+							values.add(pair[1]);
+						}
 					}
 				}
 			}
@@ -249,29 +250,64 @@ public class Entrance
 	 */
 	public Entrance gather(String... args)
 	{
-		arguments = args;
-
-		parameters = new LinkedHashMap<String, List<String>>();
+		this.reset(args);
 
 		String key = null;
 
 		List<String> values = null;
 
-		for (String arg : arguments)
+		if (arguments != null)
 		{
-			if (arg != null)
+			for (String arg : arguments)
 			{
-				if (arg.length() > 1 && arg.charAt(0) == PARAMETER_PREFIX)
+				if (arg != null)
 				{
-					key = arg.substring(1);
-					values = new ArrayList<String>(1);
-					parameters.put(key, values);
-				}
-				else if (values != null)
-				{
-					values.add(arg);
+					if (arg.length() > 1 && arg.charAt(0) == PARAMETER_PREFIX)
+					{
+						key = arg.substring(1);
+						values = new ArrayList<String>(1);
+						parameters.put(key, values);
+					}
+					else if (values != null)
+					{
+						values.add(arg);
+					}
 				}
 			}
+		}
+
+		return this;
+	}
+
+	/**
+	 * To handle different form of arguments. If the first argument is start
+	 * with '-' then the gather(String...) method would be used, otherwise,
+	 * assign(String...) would be used.
+	 * 
+	 * @param args
+	 * @return
+	 */
+	public Entrance handle(String... args)
+	{
+		if (args != null && args.length > 0)
+		{
+			String param = args[0];
+
+			if (param != null)
+			{
+				if (param.length() > 1 && param.charAt(0) == PARAMETER_PREFIX)
+				{
+					this.gather(args);
+				}
+				else
+				{
+					this.assign(args);
+				}
+			}
+		}
+		else
+		{
+			this.reset(args);
 		}
 
 		return this;
@@ -420,6 +456,15 @@ public class Entrance
 				}
 			}
 		}
+
+		return this;
+	}
+
+	protected Entrance reset(String... args)
+	{
+		arguments = args;
+
+		parameters = new LinkedHashMap<String, List<String>>();
 
 		return this;
 	}
