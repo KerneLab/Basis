@@ -63,7 +63,7 @@ public class Entrance
 	 */
 	public static void main(String[] args)
 	{
-		new Entrance().gather(args).present();
+		new Entrance().handle(args).present();
 	}
 
 	public static final Map<String, String> Updates(JarFile jarFile)
