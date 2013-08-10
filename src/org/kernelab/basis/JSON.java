@@ -3747,7 +3747,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		int nail = NOT_BEGIN;
 
 		String entry = null;
-		Object value = null;
+		Object value = NOT_A_VALUE;
 
 		boolean inString = false;
 
@@ -3864,7 +3864,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							}
 							nail = FirstNonWhitespaceIndex(json, i + 1);
 							entry = null;
-							value = null;
+							value = NOT_A_VALUE;
 							break;
 
 						case ATTR_CHAR:
@@ -3910,7 +3910,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		try
 		{
-			if (string.startsWith(QUOTE_MARK) && string.endsWith(QUOTE_MARK))
+			if (string == null || string.length() == 0)
+			{
+				value = NOT_A_VALUE;
+			}
+			else if (string.startsWith(QUOTE_MARK) && string.endsWith(QUOTE_MARK))
 			{
 				value = TrimQuotes(string);
 			}

@@ -48,6 +48,8 @@ import java.util.regex.Pattern;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.kernelab.basis.JSON.JSAN;
+
 /**
  * The collection of tools what are common functions for basis.
  * 
@@ -835,6 +837,17 @@ public class Tools
 		{
 			debug(e);
 		}
+	}
+
+	/**
+	 * To output debug information.
+	 * 
+	 * @param jsan
+	 *            the JSAN information.
+	 */
+	public static void debug(JSAN jsan)
+	{
+		debug(jsan.toString());
 	}
 
 	/**
@@ -3113,6 +3126,17 @@ public class Tools
 			}
 			mark(e);
 		}
+	}
+
+	/**
+	 * To output debug information without line wrapper.
+	 * 
+	 * @param jsan
+	 *            the JSAN information.
+	 */
+	public static void mark(JSAN jsan)
+	{
+		mark(jsan.toString());
 	}
 
 	/**
