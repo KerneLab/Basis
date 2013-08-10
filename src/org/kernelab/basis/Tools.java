@@ -61,8 +61,6 @@ public class Tools
 
 	private static final Set<PrintStream>	Outs					= new LinkedHashSet<PrintStream>();
 
-	protected static final Date				DATE					= new Date();
-
 	protected static final Calendar			CALENDAR				= new GregorianCalendar();
 
 	public static final String				DATETIME_FORMAT_STRING	= "yyyy-MM-dd HH:mm:ss";
@@ -398,10 +396,8 @@ public class Tools
 
 		if (stringLength >= containLength)
 		{
-
 			if (containLength == 0)
 			{
-
 				if (stringLength == 0)
 				{
 					contains = true;
@@ -410,22 +406,17 @@ public class Tools
 				{
 					contains = false;
 				}
-
 			}
 			else
 			{
-
 				for (int i = 0; i < stringLength - containLength + 1 && !contains; i++)
 				{
-
 					if (string.charAt(i) == contain.charAt(0))
 					{
-
 						contains = true;
 
 						for (int j = 1; j < contain.length() && contains; j++)
 						{
-
 							if (string.charAt(i + j) != contain.charAt(j))
 							{
 								contains = false;
@@ -460,11 +451,9 @@ public class Tools
 
 		try
 		{
-
 			ois = new ObjectInputStream(bais);
 
 			object = (T) ois.readObject();
-
 		}
 		catch (IOException e)
 		{
@@ -511,13 +500,11 @@ public class Tools
 
 		try
 		{
-
 			oos = new ObjectOutputStream(baos);
 
 			oos.writeObject(object);
 
 			oos.flush();
-
 		}
 		catch (IOException e)
 		{
@@ -848,6 +835,17 @@ public class Tools
 		{
 			debug(e);
 		}
+	}
+
+	/**
+	 * To output debug information.
+	 * 
+	 * @param json
+	 *            the JSON information.
+	 */
+	public static void debug(JSON json)
+	{
+		debug(json.toString());
 	}
 
 	/**
@@ -1229,7 +1227,6 @@ public class Tools
 
 		for (Entry<Integer, String> entry : map.entrySet())
 		{
-
 			int field = entry.getKey();
 			int value = 0;
 
@@ -1237,7 +1234,6 @@ public class Tools
 
 			if (matcher.find())
 			{
-
 				value = Integer.parseInt(datetime.substring(matcher.start(), matcher.end()));
 
 				if (field == Calendar.MONTH)
@@ -1326,8 +1322,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(Calendar calendar)
 	{
-		DATE.setTime(calendar.getTimeInMillis());
-		return getDateTimeString(DATE);
+		return getDateTimeString(calendar.getTime());
 	}
 
 	/**
@@ -1341,8 +1336,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(Calendar calendar, DateFormat dateFormat)
 	{
-		DATE.setTime(calendar.getTimeInMillis());
-		return getDateTimeString(DATE, dateFormat);
+		return getDateTimeString(calendar.getTime(), dateFormat);
 	}
 
 	/**
@@ -1357,8 +1351,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(Calendar calendar, String format)
 	{
-		DATE.setTime(calendar.getTimeInMillis());
-		return getDateTimeString(DATE, format);
+		return getDateTimeString(calendar.getTime(), format);
 	}
 
 	/**
@@ -1424,8 +1417,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(long timeStamp)
 	{
-		DATE.setTime(timeStamp);
-		return getDateTimeString(DATE);
+		return getDateTimeString(new Date(timeStamp));
 	}
 
 	/**
@@ -1440,8 +1432,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(long timeStamp, DateFormat dateFormat)
 	{
-		DATE.setTime(timeStamp);
-		return getDateTimeString(DATE, dateFormat);
+		return getDateTimeString(new Date(timeStamp), dateFormat);
 	}
 
 	/**
@@ -1458,8 +1449,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(long timeStamp, String format)
 	{
-		DATE.setTime(timeStamp);
-		return getDateTimeString(DATE, format);
+		return getDateTimeString(new Date(timeStamp), format);
 	}
 
 	/**
@@ -1710,11 +1700,9 @@ public class Tools
 
 		try
 		{
-
 			in = new ObjectInputStream(input);
 
 			object = (T) in.readObject();
-
 		}
 		catch (ClassNotFoundException e)
 		{
@@ -2055,7 +2043,6 @@ public class Tools
 
 		try
 		{
-
 			fileReader = new FileReader(file);
 
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -2065,7 +2052,6 @@ public class Tools
 			{
 				list.add(line);
 			}
-
 		}
 		catch (FileNotFoundException e)
 		{
@@ -3127,6 +3113,17 @@ public class Tools
 			}
 			mark(e);
 		}
+	}
+
+	/**
+	 * To output debug information without line wrapper.
+	 * 
+	 * @param json
+	 *            the JSON information.
+	 */
+	public static void mark(JSON json)
+	{
+		mark(json.toString());
 	}
 
 	/**
