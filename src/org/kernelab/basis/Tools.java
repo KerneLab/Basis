@@ -57,17 +57,27 @@ import org.kernelab.basis.JSON.JSAN;
  */
 public class Tools
 {
-	private static final PrintStream		STD_OUT					= System.out;
+	private static final PrintStream		STD_OUT							= System.out;
 
-	private static final PrintStream		STD_ERR					= System.err;
+	private static final PrintStream		STD_ERR							= System.err;
 
-	private static final Set<PrintStream>	Outs					= new LinkedHashSet<PrintStream>();
+	private static final Set<PrintStream>	Outs							= new LinkedHashSet<PrintStream>();
 
-	protected static final Calendar			CALENDAR				= new GregorianCalendar();
+	protected static final Calendar			CALENDAR						= new GregorianCalendar();
 
-	public static final String				DATETIME_FORMAT_STRING	= "yyyy-MM-dd HH:mm:ss";
+	public static final String				LOCAL_DATETIME_FORMAT_STRING	= "yyyy-MM-dd HH:mm:ss";
 
-	public static final DateFormat			DATETIME_FORMAT			= new SimpleDateFormat(DATETIME_FORMAT_STRING);
+	public static final DateFormat			LOCAL_DATETIME_FORMAT			= new SimpleDateFormat(
+																					LOCAL_DATETIME_FORMAT_STRING);
+
+	public static final String				FULL_DATETIME_FORMAT_STRING		= "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+
+	public static final DateFormat			FULL_DATETIME_FORMAT			= new SimpleDateFormat(
+																					FULL_DATETIME_FORMAT_STRING);
+
+	public static String					DEFAULT_DATETIME_FORMAT_STRING	= LOCAL_DATETIME_FORMAT_STRING;
+
+	public static DateFormat				DEFAULT_DATETIME_FORMAT			= LOCAL_DATETIME_FORMAT;
 
 	static
 	{
@@ -663,7 +673,7 @@ public class Tools
 	 */
 	public static void debug(Calendar c)
 	{
-		debug(getDateTimeString(c));
+		debug(getDateTimeString(c, FULL_DATETIME_FORMAT));
 	}
 
 	/**
@@ -1182,7 +1192,7 @@ public class Tools
 
 	/**
 	 * Get the Calendar object according to the datetime String which is
-	 * formatted by {@link Tools#DATETIME_FORMAT_STRING}.
+	 * formatted by {@link Tools#DEFAULT_DATETIME_FORMAT_STRING}.
 	 * 
 	 * @param datetime
 	 *            The datetime String, such as "2012-04-13 12:41:39".
@@ -1190,7 +1200,7 @@ public class Tools
 	 */
 	public static Calendar getCalendar(String datetime)
 	{
-		return getCalendar(datetime, DATETIME_FORMAT_STRING);
+		return getCalendar(datetime, DEFAULT_DATETIME_FORMAT_STRING);
 	}
 
 	/**
@@ -1223,12 +1233,16 @@ public class Tools
 	 */
 	public static Calendar getCalendar(String datetime, String format, Calendar calendar)
 	{
+		format = format.replaceAll("\'", "");
+
+		int length = datetime.length();
+
 		if (calendar == null)
 		{
 			calendar = new GregorianCalendar();
 		}
 
-		calendar.set(0, 0, 0, 0, 0, 0);
+		calendar.clear();
 
 		Map<Integer, String> map = new LinkedHashMap<Integer, String>();
 		map.put(Calendar.YEAR, "y");
@@ -1237,21 +1251,48 @@ public class Tools
 		map.put(Calendar.HOUR_OF_DAY, "H");
 		map.put(Calendar.MINUTE, "m");
 		map.put(Calendar.SECOND, "s");
+		map.put(Calendar.MILLISECOND, "S");
+		map.put(Calendar.ZONE_OFFSET, "Z");
 
 		for (Entry<Integer, String> entry : map.entrySet())
 		{
 			int field = entry.getKey();
+			String holder = entry.getValue();
 			int value = 0;
 
-			Matcher matcher = Pattern.compile(entry.getValue() + "+").matcher(format);
+			Matcher matcher = Pattern.compile(holder + "+").matcher(format);
 
 			if (matcher.find())
 			{
-				value = Integer.parseInt(datetime.substring(matcher.start(), matcher.end()));
+				int start = matcher.start();
+				int end = matcher.end();
 
-				if (field == Calendar.MONTH)
+				if (field == Calendar.ZONE_OFFSET)
 				{
-					value--;
+					end += 4;
+				}
+
+				end = Math.min(end, length);
+
+				String content = datetime.substring(start, end);
+
+				if (field == Calendar.ZONE_OFFSET)
+				{
+					content = paddingString(content, "0", -5);
+					content = content.replaceAll("\\+0+", "");
+				}
+
+				value = Integer.parseInt(content);
+
+				switch (field)
+				{
+					case Calendar.MONTH:
+						value--;
+						break;
+
+					case Calendar.ZONE_OFFSET:
+						value = value / 100 * 3600000 + value % 100 * 60000;
+						break;
 				}
 
 				calendar.set(field, value);
@@ -1376,7 +1417,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(Date date)
 	{
-		return getDateTimeString(date, DATETIME_FORMAT);
+		return getDateTimeString(date, DEFAULT_DATETIME_FORMAT);
 	}
 
 	/**
@@ -2820,7 +2861,7 @@ public class Tools
 	 */
 	public static void mark(Calendar c)
 	{
-		mark(getDateTimeString(c));
+		mark(getDateTimeString(c, FULL_DATETIME_FORMAT));
 	}
 
 	/**
@@ -3596,6 +3637,143 @@ public class Tools
 		success = true;
 
 		return success;
+	}
+
+	/**
+	 * To padding a String with given padding CharSequence to a certain length.
+	 * 
+	 * @param string
+	 *            the String to be padded.
+	 * @param padding
+	 *            the padding CharSequence.
+	 * @param length
+	 *            the total length the result would be. Attention that, if the
+	 *            length is less than zero then the result would be
+	 *            left-justified.
+	 * @return the String which holds the padding result.
+	 * @see Tools#paddingStringBuilder(StringBuilder, CharSequence, int)
+	 */
+	public static String paddingString(String string, CharSequence padding, int length)
+	{
+		return paddingStringBuilder(new StringBuilder(string), padding, length).toString();
+	}
+
+	/**
+	 * To padding a StringBuffer with given padding CharSequence to a certain
+	 * length.
+	 * 
+	 * @param buffer
+	 *            the StringBuffer to hold the result.
+	 * @param padding
+	 *            the padding CharSequence.
+	 * @param length
+	 *            the total length the result would be. Attention that, if the
+	 *            length is less than zero then the result would be
+	 *            left-justified.
+	 * @return the StringBuffer which holds the padding result.
+	 */
+	public static StringBuffer paddingStringBuffer(StringBuffer buffer, CharSequence padding, int length)
+	{
+		if (buffer != null && padding != null && padding.length() > 0)
+		{
+			int total = Math.abs(length);
+
+			int pads = padding.length();
+
+			int delta = total - buffer.length();
+
+			if (delta > 0)
+			{
+				int times = delta / pads;
+
+				for (int i = 0; i < times; i++)
+				{
+					if (length > 0)
+					{
+						buffer.insert(0, padding);
+					}
+					else
+					{
+						buffer.append(padding);
+					}
+				}
+
+				int rests = delta % pads;
+
+				for (int i = 0; i < rests; i++)
+				{
+					if (length > 0)
+					{
+						buffer.insert(0, padding.charAt(pads - i - 1));
+					}
+					else
+					{
+						buffer.append(padding.charAt(i));
+					}
+				}
+			}
+		}
+
+		return buffer;
+	}
+
+	/**
+	 * To padding a StringBuilder with given padding CharSequence to a certain
+	 * length.
+	 * 
+	 * @param buffer
+	 *            the StringBuilder to hold the result.
+	 * @param padding
+	 *            the padding CharSequence.
+	 * @param length
+	 *            the total length the result would be. Attention that, if the
+	 *            length is less than zero then the result would be
+	 *            left-justified.
+	 * @return the StringBuilder which holds the padding result.
+	 */
+	public static StringBuilder paddingStringBuilder(StringBuilder buffer, CharSequence padding, int length)
+	{
+		if (buffer != null && padding != null && padding.length() > 0)
+		{
+			int total = Math.abs(length);
+
+			int pads = padding.length();
+
+			int delta = total - buffer.length();
+
+			if (delta > 0)
+			{
+				int times = delta / pads;
+
+				for (int i = 0; i < times; i++)
+				{
+					if (length > 0)
+					{
+						buffer.insert(0, padding);
+					}
+					else
+					{
+						buffer.append(padding);
+					}
+				}
+
+				int rests = delta % pads;
+
+				for (int i = 0; i < rests; i++)
+				{
+					if (length > 0)
+					{
+						buffer.insert(0, padding.charAt(pads - i - 1));
+					}
+					else
+					{
+						buffer.append(padding.charAt(i));
+					}
+				}
+			}
+		}
+
+		return buffer;
 	}
 
 	/**
