@@ -195,6 +195,46 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		}
 	}
 
+	public static class MariaDB extends MySQL
+	{
+		public static String	DRIVER_CLASS_NAME	= "org.mariadb.jdbc.Driver";
+
+		public static int		DEFAULT_PORT_NUMBER	= 3306;
+
+		public MariaDB(String serverName, int portNumber, String catalog, String userName, String passWord)
+		{
+			super(serverName, portNumber, catalog, userName, passWord);
+		}
+
+		public MariaDB(String userName, String passWord)
+		{
+			super("", userName, passWord);
+		}
+
+		public MariaDB(String catalog, String userName, String passWord)
+		{
+			super("localhost", catalog, userName, passWord);
+		}
+
+		public MariaDB(String serverName, String catalog, String userName, String passWord)
+		{
+			super(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
+		}
+
+		@Override
+		public String getDriverName()
+		{
+			return DRIVER_CLASS_NAME;
+		}
+
+		@Override
+		protected String getURL()
+		{
+			return "jdbc:mariadb://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
+					+ catalog;
+		}
+	}
+
 	public static class MySQL extends DataBase
 	{
 		public static String	DRIVER_CLASS_NAME	= "com.mysql.jdbc.Driver";

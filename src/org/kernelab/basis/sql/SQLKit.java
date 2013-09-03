@@ -698,7 +698,15 @@ public class SQLKit
 
 		if (statement == null)
 		{
-			statement = this.getConnection().createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
+			try
+			{
+				statement = this.getConnection().createStatement(resultSetType, resultSetConcurrency,
+						resultSetHoldability);
+			}
+			catch (SQLException e)
+			{
+				statement = this.getConnection().createStatement();
+			}
 			statements.put(sql, statement);
 		}
 
@@ -902,7 +910,15 @@ public class SQLKit
 
 		if (ps == null)
 		{
-			ps = this.getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+			try
+			{
+				ps = this.getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency,
+						resultSetHoldability);
+			}
+			catch (SQLException e)
+			{
+				ps = this.getConnection().prepareStatement(sql);
+			}
 			statements.put(sql, ps);
 		}
 
@@ -969,8 +985,15 @@ public class SQLKit
 
 		if (ps == null)
 		{
-			ps = this.getConnection().prepareStatement(replaceParameters(sql, params), resultSetType,
-					resultSetConcurrency, resultSetHoldability);
+			try
+			{
+				ps = this.getConnection().prepareStatement(replaceParameters(sql, params), resultSetType,
+						resultSetConcurrency, resultSetHoldability);
+			}
+			catch (SQLException e)
+			{
+				ps = this.getConnection().prepareStatement(replaceParameters(sql, params));
+			}
 			statements.put(sql, ps);
 			TreeMap<Integer, String> index = indexOfParameters(sql, params);
 			parameters.put(ps, new LinkedList<String>(index.values()));
