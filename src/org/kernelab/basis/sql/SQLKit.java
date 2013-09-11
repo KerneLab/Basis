@@ -614,6 +614,26 @@ public class SQLKit
 		statement.addBatch(sql);
 	}
 
+	public void cancel()
+	{
+		cancel(statement);
+	}
+
+	public void cancel(Statement statement)
+	{
+		if (statement != null)
+		{
+			try
+			{
+				statement.cancel();
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public void clearBatch() throws SQLException
 	{
 		this.clearBatch(statement);
