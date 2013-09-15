@@ -31,7 +31,8 @@ public abstract class SQLProcess extends AbstractAccomplishable implements Runna
 			protected void process(SQLKit kit) throws SQLException
 			{
 				ResultSet rs = kit.query("SELECT * FROM `user` WHERE id>?", 3);
-				while (rs.next()) {
+				while (rs.next())
+				{
 					Tools.debug(rs.getString(1) + "\t" + rs.getString(2));
 				}
 			}
@@ -42,6 +43,8 @@ public abstract class SQLProcess extends AbstractAccomplishable implements Runna
 	}
 
 	private DataBase	dataBase;
+
+	private SQLKit		kit;
 
 	private boolean		processing;
 
@@ -56,6 +59,11 @@ public abstract class SQLProcess extends AbstractAccomplishable implements Runna
 		return dataBase;
 	}
 
+	public SQLKit getKit()
+	{
+		return kit;
+	}
+
 	public boolean isProcessing()
 	{
 		return processing;
@@ -63,14 +71,19 @@ public abstract class SQLProcess extends AbstractAccomplishable implements Runna
 
 	public void process()
 	{
-		SQLKit kit = dataBase.getSQLKit();
-		try {
+		kit = dataBase.getSQLKit();
+		try
+		{
 			this.processing = true;
 			this.process(kit);
 			this.processing = false;
-		} catch (SQLException e) {
+		}
+		catch (SQLException e)
+		{
 			e.printStackTrace();
-		} finally {
+		}
+		finally
+		{
 			kit.close();
 		}
 	}
