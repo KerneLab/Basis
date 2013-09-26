@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -189,7 +190,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static final char	DEFINE_FIRST_CHAR	= 'f';
 
-		public static final String	DEFINE_REGEX		= "^(function)\\s*?([^(]*?)(\\()";
+		public static final String	DEFINE_REGEX		= "^(function)\\s*?([^(]*?)(\\()([^)]*?)(\\))";
 
 		public static final String	DEFAULT_NAME_PREFIX	= "_";
 
@@ -200,6 +201,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		private String				expression;
 
 		private String				name;
+
+		private List<String>		parameters;
 
 		protected Function(Function f)
 		{
@@ -241,13 +244,32 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		protected Function expression(String expression)
 		{
-			this.expression = expression;
+			Matcher matcher = Pattern.compile(DEFINE_REGEX).matcher(expression);
+
+			if (matcher.find())
+			{
+				this.expression = expression;
+
+				name(matcher.group(2).trim());
+
+				String[] params = matcher.group(4).split(",");
+
+				List<String> list = new LinkedList<String>();
+
+				for (String param : params)
+				{
+					list.add(param.trim());
+				}
+
+				parameters(list);
+			}
+
 			return this;
 		}
 
 		public String name()
 		{
-			if (name == null)
+			if (name == null || name.length() == 0)
 			{
 				name = DEFAULT_NAME_PREFIX + (entry() == null ? "" : entry().trim());
 			}
@@ -271,6 +293,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
+		public List<String> parameters()
+		{
+			return parameters;
+		}
+
+		protected Function parameters(List<String> parameters)
+		{
+			this.parameters = Collections.unmodifiableList(parameters);
+			return this;
+		}
+
 		@Override
 		public String toString()
 		{
@@ -279,7 +312,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public String toString(String name)
 		{
-			return expression().replaceFirst(DEFINE_REGEX, "$1 " + (name == null ? name() : name.trim()) + "$3");
+			return expression().replaceFirst(DEFINE_REGEX, "$1 " + (name == null ? name() : name.trim()) + "$3$4$5");
 		}
 	}
 
