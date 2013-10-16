@@ -65,6 +65,14 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		writing = false;
 		append = false;
 		bommed = false;
+
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+
+			public void run()
+			{
+				DataWriter.this.close();
+			}
+		}));
 	}
 
 	/**
