@@ -1358,6 +1358,60 @@ public class Tools
 	}
 
 	/**
+	 * Get the Date object according to the datetime String which is formatted
+	 * by {@link Tools#DEFAULT_DATETIME_FORMAT_STRING}.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @return The Date object.
+	 */
+	public static Date getDate(String datetime)
+	{
+		return getDate(datetime, null);
+	}
+
+	/**
+	 * Get the Date object according to the datetime String which is formatted
+	 * by {@link Tools#DEFAULT_DATETIME_FORMAT_STRING}.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param date
+	 *            The Date object which would hold the date time. If null then a
+	 *            new Date object would be created.
+	 * @return The Data object.
+	 */
+	public static Date getDate(String datetime, Date date)
+	{
+		return getDate(datetime, DEFAULT_DATETIME_FORMAT_STRING, date);
+	}
+
+	/**
+	 * Get the Date object according to the datetime String which is formatted
+	 * by format String.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param format
+	 *            The datetime format String, such as "yyyy-MM-dd HH:mm:ss"
+	 * @param date
+	 *            The Date object which would hold the date time. If null then a
+	 *            new Date object would be created.
+	 * @return The Data object.
+	 */
+	public static Date getDate(String datetime, String format, Date date)
+	{
+		if (date == null)
+		{
+			date = new Date();
+		}
+
+		date.setTime(getCalendar(datetime, format).getTimeInMillis());
+
+		return date;
+	}
+
+	/**
 	 * Get the String of a current time form as "yyyy-MM-dd HH:mm:ss".
 	 * 
 	 * @return The String of the long type variable.

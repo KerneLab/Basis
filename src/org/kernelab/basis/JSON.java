@@ -3319,37 +3319,44 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	}
 
 	@SuppressWarnings("unused")
-	public static <T> Object CastToArray(Object obj, Class<T> comp)
+	public static <T> Object CastToArray(Object object, Class<T> type)
 	{
 		Object array = null;
 
-		if (obj instanceof Iterable)
+		if (object instanceof Iterable)
 		{
 			int length = 0;
 
-			if (obj instanceof JSAN)
+			if (object instanceof JSAN)
 			{
-				length = ((JSAN) obj).size();
+				length = ((JSAN) object).size();
 			}
-			else if (obj instanceof Collection)
+			else if (object instanceof Collection)
 			{
-				length = ((Collection<?>) obj).size();
+				length = ((Collection<?>) object).size();
 			}
 			else
 			{
-				for (Object o : (Iterable<?>) obj)
+				for (Object o : (Iterable<?>) object)
 				{
 					length++;
 				}
 			}
 
-			array = Array.newInstance(comp, length);
+			array = Array.newInstance(type, length);
 
 			length = 0;
 
-			for (Object o : (Iterable<?>) obj)
+			for (Object o : (Iterable<?>) object)
 			{
-				Array.set(array, length++, ProjectTo(o, comp, null));
+				try
+				{
+					Array.set(array, length, ProjectTo(o, type, null));
+				}
+				catch (Exception ex)
+				{
+				}
+				length++;
 			}
 		}
 
@@ -3368,7 +3375,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = new BigDecimal(obj.toString());
+				val = new BigDecimal(CastToString(obj));
 			}
 			catch (NumberFormatException ex)
 			{
@@ -3388,7 +3395,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 		catch (ClassCastException e)
 		{
-			String str = obj.toString();
+			String str = CastToString(obj);
 			if (TRUE_STRING.equals(str) || FALSE_STRING.equals(str))
 			{
 				val = Boolean.valueOf(str);
@@ -3410,7 +3417,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = Byte.valueOf(obj.toString());
+				val = Byte.valueOf(CastToString(obj));
 			}
 			catch (NumberFormatException ex)
 			{
@@ -3447,7 +3454,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = obj.toString().charAt(0);
+				val = CastToString(obj).charAt(0);
 			}
 			catch (StringIndexOutOfBoundsException ex)
 			{
@@ -3483,7 +3490,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = Double.valueOf(obj.toString());
+				val = Double.valueOf(CastToString(obj));
 			}
 			catch (NumberFormatException ex)
 			{
@@ -3505,7 +3512,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = Float.valueOf(obj.toString());
+				val = Float.valueOf(CastToString(obj));
 			}
 			catch (NumberFormatException ex)
 			{
@@ -3532,7 +3539,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = Integer.valueOf(obj.toString());
+				val = Integer.valueOf(CastToString(obj));
 			}
 			catch (NumberFormatException ex)
 			{
@@ -3564,7 +3571,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = Long.valueOf(obj.toString());
+				val = Long.valueOf(CastToString(obj));
 			}
 			catch (NumberFormatException ex)
 			{
@@ -3586,7 +3593,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = Short.valueOf(obj.toString());
+				val = Short.valueOf(CastToString(obj));
 			}
 			catch (NumberFormatException ex)
 			{
@@ -3606,7 +3613,24 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 		catch (ClassCastException e)
 		{
-			val = obj.toString();
+			try
+			{
+				if (obj instanceof java.util.Date)
+				{
+					val = String.valueOf(((java.util.Date) obj).getTime());
+				}
+				else if (obj instanceof java.util.Calendar)
+				{
+					val = String.valueOf(((java.util.Calendar) obj).getTimeInMillis());
+				}
+				else
+				{
+					val = obj.toString();
+				}
+			}
+			catch (Exception ex)
+			{
+			}
 		}
 
 		return val;
@@ -4203,10 +4227,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			val = obj;
 		}
-		else if (cls.isArray())
-		{
-			val = CastToArray(obj, cls.getComponentType());
-		}
 		else if (String.class == cls)
 		{
 			val = CastToString(obj);
@@ -4275,11 +4295,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			val = CastToFloat(obj);
 		}
+		else if (cls.isArray())
+		{
+			val = CastToArray(obj, cls.getComponentType());
+		}
 		else if (JSAN.IsJSAN(obj))
 		{
 			try
 			{
-				// Verify cls implements Collection.
+				// Target class is a Collection.
 				cls.asSubclass(Collection.class);
 
 				val = val == null ? cls.newInstance() : val;
@@ -4299,13 +4323,42 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				val = Project(val == null ? cls.newInstance() : val, (JSON) obj);
+				// Target class is a Map.
+				cls.asSubclass(Map.class);
+
+				try
+				{
+					Map<Object, Object> map = (Map<Object, Object>) (val == null ? cls.newInstance() : val);
+
+					map.clear();
+
+					for (Pair pair : ((JSON) obj).pairs())
+					{
+						map.put(pair.getKey(), pair.getValue());
+					}
+
+					val = map;
+				}
+				catch (InstantiationException e)
+				{
+				}
+				catch (IllegalAccessException e)
+				{
+				}
 			}
-			catch (InstantiationException e)
+			catch (ClassCastException e)
 			{
-			}
-			catch (IllegalAccessException e)
-			{
+				// Target class is not a Map.
+				try
+				{
+					val = Project(val == null ? cls.newInstance() : val, (JSON) obj);
+				}
+				catch (InstantiationException ex)
+				{
+				}
+				catch (IllegalAccessException ex)
+				{
+				}
 			}
 		}
 
@@ -4790,6 +4843,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				value = QUOTE_CHAR + EscapeString(object.toString()) + QUOTE_CHAR;
 			}
+			else if (object instanceof java.util.Date)
+			{
+				value = String.valueOf(((java.util.Date) object).getTime());
+			}
+			else if (object instanceof java.util.Calendar)
+			{
+				value = String.valueOf(((java.util.Calendar) object).getTimeInMillis());
+			}
 			else
 			{
 				value = object.toString();
@@ -4889,25 +4950,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
 					|| object instanceof Character || object instanceof JSON || object instanceof Function
-					|| object instanceof Quotation)
+					|| object instanceof Quotation || object instanceof BigDecimal || object instanceof java.util.Date
+					|| object instanceof java.util.Calendar)
 			{
 				result = object;
 			}
 			else if (object instanceof CharSequence)
 			{
 				result = object.toString();
-			}
-			else if (object instanceof BigDecimal)
-			{
-				result = (BigDecimal) object;
-			}
-			else if (object instanceof java.util.Calendar)
-			{
-				result = ((java.util.Calendar) object).getTimeInMillis();
-			}
-			else if (object instanceof java.util.Date)
-			{
-				result = ((java.util.Date) object).getTime();
 			}
 			else if (object instanceof java.sql.Clob)
 			{

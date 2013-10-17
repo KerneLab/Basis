@@ -58,6 +58,8 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 
 	private boolean				bommed;
 
+	private Thread				autoCloser;
+
 	public DataWriter()
 	{
 		super();
@@ -65,14 +67,38 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		writing = false;
 		append = false;
 		bommed = false;
+	}
 
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+	public boolean autoClose()
+	{
+		return autoCloser != null;
+	}
 
-			public void run()
-			{
-				DataWriter.this.close();
-			}
-		}));
+	public <E extends DataWriter> E autoClose(boolean auto)
+	{
+		if (autoCloser != null)
+		{
+			Runtime.getRuntime().removeShutdownHook(autoCloser);
+		}
+
+		if (auto)
+		{
+			autoCloser = new Thread(new Runnable() {
+
+				public void run()
+				{
+					DataWriter.this.close();
+				}
+			});
+
+			Runtime.getRuntime().addShutdownHook(autoCloser);
+		}
+		else
+		{
+			autoCloser = null;
+		}
+
+		return Tools.cast(this);
 	}
 
 	/**
