@@ -85,9 +85,12 @@ Tools.find = function(contain, object) {
 
 Tools.get = function(obj, key) {
 	var val = obj[key];
-	if (val == null && arguments.length > 2
-			&& $.type(arguments[2]) == "function") {
-		val = arguments[2](key, obj);
+	if (val == null && arguments.length > 2) {
+		if ($.type(arguments[2]) == "function") {
+			val = arguments[2](key, obj);
+		} else {
+			val = arguments[2];
+		}
 		obj[key] = val;
 	}
 	return val;
