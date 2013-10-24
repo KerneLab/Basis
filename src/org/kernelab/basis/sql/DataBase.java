@@ -142,6 +142,56 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		}
 	}
 
+	public static class Hive extends DataBase
+	{
+		public static String	DRIVER_CLASS_NAME	= "org.apache.hadoop.hive.jdbc.HiveDriver";
+
+		public static int		DEFAULT_PORT_NUMBER	= 10000;
+
+		public Hive(String serverName)
+		{
+			this(serverName, DEFAULT_PORT_NUMBER, "default");
+		}
+
+		public Hive(String serverName, int portNumber, String catalog)
+		{
+			super(serverName, portNumber, catalog, "", "");
+		}
+
+		public Hive(String serverName, int portNumber, String catalog, String userName, String passWord)
+		{
+			super(serverName, portNumber, catalog, userName, passWord);
+		}
+
+		public Hive(String userName, String passWord)
+		{
+			super("", userName, passWord);
+		}
+
+		public Hive(String catalog, String userName, String passWord)
+		{
+			super("localhost", catalog, userName, passWord);
+		}
+
+		public Hive(String serverName, String catalog, String userName, String passWord)
+		{
+			super(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
+		}
+
+		@Override
+		public String getDriverName()
+		{
+			return DRIVER_CLASS_NAME;
+		}
+
+		@Override
+		protected String getURL()
+		{
+			return "jdbc:hive://" + this.getServerName() + ":" + this.getPortNumber() + "/" + this.getCatalog();
+		}
+
+	}
+
 	public static class Informix extends DataBase
 	{
 		public static String	DRIVER_CLASS_NAME	= "com.informix.jdbc.IfxDriver	";
