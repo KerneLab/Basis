@@ -4360,7 +4360,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			Class<T> cls = (Class<T>) object.getClass();
 
-			// TODO
 			if (IsJSON(object))
 			{
 				JSON obj = (JSON) object;
@@ -4390,68 +4389,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (object instanceof Map)
 			{
-				// Map<String, Object> obj = (Map<String, Object>) object;
-				//
-				// if (project == null)
-				// {
-				// json.putTo(obj);
-				// }
-				// else
-				// {
-				// for (Entry<Field, Object> entry : project.entrySet())
-				// {
-				// try
-				// {
-				// String key = entry.getValue().toString();
-				//
-				// if (json.has(key))
-				// {
-				// obj.put(entry.getKey().getName(), json.attr(key));
-				// }
-				// }
-				// catch (Exception e)
-				// {
-				// }
-				// }
-				// }
-
 				object = (T) ProjectTo(json, object.getClass(), object, json.projects());
 			}
 			else if (object instanceof Collection)
 			{
-				// Collection<Object> obj = (Collection<Object>) object;
-				//
-				// if (project == null)
-				// {
-				// for (Pair pair : json.pairs())
-				// {
-				// obj.add(pair.getValue());
-				// }
-				// }
-				// else
-				// {
-				// for (Entry<Field, Object> entry : project.entrySet())
-				// {
-				// try
-				// {
-				// String key = entry.getValue().toString();
-				//
-				// if (json.has(key))
-				// {
-				// obj.add(json.attr(key));
-				// }
-				// }
-				// catch (Exception e)
-				// {
-				// }
-				// }
-				// }
-
 				object = (T) ProjectTo(json, object.getClass(), object, json.projects());
 			}
 			else if (IsArray(object))
 			{
-				object = (T) ProjectTo(object, object.getClass(), object, json.projects());
+				object = (T) ProjectTo(json, object.getClass(), object, json.projects());
 			}
 			else
 			{
@@ -4495,10 +4441,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 								}
 
 								value = ProjectTo(json.attr(key), field.getType(), value, json.projects());
-
-								// value = (T) ProjectTo(json.attr(key),
-								// field.getType(), value,
-								// ProjectOf(field.getType(), json.projects()));
 
 								set.invoke(object, value);
 							}
@@ -4569,7 +4511,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		Object project = ProjectOf(cls, projects);
 
-		// TODO
 		if (cls.isInstance(obj))
 		{
 			val = obj;
