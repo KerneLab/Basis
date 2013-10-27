@@ -144,18 +144,20 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 
 	public static class Hive extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "org.apache.hadoop.hive.jdbc.HiveDriver";
+		public static String	DRIVER_CLASS_NAME		= "org.apache.hadoop.hive.jdbc.HiveDriver";
 
-		public static int		DEFAULT_PORT_NUMBER	= 10000;
+		public static int		DEFAULT_PORT_NUMBER		= 10000;
+
+		public static String	DEFAULT_DATABASE_NAME	= "default";
 
 		public Hive(String serverName)
 		{
-			this(serverName, DEFAULT_PORT_NUMBER, "default");
+			this(serverName, DEFAULT_PORT_NUMBER, DEFAULT_DATABASE_NAME);
 		}
 
 		public Hive(String serverName, int portNumber, String catalog)
 		{
-			super(serverName, portNumber, catalog, "", "");
+			this(serverName, portNumber, catalog, "", "");
 		}
 
 		public Hive(String serverName, int portNumber, String catalog, String userName, String passWord)
@@ -165,17 +167,17 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 
 		public Hive(String userName, String passWord)
 		{
-			super("", userName, passWord);
+			this(DEFAULT_DATABASE_NAME, userName, passWord);
 		}
 
 		public Hive(String catalog, String userName, String passWord)
 		{
-			super("localhost", catalog, userName, passWord);
+			this("localhost", catalog, userName, passWord);
 		}
 
 		public Hive(String serverName, String catalog, String userName, String passWord)
 		{
-			super(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
+			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
 
 		@Override
@@ -189,7 +191,57 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		{
 			return "jdbc:hive://" + this.getServerName() + ":" + this.getPortNumber() + "/" + this.getCatalog();
 		}
+	}
 
+	public static class Hive2 extends DataBase
+	{
+		public static String	DRIVER_CLASS_NAME		= "org.apache.hive.jdbc.HiveDriver";
+
+		public static int		DEFAULT_PORT_NUMBER		= 10000;
+
+		public static String	DEFAULT_DATABASE_NAME	= "default";
+
+		public Hive2(String serverName)
+		{
+			this(serverName, DEFAULT_PORT_NUMBER, DEFAULT_DATABASE_NAME);
+		}
+
+		public Hive2(String serverName, int portNumber, String catalog)
+		{
+			this(serverName, portNumber, catalog, "", "");
+		}
+
+		public Hive2(String serverName, int portNumber, String catalog, String userName, String passWord)
+		{
+			super(serverName, portNumber, catalog, userName, passWord);
+		}
+
+		public Hive2(String userName, String passWord)
+		{
+			this(DEFAULT_DATABASE_NAME, userName, passWord);
+		}
+
+		public Hive2(String catalog, String userName, String passWord)
+		{
+			this("localhost", catalog, userName, passWord);
+		}
+
+		public Hive2(String serverName, String catalog, String userName, String passWord)
+		{
+			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
+		}
+
+		@Override
+		public String getDriverName()
+		{
+			return DRIVER_CLASS_NAME;
+		}
+
+		@Override
+		protected String getURL()
+		{
+			return "jdbc:hive2://" + this.getServerName() + ":" + this.getPortNumber() + "/" + this.getCatalog();
+		}
 	}
 
 	public static class Informix extends DataBase

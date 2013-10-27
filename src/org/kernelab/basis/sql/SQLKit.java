@@ -726,6 +726,50 @@ public class SQLKit
 		return statement;
 	}
 
+	public Sequel execute(PreparedStatement statement, Iterable<Object> params) throws SQLException
+	{
+		return new Sequel(statement, fillParameters(statement, params).execute());
+	}
+
+	public Sequel execute(PreparedStatement statement, Object... params) throws SQLException
+	{
+		return new Sequel(statement, fillParameters(statement, params).execute());
+	}
+
+	public Sequel execute(Statement statement, String sql) throws SQLException
+	{
+		return new Sequel(statement, statement.execute(sql));
+	}
+
+	public Sequel execute(String sql) throws SQLException
+	{
+		return execute(createStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), sql);
+	}
+
+	public Sequel execute(String sql, Iterable<Object> params) throws SQLException
+	{
+		return execute(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+	}
+
+	public Sequel execute(String sql, JSON params) throws SQLException
+	{
+		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+		List<String> keys = parameters.get(ps);
+		return execute(ps, fillParametersList(keys, params));
+	}
+
+	public Sequel execute(String sql, Map<String, Object> params) throws SQLException
+	{
+		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+		List<String> keys = parameters.get(ps);
+		return execute(ps, fillParametersList(keys, params));
+	}
+
+	public Sequel execute(String sql, Object... params) throws SQLException
+	{
+		return execute(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+	}
+
 	public int[] executeBatch() throws SQLException
 	{
 		return executeBatch(statement);
@@ -818,6 +862,29 @@ public class SQLKit
 		return connection;
 	}
 
+	public ResultSet getResultSet()
+	{
+		return getResultSet(statement);
+	}
+
+	public ResultSet getResultSet(Statement statement)
+	{
+		ResultSet rs = null;
+
+		if (statement != null)
+		{
+			try
+			{
+				rs = statement.getResultSet();
+			}
+			catch (SQLException e)
+			{
+			}
+		}
+
+		return rs;
+	}
+
 	public SQLSource getSource()
 	{
 		return source;
@@ -831,6 +898,26 @@ public class SQLKit
 	public Map<String, Statement> getStatements()
 	{
 		return statements;
+	}
+
+	public int getUpdateCount()
+	{
+		return getUpdateCount(statement);
+	}
+
+	public int getUpdateCount(Statement statement)
+	{
+		int c = -1;
+
+		try
+		{
+			c = statement.getUpdateCount();
+		}
+		catch (SQLException e)
+		{
+		}
+
+		return c;
 	}
 
 	public Boolean isAutoCommit()
