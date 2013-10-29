@@ -69,38 +69,6 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		bommed = false;
 	}
 
-	public boolean autoClose()
-	{
-		return autoCloser != null;
-	}
-
-	public <E extends DataWriter> E autoClose(boolean auto)
-	{
-		if (autoCloser != null)
-		{
-			Runtime.getRuntime().removeShutdownHook(autoCloser);
-		}
-
-		if (auto)
-		{
-			autoCloser = new Thread(new Runnable() {
-
-				public void run()
-				{
-					DataWriter.this.close();
-				}
-			});
-
-			Runtime.getRuntime().addShutdownHook(autoCloser);
-		}
-		else
-		{
-			autoCloser = null;
-		}
-
-		return Tools.cast(this);
-	}
-
 	/**
 	 * Close the writer and setting the writing status to false. This method
 	 * will also flush the buffer before the writer being closed.
@@ -174,6 +142,11 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	public boolean isAppend()
 	{
 		return append;
+	}
+
+	public boolean isAutoClose()
+	{
+		return autoCloser != null;
 	}
 
 	public boolean isAutoFlush()
@@ -269,6 +242,33 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 		{
 			this.append = append;
 		}
+		return Tools.cast(this);
+	}
+
+	public <E extends DataWriter> E setAutoClose(boolean auto)
+	{
+		if (autoCloser != null)
+		{
+			Runtime.getRuntime().removeShutdownHook(autoCloser);
+		}
+
+		if (auto)
+		{
+			autoCloser = new Thread(new Runnable() {
+
+				public void run()
+				{
+					DataWriter.this.close();
+				}
+			});
+
+			Runtime.getRuntime().addShutdownHook(autoCloser);
+		}
+		else
+		{
+			autoCloser = null;
+		}
+
 		return Tools.cast(this);
 	}
 

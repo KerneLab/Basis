@@ -1367,7 +1367,7 @@ public class Tools
 	 */
 	public static Date getDate(String datetime)
 	{
-		return getDate(datetime, null);
+		return getDate(datetime, DEFAULT_DATETIME_FORMAT_STRING);
 	}
 
 	/**
@@ -1393,7 +1393,22 @@ public class Tools
 	 * @param datetime
 	 *            The datetime String, such as "2012-04-13 12:41:39".
 	 * @param format
-	 *            The datetime format String, such as "yyyy-MM-dd HH:mm:ss"
+	 *            The datetime format String, such as "yyyy-MM-dd HH:mm:ss".
+	 * @return The Data object.
+	 */
+	public static Date getDate(String datetime, String format)
+	{
+		return getDate(datetime, format, null);
+	}
+
+	/**
+	 * Get the Date object according to the datetime String which is formatted
+	 * by format String.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param format
+	 *            The datetime format String, such as "yyyy-MM-dd HH:mm:ss".
 	 * @param date
 	 *            The Date object which would hold the date time. If null then a
 	 *            new Date object would be created.
@@ -3351,6 +3366,70 @@ public class Tools
 			}
 			mark(ss[i]);
 		}
+	}
+
+	/**
+	 * Get the Matcher object according to the given regex with default flags
+	 * and reset with an empty text.
+	 * 
+	 * @param regex
+	 *            The regular expression.
+	 * @return The Matcher object.
+	 */
+	public static final Matcher matcher(String regex)
+	{
+		return matcher(regex, 0);
+	}
+
+	/**
+	 * Get the Matcher object according to the given regex, default flags and
+	 * reset with a given text.
+	 * 
+	 * @param regex
+	 *            The regular expression.
+	 * @param text
+	 *            The text to be matched.
+	 * @return The Matcher object.
+	 */
+	public static final Matcher matcher(String regex, CharSequence text)
+	{
+		return matcher(regex, 0, text);
+	}
+
+	/**
+	 * Get the Matcher object according to the given regex and flags which is
+	 * reset with an empty text.
+	 * 
+	 * @param regex
+	 *            The regular expression.
+	 * @param flags
+	 *            Match flags, a bit mask that may include
+	 *            Pattern.CASE_INSENSITIVE, Pattern.MULTILINE, Pattern.DOTALL,
+	 *            Pattern.UNICODE_CASE, and Pattern.CANON_EQ.
+	 * @return The Matcher object.
+	 */
+	public static final Matcher matcher(String regex, int flags)
+	{
+		return matcher(regex, flags, "");
+	}
+
+	/**
+	 * Get the Matcher object according to the given regex and flags and reset
+	 * with a given text.
+	 * 
+	 * @param regex
+	 *            The regular expression.
+	 * @param flags
+	 *            Match flags, a bit mask that may include
+	 *            Pattern.CASE_INSENSITIVE, Pattern.MULTILINE, Pattern.DOTALL,
+	 *            Pattern.UNICODE_CASE, and Pattern.CANON_EQ.
+	 * @param text
+	 *            The text to be matched.
+	 * @return The Matcher object.
+	 */
+	public static final Matcher matcher(String regex, int flags, CharSequence text)
+	{
+		return Pattern.compile(regex, flags).matcher(text);
 	}
 
 	/**

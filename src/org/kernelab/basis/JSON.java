@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.kernelab.basis.test.TestBean;
 
@@ -70,10 +69,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static final String	VAR_END_MARK		= String.valueOf(VAR_END_CHAR);
 
-		public static final Matcher	VAR_ENTRY_MATCHER	= Pattern.compile("^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$")
-																.matcher("");
+		public static final String	VAR_ENTRY_REGEX		= "^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$";
 
-		public static final Matcher	VAR_EXIT_MATCHER	= Pattern.compile("^\\s*(.*?)\\s*;\\s*$").matcher("");
+		public static final String	VAR_EXIT_REGEX		= "^\\s*(.*?)\\s*;\\s*$";
 
 		private DataReader			reader;
 
@@ -81,9 +79,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			reader = new DataReader() {
 
-				private String			entry	= null;
+				private String			entry			= null;
 
-				private StringBuilder	buffer	= new StringBuilder();
+				private StringBuilder	buffer			= new StringBuilder();
+
+				private Matcher			entryMatcher	= Tools.matcher(VAR_ENTRY_REGEX);
+
+				private Matcher			exitMatcher		= Tools.matcher(VAR_EXIT_REGEX);
 
 				@Override
 				protected void readFinished()
@@ -98,10 +100,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 					if (entry == null)
 					{
-						if (VAR_ENTRY_MATCHER.reset(buffer).lookingAt())
+						if (entryMatcher.reset(buffer).lookingAt())
 						{
-							entry = VAR_ENTRY_MATCHER.group(2);
-							line = VAR_ENTRY_MATCHER.group(3);
+							entry = entryMatcher.group(2);
+							line = entryMatcher.group(3);
 							Tools.clearStringBuilder(buffer);
 							buffer.append(line);
 						}
@@ -109,10 +111,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 					if (entry != null)
 					{
-						if (VAR_EXIT_MATCHER.reset(buffer).lookingAt())
+						if (exitMatcher.reset(buffer).lookingAt())
 						{
 
-							line = VAR_EXIT_MATCHER.group(1);
+							line = exitMatcher.group(1);
 							Tools.clearStringBuilder(buffer);
 							buffer.append(line);
 
@@ -248,7 +250,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		protected Function expression(String expression)
 		{
-			Matcher matcher = Pattern.compile(DEFINE_REGEX).matcher(expression);
+			Matcher matcher = Tools.matcher(DEFINE_REGEX, expression);
 
 			if (matcher.find())
 			{
