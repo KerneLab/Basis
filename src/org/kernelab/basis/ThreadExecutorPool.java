@@ -35,9 +35,9 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	private void addTask()
 	{
-		if (!this.isShutdown())
+		synchronized (tasks)
 		{
-			synchronized (tasks)
+			if (!this.isShutdown())
 			{
 				this.tasks++;
 			}
@@ -72,7 +72,15 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public int getTasks()
 	{
-		return tasks;
+		synchronized (tasks)
+		{
+			return tasks;
+		}
+	}
+
+	public boolean isEmpty()
+	{
+		return this.getTasks() == 0;
 	}
 
 	public boolean isShutdown()
@@ -87,14 +95,22 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public Future<V> poll()
 	{
-		this.delTask();
-		return completionService.poll();
+		Future<V> future = completionService.poll();
+		if (future != null)
+		{
+			this.delTask();
+		}
+		return future;
 	}
 
 	public Future<V> poll(long timeout, TimeUnit unit) throws InterruptedException
 	{
-		this.delTask();
-		return completionService.poll(timeout, unit);
+		Future<V> future = completionService.poll(timeout, unit);
+		if (future != null)
+		{
+			this.delTask();
+		}
+		return future;
 	}
 
 	public void setCompletionService(CompletionService<V> completionService)
@@ -137,7 +153,8 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public Future<V> take() throws InterruptedException
 	{
-		if (this.getTasks() > 0)
+		int tasks = this.getTasks();
+		if (tasks > 0)
 		{
 			this.delTask();
 			return completionService.take();
