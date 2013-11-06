@@ -1,11 +1,177 @@
 package org.kernelab.basis.sql;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class Sequel
+import org.kernelab.basis.JSON;
+import org.kernelab.basis.JSON.JSAN;
+
+public class Sequel implements Iterable<Sequel>
 {
+	public static class JSONIterator<T extends JSON> implements Iterable<T>, Iterator<T>
+	{
+		public static JSAN jsanOfResultRow(ResultSet rs, String[] head)
+		{
+			JSAN jsan = new JSAN();
+
+			for (int i = 0; i < head.length; i++)
+			{
+				try
+				{
+					jsan.add(rs.getObject(i + 1));
+				}
+				catch (SQLException e)
+				{
+				}
+			}
+
+			return jsan;
+		}
+
+		@SuppressWarnings("unchecked")
+		public static <T extends JSON> T jsonOfResultRow(ResultSet rs, Class<T> type, Map<String, Object> map)
+				throws SQLException
+		{
+			if (type == JSAN.class)
+			{
+				return (T) SQLKit.jsanOfResultRow(rs, map);
+			}
+			else
+			{
+				return (T) SQLKit.jsonOfResultRow(rs, map);
+			}
+		}
+
+		private ResultSet			rs;
+
+		private Class<T>			type;
+
+		private Map<String, Object>	map;
+
+		private boolean				next;
+
+		private T					curr;
+
+		public JSONIterator(ResultSet rs)
+		{
+			this(rs, null);
+		}
+
+		public JSONIterator(ResultSet rs, Class<T> type)
+		{
+			this(rs, type, null);
+		}
+
+		public JSONIterator(ResultSet rs, Class<T> type, Map<String, Object> map)
+		{
+			this.rs = rs;
+
+			this.type = type;
+
+			try
+			{
+				if (map == null)
+				{
+					map = new LinkedHashMap<String, Object>();
+
+					ResultSetMetaData meta = rs.getMetaData();
+
+					int length = meta.getColumnCount();
+
+					for (int i = 0; i < length; i++)
+					{
+						if (type == JSAN.class)
+						{
+							map.put(String.valueOf(i), i + 1);
+						}
+						else
+						{
+							map.put(meta.getColumnName(i + 1), meta.getColumnName(i + 1));
+						}
+					}
+				}
+
+				this.map = map;
+
+				this.next = rs.next();
+
+				if (this.next)
+				{
+					this.curr = jsonOfResultRow(rs, type, this.map);
+				}
+			}
+			catch (Exception e)
+			{
+				this.next = false;
+			}
+		}
+
+		public boolean hasNext()
+		{
+			return next;
+		}
+
+		public Iterator<T> iterator()
+		{
+			return this;
+		}
+
+		public T next()
+		{
+			T last = curr;
+
+			try
+			{
+				next = rs.next();
+				curr = jsonOfResultRow(rs, type, map);
+			}
+			catch (SQLException e)
+			{
+				next = false;
+			}
+
+			return last;
+		}
+
+		public void remove()
+		{
+
+		}
+	}
+
+	private class SequelIterator implements Iterator<Sequel>
+	{
+		private boolean	first	= true;
+
+		public boolean hasNext()
+		{
+			return hasResult();
+		}
+
+		public Sequel next()
+		{
+			if (first)
+			{
+				first = false;
+				return Sequel.this;
+			}
+			else
+			{
+				return nextResult();
+			}
+		}
+
+		public void remove()
+		{
+
+		}
+	}
+
 	public static final int	N_A				= -1;
 
 	/**
@@ -23,13 +189,28 @@ public class Sequel
 	 */
 	public static final int	RESULT_COUNT	= 1;
 
-	private Statement		statement;
+	public static JSONIterator<JSON> iterate(ResultSet rs)
+	{
+		return new JSONIterator<JSON>(rs);
+	}
 
-	private boolean			resultSetObject	= false;
+	public static <T extends JSON> JSONIterator<T> iterate(ResultSet rs, Class<T> type)
+	{
+		return new JSONIterator<T>(rs, type);
+	}
 
-	private ResultSet		resultSet;
+	public static <T extends JSON> JSONIterator<T> iterate(ResultSet rs, Class<T> type, Map<String, Object> map)
+	{
+		return new JSONIterator<T>(rs, type, map);
+	}
 
-	private int				updateCount		= N_A;
+	private Statement	statement;
+
+	private boolean		resultSetObject	= false;
+
+	private ResultSet	resultSet;
+
+	private int			updateCount		= N_A;
 
 	public Sequel(Statement statement, boolean resultSet)
 	{
@@ -108,6 +289,26 @@ public class Sequel
 	public boolean isUpdateCount()
 	{
 		return this.getUpdateCount() != N_A;
+	}
+
+	public JSONIterator<JSON> iterate()
+	{
+		return iterate(this.getResultSet());
+	}
+
+	public <T extends JSON> JSONIterator<T> iterate(Class<T> type)
+	{
+		return iterate(this.getResultSet(), type);
+	}
+
+	public <T extends JSON> JSONIterator<T> iterate(Class<T> type, Map<String, Object> map)
+	{
+		return iterate(this.getResultSet(), type, map);
+	}
+
+	public Iterator<Sequel> iterator()
+	{
+		return new SequelIterator();
 	}
 
 	public Sequel nextResult()
