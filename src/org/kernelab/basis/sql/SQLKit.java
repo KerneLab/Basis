@@ -127,7 +127,7 @@ public class SQLKit
 	 * @return the parameters value list.
 	 * @see SQLKit#fillParametersList(Iterable, Map, List)
 	 */
-	public static final List<Object> fillParametersList(Iterable<String> keys, JSON params)
+	public static List<Object> fillParametersList(Iterable<String> keys, JSON params)
 	{
 		return fillParametersList(keys, params, null);
 	}
@@ -147,7 +147,7 @@ public class SQLKit
 	 * 
 	 * @return the parameters value list.
 	 */
-	public static final List<Object> fillParametersList(Iterable<String> keys, JSON params, List<Object> list)
+	public static List<Object> fillParametersList(Iterable<String> keys, JSON params, List<Object> list)
 	{
 		if (list == null)
 		{
@@ -178,7 +178,7 @@ public class SQLKit
 	 * @return the parameters value list.
 	 * @see SQLKit#fillParametersList(Iterable, Map, List)
 	 */
-	public static final List<Object> fillParametersList(Iterable<String> keys, Map<String, Object> params)
+	public static List<Object> fillParametersList(Iterable<String> keys, Map<String, Object> params)
 	{
 		return fillParametersList(keys, params, null);
 	}
@@ -199,8 +199,7 @@ public class SQLKit
 	 * 
 	 * @return the parameters value list.
 	 */
-	public static final List<Object> fillParametersList(Iterable<String> keys, Map<String, Object> params,
-			List<Object> list)
+	public static List<Object> fillParametersList(Iterable<String> keys, Map<String, Object> params, List<Object> list)
 	{
 		if (list == null)
 		{
@@ -226,7 +225,7 @@ public class SQLKit
 	 *            the ResultSet.
 	 * @return the number of result in the ResultSet
 	 */
-	public static final int getResultNumber(ResultSet rs)
+	public static int getResultNumber(ResultSet rs)
 	{
 		int number = -1;
 
@@ -266,7 +265,7 @@ public class SQLKit
 	 * @return the index of each parameter.
 	 * @see SQLKit#indexOfParameters(String, Iterable, TreeMap)
 	 */
-	public static final TreeMap<Integer, String> indexOfParameters(String sql, Iterable<String> params)
+	public static TreeMap<Integer, String> indexOfParameters(String sql, Iterable<String> params)
 	{
 		return indexOfParameters(sql, params, null);
 	}
@@ -284,7 +283,7 @@ public class SQLKit
 	 *            be created instead.
 	 * @return the index of each parameter.
 	 */
-	public static final TreeMap<Integer, String> indexOfParameters(String sql, Iterable<String> params,
+	public static TreeMap<Integer, String> indexOfParameters(String sql, Iterable<String> params,
 			TreeMap<Integer, String> index)
 	{
 		if (index == null)
@@ -322,7 +321,7 @@ public class SQLKit
 	 * @return the JSAN object.
 	 * @throws SQLException
 	 */
-	public static final JSAN jsanOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
+	public static JSAN jsanOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
 	{
 		return (JSAN) jsonOfResultRow(rs, new JSAN(), map);
 	}
@@ -344,7 +343,7 @@ public class SQLKit
 	 * @return the JSAN object.
 	 * @throws SQLException
 	 */
-	public static final JSAN jsanOfResultSet(ResultSet rs, JSAN jsan, Map<String, Object> map, Class<? extends JSON> cls)
+	public static JSAN jsanOfResultSet(ResultSet rs, JSAN jsan, Map<String, Object> map, Class<? extends JSON> cls)
 			throws SQLException
 	{
 		if (rs != null)
@@ -402,7 +401,7 @@ public class SQLKit
 	 * @return the JSON object.
 	 * @throws SQLException
 	 */
-	public static final JSON jsonOfResultRow(ResultSet rs, JSON json, Map<String, Object> map) throws SQLException
+	public static JSON jsonOfResultRow(ResultSet rs, JSON json, Map<String, Object> map) throws SQLException
 	{
 		if (rs != null && map != null)
 		{
@@ -444,7 +443,7 @@ public class SQLKit
 	 * @return the JSON object.
 	 * @throws SQLException
 	 */
-	public static final JSON jsonOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
+	public static JSON jsonOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
 	{
 		return jsonOfResultRow(rs, new JSON(), map);
 	}
@@ -503,6 +502,108 @@ public class SQLKit
 	}
 
 	/**
+	 * Map the column names using the column indexes begin with ZERO.
+	 * 
+	 * @param rs
+	 *            The ResultSet.
+	 * @return The map of column index against the column name.
+	 */
+	public static Map<String, Object> mapIndexOfMetaData(ResultSet rs)
+	{
+		Map<String, Object> map = null;
+
+		try
+		{
+			map = mapIndexOfMetaData(rs.getMetaData());
+		}
+		catch (SQLException e)
+		{
+		}
+
+		return map;
+	}
+
+	/**
+	 * Map the column names using the column indexes begin with ZERO.
+	 * 
+	 * @param rs
+	 *            The ResultSet.
+	 * @return The map of column index against the column name.
+	 */
+	public static Map<String, Object> mapIndexOfMetaData(ResultSetMetaData meta)
+	{
+		Map<String, Object> map = null;
+
+		try
+		{
+			int columns = meta.getColumnCount();
+
+			map = new LinkedHashMap<String, Object>();
+
+			for (int i = 0; i < columns; i++)
+			{
+				map.put(String.valueOf(i), meta.getColumnName(i + 1));
+			}
+		}
+		catch (SQLException e)
+		{
+		}
+
+		return map;
+	}
+
+	/**
+	 * Map the column names using the column names.
+	 * 
+	 * @param rs
+	 *            The ResultSet.
+	 * @return The map of column name against the column name.
+	 */
+	public static Map<String, Object> mapNameOfMetaData(ResultSet rs)
+	{
+		Map<String, Object> map = null;
+
+		try
+		{
+			map = mapNameOfMetaData(rs.getMetaData());
+		}
+		catch (SQLException e)
+		{
+		}
+
+		return map;
+	}
+
+	/**
+	 * Map the column names using the column names.
+	 * 
+	 * @param rs
+	 *            The ResultSet.
+	 * @return The map of column name against the column name.
+	 */
+	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta)
+	{
+		Map<String, Object> map = null;
+
+		try
+		{
+			int columns = meta.getColumnCount();
+
+			map = new LinkedHashMap<String, Object>();
+
+			for (int i = 0; i < columns; i++)
+			{
+				map.put(meta.getColumnName(i + 1), meta.getColumnName(i + 1));
+			}
+		}
+		catch (SQLException e)
+		{
+		}
+
+		return map;
+	}
+
+	/**
 	 * Replace each parameters name in SQL with the VALUE_HOLDER in order to be
 	 * prepared.
 	 * 
@@ -512,7 +613,7 @@ public class SQLKit
 	 *            the names of parameters.
 	 * @return the SQL String which could be prepared.
 	 */
-	public static final String replaceParameters(String sql, Iterable<String> params)
+	public static String replaceParameters(String sql, Iterable<String> params)
 	{
 		TextFiller filler = new TextFiller(sql).reset();
 
@@ -535,7 +636,7 @@ public class SQLKit
 	 *            Map<String,Object>.
 	 * @return the SQL String which could be prepared.
 	 */
-	public static final String replaceParameters(String sql, Map<String, Object> params)
+	public static String replaceParameters(String sql, Map<String, Object> params)
 	{
 		return replaceParameters(sql, params.keySet());
 	}

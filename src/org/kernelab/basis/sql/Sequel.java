@@ -1,141 +1,44 @@
 package org.kernelab.basis.sql;
 
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import org.kernelab.basis.JSON;
-import org.kernelab.basis.JSON.JSAN;
 
 public class Sequel implements Iterable<Sequel>
 {
-	public static class JSONIterator<T extends JSON> implements Iterable<T>, Iterator<T>
+	public static class ResultSetIterator implements Iterable<ResultSet>, Iterator<ResultSet>
 	{
-		public static JSAN jsanOfResultRow(ResultSet rs, String[] head)
-		{
-			JSAN jsan = new JSAN();
+		private ResultSet	rs;
 
-			for (int i = 0; i < head.length; i++)
-			{
-				try
-				{
-					jsan.add(rs.getObject(i + 1));
-				}
-				catch (SQLException e)
-				{
-				}
-			}
-
-			return jsan;
-		}
-
-		@SuppressWarnings("unchecked")
-		public static <T extends JSON> T jsonOfResultRow(ResultSet rs, Class<T> type, Map<String, Object> map)
-				throws SQLException
-		{
-			if (type == JSAN.class)
-			{
-				return (T) SQLKit.jsanOfResultRow(rs, map);
-			}
-			else
-			{
-				return (T) SQLKit.jsonOfResultRow(rs, map);
-			}
-		}
-
-		private ResultSet			rs;
-
-		private Class<T>			type;
-
-		private Map<String, Object>	map;
-
-		private boolean				next;
-
-		private T					curr;
-
-		public JSONIterator(ResultSet rs)
-		{
-			this(rs, null);
-		}
-
-		public JSONIterator(ResultSet rs, Class<T> type)
-		{
-			this(rs, type, null);
-		}
-
-		public JSONIterator(ResultSet rs, Class<T> type, Map<String, Object> map)
+		public ResultSetIterator(ResultSet rs)
 		{
 			this.rs = rs;
-
-			this.type = type;
-
-			try
-			{
-				if (map == null)
-				{
-					map = new LinkedHashMap<String, Object>();
-
-					ResultSetMetaData meta = rs.getMetaData();
-
-					int length = meta.getColumnCount();
-
-					for (int i = 0; i < length; i++)
-					{
-						if (type == JSAN.class)
-						{
-							map.put(String.valueOf(i), i + 1);
-						}
-						else
-						{
-							map.put(meta.getColumnName(i + 1), meta.getColumnName(i + 1));
-						}
-					}
-				}
-
-				this.map = map;
-
-				this.next = rs.next();
-
-				if (this.next)
-				{
-					this.curr = jsonOfResultRow(rs, type, this.map);
-				}
-			}
-			catch (Exception e)
-			{
-				this.next = false;
-			}
 		}
 
 		public boolean hasNext()
 		{
-			return next;
+			boolean has = false;
+
+			try
+			{
+				has = rs.next();
+			}
+			catch (Exception e)
+			{
+			}
+
+			return has;
 		}
 
-		public Iterator<T> iterator()
+		public Iterator<ResultSet> iterator()
 		{
 			return this;
 		}
 
-		public T next()
+		public ResultSet next()
 		{
-			T last = curr;
-
-			try
-			{
-				next = rs.next();
-				curr = jsonOfResultRow(rs, type, map);
-			}
-			catch (SQLException e)
-			{
-				next = false;
-			}
-
-			return last;
+			return rs;
 		}
 
 		public void remove()
@@ -150,20 +53,21 @@ public class Sequel implements Iterable<Sequel>
 
 		public boolean hasNext()
 		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				nextResult();
+			}
+
 			return hasResult();
 		}
 
 		public Sequel next()
 		{
-			if (first)
-			{
-				first = false;
-				return Sequel.this;
-			}
-			else
-			{
-				return nextResult();
-			}
+			return Sequel.this;
 		}
 
 		public void remove()
@@ -189,19 +93,9 @@ public class Sequel implements Iterable<Sequel>
 	 */
 	public static final int	RESULT_COUNT	= 1;
 
-	public static JSONIterator<JSON> iterate(ResultSet rs)
+	public static ResultSetIterator iterate(ResultSet rs)
 	{
-		return new JSONIterator<JSON>(rs);
-	}
-
-	public static <T extends JSON> JSONIterator<T> iterate(ResultSet rs, Class<T> type)
-	{
-		return new JSONIterator<T>(rs, type);
-	}
-
-	public static <T extends JSON> JSONIterator<T> iterate(ResultSet rs, Class<T> type, Map<String, Object> map)
-	{
-		return new JSONIterator<T>(rs, type, map);
+		return new ResultSetIterator(rs);
 	}
 
 	private Statement	statement;
@@ -215,6 +109,56 @@ public class Sequel implements Iterable<Sequel>
 	public Sequel(Statement statement, boolean resultSet)
 	{
 		this.setStatement(statement).hasResultSetObject(resultSet).refreshUpdateCount();
+	}
+
+	public Object getColumnValue(int column)
+	{
+		Object value = null;
+
+		if (this.isResultSet())
+		{
+			ResultSet rs = this.getResultSet();
+
+			try
+			{
+				if (rs.isBeforeFirst())
+				{
+					rs.next();
+				}
+
+				value = rs.getObject(column);
+			}
+			catch (SQLException e)
+			{
+			}
+		}
+
+		return value;
+	}
+
+	public Object getColumnValue(String column)
+	{
+		Object value = null;
+
+		if (this.isResultSet())
+		{
+			ResultSet rs = this.getResultSet();
+
+			try
+			{
+				if (rs.isBeforeFirst())
+				{
+					rs.next();
+				}
+
+				value = rs.getObject(column);
+			}
+			catch (SQLException e)
+			{
+			}
+		}
+
+		return value;
 	}
 
 	public ResultSet getResultSet()
@@ -291,19 +235,9 @@ public class Sequel implements Iterable<Sequel>
 		return this.getUpdateCount() != N_A;
 	}
 
-	public JSONIterator<JSON> iterate()
+	public ResultSetIterator iterate()
 	{
-		return iterate(this.getResultSet());
-	}
-
-	public <T extends JSON> JSONIterator<T> iterate(Class<T> type)
-	{
-		return iterate(this.getResultSet(), type);
-	}
-
-	public <T extends JSON> JSONIterator<T> iterate(Class<T> type, Map<String, Object> map)
-	{
-		return iterate(this.getResultSet(), type, map);
+		return new ResultSetIterator(this.getResultSet());
 	}
 
 	public Iterator<Sequel> iterator()
