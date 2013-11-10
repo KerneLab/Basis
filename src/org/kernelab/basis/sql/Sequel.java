@@ -18,6 +18,9 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.kernelab.basis.JSON;
+import org.kernelab.basis.JSON.JSAN;
+
 public class Sequel implements Iterable<Sequel>
 {
 	public static class ResultSetIterator implements Iterable<ResultSet>, Iterator<ResultSet>
@@ -151,6 +154,46 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return type;
+	}
+
+	public JSAN getRowAsJSAN()
+	{
+		return getRowAsJSAN(SQLKit.mapIndexOfMetaData(this.getResultSet()));
+	}
+
+	public JSAN getRowAsJSAN(Map<String, Object> map)
+	{
+		JSAN jsan = null;
+
+		try
+		{
+			jsan = SQLKit.jsanOfResultRow(this.getResultSet(), map);
+		}
+		catch (Exception e)
+		{
+		}
+
+		return jsan;
+	}
+
+	public JSON getRowAsJSON()
+	{
+		return getRowAsJSON(SQLKit.mapNameOfMetaData(this.getResultSet()));
+	}
+
+	public JSON getRowAsJSON(Map<String, Object> map)
+	{
+		JSON json = null;
+
+		try
+		{
+			json = SQLKit.jsonOfResultRow(this.getResultSet(), map);
+		}
+		catch (Exception e)
+		{
+		}
+
+		return json;
 	}
 
 	public Statement getStatement()

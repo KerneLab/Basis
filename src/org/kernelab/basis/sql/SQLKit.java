@@ -516,7 +516,7 @@ public class SQLKit
 		{
 			map = mapIndexOfMetaData(rs.getMetaData());
 		}
-		catch (SQLException e)
+		catch (Exception e)
 		{
 		}
 
@@ -567,7 +567,7 @@ public class SQLKit
 		{
 			map = mapNameOfMetaData(rs.getMetaData());
 		}
-		catch (SQLException e)
+		catch (Exception e)
 		{
 		}
 
