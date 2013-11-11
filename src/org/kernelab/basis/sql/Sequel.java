@@ -158,7 +158,7 @@ public class Sequel implements Iterable<Sequel>
 
 	public JSAN getRowAsJSAN()
 	{
-		return getRowAsJSAN(SQLKit.mapIndexOfMetaData(this.getResultSet()));
+		return getRowAsJSAN(null);
 	}
 
 	public JSAN getRowAsJSAN(Map<String, Object> map)
@@ -167,7 +167,14 @@ public class Sequel implements Iterable<Sequel>
 
 		try
 		{
-			jsan = SQLKit.jsanOfResultRow(this.getResultSet(), map);
+			if (this.preparedResultSet())
+			{
+				if (map == null)
+				{
+					map = SQLKit.mapIndexOfMetaData(this.getResultSet());
+				}
+				jsan = SQLKit.jsanOfResultRow(this.getResultSet(), map);
+			}
 		}
 		catch (Exception e)
 		{
@@ -178,7 +185,7 @@ public class Sequel implements Iterable<Sequel>
 
 	public JSON getRowAsJSON()
 	{
-		return getRowAsJSON(SQLKit.mapNameOfMetaData(this.getResultSet()));
+		return getRowAsJSON(null);
 	}
 
 	public JSON getRowAsJSON(Map<String, Object> map)
@@ -187,7 +194,14 @@ public class Sequel implements Iterable<Sequel>
 
 		try
 		{
-			json = SQLKit.jsonOfResultRow(this.getResultSet(), map);
+			if (this.preparedResultSet())
+			{
+				if (map == null)
+				{
+					map = SQLKit.mapNameOfMetaData(this.getResultSet());
+				}
+				json = SQLKit.jsonOfResultRow(this.getResultSet(), map);
+			}
 		}
 		catch (Exception e)
 		{
@@ -210,7 +224,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Array value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -228,7 +242,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Array value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -246,7 +260,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		InputStream value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -264,7 +278,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		InputStream value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -282,7 +296,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		BigDecimal value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -300,7 +314,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		BigDecimal value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -318,7 +332,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		InputStream value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -336,7 +350,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		InputStream value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -354,7 +368,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Blob value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -372,7 +386,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Blob value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -390,7 +404,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Boolean value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -408,7 +422,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Boolean value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -426,7 +440,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Byte value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -444,7 +458,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Byte value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -462,7 +476,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		byte[] value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -480,7 +494,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		byte[] value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -498,7 +512,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Reader value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -516,7 +530,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Reader value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -534,7 +548,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Clob value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -552,7 +566,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Clob value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -570,7 +584,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Date value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -588,7 +602,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Date value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -606,7 +620,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Date value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -624,7 +638,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Date value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -642,7 +656,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Double value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -660,7 +674,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Double value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -678,7 +692,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Float value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -696,7 +710,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Float value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -714,7 +728,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Integer value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -732,7 +746,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Integer value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -750,7 +764,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Long value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -768,7 +782,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Long value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -786,7 +800,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Object value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -804,7 +818,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Object value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -822,7 +836,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Object value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -840,7 +854,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Object value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -858,7 +872,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Ref value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -876,7 +890,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Ref value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -894,7 +908,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Short value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -912,7 +926,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Short value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -930,7 +944,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		String value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -948,7 +962,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		String value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -966,7 +980,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Time value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -984,7 +998,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Time value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1002,7 +1016,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Time value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1020,7 +1034,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Time value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1038,7 +1052,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Timestamp value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1056,7 +1070,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Timestamp value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1074,7 +1088,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Timestamp value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1092,7 +1106,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Timestamp value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1110,7 +1124,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		URL value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1128,7 +1142,7 @@ public class Sequel implements Iterable<Sequel>
 	{
 		URL value = null;
 
-		if (this.prepareResultSet())
+		if (this.preparedResultSet())
 		{
 			try
 			{
@@ -1216,7 +1230,7 @@ public class Sequel implements Iterable<Sequel>
 		return this;
 	}
 
-	private boolean prepareResultSet()
+	private boolean preparedResultSet()
 	{
 		boolean ok = false;
 

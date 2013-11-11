@@ -3,15 +3,14 @@ package org.kernelab.basis;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
-public class ProcessHandler extends AbstractAccomplishable implements Runnable
+public class ProcessHandler extends AbstractAccomplishable implements Callable<Integer>, Runnable
 {
-
 	public static final String	PROCESS_ACCOMPLISHED_COMMAND	= "ACCOMPLISHED";
 
 	/**
@@ -43,14 +42,47 @@ public class ProcessHandler extends AbstractAccomplishable implements Runnable
 		accomplishedEvent = null;
 	}
 
+	public Integer call() throws Exception
+	{
+		Integer result = null;
+
+		String line = null;
+
+		process = processBuilder.start();
+
+		terminated = false;
+
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+		while (!terminated && (line = bufferedReader.readLine()) != null)
+		{
+			if (printStream != null)
+			{
+				printStream.println(line);
+			}
+		}
+
+		if (!terminated)
+		{
+			result = this.getProcess().waitFor();
+
+			this.terminate();
+
+			this.accomplished();
+		}
+
+		return result;
+	}
+
 	@Override
 	public ActionEvent getAccomplishedEvent()
 	{
 		ActionEvent event = accomplishedEvent;
 
-		if (event == null) {
-			event = new ActionEvent(this, process.exitValue(),
-					ProcessHandler.PROCESS_ACCOMPLISHED_COMMAND, Tools.getTimeStamp(), 0);
+		if (event == null)
+		{
+			event = new ActionEvent(this, process.exitValue(), ProcessHandler.PROCESS_ACCOMPLISHED_COMMAND,
+					Tools.getTimeStamp(), 0);
 		}
 
 		return event;
@@ -93,38 +125,14 @@ public class ProcessHandler extends AbstractAccomplishable implements Runnable
 
 	public void run()
 	{
-		try {
-
-			String line = null;
-
-			process = processBuilder.start();
-
-			terminated = false;
-
-			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
-					process.getInputStream()));
-
-			while (!terminated && (line = bufferedReader.readLine()) != null) {
-				if (printStream != null) {
-					printStream.println(line);
-				}
-			}
-
-			if (!terminated) {
-
-				this.getProcess().waitFor();
-
-				this.terminate();
-
-				this.accomplished();
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+		try
+		{
+			this.call();
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
-
 	}
 
 	public ProcessHandler setAccomplishedEvent(ActionEvent finishedEvent)
@@ -168,12 +176,11 @@ public class ProcessHandler extends AbstractAccomplishable implements Runnable
 	 */
 	public void terminate()
 	{
-		if (!terminated) {
-
+		if (!terminated)
+		{
 			terminated = true;
 
 			process.destroy();
 		}
 	}
-
 }
