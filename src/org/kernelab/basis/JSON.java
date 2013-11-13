@@ -54,93 +54,100 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 {
 	public static class Context extends JSON
 	{
+		private class ContextReader extends DataReader implements Serializable
+		{
+			/**
+			 * 
+			 */
+			private static final long	serialVersionUID	= 1515152016778877444L;
+
+			private String				entry				= null;
+
+			private StringBuilder		buffer				= new StringBuilder();
+
+			private Matcher				entryMatcher		= Tools.matcher(VAR_ENTRY_REGEX);
+
+			private Matcher				exitMatcher			= Tools.matcher(VAR_EXIT_REGEX);
+
+			@Override
+			protected void readFinished()
+			{
+
+			}
+
+			@Override
+			protected void readLine(CharSequence line)
+			{
+				buffer.append(line);
+
+				if (entry == null)
+				{
+					if (entryMatcher.reset(buffer).lookingAt())
+					{
+						entry = entryMatcher.group(2);
+						line = entryMatcher.group(3);
+						Tools.clearStringBuilder(buffer);
+						buffer.append(line);
+					}
+				}
+
+				if (entry != null)
+				{
+					if (exitMatcher.reset(buffer).lookingAt())
+					{
+
+						line = exitMatcher.group(1);
+						Tools.clearStringBuilder(buffer);
+						buffer.append(line);
+
+						Object object = JSON.ParseValueOf(buffer.toString());
+
+						if (object == JSON.NOT_A_VALUE)
+						{
+							object = JSON.Parse(buffer, null, Context.this);
+						}
+
+						if (object != JSON.NOT_A_VALUE)
+						{
+							Quotation.Quote(Context.this, entry, object);
+							entry = null;
+							Tools.clearStringBuilder(buffer);
+						}
+					}
+				}
+			}
+
+			@Override
+			protected void readPrepare()
+			{
+				entry = null;
+			}
+		}
+
 		/**
 		 * 
 		 */
-		private static final long	serialVersionUID	= -7912039879626749853L;
+		private static final long		serialVersionUID	= -7912039879626749853L;
 
-		public static final String	VAR_DEFINE_MARK		= "var";
+		public static final String		VAR_DEFINE_MARK		= "var";
 
-		public static final char	VAR_ASSIGN_CHAR		= '=';
+		public static final char		VAR_ASSIGN_CHAR		= '=';
 
-		public static final String	VAR_ASSIGN_MARK		= String.valueOf(VAR_ASSIGN_CHAR);
+		public static final String		VAR_ASSIGN_MARK		= String.valueOf(VAR_ASSIGN_CHAR);
 
-		public static final char	VAR_END_CHAR		= ';';
+		public static final char		VAR_END_CHAR		= ';';
 
-		public static final String	VAR_END_MARK		= String.valueOf(VAR_END_CHAR);
+		public static final String		VAR_END_MARK		= String.valueOf(VAR_END_CHAR);
 
-		public static final String	VAR_ENTRY_REGEX		= "^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$";
+		public static final String		VAR_ENTRY_REGEX		= "^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$";
 
-		public static final String	VAR_EXIT_REGEX		= "^\\s*(.*?)\\s*;\\s*$";
+		public static final String		VAR_EXIT_REGEX		= "^\\s*(.*?)\\s*;\\s*$";
 
-		private DataReader			reader;
+		private transient DataReader	reader;
 
 		public Context()
 		{
-			reader = new DataReader() {
-
-				private String			entry			= null;
-
-				private StringBuilder	buffer			= new StringBuilder();
-
-				private Matcher			entryMatcher	= Tools.matcher(VAR_ENTRY_REGEX);
-
-				private Matcher			exitMatcher		= Tools.matcher(VAR_EXIT_REGEX);
-
-				@Override
-				protected void readFinished()
-				{
-
-				}
-
-				@Override
-				protected void readLine(CharSequence line)
-				{
-					buffer.append(line);
-
-					if (entry == null)
-					{
-						if (entryMatcher.reset(buffer).lookingAt())
-						{
-							entry = entryMatcher.group(2);
-							line = entryMatcher.group(3);
-							Tools.clearStringBuilder(buffer);
-							buffer.append(line);
-						}
-					}
-
-					if (entry != null)
-					{
-						if (exitMatcher.reset(buffer).lookingAt())
-						{
-
-							line = exitMatcher.group(1);
-							Tools.clearStringBuilder(buffer);
-							buffer.append(line);
-
-							Object object = JSON.ParseValueOf(buffer.toString());
-
-							if (object == JSON.NOT_A_VALUE)
-							{
-								object = JSON.Parse(buffer, null, Context.this);
-							}
-
-							if (object != JSON.NOT_A_VALUE)
-							{
-								Quotation.Quote(Context.this, entry, object);
-								entry = null;
-								Tools.clearStringBuilder(buffer);
-							}
-						}
-					}
-				}
-
-				@Override
-				protected void readPrepare()
-				{
-					entry = null;
-				}
-			};
+			reader = new ContextReader();
 		}
 
 		@Override
@@ -190,8 +197,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
-	public static class Function implements Hierarchical
+	public static class Function implements Hierarchical, Serializable
 	{
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -2638142033937727881L;
+
 		public static final String	DEFINE_MARK			= "function";
 
 		public static final char	DEFINE_FIRST_CHAR	= 'f';
@@ -330,6 +342,37 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	 */
 	public static class JSAN extends JSON implements Iterable<Object>
 	{
+		private static class ArrayIndexComparator implements Comparator<String>, Serializable
+		{
+			/**
+			 * 
+			 */
+			private static final long	serialVersionUID	= -3834859681987586236L;
+
+			public int compare(String a, String b)
+			{
+				Integer va = Index(a);
+				Integer vb = Index(b);
+
+				if (va != null && vb != null)
+				{
+					return va - vb;
+				}
+				else if (va == null && vb != null)
+				{
+					return 1;
+				}
+				else if (va != null && vb == null)
+				{
+					return -1;
+				}
+				else
+				{
+					return a.compareTo(b);
+				}
+			}
+		}
+
 		protected class ArrayIterator implements Iterator<Object>
 		{
 			private LinkedList<String>		keys	= new LinkedList<String>();
@@ -972,32 +1015,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			super();
 
-			array(new TreeMap<String, Object>(new Comparator<String>() {
-
-				public int compare(String a, String b)
-				{
-					Integer va = Index(a);
-					Integer vb = Index(b);
-
-					if (va != null && vb != null)
-					{
-						return va - vb;
-					}
-					else if (va == null && vb != null)
-					{
-						return 1;
-					}
-					else if (va != null && vb == null)
-					{
-						return -1;
-					}
-					else
-					{
-						return a.compareTo(b);
-					}
-				}
-
-			}));
+			array(new TreeMap<String, Object>(new ArrayIndexComparator()));
 		}
 
 		public JSAN(Object... values)

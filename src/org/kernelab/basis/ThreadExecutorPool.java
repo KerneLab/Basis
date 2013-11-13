@@ -78,6 +78,20 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		}
 	}
 
+	public Future<V> grab() throws InterruptedException
+	{
+		int tasks = this.getTasks();
+		if (tasks > 0)
+		{
+			this.delTask();
+			return completionService.take();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
 	public boolean isEmpty()
 	{
 		return this.getTasks() == 0;
@@ -153,15 +167,8 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public Future<V> take() throws InterruptedException
 	{
-		int tasks = this.getTasks();
-		if (tasks > 0)
-		{
-			this.delTask();
-			return completionService.take();
-		}
-		else
-		{
-			return null;
-		}
+		Future<V> future = completionService.take();
+		this.delTask();
+		return future;
 	}
 }
