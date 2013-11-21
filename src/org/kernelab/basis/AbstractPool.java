@@ -77,6 +77,14 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return Tools.cast(this);
 	}
 
+	public int size()
+	{
+		synchronized (pool)
+		{
+			return pool.size();
+		}
+	}
+
 	public E takeAway()
 	{
 		E element = null;
