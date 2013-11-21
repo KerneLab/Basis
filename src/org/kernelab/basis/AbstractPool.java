@@ -7,7 +7,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 {
 	private List<E>	pool;
 
-	private int		count;
+	private int		trace;
 
 	private int		limit;
 
@@ -26,7 +26,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 	protected AbstractPool(List<E> pool, int limit, boolean lazy)
 	{
 		this.pool = pool;
-		this.count = 0;
+		this.trace = 0;
 		this.limit = Math.max(limit, 1);
 		this.lazy = lazy;
 
@@ -36,6 +36,11 @@ public abstract class AbstractPool<E> implements Pool<E>
 	public int getLimit()
 	{
 		return limit;
+	}
+
+	public int getTrace()
+	{
+		return trace;
 	}
 
 	public void giveBack(E element)
@@ -55,7 +60,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 			{
 				pool.add(newElement());
 			}
-			count = limit;
+			trace = limit;
 		}
 	}
 
@@ -82,10 +87,10 @@ public abstract class AbstractPool<E> implements Pool<E>
 			{
 				if (pool.isEmpty())
 				{
-					if (count < limit)
+					if (trace < limit)
 					{
 						element = newElement();
-						count++;
+						trace++;
 					}
 					else
 					{
