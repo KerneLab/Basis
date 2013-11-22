@@ -10,16 +10,18 @@ package org.kernelab.basis;
 public interface Pool<E>
 {
 	/**
-	 * To give an element back to the pool.
-	 * 
-	 * @param element
-	 */
-	public void giveBack(E element);
-
-	/**
-	 * To take an element away from the pool.
+	 * To provide an element in the pool and remove it away which means this
+	 * element would not been provided again until it has been recycled.
 	 * 
 	 * @return
 	 */
-	public E takeAway();
+	public E provide();
+
+	/**
+	 * To recycle an element back into the pool so that this pool could provide
+	 * the element to others again.
+	 * 
+	 * @param element
+	 */
+	public void recycle(E element);
 }

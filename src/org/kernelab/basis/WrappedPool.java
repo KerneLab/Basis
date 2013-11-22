@@ -23,7 +23,7 @@ public abstract class WrappedPool<E> extends AbstractPool<Element<E>>
 
 		public void release()
 		{
-			pool.giveBack(this);
+			pool.recycle(this);
 		}
 	}
 

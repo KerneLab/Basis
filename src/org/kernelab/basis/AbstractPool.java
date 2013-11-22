@@ -43,15 +43,6 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return trace;
 	}
 
-	public void giveBack(E element)
-	{
-		synchronized (pool)
-		{
-			pool.add(element);
-			pool.notifyAll();
-		}
-	}
-
 	private void init()
 	{
 		if (!lazy)
@@ -71,21 +62,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	protected abstract E newElement();
 
-	public AbstractPool<E> setLimit(int limit)
-	{
-		this.limit = limit;
-		return Tools.cast(this);
-	}
-
-	public int size()
-	{
-		synchronized (pool)
-		{
-			return pool.size();
-		}
-	}
-
-	public E takeAway()
+	public E provide()
 	{
 		E element = null;
 
@@ -120,5 +97,28 @@ public abstract class AbstractPool<E> implements Pool<E>
 		} while (element == null);
 
 		return element;
+	}
+
+	public void recycle(E element)
+	{
+		synchronized (pool)
+		{
+			pool.add(element);
+			pool.notifyAll();
+		}
+	}
+
+	public AbstractPool<E> setLimit(int limit)
+	{
+		this.limit = limit;
+		return Tools.cast(this);
+	}
+
+	public int size()
+	{
+		synchronized (pool)
+		{
+			return pool.size();
+		}
 	}
 }
