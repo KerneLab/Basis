@@ -1,3 +1,20 @@
+/**
+ * Rogar is a jQuery plugin to Display a progress bar.<br />
+ * D3 framework is also needed.<br />
+ * The default css styles:<br />
+ * .rogar-box { border: 1px solid #6666dd; float: left; height: 20px; width:
+ * 200px; overflow: hidden; position: relative; float: left; }
+ * 
+ * .rogar-bar { background-color: #9999ee; height: 20px; overflow: hidden;
+ * position: relative; text-align: center; position: relative; }
+ * 
+ * .rogar-txt-dark,.rogar-txt-light { height: 20px; line-height: 20px; position:
+ * absolute; text-align: center; width: 200px; }
+ * 
+ * .rogar-txt-dark { color: #333333; }
+ * 
+ * .rogar-txt-light { color: #ffffff; }
+ */
 (function($)
 {
 	$.fn.rogar = function(options)
