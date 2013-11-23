@@ -11,7 +11,6 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	 */
 	public static void main(String[] args)
 	{
-		// TODO Auto-generated method stub
 
 	}
 
@@ -30,8 +29,11 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public void close(SQLKit kit)
 	{
-		this.recycle(kit.getConnection());
+		Connection c = kit.getConnection();
+
 		kit.setConnection(null);
+
+		this.recycle(c);
 	}
 
 	public Connection getConnection()
