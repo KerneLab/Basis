@@ -7,10 +7,9 @@ import java.util.Set;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.sql.DataSource;
 
 /**
- * The ConnectionPool class is an abstract connection pool of database support
+ * The DataSource is a class which wraps javax.sql.DataSource.
  * 
  * To support various database, but the connection resource should be config in
  * follow files: <br>
@@ -45,7 +44,7 @@ import javax.sql.DataSource;
  * @version 1.1.0
  * @update 2010-02-18
  */
-public class ConnectionPool implements SQLSource
+public class DataSource implements SQLSource
 {
 	/**
 	 * @param args
@@ -55,11 +54,11 @@ public class ConnectionPool implements SQLSource
 
 	}
 
-	private String		dataSourceName;
+	private String					dataSourceName;
 
-	private DataSource	dataSource;
+	private javax.sql.DataSource	dataSource;
 
-	private Set<SQLKit>	kits	= new HashSet<SQLKit>();
+	private Set<SQLKit>				kits	= new HashSet<SQLKit>();
 
 	/**
 	 * Create a connection pool with the given data source name.
@@ -67,16 +66,16 @@ public class ConnectionPool implements SQLSource
 	 * @param dataSourceName
 	 *            The name of data source such as "jdbc/mysql".
 	 */
-	public ConnectionPool(String dataSourceName)
+	public DataSource(String dataSourceName)
 	{
 		this.setDataSourceName(dataSourceName);
 
-		DataSource dataSource = null;
+		javax.sql.DataSource dataSource = null;
 
 		try
 		{
 			InitialContext initialContext = new InitialContext();
-			dataSource = (DataSource) initialContext.lookup("java:comp/env/" + this.getDataSourceName());
+			dataSource = (javax.sql.DataSource) initialContext.lookup("java:comp/env/" + this.getDataSourceName());
 		}
 		catch (NamingException e)
 		{
@@ -118,7 +117,7 @@ public class ConnectionPool implements SQLSource
 		return connection;
 	}
 
-	public DataSource getDataSource()
+	public javax.sql.DataSource getDataSource()
 	{
 		return dataSource;
 	}
@@ -158,7 +157,7 @@ public class ConnectionPool implements SQLSource
 		return is;
 	}
 
-	public void setDataSource(DataSource dataSource)
+	public void setDataSource(javax.sql.DataSource dataSource)
 	{
 		this.dataSource = dataSource;
 	}
