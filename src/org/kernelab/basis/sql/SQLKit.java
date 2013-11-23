@@ -641,7 +641,7 @@ public class SQLKit
 		return replaceParameters(sql, params.keySet());
 	}
 
-	private SQLSource								source;
+	private ConnectionSource						source;
 
 	private Connection								connection;
 
@@ -657,10 +657,17 @@ public class SQLKit
 
 	private int										resultSetHoldability	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][2];
 
-	public SQLKit(SQLSource source)
+	public SQLKit(ConnectionSource source)
 	{
 		this.setSource(source);
-		this.setConnection(source.getConnection());
+		try
+		{
+			this.setConnection(source.getConnection());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
 		this.setStatements(new HashMap<String, Statement>());
 	}
 
@@ -761,6 +768,7 @@ public class SQLKit
 			statements = null;
 		}
 		this.getSource().close(this);
+		connection = null;
 	}
 
 	public void commit() throws SQLException
@@ -986,7 +994,7 @@ public class SQLKit
 		return rs;
 	}
 
-	public SQLSource getSource()
+	public ConnectionSource getSource()
 	{
 		return source;
 	}
@@ -1038,7 +1046,7 @@ public class SQLKit
 
 	public boolean isClosed()
 	{
-		return this.getSource().isClosed(this);
+		return connection == null;
 	}
 
 	public SQLKit optimizingAs(byte i)
@@ -1418,7 +1426,7 @@ public class SQLKit
 		this.connection = connection;
 	}
 
-	public void setSource(SQLSource source)
+	public void setSource(ConnectionSource source)
 	{
 		this.source = source;
 	}

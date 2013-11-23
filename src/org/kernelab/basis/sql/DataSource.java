@@ -44,7 +44,7 @@ import javax.naming.NamingException;
  * @version 1.1.0
  * @update 2010-02-18
  */
-public class DataSource implements SQLSource
+public class DataSource implements ConnectionFactory, ConnectionSource
 {
 	/**
 	 * @param args
@@ -103,18 +103,14 @@ public class DataSource implements SQLSource
 
 	public Connection getConnection()
 	{
-		Connection connection = null;
-
 		try
 		{
-			connection = this.getDataSource().getConnection();
+			return this.newConnection();
 		}
-		catch (SQLException e)
+		catch (Exception e)
 		{
-			e.printStackTrace();
+			return null;
 		}
-
-		return connection;
 	}
 
 	public javax.sql.DataSource getDataSource()
@@ -155,6 +151,11 @@ public class DataSource implements SQLSource
 		}
 
 		return is;
+	}
+
+	public Connection newConnection() throws SQLException
+	{
+		return this.getDataSource().getConnection();
 	}
 
 	public void setDataSource(javax.sql.DataSource dataSource)

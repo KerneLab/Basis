@@ -5,7 +5,7 @@ import java.util.List;
 
 public abstract class AbstractPool<E> implements Pool<E>
 {
-	private List<E>	pool;
+	private List<E>	elements;
 
 	private int		trace;
 
@@ -25,12 +25,17 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	protected AbstractPool(List<E> pool, int limit, boolean lazy)
 	{
-		this.pool = pool;
+		this.elements = pool;
 		this.trace = 0;
 		this.limit = Math.max(limit, 1);
 		this.lazy = lazy;
 
 		this.init();
+	}
+
+	protected List<E> getElements()
+	{
+		return elements;
 	}
 
 	public int getLimit()
@@ -43,13 +48,13 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return trace;
 	}
 
-	private void init()
+	protected void init()
 	{
 		if (!lazy)
 		{
 			for (int i = 0; i < limit; i++)
 			{
-				pool.add(newElement());
+				elements.add(newElement());
 			}
 			trace = limit;
 		}
@@ -68,9 +73,9 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 		do
 		{
-			synchronized (pool)
+			synchronized (elements)
 			{
-				if (pool.isEmpty())
+				if (elements.isEmpty())
 				{
 					if (trace < limit)
 					{
@@ -81,7 +86,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 					{
 						try
 						{
-							pool.wait();
+							elements.wait();
 						}
 						catch (InterruptedException e)
 						{
@@ -91,7 +96,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 				}
 				else
 				{
-					element = pool.remove(0);
+					element = elements.remove(0);
 				}
 			}
 		} while (element == null);
@@ -101,10 +106,10 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	public void recycle(E element)
 	{
-		synchronized (pool)
+		synchronized (elements)
 		{
-			pool.add(element);
-			pool.notifyAll();
+			elements.add(element);
+			elements.notifyAll();
 		}
 	}
 
@@ -116,9 +121,9 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	public int size()
 	{
-		synchronized (pool)
+		synchronized (elements)
 		{
-			return pool.size();
+			return elements.size();
 		}
 	}
 }

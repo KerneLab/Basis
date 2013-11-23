@@ -21,7 +21,7 @@ import org.kernelab.basis.Relation;
  * 
  * @author Dilly King
  */
-public abstract class DataBase implements SQLSource, Copieable<DataBase>
+public abstract class DataBase implements ConnectionFactory, ConnectionSource, Copieable<DataBase>
 {
 	public static class DB2 extends DataBase
 	{
@@ -939,16 +939,22 @@ public abstract class DataBase implements SQLSource, Copieable<DataBase>
 		return is;
 	}
 
+	public Connection newConnection() throws SQLException, InstantiationException, IllegalAccessException,
+			ClassNotFoundException
+	{
+		// No need for JDBC4.0 with Java6.0
+		Class.forName(this.getDriverName()).newInstance();
+
+		return DriverManager.getConnection(this.getURL(), this.getInformation());
+	}
+
 	public void openConnection() throws InstantiationException, IllegalAccessException, ClassNotFoundException
 	{
 		try
 		{
 			if (this.isClosed())
 			{
-				// No need for JDBC4.0 with Java6.0
-				Class.forName(this.getDriverName()).newInstance();
-
-				this.setConnection(DriverManager.getConnection(this.getURL(), this.getInformation()));
+				this.setConnection(this.newConnection());
 			}
 		}
 		catch (SQLException e)
