@@ -54,7 +54,9 @@
 		{
 			var rat = rate;
 
-			d3.select(self.selector).selectAll("." + opts["bar.class"]).transition().duration(1000).tween("width",
+			var duration = Math.abs(r - rat) * opts["duration.total"];
+
+			d3.select(self.selector).selectAll("." + opts["bar.class"]).transition().duration(duration).tween("width",
 					function()
 					{
 						var i = d3.interpolate(rat, r);
@@ -65,8 +67,8 @@
 						}
 					});
 
-			d3.select(self.selector).selectAll("." + opts["txt.dark.class"]).transition().duration(1000).tween("text",
-					function()
+			d3.select(self.selector).selectAll("." + opts["txt.dark.class"]).transition().duration(duration).tween(
+					"text", function()
 					{
 						var i = d3.interpolate(rat, r);
 						return function(t)
@@ -75,8 +77,8 @@
 						};
 					});
 
-			d3.select(self.selector).selectAll("." + opts["txt.light.class"]).transition().duration(1000).tween("text",
-					function()
+			d3.select(self.selector).selectAll("." + opts["txt.light.class"]).transition().duration(duration).tween(
+					"text", function()
 					{
 						var i = d3.interpolate(rat, r);
 						return function(t)
@@ -93,6 +95,7 @@
 
 	$.fn.rogar.defaults = {
 		"init.rate": 0,
+		"duration.total": 2000,
 		"box.class": "rogar-box",
 		"bar.class": "rogar-bar",
 		"txt.dark.class": "rogar-txt-dark",
