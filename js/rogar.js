@@ -52,23 +52,33 @@
 
 		this.to = function(r)
 		{
-			d3.select(self.selector).selectAll("." + opts["bar.class"]).transition().duration(750).style("width",
-					(r * 100) + "%");
+			var rat = rate;
 
-			d3.select(self.selector).selectAll("." + opts["txt.dark.class"]).transition().duration(750).tween("text",
+			d3.select(self.selector).selectAll("." + opts["bar.class"]).transition().duration(1000).tween("width",
 					function()
 					{
-						var i = d3.interpolate(rate, r);
+						var i = d3.interpolate(rat, r);
+						return function(t)
+						{
+							rate = i(t);
+							$(this).css("width", (i(t) * 100).toFixed(2) + "%");
+						}
+					});
+
+			d3.select(self.selector).selectAll("." + opts["txt.dark.class"]).transition().duration(1000).tween("text",
+					function()
+					{
+						var i = d3.interpolate(rat, r);
 						return function(t)
 						{
 							this.textContent = opts["txt.formatter"](i(t));
 						};
 					});
 
-			d3.select(self.selector).selectAll("." + opts["txt.light.class"]).transition().duration(750).tween("text",
+			d3.select(self.selector).selectAll("." + opts["txt.light.class"]).transition().duration(1000).tween("text",
 					function()
 					{
-						var i = d3.interpolate(rate, r);
+						var i = d3.interpolate(rat, r);
 						return function(t)
 						{
 							this.textContent = opts["txt.formatter"](i(t));
