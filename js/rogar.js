@@ -25,9 +25,18 @@
 
 		var rate = opts["init.rate"];
 
-		this.children().remove();
+		var box = this;
 
-		this.addClass(opts["box.class"]);
+		box.children().remove();
+		box.html("");
+
+		if (!box.is("div"))
+		{
+			box = $("<div></div>");
+			this.append(box);
+		}
+
+		box.addClass(opts["box.class"]);
 
 		var darkText = $("<div></div>").addClass(opts["txt.dark.class"]).text(opts["txt.formatter"](rate));
 
@@ -35,11 +44,11 @@
 
 		var bar = $("<div></div>").addClass(opts["bar.class"]).css("width", (rate * 100) + "%");
 
-		this.append(darkText);
+		box.append(darkText);
 
 		bar.append(lightText);
 
-		this.append(bar);
+		box.append(bar);
 
 		this.to = function(r)
 		{
