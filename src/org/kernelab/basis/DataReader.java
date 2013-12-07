@@ -8,17 +8,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.concurrent.Callable;
 
 /**
  * This is a framework to read a data file line by line.
  * 
  * @author Dilly King
  */
-public abstract class DataReader extends AbstractAccomplishable implements Runnable
+public abstract class DataReader extends AbstractAccomplishable implements Runnable, Callable<Integer>
 {
-	private static final char	LF				= '\n';
-
 	private static final char	CR				= '\r';
+
+	private static final char	LF				= '\n';
 
 	public static Charset		DEFAULT_CHARSET	= Charset.defaultCharset();
 
@@ -30,6 +31,8 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	private boolean				reading;
 
+	private int					lines;
+
 	private StringBuilder		buffer;
 
 	public DataReader()
@@ -38,7 +41,17 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		reading = false;
 	}
 
-	@Override
+	public Integer call() throws Exception
+	{
+		if (!this.isReading())
+		{
+			this.resetAccomplishStatus();
+			this.read();
+			this.accomplished();
+		}
+		return lines;
+	}
+
 	public ActionEvent getAccomplishedEvent()
 	{
 		return null;
@@ -52,6 +65,11 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	public String getCharsetName()
 	{
 		return charset.name();
+	}
+
+	public int getLines()
+	{
+		return lines;
 	}
 
 	public Reader getReader()
@@ -74,6 +92,8 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		if (this.reader != null)
 		{
 			reading = true;
+
+			lines = 0;
 
 			BufferedReader reader = new BufferedReader(this.reader);
 
@@ -108,6 +128,7 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 					{
 						this.readLine(buffer);
 						buffer.delete(0, buffer.length());
+						lines++;
 					}
 
 					if (c != LF && c != CR && l == CR)
@@ -169,11 +190,13 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 
 	public void run()
 	{
-		if (!this.isReading())
+		try
 		{
-			this.resetAccomplishStatus();
-			this.read();
-			this.accomplished();
+			call();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
 		}
 	}
 

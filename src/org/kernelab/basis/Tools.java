@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -2157,18 +2156,49 @@ public class Tools
 	 */
 	public static List<String> inputStringsFromFile(File file, List<String> list)
 	{
+		return inputStringsFromFile(file, list, null);
+	}
+
+	/**
+	 * To input strings from a File. Each line in the file will be input as a
+	 * String in a List.<br />
+	 * If the file is very huge and contains great amount of lines, this method
+	 * would perform in low efficiency. {@link DataReader} is recommended for
+	 * this situation.
+	 * 
+	 * @param file
+	 *            the file to be input.
+	 * @param list
+	 *            A list which would hold the result Strings. A LinkedList
+	 *            Object would be create if list is null.
+	 * @param charSetName
+	 *            the CharSet name of the file.
+	 * @return a List of String or {@code null} if file doesn't exist.
+	 */
+	public static List<String> inputStringsFromFile(File file, List<String> list, String charSetName)
+	{
 		if (list == null)
 		{
 			list = new LinkedList<String>();
 		}
 
-		FileReader fileReader = null;
+		Charset charSet = null;
+		if (charSetName == null)
+		{
+			charSet = Charset.defaultCharset();
+		}
+		else
+		{
+			charSet = Charset.forName(charSetName);
+		}
+
+		InputStreamReader reader = null;
 
 		try
 		{
-			fileReader = new FileReader(file);
+			reader = new InputStreamReader(new FileInputStream(file), charSet);
 
-			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			BufferedReader bufferedReader = new BufferedReader(reader);
 
 			String line = null;
 			while ((line = bufferedReader.readLine()) != null)
@@ -2186,11 +2216,11 @@ public class Tools
 		}
 		finally
 		{
-			if (fileReader != null)
+			if (reader != null)
 			{
 				try
 				{
-					fileReader.close();
+					reader.close();
 				}
 				catch (IOException e)
 				{
