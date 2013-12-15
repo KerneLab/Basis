@@ -56,7 +56,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:db2://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
 					+ catalog;
@@ -97,7 +97,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:derby://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
 					+ catalog;
@@ -136,7 +136,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:derby:" + catalog;
 		}
@@ -187,7 +187,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:hive://" + this.getServerName() + ":" + this.getPortNumber() + "/" + this.getCatalog();
 		}
@@ -238,7 +238,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:hive2://" + this.getServerName() + ":" + this.getPortNumber() + "/" + this.getCatalog();
 		}
@@ -277,7 +277,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:informix-sqli://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER)
 					+ "/" + catalog + ":INFORMIXSERVER=myserver";
@@ -330,7 +330,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:mariadb://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
 					+ catalog;
@@ -374,7 +374,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:mysql://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
 					+ catalog;
@@ -412,7 +412,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:odbc:" + catalog;
 		}
@@ -423,6 +423,8 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public static String	DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
 
 		public static int		DEFAULT_PORT_NUMBER	= 1521;
+
+		private boolean			connectBySID		= true;
 
 		public Oracle(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -444,6 +446,18 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
 		}
 
+		public Oracle connectByServiceName()
+		{
+			this.connectBySID = false;
+			return this;
+		}
+
+		public Oracle connectBySID()
+		{
+			this.connectBySID = true;
+			return this;
+		}
+
 		@Override
 		public String getDriverName()
 		{
@@ -451,9 +465,28 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
-			return "jdbc:oracle:thin:@" + this.getServerName() + ":" + this.getPortNumber() + ":" + this.getCatalog();
+			if (this.isConnectBySID())
+			{
+				return "jdbc:oracle:thin:@" + this.getServerName() + ":" + this.getPortNumber() + ":"
+						+ this.getCatalog();
+			}
+			else
+			{
+				return "jdbc:oracle:thin:@" + this.getServerName() + ":" + this.getPortNumber() + "/"
+						+ this.getCatalog();
+			}
+		}
+
+		public boolean isConnectByServiceName()
+		{
+			return !connectBySID;
+		}
+
+		public boolean isConnectBySID()
+		{
+			return connectBySID;
 		}
 	}
 
@@ -466,6 +499,8 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		private String							serverMode			= null;
 
 		private Set<Relation<String, Integer>>	address				= new LinkedHashSet<Relation<String, Integer>>();
+
+		private boolean							connectBySID		= false;
 
 		public OracleClassic(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -491,6 +526,18 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public OracleClassic addAddress(String serverName, int portNumber)
 		{
 			address.add(new Relation<String, Integer>(serverName, portNumber));
+			return this;
+		}
+
+		public OracleClassic connectByServiceName()
+		{
+			this.connectBySID = false;
+			return this;
+		}
+
+		public OracleClassic connectBySID()
+		{
+			this.connectBySID = true;
 			return this;
 		}
 
@@ -520,6 +567,18 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			return address.size() > 1 ? "(LOAD_BALANCE=YES)(FAILOVER=ON)" : "";
 		}
 
+		protected String getConnectData()
+		{
+			if (this.isConnectByServiceName())
+			{
+				return "SERVICE_NAME=" + catalog;
+			}
+			else
+			{
+				return "SID=" + catalog;
+			}
+		}
+
 		@Override
 		public String getDriverName()
 		{
@@ -539,11 +598,20 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:oracle:thin:@(DESCRIPTION=" + this.getBalanceOption() + "(ADDRESS_LIST="
-					+ this.getAddressList() + ")(CONNECT_DATA=(SERVICE_NAME=" + catalog + ")" + this.getServerMode()
-					+ "))";
+					+ this.getAddressList() + ")(CONNECT_DATA=(" + getConnectData() + ")" + this.getServerMode() + "))";
+		}
+
+		public boolean isConnectByServiceName()
+		{
+			return !connectBySID;
+		}
+
+		public boolean isConnectBySID()
+		{
+			return connectBySID;
 		}
 
 		public OracleClassic removeAddress(String serverName, int portNumber)
@@ -552,9 +620,10 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			return this;
 		}
 
-		public void setServerMode(String serverMode)
+		public OracleClassic setServerMode(String serverMode)
 		{
 			this.serverMode = serverMode;
+			return this;
 		}
 	}
 
@@ -591,7 +660,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:postgresql://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
 					+ catalog;
@@ -631,7 +700,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:microsoft:sqlserver://" + serverName + ":"
 					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + ";databaseName=" + catalog;
@@ -671,7 +740,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:sqlserver://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER)
 					+ ";databaseName=" + catalog;
@@ -711,7 +780,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 
 		@Override
-		protected String getURL()
+		public String getURL()
 		{
 			return "jdbc:sybase:Tds:" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
 					+ catalog;
@@ -901,7 +970,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 	 * 
 	 * @return the connection URL.
 	 */
-	protected abstract String getURL();
+	public abstract String getURL();
 
 	protected String getUserName()
 	{
