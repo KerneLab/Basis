@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -28,6 +29,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public static String	DRIVER_CLASS_NAME	= "com.ibm.db2.jdbc.app.DB2Driver";
 
 		public static int		DEFAULT_PORT_NUMBER	= 5000;
+
+		public DB2()
+		{
+			super();
+		}
+
+		public DB2(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public DB2(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
 
 		public DB2(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -69,6 +85,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 		public static int		DEFAULT_PORT_NUMBER	= 1527;
 
+		public Derby()
+		{
+			super();
+		}
+
+		public Derby(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public Derby(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
+
 		public Derby(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
@@ -107,6 +138,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 	public static class EmbeddeDerby extends DataBase
 	{
 		public static String	DRIVER_CLASS_NAME	= "org.apache.derby.jdbc.EmbeddedDriver";
+
+		public EmbeddeDerby()
+		{
+			super();
+		}
+
+		public EmbeddeDerby(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public EmbeddeDerby(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
 
 		public EmbeddeDerby(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -150,6 +196,11 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 		public static String	DEFAULT_DATABASE_NAME	= "default";
 
+		public Hive()
+		{
+			super();
+		}
+
 		public Hive(String serverName)
 		{
 			this(serverName, DEFAULT_PORT_NUMBER, DEFAULT_DATABASE_NAME);
@@ -158,6 +209,16 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public Hive(String serverName, int portNumber, String catalog)
 		{
 			this(serverName, portNumber, catalog, "", "");
+		}
+
+		public Hive(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public Hive(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
 		}
 
 		public Hive(String serverName, int portNumber, String catalog, String userName, String passWord)
@@ -201,6 +262,11 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 		public static String	DEFAULT_DATABASE_NAME	= "default";
 
+		public Hive2()
+		{
+			super();
+		}
+
 		public Hive2(String serverName)
 		{
 			this(serverName, DEFAULT_PORT_NUMBER, DEFAULT_DATABASE_NAME);
@@ -209,6 +275,16 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public Hive2(String serverName, int portNumber, String catalog)
 		{
 			this(serverName, portNumber, catalog, "", "");
+		}
+
+		public Hive2(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public Hive2(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
 		}
 
 		public Hive2(String serverName, int portNumber, String catalog, String userName, String passWord)
@@ -249,6 +325,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public static String	DRIVER_CLASS_NAME	= "com.informix.jdbc.IfxDriver	";
 
 		public static int		DEFAULT_PORT_NUMBER	= 1533;
+
+		public Informix()
+		{
+			super();
+		}
+
+		public Informix(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public Informix(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
 
 		public Informix(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -303,6 +394,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 		public static int		DEFAULT_PORT_NUMBER	= 3306;
 
+		public MariaDB()
+		{
+			super();
+		}
+
+		public MariaDB(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public MariaDB(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
+
 		public MariaDB(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
@@ -342,6 +448,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public static String	DRIVER_CLASS_NAME	= "com.mysql.jdbc.Driver";
 
 		public static int		DEFAULT_PORT_NUMBER	= 3306;
+
+		public MySQL()
+		{
+			super();
+		}
+
+		public MySQL(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public MySQL(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
 
 		public MySQL(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -385,6 +506,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 	{
 		public static String	DRIVER_CLASS_NAME	= "sun.jdbc.odbc.JdbcOdbcDriver";
 
+		public ODBC()
+		{
+			super();
+		}
+
+		public ODBC(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public ODBC(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
+
 		public ODBC(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
@@ -424,7 +560,22 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 		public static int		DEFAULT_PORT_NUMBER	= 1521;
 
-		private boolean			connectBySID		= true;
+		private boolean			connectBySID		= false;
+
+		public Oracle()
+		{
+			super();
+		}
+
+		public Oracle(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public Oracle(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
 
 		public Oracle(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -474,7 +625,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			}
 			else
 			{
-				return "jdbc:oracle:thin:@" + this.getServerName() + ":" + this.getPortNumber() + "/"
+				return "jdbc:oracle:thin:@//" + this.getServerName() + ":" + this.getPortNumber() + "/"
 						+ this.getCatalog();
 			}
 		}
@@ -487,6 +638,12 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public boolean isConnectBySID()
 		{
 			return connectBySID;
+		}
+
+		public Oracle setConnectBySID(boolean connectBySID)
+		{
+			this.connectBySID = connectBySID;
+			return this;
 		}
 	}
 
@@ -501,6 +658,22 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		private Set<Relation<String, Integer>>	address				= new LinkedHashSet<Relation<String, Integer>>();
 
 		private boolean							connectBySID		= false;
+
+		public OracleClassic()
+		{
+			super();
+		}
+
+		public OracleClassic(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public OracleClassic(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+			this.addAddress(serverName, portNumber);
+		}
 
 		public OracleClassic(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -620,6 +793,12 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			return this;
 		}
 
+		public OracleClassic setConnectBySID(boolean connectBySID)
+		{
+			this.connectBySID = connectBySID;
+			return this;
+		}
+
 		public OracleClassic setServerMode(String serverMode)
 		{
 			this.serverMode = serverMode;
@@ -632,6 +811,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public static String	DRIVER_CLASS_NAME	= "org.postgresql.Driver";
 
 		public static int		DEFAULT_PORT_NUMBER	= 5432;
+
+		public PostgreSQL()
+		{
+			super();
+		}
+
+		public PostgreSQL(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public PostgreSQL(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
 
 		public PostgreSQL(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -673,6 +867,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 		public static int		DEFAULT_PORT_NUMBER	= 1433;
 
+		public SqlServer2000()
+		{
+			super();
+		}
+
+		public SqlServer2000(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public SqlServer2000(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
+
 		public SqlServer2000(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
@@ -713,6 +922,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 		public static int		DEFAULT_PORT_NUMBER	= 1433;
 
+		public SqlServer2005()
+		{
+			super();
+		}
+
+		public SqlServer2005(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public SqlServer2005(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
+
 		public SqlServer2005(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
@@ -752,6 +976,21 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public static String	DRIVER_CLASS_NAME	= "com.sybase.jdbc.SybDriver";
 
 		public static int		DEFAULT_PORT_NUMBER	= 5007;
+
+		public Sybase()
+		{
+			super();
+		}
+
+		public Sybase(String serverName, int portNumber, String catalog, Map<?, Object> information)
+		{
+			this(serverName, portNumber, catalog, PropertiesOfMap(information));
+		}
+
+		public Sybase(String serverName, int portNumber, String catalog, Properties information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
 
 		public Sybase(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
@@ -806,6 +1045,13 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	}
 
+	public static final Properties PropertiesOfMap(Map<?, Object> map)
+	{
+		Properties p = new Properties();
+		p.putAll(map);
+		return p;
+	}
+
 	protected String		serverName;
 
 	protected int			portNumber	= DEFAULT_PORT_NUMBER;
@@ -818,12 +1064,22 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	private Set<SQLKit>		kits		= new HashSet<SQLKit>();
 
+	public DataBase()
+	{
+		super();
+	}
+
 	protected DataBase(DataBase dataBase)
 	{
 		this.setServerName(dataBase.serverName);
 		this.setPortNumber(dataBase.portNumber);
 		this.setCatalog(dataBase.catalog);
 		this.setInformation(dataBase.information);
+	}
+
+	public DataBase(String serverName, int portNumber, String catalog, Map<?, Object> information)
+	{
+		this(serverName, portNumber, catalog, PropertiesOfMap(information));
 	}
 
 	public DataBase(String serverName, int portNumber, String catalog, Properties information)
@@ -1032,38 +1288,45 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 	}
 
-	public void setCatalog(String catalog)
+	public DataBase setCatalog(String catalog)
 	{
 		this.catalog = catalog;
+		return this;
 	}
 
-	public void setConnection(Connection connection)
+	public DataBase setConnection(Connection connection)
 	{
 		this.connection = connection;
+		return this;
 	}
 
-	protected void setInformation(Properties information)
+	protected DataBase setInformation(Properties information)
 	{
 		this.information = information;
+		return this;
 	}
 
-	public void setPassWord(String passWord)
+	public DataBase setPassWord(String passWord)
 	{
 		information.setProperty(PASSWORD, passWord);
+		return this;
 	}
 
-	public void setPortNumber(int portNumber)
+	public DataBase setPortNumber(int portNumber)
 	{
 		this.portNumber = portNumber;
+		return this;
 	}
 
-	public void setServerName(String serverName)
+	public DataBase setServerName(String serverName)
 	{
 		this.serverName = serverName;
+		return this;
 	}
 
-	public void setUserName(String userName)
+	public DataBase setUserName(String userName)
 	{
 		information.setProperty(USER, userName);
+		return this;
 	}
 }
