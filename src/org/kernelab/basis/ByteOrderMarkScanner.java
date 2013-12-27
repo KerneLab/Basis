@@ -133,35 +133,38 @@ public class ByteOrderMarkScanner
 
 		boolean bommed = false;
 
-		for (Entry<String, byte[]> entry : BOMS.entrySet())
+		if (reads != -1)
 		{
-			if (samePrefix(bytes, entry.getValue()))
+			for (Entry<String, byte[]> entry : BOMS.entrySet())
 			{
-				bommed = true;
+				if (samePrefix(bytes, entry.getValue()))
+				{
+					bommed = true;
 
-				int len = entry.getValue().length;
+					int len = entry.getValue().length;
 
-				scanner.unread(bytes, len, reads - len);
+					scanner.unread(bytes, len, reads - len);
 
-				charsetName = entry.getKey().replaceFirst("^(.+?)(?:\\|.*)$", "$1");
+					charsetName = entry.getKey().replaceFirst("^(.+?)(?:\\|.*)$", "$1");
 
-				break;
+					break;
+				}
 			}
-		}
 
-		if (charsetName == null)
-		{
-			scanner.unread(bytes, 0, reads);
-		}
-		else
-		{
-			try
+			if (charsetName == null)
 			{
-				charset = Charset.forName(charsetName);
+				scanner.unread(bytes, 0, reads);
 			}
-			catch (Exception e)
+			else
 			{
-				charset = defaultCharset;
+				try
+				{
+					charset = Charset.forName(charsetName);
+				}
+				catch (Exception e)
+				{
+					charset = defaultCharset;
+				}
 			}
 		}
 
