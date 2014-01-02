@@ -382,9 +382,9 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		 */
 		private static final long	serialVersionUID	= 186848770749944602L;
 
-		public InvalidDataBaseConnectionException(Throwable cause)
+		public InvalidDataBaseConnectionException(String message, Throwable cause)
 		{
-			super(cause);
+			super(message, cause);
 		}
 	}
 
@@ -1215,7 +1215,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		}
 		catch (Exception e)
 		{
-			throw new InvalidDataBaseConnectionException(e.getCause());
+			throw new InvalidDataBaseConnectionException(e.getMessage(), e.getCause());
 		}
 
 		return kit;
@@ -1273,18 +1273,12 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		return DriverManager.getConnection(this.getURL(), this.getInformation());
 	}
 
-	public void openConnection() throws InstantiationException, IllegalAccessException, ClassNotFoundException
+	public void openConnection() throws SQLException, InstantiationException, IllegalAccessException,
+			ClassNotFoundException
 	{
-		try
+		if (this.isClosed())
 		{
-			if (this.isClosed())
-			{
-				this.setConnection(this.newConnection());
-			}
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
+			this.setConnection(this.newConnection());
 		}
 	}
 
