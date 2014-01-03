@@ -61,7 +61,18 @@ public class DataSource implements ConnectionFactory, ConnectionSource
 	private Set<SQLKit>				kits	= new HashSet<SQLKit>();
 
 	/**
-	 * Create a connection pool with the given data source name.
+	 * Create a Data Source with the given data source object.
+	 * 
+	 * @param ds
+	 *            A data source object.
+	 */
+	public DataSource(javax.sql.DataSource ds)
+	{
+		this.setDataSource(ds);
+	}
+
+	/**
+	 * Create a Data Source with the given data source name.
 	 * 
 	 * @param dataSourceName
 	 *            The name of data source such as "jdbc/mysql".
