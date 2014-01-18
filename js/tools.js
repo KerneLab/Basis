@@ -46,6 +46,91 @@ Tools.clean = function(obj) {
 	}
 };
 
+Tools.dualMatch = function(str, a, b, from) {
+	var pos = null;
+	if ($.type(str) == "string") {
+		pos = -1;
+		if (from == null) {
+			from = 0;
+		}
+		var quotes = {};
+		if ($.type(arguments[4]) == "array") {
+			var quote = arguments[4];
+			for ( var k in quote) {
+				quotes[quote[k]] = k;
+			}
+		}
+		var length = str.length;
+		var count = 0;
+		var quoting = null;
+		for ( var i = Math.max(from, 0); i < length; i++) {
+			var c = str.charAt(i);
+			var q = quotes[c];
+			if (q != null) {
+				if (q == quoting) {
+					quoting = null;
+					continue;
+				} else if (quoting == null) {
+					quoting = q;
+					continue;
+				}
+			}
+			if (quoting == null) {
+				if (c == a) {
+					count--;
+				} else if (c == b) {
+					count++;
+				}
+				if (count == 0) {
+					pos = i;
+					break;
+				}
+			}
+		}
+	}
+	return pos;
+};
+
+Tools.dualCount = function(str, a, b, from) {
+	var count = null;
+	if ($.type(str) == "string") {
+		count = 0;
+		if (from == null) {
+			from = 0;
+		}
+		var quotes = {};
+		if ($.type(arguments[4]) == "array") {
+			var quote = arguments[4];
+			for ( var k in quote) {
+				quotes[quote[k]] = k;
+			}
+		}
+		var length = str.length;
+		var quoting = null;
+		for ( var i = Math.max(from, 0); i < length; i++) {
+			var c = str.charAt(i);
+			var q = quotes[c];
+			if (q != null) {
+				if (q == quoting) {
+					quoting = null;
+					continue;
+				} else if (quoting == null) {
+					quoting = q;
+					continue;
+				}
+			}
+			if (quoting == null) {
+				if (c == a) {
+					count--;
+				} else if (c == b) {
+					count++;
+				}
+			}
+		}
+	}
+	return count;
+};
+
 Tools.escapeRegex = function(str) {
 	return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 };
@@ -148,6 +233,10 @@ Tools.size = function(obj) {
 		}
 	}
 	return s;
+};
+
+Tools.trim = function(str) {
+	return str == null ? str : str.replace(new RegExp("^\\s+|\\s+$", "g"), "");
 };
 
 Tools.unit = function(vector) {
