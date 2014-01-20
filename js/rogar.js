@@ -6,7 +6,7 @@
  * 200px; overflow: hidden; position: relative; float: left; }
  * 
  * .rogar-bar { background-color: #9999ee; height: 20px; overflow: hidden;
- * position: relative; text-align: center; position: relative; }
+ * position: relative; text-align: center; }
  * 
  * .rogar-txt-dark,.rogar-txt-light { height: 20px; line-height: 20px; position:
  * absolute; text-align: center; width: 200px; }
@@ -53,10 +53,9 @@
 		this.to = function(r)
 		{
 			var rat = rate;
-
 			var duration = Math.abs(r - rat) * opts["duration.total"];
-
-			d3.select(self.selector).selectAll("." + opts["bar.class"]).transition().duration(duration).tween("width",
+			var node = self.get(0);
+			d3.select(node).selectAll("." + opts["bar.class"]).transition().duration(duration).tween("width",
 					function()
 					{
 						var i = d3.interpolate(rat, r);
@@ -67,7 +66,7 @@
 						}
 					});
 
-			d3.select(self.selector).selectAll("." + opts["txt.dark.class"]).transition().duration(duration).tween(
+			d3.select(node).selectAll("." + opts["txt.dark.class"]).transition().duration(duration).tween(
 					"text", function()
 					{
 						var i = d3.interpolate(rat, r);
@@ -77,7 +76,7 @@
 						};
 					});
 
-			d3.select(self.selector).selectAll("." + opts["txt.light.class"]).transition().duration(duration).tween(
+			d3.select(node).selectAll("." + opts["txt.light.class"]).transition().duration(duration).tween(
 					"text", function()
 					{
 						var i = d3.interpolate(rat, r);
