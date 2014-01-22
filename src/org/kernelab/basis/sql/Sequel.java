@@ -71,9 +71,21 @@ public class Sequel implements Iterable<Sequel>
 		}
 	}
 
-	private class SequelIterator implements Iterator<Sequel>
+	public class SequelIterator implements Iterable<Sequel>, Iterator<Sequel>
 	{
+		private int		current;
+
 		private boolean	first	= true;
+
+		public SequelIterator()
+		{
+			this(Statement.CLOSE_CURRENT_RESULT);
+		}
+
+		public SequelIterator(int current)
+		{
+			this.current = current;
+		}
 
 		public boolean hasNext()
 		{
@@ -83,10 +95,15 @@ public class Sequel implements Iterable<Sequel>
 			}
 			else
 			{
-				nextResult();
+				nextResult(current);
 			}
 
 			return hasResult();
+		}
+
+		public Iterator<Sequel> iterator()
+		{
+			return new SequelIterator(current);
 		}
 
 		public Sequel next()
@@ -133,6 +150,40 @@ public class Sequel implements Iterable<Sequel>
 	public Sequel(Statement statement, boolean resultSet)
 	{
 		this.setStatement(statement).hasResultSetObject(resultSet).refreshUpdateCount();
+	}
+
+	public JSAN getNextRowAsJSAN()
+	{
+		return getNextRowAsJSAN(null);
+	}
+
+	public JSAN getNextRowAsJSAN(Map<String, Object> map)
+	{
+		JSAN jsan = null;
+
+		if (this.nextRow())
+		{
+			jsan = this.getRowAsJSAN(map);
+		}
+
+		return jsan;
+	}
+
+	public JSON getNextRowAsJSON()
+	{
+		return getNextRowAsJSON(null);
+	}
+
+	public JSON getNextRowAsJSON(Map<String, Object> map)
+	{
+		JSON json = null;
+
+		if (this.nextRow())
+		{
+			json = this.getRowAsJSON(map);
+		}
+
+		return json;
 	}
 
 	public ResultSet getResultSet()
@@ -1204,9 +1255,14 @@ public class Sequel implements Iterable<Sequel>
 		return new ResultSetIterator(this.getResultSet());
 	}
 
-	public Iterator<Sequel> iterator()
+	public SequelIterator iterator()
 	{
 		return new SequelIterator();
+	}
+
+	public SequelIterator iterator(int current)
+	{
+		return new SequelIterator(current);
 	}
 
 	public Sequel nextResult()
@@ -1228,6 +1284,21 @@ public class Sequel implements Iterable<Sequel>
 		this.refreshUpdateCount();
 
 		return this;
+	}
+
+	public boolean nextRow()
+	{
+		boolean next = false;
+
+		try
+		{
+			next = this.getResultSet().next();
+		}
+		catch (Exception e)
+		{
+		}
+
+		return next;
 	}
 
 	private boolean preparedResultSet()
