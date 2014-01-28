@@ -103,7 +103,7 @@ public class Sequel implements Iterable<Sequel>
 
 		public Iterator<Sequel> iterator()
 		{
-			return new SequelIterator(current);
+			return this;
 		}
 
 		public Sequel next()
