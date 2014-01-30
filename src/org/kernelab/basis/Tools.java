@@ -4833,6 +4833,41 @@ public class Tools
 	}
 
 	/**
+	 * Get the size of an Iterable object. Return -1 when the object is null.
+	 * 
+	 * @param i
+	 *            the Iterable object.
+	 * @return the size of the object.
+	 */
+	public static int sizeOfIterable(Iterable<?> i)
+	{
+		int size = -1;
+
+		if (i != null)
+		{
+			if (i instanceof Collection)
+			{
+				size = ((Collection<?>) i).size();
+			}
+			else if (i instanceof JSAN)
+			{
+				size = ((JSAN) i).size();
+			}
+			else
+			{
+				size = 0;
+				for (@SuppressWarnings("unused")
+				Object o : i)
+				{
+					size++;
+				}
+			}
+		}
+
+		return size;
+	}
+
+	/**
 	 * Split a CharSequence which is divided by split.<br />
 	 * If the CharSequence does not contain the split then return a String of
 	 * the CharSequence.
