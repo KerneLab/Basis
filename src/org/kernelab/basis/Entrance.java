@@ -2,6 +2,7 @@ package org.kernelab.basis;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
@@ -12,12 +13,10 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -32,11 +31,104 @@ import java.util.regex.Pattern;
  */
 public class Entrance
 {
+	protected static class ClassFile
+	{
+		protected static final int	MASK_VERSION	= 1;
+
+		protected static final int	MASK_LEVEL		= 1 << 1;
+
+		private JarFile				file;
+
+		private JarEntry			entry;
+
+		private String				name;
+
+		private String				version;
+
+		private String				level;
+
+		public ClassFile(JarFile file, JarEntry entry)
+		{
+			this.file = file;
+			this.entry = entry;
+
+			this.name = entry.getName().substring(0, entry.getName().lastIndexOf('.')).replace('/', '.');
+			this.version = UpdateVersion(entry.getTime());
+			this.level = Level(file, entry);
+		}
+
+		public String getCompileLevel()
+		{
+			float level = Float.NaN;
+
+			String version = this.getLevel();
+			try
+			{
+				int value = Integer.parseInt(version.substring(0, version.indexOf('.')));
+				level = (value - 34) / 10.0f;
+			}
+			catch (Exception e)
+			{
+			}
+
+			return String.valueOf(level);
+		}
+
+		public JarEntry getEntry()
+		{
+			return entry;
+		}
+
+		public JarFile getFile()
+		{
+			return file;
+		}
+
+		public String getLevel()
+		{
+			return level;
+		}
+
+		public String getName()
+		{
+			return name;
+		}
+
+		public String getVersion()
+		{
+			return version;
+		}
+
+		public String toString(int mask)
+		{
+			StringBuilder buffer = new StringBuilder();
+
+			if ((mask & MASK_VERSION) != 0)
+			{
+				buffer.append(this.getVersion());
+				buffer.append(DISPLAY_SEPARATOR);
+			}
+
+			if ((mask & MASK_LEVEL) != 0)
+			{
+				buffer.append(this.getCompileLevel());
+				buffer.append(DISPLAY_SEPARATOR);
+			}
+
+			return buffer.toString();
+		}
+	}
+
 	private static final Calendar		CALENDAR			= new GregorianCalendar();
 
 	protected static final DateFormat	VERSION_FORMAT		= new SimpleDateFormat("yyyy.MM.dd");
 
 	public static final char			PARAMETER_PREFIX	= '-';
+
+	public static final char			DISPLAY_SEPARATOR	= ' ';
+
+	public static final byte[]			CLASS_MAGIC_NUMBER	= new byte[] { (byte) 0xCA, (byte) 0xFE, (byte) 0xBA,
+			(byte) 0xBE									};
 
 	public static final JarFile BelongingJarFile(Class<?> cls)
 	{
@@ -58,6 +150,45 @@ public class Entrance
 		return jarFile;
 	}
 
+	public static final String Level(JarFile file, JarEntry entry)
+	{
+		String level = null;
+
+		if (file != null && entry != null)
+		{
+			byte[] head = new byte[8];
+
+			InputStream is = null;
+			try
+			{
+				is = file.getInputStream(entry);
+
+				if (is.read(head) == head.length && Tools.samePrefix(CLASS_MAGIC_NUMBER, head))
+				{
+					level = ((((int) head[6]) << 8) + head[7]) + "." + ((((int) head[4]) << 8) + head[5]);
+				}
+			}
+			catch (IOException e)
+			{
+			}
+			finally
+			{
+				if (is != null)
+				{
+					try
+					{
+						is.close();
+					}
+					catch (IOException e)
+					{
+					}
+				}
+			}
+		}
+
+		return level;
+	}
+
 	/**
 	 * @param args
 	 */
@@ -66,9 +197,9 @@ public class Entrance
 		new Entrance().handle(args).present();
 	}
 
-	public static final Map<String, String> Updates(JarFile jarFile)
+	public static final Map<String, ClassFile> Updates(JarFile jarFile)
 	{
-		Map<String, String> map = new TreeMap<String, String>();
+		Map<String, ClassFile> map = new TreeMap<String, ClassFile>();
 
 		if (jarFile != null)
 		{
@@ -81,7 +212,7 @@ public class Entrance
 				if (name.endsWith(".class"))
 				{
 					name = name.substring(0, name.lastIndexOf('.')).replace('/', '.');
-					map.put(name, UpdateVersion(entry.getTime()));
+					map.put(name, new ClassFile(jarFile, entry));
 				}
 			}
 		}
@@ -112,7 +243,7 @@ public class Entrance
 
 	private Map<String, List<String>>	parameters;
 
-	private Map<String, String>			updates;
+	private Map<String, ClassFile>		classes;
 
 	public Entrance()
 	{
@@ -196,6 +327,11 @@ public class Entrance
 		}
 
 		return this;
+	}
+
+	public Map<String, ClassFile> classes()
+	{
+		return classes;
 	}
 
 	protected Entrance delegate()
@@ -320,7 +456,7 @@ public class Entrance
 
 	protected Entrance initiate(JarFile file)
 	{
-		updates = Collections.unmodifiableMap(Updates(file));
+		classes = Collections.unmodifiableMap(Updates(file));
 		return this;
 	}
 
@@ -413,46 +549,89 @@ public class Entrance
 
 		initiate(file);
 
-		List<String> u = parameters("u");
+		// Display the last update version.
 		List<String> v = parameters("v");
 
-		if ((u == null && v == null) || (v != null && v.isEmpty()))
+		// Filter via a given class name pattern.
+		List<String> c = parameters("c");
+
+		// Filter via a given update version pattern.
+		List<String> u = parameters("u");
+
+		// Filter via a given compile level pattern.
+		List<String> l = parameters("l");
+
+		if (v != null || (c == null && u == null && l == null))
 		{
 			Tools.debug(version());
 		}
 		else
 		{
-			Set<String> filter = new HashSet<String>();
+			int mask = 0;
 
-			if (u != null && !u.isEmpty())
+			Matcher classMatcher = null;
+			if (c != null)
 			{
-				Matcher matcher = Pattern.compile(u.get(0)).matcher("");
-				for (Entry<String, String> entry : updates().entrySet())
+				if (!c.isEmpty())
 				{
-					if (!matcher.reset(entry.getKey()).find())
-					{
-						filter.add(entry.getKey());
-					}
+					classMatcher = Pattern.compile(c.get(0)).matcher("");
 				}
 			}
 
-			if (v != null && !v.isEmpty())
+			Matcher updateMatcher = null;
+			if (u != null)
 			{
-				Matcher matcher = Pattern.compile(v.get(0)).matcher("");
-				for (Entry<String, String> entry : updates().entrySet())
+				mask |= ClassFile.MASK_VERSION;
+				if (!u.isEmpty())
 				{
-					if (!matcher.reset(entry.getValue()).find())
-					{
-						filter.add(entry.getKey());
-					}
+					updateMatcher = Pattern.compile(u.get(0)).matcher("");
 				}
 			}
 
-			for (Entry<String, String> entry : updates().entrySet())
+			Matcher levelMatcher = null;
+			if (l != null)
 			{
-				if (!filter.contains(entry.getKey()))
+				mask |= ClassFile.MASK_LEVEL;
+				if (!l.isEmpty())
 				{
-					Tools.debug(entry.getValue() + '\t' + entry.getKey());
+					levelMatcher = Pattern.compile(l.get(0)).matcher("");
+				}
+			}
+
+			for (Entry<String, ClassFile> entry : classes().entrySet())
+			{
+				String className = entry.getKey();
+				ClassFile classFile = entry.getValue();
+
+				boolean filter = false;
+
+				if (classMatcher != null)
+				{
+					if (!classMatcher.reset(className).find())
+					{
+						filter = true;
+					}
+				}
+
+				if (!filter && updateMatcher != null)
+				{
+					if (!updateMatcher.reset(classFile.getVersion()).find())
+					{
+						filter = true;
+					}
+				}
+
+				if (!filter && levelMatcher != null)
+				{
+					if (!levelMatcher.reset(classFile.getCompileLevel()).find())
+					{
+						filter = true;
+					}
+				}
+
+				if (!filter)
+				{
+					Tools.debug(classFile.toString(mask) + className);
 				}
 			}
 		}
@@ -469,13 +648,18 @@ public class Entrance
 		return this;
 	}
 
-	public Map<String, String> updates()
-	{
-		return updates;
-	}
-
 	public String version()
 	{
-		return Collections.max(updates.values());
+		String version = "";
+
+		for (ClassFile file : this.classes().values())
+		{
+			if (file.getVersion().compareTo(version) > 0)
+			{
+				version = file.getVersion();
+			}
+		}
+
+		return version;
 	}
 }

@@ -1076,9 +1076,37 @@ public class Tools
 		{
 			is = true;
 		}
-		else if (a != null)
+		else if (a != null && b != null)
 		{
 			is = a.equals(b);
+		}
+
+		return is;
+	}
+
+	/**
+	 * To decide whether two object is equal or not via a given Comparator. It
+	 * would also be recognized as equal if two parameter are both null.
+	 * 
+	 * @param a
+	 *            one object.
+	 * @param b
+	 *            another object.
+	 * @param c
+	 *            the Comparator.
+	 * @return true if two object is equal.
+	 */
+	public static <T> boolean equals(T a, T b, Comparator<T> c)
+	{
+		boolean is = false;
+
+		if (a == b)
+		{
+			is = true;
+		}
+		else if (a != null && b != null)
+		{
+			is = c.compare(a, b) == 0;
 		}
 
 		return is;
@@ -2800,10 +2828,7 @@ public class Tools
 	 */
 	public static void main(String[] args)
 	{
-		String s = "2012/12/07 13:23:58";
-		String f = "yyyy/dd/MM HH";
-		Calendar c = getCalendar(s, f, null);
-		Tools.debug(getDateTimeString(c, "yyyy-MM-dd HH:mm:ss"));
+
 	}
 
 	/**
@@ -3406,7 +3431,7 @@ public class Tools
 	 *            The regular expression.
 	 * @return The Matcher object.
 	 */
-	public static final Matcher matcher(String regex)
+	public static Matcher matcher(String regex)
 	{
 		return matcher(regex, 0);
 	}
@@ -3421,7 +3446,7 @@ public class Tools
 	 *            The text to be matched.
 	 * @return The Matcher object.
 	 */
-	public static final Matcher matcher(String regex, CharSequence text)
+	public static Matcher matcher(String regex, CharSequence text)
 	{
 		return matcher(regex, 0, text);
 	}
@@ -3438,7 +3463,7 @@ public class Tools
 	 *            Pattern.UNICODE_CASE, and Pattern.CANON_EQ.
 	 * @return The Matcher object.
 	 */
-	public static final Matcher matcher(String regex, int flags)
+	public static Matcher matcher(String regex, int flags)
 	{
 		return matcher(regex, flags, "");
 	}
@@ -3457,7 +3482,7 @@ public class Tools
 	 *            The text to be matched.
 	 * @return The Matcher object.
 	 */
-	public static final Matcher matcher(String regex, int flags, CharSequence text)
+	public static Matcher matcher(String regex, int flags, CharSequence text)
 	{
 		return Pattern.compile(regex, flags).matcher(text);
 	}
@@ -4576,6 +4601,419 @@ public class Tools
 		}
 
 		return index;
+	}
+
+	/**
+	 * To determine whether the two boolean arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one boolean array.
+	 * @param b
+	 *            another boolean array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static boolean samePrefix(boolean[] a, boolean[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			boolean[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (m[i] != n[i])
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two byte arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one byte array.
+	 * @param b
+	 *            another byte array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static boolean samePrefix(byte[] a, byte[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			byte[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (m[i] != n[i])
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two char arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one char array.
+	 * @param b
+	 *            another char array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static boolean samePrefix(char[] a, char[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			char[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (m[i] != n[i])
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two double arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one double array.
+	 * @param b
+	 *            another double array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static boolean samePrefix(double[] a, double[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			double[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (m[i] != n[i])
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two float arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one float array.
+	 * @param b
+	 *            another float array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static boolean samePrefix(float[] a, float[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			float[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (m[i] != n[i])
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two int arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one int array.
+	 * @param b
+	 *            another int array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static boolean samePrefix(int[] a, int[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			int[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (m[i] != n[i])
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two long arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one long array.
+	 * @param b
+	 *            another long array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static boolean samePrefix(long[] a, long[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			long[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (m[i] != n[i])
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two short arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one short array.
+	 * @param b
+	 *            another short array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static boolean samePrefix(short[] a, short[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			short[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (m[i] != n[i])
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two T type arrays have the same prefix.
+	 * 
+	 * @param a
+	 *            one T type array.
+	 * @param b
+	 *            another T type array.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static <T> boolean samePrefix(T[] a, T[] b)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			T[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (!equals(m[i], n[i]))
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
+	}
+
+	/**
+	 * To determine whether the two T type arrays have the same prefix via a
+	 * given Comparator.
+	 * 
+	 * @param a
+	 *            one T type array.
+	 * @param b
+	 *            another T type array.
+	 * @param c
+	 *            the Comparator.
+	 * @return true only both arrays are not null and have the same prefix.
+	 */
+	public static <T> boolean samePrefix(T[] a, T[] b, Comparator<T> c)
+	{
+		boolean same = false;
+
+		if (a != null && b != null)
+		{
+			T[] m = null, n = null;
+
+			if (a.length < b.length)
+			{
+				m = a;
+				n = b;
+			}
+			else
+			{
+				m = b;
+				n = a;
+			}
+			same = true;
+			for (int i = 0; i < m.length; i++)
+			{
+				if (!equals(m[i], n[i], c))
+				{
+					same = false;
+					break;
+				}
+			}
+		}
+
+		return same;
 	}
 
 	/**
