@@ -49,12 +49,8 @@ public class Entrance
 
 		public ClassFile(JarFile file, JarEntry entry)
 		{
-			this.file = file;
-			this.entry = entry;
-
-			this.name = entry.getName().substring(0, entry.getName().lastIndexOf('.')).replace('/', '.');
-			this.version = UpdateVersion(entry.getTime());
-			this.level = Level(file, entry);
+			this.setFile(file).setEntry(entry).setName(entry.getName()).setVersion(UpdateVersion(entry.getTime()))
+					.setLevel(Level(file, entry));
 		}
 
 		public String getCompileLevel()
@@ -97,6 +93,36 @@ public class Entrance
 		public String getVersion()
 		{
 			return version;
+		}
+
+		private ClassFile setEntry(JarEntry entry)
+		{
+			this.entry = entry;
+			return this;
+		}
+
+		private ClassFile setFile(JarFile file)
+		{
+			this.file = file;
+			return this;
+		}
+
+		private ClassFile setLevel(String level)
+		{
+			this.level = level;
+			return this;
+		}
+
+		private ClassFile setName(String name)
+		{
+			this.name = name.substring(0, name.lastIndexOf('.')).replace('/', '.');
+			return this;
+		}
+
+		private ClassFile setVersion(String version)
+		{
+			this.version = version;
+			return this;
 		}
 
 		public String toString(int mask)
@@ -150,6 +176,28 @@ public class Entrance
 		return jarFile;
 	}
 
+	public static final Map<String, ClassFile> Classes(JarFile file)
+	{
+		Map<String, ClassFile> map = new TreeMap<String, ClassFile>();
+
+		if (file != null)
+		{
+			Enumeration<JarEntry> entries = file.entries();
+
+			while (entries.hasMoreElements())
+			{
+				JarEntry entry = entries.nextElement();
+				if (!entry.isDirectory() && entry.getName().endsWith(".class"))
+				{
+					ClassFile cls = new ClassFile(file, entry);
+					map.put(cls.getName(), cls);
+				}
+			}
+		}
+
+		return map;
+	}
+
 	public static final String Level(JarFile file, JarEntry entry)
 	{
 		String level = null;
@@ -195,29 +243,6 @@ public class Entrance
 	public static void main(String[] args)
 	{
 		new Entrance().handle(args).present();
-	}
-
-	public static final Map<String, ClassFile> Updates(JarFile jarFile)
-	{
-		Map<String, ClassFile> map = new TreeMap<String, ClassFile>();
-
-		if (jarFile != null)
-		{
-			Enumeration<JarEntry> entries = jarFile.entries();
-
-			while (entries.hasMoreElements())
-			{
-				JarEntry entry = entries.nextElement();
-				String name = entry.getName();
-				if (name.endsWith(".class"))
-				{
-					name = name.substring(0, name.lastIndexOf('.')).replace('/', '.');
-					map.put(name, new ClassFile(jarFile, entry));
-				}
-			}
-		}
-
-		return map;
 	}
 
 	public static final String UpdateVersion(long time)
@@ -456,7 +481,7 @@ public class Entrance
 
 	protected Entrance initiate(JarFile file)
 	{
-		classes = Collections.unmodifiableMap(Updates(file));
+		classes = Collections.unmodifiableMap(Classes(file));
 		return this;
 	}
 
