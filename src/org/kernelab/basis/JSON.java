@@ -93,9 +93,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				if (entry != null)
 				{
-					if (exitMatcher.reset(buffer).lookingAt())
+					if (exitMatcher.reset(buffer).lookingAt()
+							&& JSON.DualMatchIndex(buffer, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, 0) != -1)
 					{
-
 						line = exitMatcher.group(1);
 						Tools.clearStringBuilder(buffer);
 						buffer.append(line);
@@ -141,7 +141,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static final String		VAR_ENTRY_REGEX		= "^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$";
 
-		public static final String		VAR_EXIT_REGEX		= "^\\s*(.*?)\\s*;\\s*$";
+		public static final String		VAR_EXIT_REGEX		= "^\\s*(.*?\\})\\s*;\\s*$";
 
 		private transient DataReader	reader;
 
