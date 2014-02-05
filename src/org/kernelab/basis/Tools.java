@@ -972,8 +972,57 @@ public class Tools
 	}
 
 	/**
-	 * Find the dual match character in a CharSequence from the beginning to the
+	 * Count the dual matching in a CharSequence from the given position to the
 	 * end.
+	 * 
+	 * <pre>
+	 * Example:
+	 * &quot;(morning(afternoon)evening)&quot;
+	 * We find a='(' and b=')' for the dual match.
+	 * If from 0, this method would returns 0.
+	 * If from 8 or less but greater than 0, this method returns 1 
+	 *   which means the right character is 1 time more than the left.
+	 * If from 18 or less but greater than 8, this method returns 2 
+	 *   which means the right character is 2 times more than the left.
+	 * </pre>
+	 * 
+	 * @param sequence
+	 *            The CharSequence in which we find the dual match.
+	 * @param a
+	 *            The left character.
+	 * @param b
+	 *            The right character.
+	 * @param from
+	 *            From which position we start to find the dual match.
+	 * @return The count result of the dual match in the CharSequence. The count
+	 *         will be greater than zero which means the right character is more
+	 *         than the left. The result will be less than zero if the left is
+	 *         more.
+	 */
+	public static int dualMatchCount(CharSequence sequence, char a, char b, int from)
+	{
+		int match = 0;
+
+		for (int i = Math.max(0, from); i < sequence.length(); i++)
+		{
+			char c = sequence.charAt(i);
+
+			if (c == a)
+			{
+				match--;
+			}
+			else if (c == b)
+			{
+				match++;
+			}
+		}
+
+		return match;
+	}
+
+	/**
+	 * Find the dual match character in a CharSequence from the given position
+	 * to the end.
 	 * 
 	 * <pre>
 	 * Example:
@@ -1004,11 +1053,11 @@ public class Tools
 
 			if (c == a)
 			{
-				match++;
+				match--;
 			}
 			else if (c == b)
 			{
-				match--;
+				match++;
 				if (match == 0)
 				{
 					index = i;

@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.kernelab.basis.test.TestBean;
 
@@ -65,9 +66,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			private StringBuilder		buffer				= new StringBuilder();
 
-			private Matcher				entryMatcher		= Tools.matcher(VAR_ENTRY_REGEX);
+			private Matcher				entryMatcher		= Tools.matcher(VAR_ENTRY_REGEX, Pattern.DOTALL);
 
-			private Matcher				exitMatcher			= Tools.matcher(VAR_EXIT_REGEX);
+			private Matcher				exitMatcher			= Tools.matcher(VAR_EXIT_REGEX, Pattern.DOTALL);
 
 			@Override
 			protected void readFinished()
@@ -79,6 +80,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			protected void readLine(CharSequence line)
 			{
 				buffer.append(line);
+				buffer.append(VAR_NEXT_LINE_CHAR);
 
 				if (entry == null)
 				{
@@ -94,7 +96,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				if (entry != null)
 				{
 					if (exitMatcher.reset(buffer).lookingAt()
-							&& JSON.DualMatchIndex(buffer, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, 0) != -1)
+							&& JSON.DualMatchCount(buffer, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, 0) == 0)
 					{
 						line = exitMatcher.group(1);
 						Tools.clearStringBuilder(buffer);
@@ -135,13 +137,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static final String		VAR_ASSIGN_MARK		= String.valueOf(VAR_ASSIGN_CHAR);
 
+		public static final char		VAR_NEXT_LINE_CHAR	= '\n';
+
 		public static final char		VAR_END_CHAR		= ';';
 
 		public static final String		VAR_END_MARK		= String.valueOf(VAR_END_CHAR);
 
-		public static final String		VAR_ENTRY_REGEX		= "^\\s*?(var\\s+)?\\s*?(\\S+)\\s*?=\\s*(.*)$";
+		public static final String		VAR_ENTRY_REGEX		= "^\\s*?(var\\s+)?\\s*?(\\w+)\\s*?=\\s*(.*);?\\s*$";
 
-		public static final String		VAR_EXIT_REGEX		= "^\\s*(.*?\\})\\s*;\\s*$";
+		public static final String		VAR_EXIT_REGEX		= "^\\s*(.*?)\\s*;\\s*$";
 
 		private transient DataReader	reader;
 
@@ -3770,6 +3774,52 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return ESCAPED_CHAR.containsKey(c);
 	}
 
+	public static int DualMatchCount(CharSequence sequence, char a, char b, int from)
+	{
+		int match = 0;
+
+		boolean inString = false;
+
+		i: for (int i = Math.max(0, from); i < sequence.length(); i++)
+		{
+			char c = sequence.charAt(i);
+
+			if (c == ESCAPE_CHAR)
+			{
+				c = sequence.charAt(i + 1);
+				if (ESCAPING_CHAR.containsKey(c))
+				{
+					i++;
+				}
+				else if (c == UNICODE_ESCAPING_CHAR)
+				{
+					i += UNICODE_ESCAPED_LENGTH + 1;
+				}
+				continue i;
+			}
+
+			if (c == QUOTE_CHAR)
+			{
+				inString = !inString;
+			}
+			if (inString)
+			{
+				continue i;
+			}
+
+			if (c == a)
+			{
+				match--;
+			}
+			else if (c == b)
+			{
+				match++;
+			}
+		}
+
+		return match;
+	}
+
 	public static int DualMatchIndex(CharSequence sequence, char a, char b, int from)
 	{
 		int index = -1;
@@ -3806,11 +3856,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			if (c == a)
 			{
-				match++;
+				match--;
 			}
 			else if (c == b)
 			{
-				match--;
+				match++;
 				if (match == 0)
 				{
 					index = i;
