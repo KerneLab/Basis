@@ -1058,6 +1058,10 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	protected String		catalog;
 
+	protected String		userName;
+
+	protected String		passWord;
+
 	protected Properties	information;
 
 	private Connection		connection;
@@ -1067,6 +1071,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 	public DataBase()
 	{
 		super();
+		this.setInformation(new Properties());
 	}
 
 	protected DataBase(DataBase dataBase)
@@ -1185,7 +1190,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	protected String getPassWord()
 	{
-		return information.getProperty(PASSWORD);
+		return passWord;
 	}
 
 	public int getPortNumber()
@@ -1230,7 +1235,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	protected String getUserName()
 	{
-		return information.getProperty(USER);
+		return userName;
 	}
 
 	public boolean isClosed()
@@ -1302,6 +1307,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	public DataBase setPassWord(String passWord)
 	{
+		this.passWord = passWord;
 		information.setProperty(PASSWORD, passWord);
 		return this;
 	}
@@ -1320,6 +1326,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	public DataBase setUserName(String userName)
 	{
+		this.userName = userName;
 		information.setProperty(USER, userName);
 		return this;
 	}
