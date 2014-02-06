@@ -5800,14 +5800,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			try
 			{
-				object = this.project(cls.newInstance());
+				object = cls.newInstance();
 			}
-			catch (InstantiationException e)
+			catch (Exception e)
 			{
 			}
-			catch (IllegalAccessException e)
-			{
-			}
+		}
+
+		if (object != null)
+		{
+			object = this.project(object);
 		}
 
 		return object;
