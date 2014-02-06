@@ -6,7 +6,9 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -53,6 +55,24 @@ interface Hierarchical extends Copieable<Hierarchical>
  */
 public class JSON implements Map<String, Object>, Serializable, Hierarchical
 {
+	private static class ArrayLengthReverseComparator<T> implements Comparator<T[]>, Serializable
+	{
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -6259816417783534899L;
+
+		public int compare(T[] o1, T[] o2)
+		{
+			int c = o2.length - o1.length;
+			if (c == 0)
+			{
+				c = o2.hashCode() - o1.hashCode();
+			}
+			return c;
+		}
+	}
+
 	public static class Context extends JSON
 	{
 		private class ContextReader extends DataReader implements Serializable
@@ -3288,29 +3308,29 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	 * 
 	 */
 	private static final long						serialVersionUID		= 6090747632739206720L;
-
 	public static final char						OBJECT_BEGIN_CHAR		= '{';
+
 	public static final String						OBJECT_BEGIN_MARK		= String.valueOf(OBJECT_BEGIN_CHAR);
-
 	public static final char						OBJECT_END_CHAR			= '}';
+
 	public static final String						OBJECT_END_MARK			= String.valueOf(OBJECT_END_CHAR);
-
 	public static final char						ARRAY_BEGIN_CHAR		= '[';
+
 	public static final String						ARRAY_BEGIN_MARK		= String.valueOf(ARRAY_BEGIN_CHAR);
-
 	public static final char						ARRAY_END_CHAR			= ']';
+
 	public static final String						ARRAY_END_MARK			= String.valueOf(ARRAY_END_CHAR);
-
 	public static final char						PAIR_CHAR				= ',';
+
 	public static final String						PAIR_MARK				= String.valueOf(PAIR_CHAR);
-
 	public static final char						ATTR_CHAR				= ':';
+
 	public static final String						ATTR_MARK				= String.valueOf(ATTR_CHAR);
-
 	public static final char						QUOTE_CHAR				= '"';
-	public static final String						QUOTE_MARK				= String.valueOf(QUOTE_CHAR);
 
+	public static final String						QUOTE_MARK				= String.valueOf(QUOTE_CHAR);
 	public static final char						ESCAPE_CHAR				= '\\';
+
 	public static final String						ESCAPE_MARK				= String.valueOf(ESCAPE_CHAR);
 
 	public static final int							NOT_BEGIN				= -1;
@@ -4389,6 +4409,69 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return value;
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T> T Project(Class<T> cls, JSON json)
+	{
+		T object = null;
+
+		TreeMap<Class<?>[], Constructor<?>> cons = new TreeMap<Class<?>[], Constructor<?>>(
+				new ArrayLengthReverseComparator<Class<?>>());
+
+		for (Constructor<?> c : cls.getConstructors())
+		{
+			cons.put(c.getParameterTypes(), c);
+		}
+
+		Object[] params = null;
+
+		for (Entry<Class<?>[], Constructor<?>> entry : cons.entrySet())
+		{
+			Class<?>[] types = entry.getKey();
+			Constructor<?> con = entry.getValue();
+
+			if (params == null)
+			{
+				params = new Object[types.length];
+
+				int i = 0;
+				for (Object o : json.values())
+				{
+					if (i >= params.length)
+					{
+						break;
+					}
+					params[i] = o;
+					i++;
+				}
+			}
+
+			if (Tools.suitableParameters(types, params))
+			{
+				Object[] param = new Object[types.length];
+				System.arraycopy(params, 0, param, 0, param.length);
+				try
+				{
+					object = (T) con.newInstance(param);
+					break;
+				}
+				catch (IllegalArgumentException e)
+				{
+				}
+				catch (InstantiationException e)
+				{
+				}
+				catch (IllegalAccessException e)
+				{
+				}
+				catch (InvocationTargetException e)
+				{
+				}
+			}
+		}
+
+		return object;
+	}
+
 	public static <T> T Project(T object, JSON json)
 	{
 		Map<Field, Object> project = null;
@@ -4645,13 +4728,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			val = CastToByte(obj);
 		}
-		else if (Short.TYPE == cls || Short.class == cls)
-		{
-			val = CastToShort(obj);
-		}
 		else if (Float.TYPE == cls || Float.class == cls)
 		{
 			val = CastToFloat(obj);
+		}
+		else if (Short.TYPE == cls || Short.class == cls)
+		{
+			val = CastToShort(obj);
 		}
 		else if (project instanceof JSON.Projector)
 		{
@@ -5711,15 +5794,20 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		E object = null;
 
-		try
+		object = Project(cls, this);
+
+		if (object == null)
 		{
-			object = this.project(cls.newInstance());
-		}
-		catch (InstantiationException e)
-		{
-		}
-		catch (IllegalAccessException e)
-		{
+			try
+			{
+				object = this.project(cls.newInstance());
+			}
+			catch (InstantiationException e)
+			{
+			}
+			catch (IllegalAccessException e)
+			{
+			}
 		}
 
 		return object;

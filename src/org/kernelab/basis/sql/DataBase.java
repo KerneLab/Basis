@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -35,12 +36,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public DB2(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public DB2(String serverName, int portNumber, String catalog, Properties information)
+		public DB2(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -90,12 +86,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public Derby(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public Derby(String serverName, int portNumber, String catalog, Properties information)
+		public Derby(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -144,12 +135,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public EmbeddeDerby(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public EmbeddeDerby(String serverName, int portNumber, String catalog, Properties information)
+		public EmbeddeDerby(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -211,12 +197,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			this(serverName, portNumber, catalog, "", "");
 		}
 
-		public Hive(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public Hive(String serverName, int portNumber, String catalog, Properties information)
+		public Hive(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -277,12 +258,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			this(serverName, portNumber, catalog, "", "");
 		}
 
-		public Hive2(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public Hive2(String serverName, int portNumber, String catalog, Properties information)
+		public Hive2(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -331,12 +307,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public Informix(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public Informix(String serverName, int portNumber, String catalog, Properties information)
+		public Informix(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -399,12 +370,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public MariaDB(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public MariaDB(String serverName, int portNumber, String catalog, Properties information)
+		public MariaDB(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -454,12 +420,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public MySQL(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public MySQL(String serverName, int portNumber, String catalog, Properties information)
+		public MySQL(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -511,12 +472,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public ODBC(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public ODBC(String serverName, int portNumber, String catalog, Properties information)
+		public ODBC(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -567,12 +523,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public Oracle(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public Oracle(String serverName, int portNumber, String catalog, Properties information)
+		public Oracle(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -664,12 +615,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public OracleClassic(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public OracleClassic(String serverName, int portNumber, String catalog, Properties information)
+		public OracleClassic(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 			this.addAddress(serverName, portNumber);
@@ -817,12 +763,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public PostgreSQL(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public PostgreSQL(String serverName, int portNumber, String catalog, Properties information)
+		public PostgreSQL(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -872,12 +813,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public SqlServer2000(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public SqlServer2000(String serverName, int portNumber, String catalog, Properties information)
+		public SqlServer2000(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -927,12 +863,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public SqlServer2005(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public SqlServer2005(String serverName, int portNumber, String catalog, Properties information)
+		public SqlServer2005(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -982,12 +913,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 			super();
 		}
 
-		public Sybase(String serverName, int portNumber, String catalog, Map<?, Object> information)
-		{
-			this(serverName, portNumber, catalog, PropertiesOfMap(information));
-		}
-
-		public Sybase(String serverName, int portNumber, String catalog, Properties information)
+		public Sybase(String serverName, int portNumber, String catalog, Map<String, Object> information)
 		{
 			super(serverName, portNumber, catalog, information);
 		}
@@ -1052,26 +978,26 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		return p;
 	}
 
-	protected String		serverName;
+	protected String			serverName;
 
-	protected int			portNumber	= DEFAULT_PORT_NUMBER;
+	protected int				portNumber	= DEFAULT_PORT_NUMBER;
 
-	protected String		catalog;
+	protected String			catalog;
 
-	protected String		userName;
+	private String				userName;
 
-	protected String		passWord;
+	private String				passWord;
 
-	protected Properties	information;
+	private Map<String, Object>	information;
 
-	private Connection		connection;
+	private Connection			connection;
 
-	private Set<SQLKit>		kits		= new HashSet<SQLKit>();
+	private Set<SQLKit>			kits		= new HashSet<SQLKit>();
 
 	public DataBase()
 	{
 		super();
-		this.setInformation(new Properties());
+		this.setInformation(new LinkedHashMap<String, Object>());
 	}
 
 	protected DataBase(DataBase dataBase)
@@ -1082,12 +1008,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		this.setInformation(dataBase.information);
 	}
 
-	public DataBase(String serverName, int portNumber, String catalog, Map<?, Object> information)
-	{
-		this(serverName, portNumber, catalog, PropertiesOfMap(information));
-	}
-
-	public DataBase(String serverName, int portNumber, String catalog, Properties information)
+	public DataBase(String serverName, int portNumber, String catalog, Map<String, Object> information)
 	{
 		this.setServerName(serverName);
 		this.setPortNumber(portNumber);
@@ -1097,7 +1018,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	public DataBase(String serverName, int portNumber, String catalog, String userName, String passWord)
 	{
-		this(serverName, portNumber, catalog, new Properties());
+		this(serverName, portNumber, catalog, new LinkedHashMap<String, Object>());
 		this.setUserName(userName);
 		this.setPassWord(passWord);
 	}
@@ -1180,7 +1101,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	public Properties getInformation()
 	{
-		return information;
+		return PropertiesOfMap(this.information);
 	}
 
 	private Set<SQLKit> getKits()
@@ -1299,7 +1220,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		return this;
 	}
 
-	protected DataBase setInformation(Properties information)
+	public DataBase setInformation(Map<String, Object> information)
 	{
 		this.information = information;
 		return this;
@@ -1308,7 +1229,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 	public DataBase setPassWord(String passWord)
 	{
 		this.passWord = passWord;
-		information.setProperty(PASSWORD, passWord);
+		information.put(PASSWORD, passWord);
 		return this;
 	}
 
@@ -1327,7 +1248,7 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 	public DataBase setUserName(String userName)
 	{
 		this.userName = userName;
-		information.setProperty(USER, userName);
+		information.put(USER, userName);
 		return this;
 	}
 }
