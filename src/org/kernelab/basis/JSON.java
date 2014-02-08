@@ -1504,6 +1504,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this.containsValue(value);
 		}
 
+		public boolean contains(Object value, Comparator<Object> cmp)
+		{
+			return this.containsValue(value, cmp);
+		}
+
 		public boolean containsAll(Iterable<? extends Object> iterable)
 		{
 			boolean contains = false;
@@ -1533,6 +1538,35 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public boolean containsValue(Object value)
 		{
 			return array().containsValue(value) || super.containsValue(value);
+		}
+
+		@Override
+		public boolean containsValue(Object value, Comparator<Object> cmp)
+		{
+			boolean contains = false;
+
+			if (cmp == null)
+			{
+				contains = containsValue(value);
+			}
+			else
+			{
+				for (Object o : array().values())
+				{
+					if (cmp.compare(value, o) == 0)
+					{
+						contains = true;
+						break;
+					}
+				}
+
+				if (!contains)
+				{
+					contains = super.containsValue(value, cmp);
+				}
+			}
+
+			return contains;
 		}
 
 		public JSAN delete(Object value)
@@ -5624,6 +5658,29 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public boolean containsValue(Object value)
 	{
 		return object().containsValue(value);
+	}
+
+	public boolean containsValue(Object value, Comparator<Object> cmp)
+	{
+		boolean contains = false;
+
+		if (cmp == null)
+		{
+			contains = containsValue(value);
+		}
+		else
+		{
+			for (Object o : object().values())
+			{
+				if (cmp.compare(value, o) == 0)
+				{
+					contains = true;
+					break;
+				}
+			}
+		}
+
+		return contains;
 	}
 
 	public JSON context()
