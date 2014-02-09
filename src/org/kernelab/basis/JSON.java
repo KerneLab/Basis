@@ -580,18 +580,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			protected static final short			JSON_RANK			= 7;
 
-			protected static final short			NONE_RANK			= 8;
+			protected static final short			QUOTATION_RANK		= 8;
+
+			protected static final short			NONE_RANK			= Short.MAX_VALUE;
 
 			static
 			{
 				TYPE_RANK.put(Boolean.class, BOOLEAN_RANK);
 				TYPE_RANK.put(Number.class, NUMBER_RANK);
 				TYPE_RANK.put(Character.class, CHARACTER_RANK);
-				TYPE_RANK.put(String.class, STRING_RANK);
+				TYPE_RANK.put(CharSequence.class, STRING_RANK);
 				TYPE_RANK.put(java.util.Date.class, DATE_RANK);
 				TYPE_RANK.put(java.util.Calendar.class, CALENDAR_RANK);
 				TYPE_RANK.put(Function.class, FUNCTION_RANK);
 				TYPE_RANK.put(JSON.class, JSON_RANK);
+				TYPE_RANK.put(Quotation.class, QUOTATION_RANK);
 			}
 
 			public static int CompareIndex(String a, String b)
@@ -626,30 +629,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				if (value != null)
 				{
-					Class<?> cls = value.getClass();
-
-					if (value instanceof Number)
+					for (Entry<Class<?>, Short> entry : TYPE_RANK.entrySet())
 					{
-						cls = Number.class;
+						if (Tools.superClass(value, entry.getKey()) != null)
+						{
+							rank = entry.getValue();
+							break;
+						}
 					}
-					else if (value instanceof CharSequence)
-					{
-						cls = String.class;
-					}
-					else if (value instanceof java.util.Date)
-					{
-						cls = java.util.Date.class;
-					}
-					else if (value instanceof java.util.Calendar)
-					{
-						cls = java.util.Calendar.class;
-					}
-					else if (value instanceof JSON)
-					{
-						cls = JSON.class;
-					}
-
-					rank = TYPE_RANK.get(cls);
 				}
 
 				return rank == null ? NONE_RANK : rank;
@@ -692,7 +679,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 								break;
 
 							case STRING_RANK:
-								c = ((String) a).compareTo((String) b);
+								c = ((CharSequence) a).toString().compareTo(((CharSequence) b).toString());
 								break;
 
 							case DATE_RANK:
@@ -710,6 +697,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 							case JSON_RANK:
 								c = CompareIndex(((JSON) a).entry(), ((JSON) b).entry());
+								break;
+
+							case QUOTATION_RANK:
+								c = CompareIndex(((Quotation) a).entry(), ((Quotation) b).entry());
 								break;
 
 							default:
@@ -1227,7 +1218,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					target = new JSAN().reflects(source).transformers(source);
 				}
 
-				source.addTo(sorter);
+				sorter.addAll(source.values());
 
 				// Must clear here after addTo in case of target==source
 				target.clear();
@@ -1711,16 +1702,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return new JSAN().reflects(this).transformers(this).clone(this);
 		}
 
-		public boolean contains(Object value)
-		{
-			return this.containsValue(value);
-		}
-
-		public boolean contains(Object value, Comparator<Object> cmp)
-		{
-			return this.containsValue(value, cmp);
-		}
-
 		public boolean containsAll(Iterable<? extends Object> iterable)
 		{
 			boolean contains = false;
@@ -1749,36 +1730,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public boolean containsValue(Object value)
 		{
-			return array().containsValue(value) || super.containsValue(value);
-		}
-
-		@Override
-		public boolean containsValue(Object value, Comparator<Object> cmp)
-		{
-			boolean contains = false;
-
-			if (cmp == null)
-			{
-				contains = containsValue(value);
-			}
-			else
-			{
-				for (Object o : array().values())
-				{
-					if (cmp.compare(value, o) == 0)
-					{
-						contains = true;
-						break;
-					}
-				}
-
-				if (!contains)
-				{
-					contains = super.containsValue(value, cmp);
-				}
-			}
-
-			return contains;
+			return array().containsValue(value) || object().containsValue(value);
 		}
 
 		public JSAN delete(Object value)
@@ -2375,7 +2327,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				List<Object> temp = new LinkedList<Object>();
 				for (Object o : this)
 				{
-					if (!jsan.contains(o))
+					if (!jsan.hasValue(o))
 					{
 						temp.add(o);
 					}
@@ -5917,29 +5869,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return object().containsValue(value);
 	}
 
-	public boolean containsValue(Object value, Comparator<Object> cmp)
-	{
-		boolean contains = false;
-
-		if (cmp == null)
-		{
-			contains = containsValue(value);
-		}
-		else
-		{
-			for (Object o : object().values())
-			{
-				if (cmp.compare(value, o) == 0)
-				{
-					contains = true;
-					break;
-				}
-			}
-		}
-
-		return contains;
-	}
-
 	public JSON context()
 	{
 		JSON context = this;
@@ -5989,6 +5918,45 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public boolean has(String entry)
 	{
 		return object().containsKey(entry);
+	}
+
+	public boolean hasValue(Object value)
+	{
+		boolean has = false;
+
+		for (String key : this.keySet())
+		{
+			if (Tools.equals(value, this.val(key)))
+			{
+				has = true;
+				break;
+			}
+		}
+
+		return has;
+	}
+
+	public boolean hasValue(Object value, Comparator<Object> cmp)
+	{
+		boolean has = false;
+
+		if (cmp == null)
+		{
+			has = hasValue(value);
+		}
+		else
+		{
+			for (String key : this.keySet())
+			{
+				if (cmp.compare(value, this.val(key)) == 0)
+				{
+					has = true;
+					break;
+				}
+			}
+		}
+
+		return has;
 	}
 
 	public boolean isEmpty()
@@ -7033,9 +7001,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			collection = new LinkedList<Object>();
 		}
 
-		for (Pair pair : pairs())
+		for (String key : keySet())
 		{
-			collection.add(pair.getValue());
+			collection.add(val(key));
 		}
 
 		return collection;

@@ -5730,6 +5730,35 @@ public class Tools
 	}
 
 	/**
+	 * To determine wheter the class is the super class of the object which is
+	 * similar to instanceof operator. This method would try to convert the
+	 * class to its wrap class if it is a primary type.
+	 * 
+	 * @param obj
+	 *            The given object value. If the object is null, then always
+	 *            return null.
+	 * @param cls
+	 *            The given super class.
+	 * @return The class parameter if the object is the instace of the class,
+	 *         otherwise returns null.
+	 */
+	public static Class<?> superClass(Object obj, Class<?> cls)
+	{
+		Class<?> c = null;
+
+		if (obj != null && cls != null)
+		{
+			cls = getWrapClass(cls);
+			if (cls.isInstance(obj))
+			{
+				c = cls;
+			}
+		}
+
+		return c;
+	}
+
+	/**
 	 * To get the Union of Iterable object a and b.<br />
 	 * That is all element in a or in b.
 	 * 
