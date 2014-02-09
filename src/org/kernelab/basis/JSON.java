@@ -2327,7 +2327,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				List<Object> temp = new LinkedList<Object>();
 				for (Object o : this)
 				{
-					if (!jsan.hasValue(o))
+					if (!jsan.hasVal(o))
 					{
 						temp.add(o);
 					}
@@ -5920,7 +5920,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return object().containsKey(entry);
 	}
 
-	public boolean hasValue(Object value)
+	public boolean hasVal(Object value)
 	{
 		boolean has = false;
 
@@ -5936,13 +5936,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return has;
 	}
 
-	public boolean hasValue(Object value, Comparator<Object> cmp)
+	public boolean hasVal(Object value, Comparator<Object> cmp)
 	{
 		boolean has = false;
 
 		if (cmp == null)
 		{
-			has = hasValue(value);
+			has = hasVal(value);
 		}
 		else
 		{
