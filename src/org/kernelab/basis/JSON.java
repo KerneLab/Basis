@@ -29,6 +29,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -397,9 +398,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 		}
 
-		protected class ArrayIterator implements Iterator<Object>
+		protected class ArrayIterator implements Iterator<Object>, Serializable
 		{
-			private LinkedList<String>		keys	= new LinkedList<String>();
+			/**
+			 * 
+			 */
+			private static final long		serialVersionUID	= 7218728241929428448L;
+
+			private LinkedList<String>		keys				= new LinkedList<String>();
 
 			private ListIterator<String>	iter;
 
@@ -546,6 +552,178 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				reset(seq);
 
 				return this;
+			}
+		}
+
+		protected static class GeneralValueComparator implements Comparator<Object>, Serializable
+		{
+			/**
+			 * 
+			 */
+			private static final long				serialVersionUID	= -7397716884280949033L;
+
+			protected static Map<Class<?>, Short>	TYPE_RANK			= new HashMap<Class<?>, Short>();
+
+			protected static final short			BOOLEAN_RANK		= 0;
+
+			protected static final short			NUMBER_RANK			= 1;
+
+			protected static final short			CHARACTER_RANK		= 2;
+
+			protected static final short			STRING_RANK			= 3;
+
+			protected static final short			DATE_RANK			= 4;
+
+			protected static final short			CALENDAR_RANK		= 5;
+
+			protected static final short			FUNCTION_RANK		= 6;
+
+			protected static final short			JSON_RANK			= 7;
+
+			protected static final short			NONE_RANK			= 8;
+
+			static
+			{
+				TYPE_RANK.put(Boolean.class, BOOLEAN_RANK);
+				TYPE_RANK.put(Number.class, NUMBER_RANK);
+				TYPE_RANK.put(Character.class, CHARACTER_RANK);
+				TYPE_RANK.put(String.class, STRING_RANK);
+				TYPE_RANK.put(java.util.Date.class, DATE_RANK);
+				TYPE_RANK.put(java.util.Calendar.class, CALENDAR_RANK);
+				TYPE_RANK.put(Function.class, FUNCTION_RANK);
+				TYPE_RANK.put(JSON.class, JSON_RANK);
+			}
+
+			public static int CompareIndex(String a, String b)
+			{
+				int c = 0;
+
+				Integer indexA = Index(a), indexB = Index(b);
+
+				if (indexA == null && indexB == null)
+				{
+					c = a.compareTo(b);
+				}
+				else if (indexA != null && indexB == null)
+				{
+					c = -1;
+				}
+				else if (indexA == null && indexB != null)
+				{
+					c = 1;
+				}
+				else
+				{
+					c = indexA - indexB;
+				}
+
+				return c;
+			}
+
+			protected static short getTypeRank(Object value)
+			{
+				Short rank = null;
+
+				if (value != null)
+				{
+					Class<?> cls = value.getClass();
+
+					if (value instanceof Number)
+					{
+						cls = Number.class;
+					}
+					else if (value instanceof CharSequence)
+					{
+						cls = String.class;
+					}
+					else if (value instanceof java.util.Date)
+					{
+						cls = java.util.Date.class;
+					}
+					else if (value instanceof java.util.Calendar)
+					{
+						cls = java.util.Calendar.class;
+					}
+					else if (value instanceof JSON)
+					{
+						cls = JSON.class;
+					}
+
+					rank = TYPE_RANK.get(cls);
+				}
+
+				return rank == null ? NONE_RANK : rank;
+			}
+
+			public int compare(Object a, Object b)
+			{
+				int c = 0;
+
+				if (a == null && b == null)
+				{
+					c = 0;
+				}
+				else if (a == null && b != null)
+				{
+					c = 1;
+				}
+				else if (a != null && b == null)
+				{
+					c = -1;
+				}
+				else
+				{
+					short rankA = getTypeRank(a), rankB = getTypeRank(b);
+
+					if (rankA == rankB)
+					{
+						switch (rankA)
+						{
+							case BOOLEAN_RANK:
+								c = ((Boolean) a ? 1 : 0) - ((Boolean) b ? 1 : 0);
+								break;
+
+							case NUMBER_RANK:
+								c = (int) Math.signum(((Number) a).doubleValue() - ((Number) b).doubleValue());
+								break;
+
+							case CHARACTER_RANK:
+								c = (Character) a - (Character) b;
+								break;
+
+							case STRING_RANK:
+								c = ((String) a).compareTo((String) b);
+								break;
+
+							case DATE_RANK:
+								c = (int) Math.signum(((java.util.Date) a).getTime() - ((java.util.Date) b).getTime());
+								break;
+
+							case CALENDAR_RANK:
+								c = (int) Math.signum(((java.util.Calendar) a).getTimeInMillis()
+										- ((java.util.Calendar) b).getTimeInMillis());
+								break;
+
+							case FUNCTION_RANK:
+								c = ((Function) a).name().compareTo(((Function) b).name());
+								break;
+
+							case JSON_RANK:
+								c = CompareIndex(((JSON) a).entry(), ((JSON) b).entry());
+								break;
+
+							default:
+								c = a.hashCode() - b.hashCode();
+								break;
+						}
+					}
+					else
+					{
+						c = rankA - rankB;
+					}
+				}
+
+				return c;
 			}
 		}
 
@@ -1029,6 +1207,40 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		public static JSAN Reflect(Object object, String... fields)
 		{
 			return JSAN.Reflect(null, object, fields);
+		}
+
+		public static JSAN Sort(JSAN source, Set<Object> sorter, JSAN target)
+		{
+			if (source != null)
+			{
+				if (sorter == null)
+				{
+					sorter = new TreeSet<Object>();
+				}
+				else
+				{
+					sorter.clear();
+				}
+
+				if (target == null)
+				{
+					target = new JSAN().reflects(source).transformers(source);
+				}
+
+				source.addTo(sorter);
+
+				// Must clear here after addTo in case of target==source
+				target.clear();
+
+				target.splice(0, 0, sorter);
+			}
+
+			return target;
+		}
+
+		public static JSAN Unique(JSAN source, JSAN target)
+		{
+			return Sort(source, new LinkedHashSet<Object>(), target);
 		}
 
 		private Map<String, Object>	array;
@@ -2229,6 +2441,41 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return jsan;
 		}
 
+		public JSAN sort()
+		{
+			return sort(this);
+		}
+
+		public JSAN sort(Comparator<Object> cmp)
+		{
+			return sort(cmp, this);
+		}
+
+		public JSAN sort(Comparator<Object> cmp, JSAN jsan)
+		{
+			if (cmp == null)
+			{
+				cmp = new GeneralValueComparator();
+			}
+
+			return sort(new TreeSet<Object>(cmp), jsan);
+		}
+
+		public JSAN sort(JSAN target)
+		{
+			return sort(new GeneralValueComparator(), target);
+		}
+
+		public JSAN sort(Set<Object> sorter)
+		{
+			return sort(sorter, this);
+		}
+
+		public JSAN sort(Set<Object> sorter, JSAN target)
+		{
+			return Sort(this, sorter, target);
+		}
+
 		public JSAN splice(int index, int cover, Collection<?> collection)
 		{
 			int trace = length();
@@ -2531,6 +2778,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			super.transformersSingleton();
 			return this;
+		}
+
+		public JSAN unique()
+		{
+			return unique(this);
+		}
+
+		public JSAN unique(JSAN target)
+		{
+			return Unique(this, target);
 		}
 
 		@SuppressWarnings("unchecked")
