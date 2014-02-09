@@ -555,34 +555,38 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 		}
 
-		protected static class GeneralValueComparator implements Comparator<Object>, Serializable
+		public static class GeneralValueComparator implements Comparator<Object>, Serializable
 		{
 			/**
 			 * 
 			 */
-			private static final long				serialVersionUID	= -7397716884280949033L;
+			private static final long			serialVersionUID	= -7397716884280949033L;
 
-			protected static Map<Class<?>, Short>	TYPE_RANK			= new HashMap<Class<?>, Short>();
+			private static Map<Class<?>, Short>	TYPE_RANK			= new HashMap<Class<?>, Short>();
 
-			protected static final short			BOOLEAN_RANK		= 0;
+			private static final short			BOOLEAN_RANK		= 0;
 
-			protected static final short			NUMBER_RANK			= 1;
+			private static final short			NUMBER_RANK			= 1;
 
-			protected static final short			CHARACTER_RANK		= 2;
+			private static final short			CHARACTER_RANK		= 2;
 
-			protected static final short			STRING_RANK			= 3;
+			private static final short			STRING_RANK			= 3;
 
-			protected static final short			DATE_RANK			= 4;
+			private static final short			DATE_RANK			= 4;
 
-			protected static final short			CALENDAR_RANK		= 5;
+			private static final short			CALENDAR_RANK		= 5;
 
-			protected static final short			FUNCTION_RANK		= 6;
+			private static final short			FUNCTION_RANK		= 6;
 
-			protected static final short			JSON_RANK			= 7;
+			private static final short			JSON_RANK			= 7;
 
-			protected static final short			QUOTATION_RANK		= 8;
+			private static final short			QUOTATION_RANK		= 8;
 
-			protected static final short			NONE_RANK			= Short.MAX_VALUE;
+			private static final short			NONE_RANK			= Short.MAX_VALUE;
+
+			public static final int				ASCEND				= 1;
+
+			public static final int				DESCEND				= -1;
 
 			static
 			{
@@ -597,7 +601,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				TYPE_RANK.put(Quotation.class, QUOTATION_RANK);
 			}
 
-			public static int CompareIndex(String a, String b)
+			protected static int CompareIndex(String a, String b)
 			{
 				int c = 0;
 
@@ -640,6 +644,18 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				}
 
 				return rank == null ? NONE_RANK : rank;
+			}
+
+			private int	order;
+
+			public GeneralValueComparator()
+			{
+				this(ASCEND);
+			}
+
+			public GeneralValueComparator(int order)
+			{
+				this.order = order >= 0 ? ASCEND : DESCEND;
 			}
 
 			public int compare(Object a, Object b)
@@ -714,7 +730,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					}
 				}
 
-				return c;
+				return c * order;
 			}
 		}
 
