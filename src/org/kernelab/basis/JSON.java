@@ -280,6 +280,26 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return this;
 		}
 
+		@Override
+		public boolean equals(Object o)
+		{
+			boolean is = false;
+
+			if (this == o)
+			{
+				is = true;
+			}
+			else
+			{
+				if (o instanceof Function)
+				{
+					is = this.expression().equals(((Function) o).expression());
+				}
+			}
+
+			return is;
+		}
+
 		public String expression()
 		{
 			return expression;
@@ -576,11 +596,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			private static final short			CALENDAR_RANK		= 5;
 
-			private static final short			FUNCTION_RANK		= 6;
-
-			private static final short			JSON_RANK			= 7;
-
-			private static final short			QUOTATION_RANK		= 8;
+			private static final short			HIERARCH_RANK		= 6;
 
 			private static final short			NONE_RANK			= Short.MAX_VALUE;
 
@@ -596,9 +612,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				TYPE_RANK.put(CharSequence.class, STRING_RANK);
 				TYPE_RANK.put(java.util.Date.class, DATE_RANK);
 				TYPE_RANK.put(java.util.Calendar.class, CALENDAR_RANK);
-				TYPE_RANK.put(Function.class, FUNCTION_RANK);
-				TYPE_RANK.put(JSON.class, JSON_RANK);
-				TYPE_RANK.put(Quotation.class, QUOTATION_RANK);
+				TYPE_RANK.put(Hierarchical.class, HIERARCH_RANK);
 			}
 
 			protected static int CompareIndex(String a, String b)
@@ -676,57 +690,64 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				}
 				else
 				{
-					short rankA = getTypeRank(a), rankB = getTypeRank(b);
+					Object x = a, y = b;
 
-					if (rankA == rankB)
+					if (IsQuotation(a))
 					{
-						switch (rankA)
+						x = ((Quotation) x).quote();
+					}
+
+					if (IsQuotation(b))
+					{
+						y = ((Quotation) y).quote();
+					}
+
+					short rankX = getTypeRank(x), rankY = getTypeRank(y);
+
+					if (rankX == rankY)
+					{
+						switch (rankX)
 						{
 							case BOOLEAN_RANK:
-								c = ((Boolean) a ? 1 : 0) - ((Boolean) b ? 1 : 0);
+								// false=0, true=1
+								c = ((Boolean) x ? 1 : 0) - ((Boolean) y ? 1 : 0);
 								break;
 
 							case NUMBER_RANK:
-								c = (int) Math.signum(((Number) a).doubleValue() - ((Number) b).doubleValue());
+								c = (int) Math.signum(((Number) x).doubleValue() - ((Number) y).doubleValue());
 								break;
 
 							case CHARACTER_RANK:
-								c = (Character) a - (Character) b;
+								c = (Character) x - (Character) y;
 								break;
 
 							case STRING_RANK:
-								c = ((CharSequence) a).toString().compareTo(((CharSequence) b).toString());
+								c = ((CharSequence) x).toString().compareTo(((CharSequence) y).toString());
 								break;
 
 							case DATE_RANK:
-								c = (int) Math.signum(((java.util.Date) a).getTime() - ((java.util.Date) b).getTime());
+								c = (int) Math.signum(((java.util.Date) x).getTime() - ((java.util.Date) y).getTime());
 								break;
 
 							case CALENDAR_RANK:
-								c = (int) Math.signum(((java.util.Calendar) a).getTimeInMillis()
-										- ((java.util.Calendar) b).getTimeInMillis());
+								c = (int) Math.signum(((java.util.Calendar) x).getTimeInMillis()
+										- ((java.util.Calendar) y).getTimeInMillis());
 								break;
 
-							case FUNCTION_RANK:
-								c = ((Function) a).name().compareTo(((Function) b).name());
-								break;
-
-							case JSON_RANK:
-								c = CompareIndex(((JSON) a).entry(), ((JSON) b).entry());
-								break;
-
-							case QUOTATION_RANK:
-								c = CompareIndex(((Quotation) a).entry(), ((Quotation) b).entry());
+							case HIERARCH_RANK:
+								// For Hierarchical values, compare the entry.
+								// This means keep its order in the JSAN.
+								c = CompareIndex(((Hierarchical) a).entry(), ((Hierarchical) b).entry());
 								break;
 
 							default:
-								c = a.hashCode() - b.hashCode();
+								c = x.hashCode() - y.hashCode();
 								break;
 						}
 					}
 					else
 					{
-						c = rankA - rankB;
+						c = rankX - rankY;
 					}
 				}
 
@@ -5917,6 +5938,37 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public Set<Map.Entry<String, Object>> entrySet()
 	{
 		return object().entrySet();
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		boolean is = false;
+
+		if (this == o)
+		{
+			is = true;
+		}
+		else if (o instanceof JSON)
+		{
+			JSON that = (JSON) o;
+
+			if (this.size() == that.size())
+			{
+				is = true;
+
+				for (String key : this.keySet())
+				{
+					if (!Tools.equals(this.val(key), that.val(key)))
+					{
+						is = false;
+						break;
+					}
+				}
+			}
+		}
+
+		return is;
 	}
 
 	@Override
