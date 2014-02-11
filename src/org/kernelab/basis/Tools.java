@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -540,6 +541,92 @@ public class Tools
 		array = baos.toByteArray();
 
 		return array;
+	}
+
+	/**
+	 * Copy the content from source File to the target File.<br />
+	 * If the target is a directory, then the source will be copied into the
+	 * directory as the same name.
+	 * 
+	 * @param source
+	 *            The source File.
+	 * @param target
+	 *            The target File.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(File source, File target) throws IOException
+	{
+		boolean copied = false;
+
+		if (target.isDirectory())
+		{
+			target = new File(target, source.getName());
+		}
+
+		FileChannel src = new FileInputStream(source).getChannel();
+
+		copied = copy(src, target);
+
+		src.close();
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source FileChannel to the target file.<br />
+	 * The target MUST be a real file otherwise FileNotFoundException will be
+	 * thrown.<br />
+	 * This method will NOT change the position of source FileChannel or close
+	 * it after the operation.
+	 * 
+	 * @param source
+	 *            The source FileChannel.
+	 * @param target
+	 *            The target file.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(FileChannel source, File target) throws IOException
+	{
+		boolean copied = false;
+
+		if (source.isOpen() && target != null)
+		{
+			FileChannel tar = new FileOutputStream(target).getChannel();
+
+			copied = copy(source, tar);
+
+			tar.close();
+		}
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source FileChannel to the target FileChannel.<br />
+	 * This method will NOT change the position of source FileChannel. Both
+	 * source and target FileChannel will NOT be closed after the operation.
+	 * 
+	 * @param source
+	 *            The source FileChannel.
+	 * @param target
+	 *            The target FileChannel.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(FileChannel source, FileChannel target) throws IOException
+	{
+		boolean copied = false;
+
+		if (source.isOpen() && target.isOpen())
+		{
+			source.transferTo(0, source.size(), target);
+
+			copied = true;
+		}
+
+		return copied;
 	}
 
 	/**

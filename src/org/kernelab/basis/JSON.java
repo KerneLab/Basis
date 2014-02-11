@@ -737,7 +737,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							case HIERARCH_RANK:
 								// For Hierarchical values, compare the entry.
 								// This means keep its order in the JSAN.
-								c = CompareIndex(((Hierarchical) a).entry(), ((Hierarchical) b).entry());
+								if (!Tools.equals(x, y))
+								{
+									c = CompareIndex(((Hierarchical) a).entry(), ((Hierarchical) b).entry());
+								}
 								break;
 
 							default:
