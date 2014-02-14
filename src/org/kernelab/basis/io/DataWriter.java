@@ -1,4 +1,4 @@
-package org.kernelab.basis;
+package org.kernelab.basis.io;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -9,7 +9,11 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
+
+import org.kernelab.basis.AbstractAccomplishable;
+import org.kernelab.basis.Tools;
 
 /**
  * The class to output strings line by line.
@@ -300,6 +304,21 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	{
 		this.bommed = bommed;
 		return Tools.cast(this);
+	}
+
+	public <E extends DataWriter> E setChannel(WritableByteChannel os)
+	{
+		return this.setOutputStream(new ChannelOutputStream(os), charset);
+	}
+
+	public <E extends DataWriter> E setChannel(WritableByteChannel os, Charset charset)
+	{
+		return this.setOutputStream(new ChannelOutputStream(os), charset);
+	}
+
+	public <E extends DataWriter> E setChannel(WritableByteChannel os, String charsetName)
+	{
+		return this.setOutputStream(new ChannelOutputStream(os), charsetName);
 	}
 
 	public <E extends DataWriter> E setCharset(Charset charset)

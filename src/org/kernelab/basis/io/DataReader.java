@@ -1,4 +1,4 @@
-package org.kernelab.basis;
+package org.kernelab.basis.io;
 
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
@@ -7,8 +7,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.util.concurrent.Callable;
+
+import org.kernelab.basis.AbstractAccomplishable;
+import org.kernelab.basis.Tools;
 
 /**
  * This is a framework to read a data file line by line.
@@ -210,6 +214,21 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 	{
 		this.buffer = buffer;
 		return Tools.cast(this);
+	}
+
+	public <E extends DataReader> E setChannel(ReadableByteChannel channel) throws IOException
+	{
+		return this.setInputStream(new ChannelInputStream(channel), charset);
+	}
+
+	public <E extends DataReader> E setChannel(ReadableByteChannel channel, Charset charset) throws IOException
+	{
+		return this.setInputStream(new ChannelInputStream(channel), charset);
+	}
+
+	public <E extends DataReader> E setChannel(ReadableByteChannel channel, String charsetName) throws IOException
+	{
+		return this.setInputStream(new ChannelInputStream(channel), charsetName);
 	}
 
 	public <E extends DataReader> E setCharset(Charset charset)

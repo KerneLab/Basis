@@ -7,8 +7,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.kernelab.basis.DataReader;
 import org.kernelab.basis.Tools;
+import org.kernelab.basis.io.DataReader;
 
 /**
  * 设想有一个文本文件data.txt<br />

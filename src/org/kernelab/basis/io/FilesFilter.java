@@ -1,4 +1,4 @@
-package org.kernelab.basis;
+package org.kernelab.basis.io;
 
 import java.io.File;
 import java.util.Collection;
@@ -14,7 +14,8 @@ import javax.swing.filechooser.FileFilter;
  * Or to be used as:
  * 
  * <pre>
- * for (FileFilter ff : FilesFilter.getFilters().values()) {
+ * for (FileFilter ff : FilesFilter.getFilters().values())
+ * {
  * 	JFileChooser.addChoosableFileFilter(ff);
  * }
  * </pre>
@@ -26,7 +27,6 @@ import javax.swing.filechooser.FileFilter;
  */
 public class FilesFilter extends FileFilter
 {
-
 	public static class SingleFilter extends FileFilter
 	{
 
@@ -45,8 +45,10 @@ public class FilesFilter extends FileFilter
 		{
 			boolean accept = f.isDirectory();
 
-			if (!accept) {
-				if (getFileExtension(f).toLowerCase().equals(extension)) {
+			if (!accept)
+			{
+				if (getFileExtension(f).toLowerCase().equals(extension))
+				{
 					accept = true;
 				}
 			}
@@ -57,8 +59,7 @@ public class FilesFilter extends FileFilter
 		@Override
 		public String getDescription()
 		{
-			return (description == null ? "" : description + ' ') + "(*." + extension
-					+ ")";
+			return (description == null ? "" : description + ' ') + "(*." + extension + ")";
 		}
 
 	}
@@ -108,11 +109,14 @@ public class FilesFilter extends FileFilter
 	{
 		boolean accept = f.isDirectory();
 
-		if (!accept) {
+		if (!accept)
+		{
 			String suffix = getFileExtension(f).toLowerCase();
 
-			for (String extension : filters.keySet()) {
-				if (extension.equals(suffix)) {
+			for (String extension : filters.keySet())
+			{
+				if (extension.equals(suffix))
+				{
 					accept = true;
 					break;
 				}
@@ -141,7 +145,8 @@ public class FilesFilter extends FileFilter
 	public void addExtensions(Collection<String> extensions)
 	{
 		filters.clear();
-		for (String extension : extensions) {
+		for (String extension : extensions)
+		{
 			this.addExtension(extension);
 		}
 	}
@@ -150,14 +155,16 @@ public class FilesFilter extends FileFilter
 	{
 		map.clear();
 		filters.clear();
-		for (Entry<String, String> entry : map.entrySet()) {
+		for (Entry<String, String> entry : map.entrySet())
+		{
 			this.addExtension(entry.getKey(), entry.getValue());
 		}
 	}
 
 	public void attachToFileChooser(JFileChooser fc)
 	{
-		for (SingleFilter sf : this.filters.values()) {
+		for (SingleFilter sf : this.filters.values())
+		{
 			fc.addChoosableFileFilter(sf);
 		}
 	}
@@ -169,17 +176,22 @@ public class FilesFilter extends FileFilter
 		StringBuilder ext = new StringBuilder();
 
 		boolean firstExt = true;
-		for (SingleFilter filter : filters.values()) {
+		for (SingleFilter filter : filters.values())
+		{
 
-			if (filter.description != null) {
+			if (filter.description != null)
+			{
 				des.append(filter.description);
 				des.append(' ');
 			}
 
-			if (firstExt) {
+			if (firstExt)
+			{
 				firstExt = false;
 				ext.append('(');
-			} else {
+			}
+			else
+			{
 				ext.append(';');
 			}
 			ext.append("*.");
@@ -197,5 +209,4 @@ public class FilesFilter extends FileFilter
 	{
 		return filters;
 	}
-
 }

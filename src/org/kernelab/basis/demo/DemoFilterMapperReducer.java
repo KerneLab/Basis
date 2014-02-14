@@ -34,7 +34,7 @@ public class DemoFilterMapperReducer
 			public boolean filter(Double e)
 			{
 				// 将小于等于3的元素过滤保留至结果集合中
-				return e <= 3 ? true : false;
+				return e <= 3 ? false : true;
 			}
 
 		}, null);
@@ -73,10 +73,13 @@ public class DemoFilterMapperReducer
 
 			public Double reduce(Double result, Double element, int index)
 			{
-				if (index < 3) {
+				if (index < 3)
+				{
 					// 对原始集合中前3个元素部分求和
 					return result + element;
-				} else {
+				}
+				else
+				{
 					// 化简到其他元素时，抛出Terminator以终止化简过程
 					throw Terminator.SIGNAL;
 				}

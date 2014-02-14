@@ -1,4 +1,4 @@
-package org.kernelab.basis;
+package org.kernelab.basis.io;
 
 import java.awt.Component;
 import java.io.File;
@@ -7,9 +7,11 @@ import java.io.FileNotFoundException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import org.kernelab.basis.TextFiller;
+import org.kernelab.basis.Tools;
+
 public class FilePicker
 {
-
 	public static String	TARGET_PATH_KEY						= "target";
 
 	public static String	TARGET_FILE_EXIST_TITLE				= "目标文件已存在";
@@ -318,5 +320,4 @@ public class FilePicker
 		this.targetPathKey = targetPathKey;
 		return Tools.cast(this);
 	}
-
 }

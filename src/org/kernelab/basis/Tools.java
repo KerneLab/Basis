@@ -49,6 +49,8 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import org.kernelab.basis.JSON.JSAN;
+import org.kernelab.basis.io.DataReader;
+import org.kernelab.basis.io.DataWriter;
 
 /**
  * The collection of tools what are common functions for basis.
@@ -1286,7 +1288,7 @@ public class Tools
 	 *            The Iterable object which is to be filtered.
 	 * @param filter
 	 *            The Filter object which indicates the elements should be
-	 *            preserved if filter returns true.
+	 *            preserved if filter returns false.
 	 * @param result
 	 *            The Collection holding the result of filter. If null, an empty
 	 *            LinkedList would be created.
@@ -1302,7 +1304,7 @@ public class Tools
 		{
 			for (E element : iterable)
 			{
-				if (filter.filter(element))
+				if (!filter.filter(element))
 				{
 					result.add(element);
 				}
@@ -1324,7 +1326,7 @@ public class Tools
 	 *            The Iterable object which is to be filtered.
 	 * @param filter
 	 *            The IndexedFilter object which indicates the elements should
-	 *            be preserved if filter returns true.
+	 *            be preserved if filter returns false.
 	 * @param result
 	 *            The Collection holding the result of filter. If null, an empty
 	 *            LinkedList would be created.
@@ -1341,7 +1343,7 @@ public class Tools
 		{
 			for (E element : iterable)
 			{
-				if (filter.filter(element, index++))
+				if (!filter.filter(element, index++))
 				{
 					result.add(element);
 				}

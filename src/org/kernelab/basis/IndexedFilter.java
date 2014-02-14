@@ -3,7 +3,8 @@ package org.kernelab.basis;
 public interface IndexedFilter<E>
 {
 	/**
-	 * Filter some element from a container such as Collection, List and so on.
+	 * Filter some element from a container such as Collection, List and so on.<br />
+	 * If returns false, generally means preserve the element.
 	 * 
 	 * @param element
 	 *            The element to be filtered.

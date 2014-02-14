@@ -14,20 +14,12 @@ import java.util.LinkedList;
  */
 public class ComparatorsChain<E> implements Comparator<E>
 {
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args)
-	{
-
-	}
-
 	private Collection<Comparator<E>>	chain;
 
 	public ComparatorsChain(Collection<Comparator<E>> chain)
 	{
-		if (chain == null) {
+		if (chain == null)
+		{
 			chain = new LinkedList<Comparator<E>>();
 		}
 		this.chain = chain;
@@ -35,7 +27,8 @@ public class ComparatorsChain<E> implements Comparator<E>
 
 	public ComparatorsChain<E> buckle(Comparator<E>... comparator)
 	{
-		for (Comparator<E> c : comparator) {
+		for (Comparator<E> c : comparator)
+		{
 			chain.add(c);
 		}
 		return this;
@@ -45,8 +38,10 @@ public class ComparatorsChain<E> implements Comparator<E>
 	{
 		int result = 0;
 
-		for (Comparator<E> c : chain) {
-			if ((result = c.compare(o1, o2)) != 0) {
+		for (Comparator<E> c : chain)
+		{
+			if ((result = c.compare(o1, o2)) != 0)
+			{
 				break;
 			}
 		}
@@ -72,7 +67,8 @@ public class ComparatorsChain<E> implements Comparator<E>
 
 	public ComparatorsChain<E> unbuckle(Collection<Comparator<E>> comparators)
 	{
-		for (Comparator<E> c : comparators) {
+		for (Comparator<E> c : comparators)
+		{
 			chain.remove(c);
 		}
 		return this;
@@ -80,7 +76,8 @@ public class ComparatorsChain<E> implements Comparator<E>
 
 	public ComparatorsChain<E> unbuckle(Comparator<E>... comparator)
 	{
-		for (Comparator<E> c : comparator) {
+		for (Comparator<E> c : comparator)
+		{
 			chain.remove(c);
 		}
 		return this;

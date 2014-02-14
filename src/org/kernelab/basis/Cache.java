@@ -2,11 +2,10 @@ package org.kernelab.basis;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class Cache<K, V> extends Hashtable<K, V>
+public class Cache<K, V> extends ConcurrentHashMap<K, V>
 {
-
 	/**
 	 * 
 	 */
@@ -36,8 +35,11 @@ public class Cache<K, V> extends Hashtable<K, V>
 	public boolean isLegal(K key, V value)
 	{
 		boolean is = true;
-		for (Filter<Relation<K, V>> f : this.getFilters()) {
-			if (f.filter(new Relation<K, V>(key, value))) {
+		Relation<K, V> r = new Relation<K, V>(key, value);
+		for (Filter<Relation<K, V>> f : this.getFilters())
+		{
+			if (f.filter(r))
+			{
 				is = false;
 				break;
 			}
@@ -49,7 +51,8 @@ public class Cache<K, V> extends Hashtable<K, V>
 	public V put(K key, V value)
 	{
 		V v = null;
-		if (this.isLegal(key, value)) {
+		if (this.isLegal(key, value))
+		{
 			v = super.put(key, value);
 		}
 		return v;
@@ -59,5 +62,4 @@ public class Cache<K, V> extends Hashtable<K, V>
 	{
 		this.filters = filters;
 	}
-
 }

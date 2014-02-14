@@ -34,6 +34,7 @@ import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.kernelab.basis.io.DataReader;
 import org.kernelab.basis.test.TestBean;
 
 interface Hierarchical extends Copieable<Hierarchical>

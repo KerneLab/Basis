@@ -1,4 +1,4 @@
-package org.kernelab.basis;
+package org.kernelab.basis.io;
 
 import java.io.IOException;
 import java.io.OutputStream;

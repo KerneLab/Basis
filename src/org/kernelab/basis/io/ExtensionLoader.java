@@ -1,4 +1,4 @@
-package org.kernelab.basis;
+package org.kernelab.basis.io;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -24,13 +24,18 @@ public class ExtensionLoader
 
 	private ExtensionLoader()
 	{
-		try {
+		try
+		{
 			loader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 			load = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
 			load.setAccessible(true);
-		} catch (SecurityException e) {
+		}
+		catch (SecurityException e)
+		{
 			e.printStackTrace();
-		} catch (NoSuchMethodException e) {
+		}
+		catch (NoSuchMethodException e)
+		{
 			e.printStackTrace();
 		}
 	}
@@ -38,16 +43,23 @@ public class ExtensionLoader
 	public boolean load(File location)
 	{
 		boolean success = false;
-		try {
-			if (location.isFile()) {
+		try
+		{
+			if (location.isFile())
+			{
 				success = load(location.toURL());
-			} else if (location.isDirectory()) {
+			}
+			else if (location.isDirectory())
+			{
 				success = true;
-				for (File l : location.listFiles()) {
+				for (File l : location.listFiles())
+				{
 					success &= load(l);
 				}
 			}
-		} catch (MalformedURLException e) {
+		}
+		catch (MalformedURLException e)
+		{
 			e.printStackTrace();
 		}
 		return success;
@@ -56,7 +68,8 @@ public class ExtensionLoader
 	public boolean load(JSAN locations)
 	{
 		boolean success = true;
-		for (Object o : locations) {
+		for (Object o : locations)
+		{
 			success &= load(o.toString());
 		}
 		return success;
@@ -67,14 +80,20 @@ public class ExtensionLoader
 		boolean success = false;
 		URL url = null;
 		File file = null;
-		try {
+		try
+		{
 			url = new URL(location);
-		} catch (MalformedURLException e) {
+		}
+		catch (MalformedURLException e)
+		{
 			file = new File(location);
 		}
-		if (url != null) {
+		if (url != null)
+		{
 			success = load(url);
-		} else if (file != null) {
+		}
+		else if (file != null)
+		{
 			success = load(file);
 		}
 		return success;
@@ -83,13 +102,20 @@ public class ExtensionLoader
 	public boolean load(URL location)
 	{
 		boolean success = false;
-		try {
+		try
+		{
 			load.invoke(loader, location);
-		} catch (IllegalArgumentException e) {
+		}
+		catch (IllegalArgumentException e)
+		{
 			e.printStackTrace();
-		} catch (IllegalAccessException e) {
+		}
+		catch (IllegalAccessException e)
+		{
 			e.printStackTrace();
-		} catch (InvocationTargetException e) {
+		}
+		catch (InvocationTargetException e)
+		{
 			e.printStackTrace();
 		}
 		return success;
