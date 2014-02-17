@@ -139,6 +139,8 @@ public class Sequel implements Iterable<Sequel>
 		return new ResultSetIterator(rs);
 	}
 
+	private SQLKit		kit;
+
 	private Statement	statement;
 
 	private boolean		resultSetObject	= false;
@@ -147,9 +149,34 @@ public class Sequel implements Iterable<Sequel>
 
 	private int			updateCount		= N_A;
 
-	public Sequel(Statement statement, boolean resultSet)
+	public Sequel(SQLKit kit, Statement statement, boolean resultSet)
 	{
-		this.setStatement(statement).hasResultSetObject(resultSet).refreshUpdateCount();
+		this.setKit(kit).setStatement(statement).hasResultSetObject(resultSet).refreshUpdateCount();
+	}
+
+	public Sequel close() throws SQLException
+	{
+		if (statement != null)
+		{
+			kit.closeStatement(statement);
+			kit = null;
+			statement = null;
+		}
+		return this;
+	}
+
+	public Sequel closeResultSet() throws SQLException
+	{
+		if (this.isResultSet())
+		{
+			this.getResultSet().close();
+		}
+		return this;
+	}
+
+	public SQLKit getKit()
+	{
+		return kit;
 	}
 
 	public JSAN getNextRowAsJSAN()
@@ -1240,6 +1267,11 @@ public class Sequel implements Iterable<Sequel>
 		return this;
 	}
 
+	public boolean isClosed()
+	{
+		return statement == null;
+	}
+
 	public boolean isResultSet()
 	{
 		return this.getResultSet() != null;
@@ -1334,6 +1366,12 @@ public class Sequel implements Iterable<Sequel>
 		{
 			this.updateCount = N_A;
 		}
+		return this;
+	}
+
+	private Sequel setKit(SQLKit kit)
+	{
+		this.kit = kit;
 		return this;
 	}
 

@@ -823,6 +823,36 @@ public class SQLKit
 		}
 	}
 
+	public SQLKit clean()
+	{
+		if (statement != null)
+		{
+			try
+			{
+				clearBatch(statement);
+			}
+			catch (SQLException e)
+			{
+			}
+			statement = null;
+		}
+		if (statements != null)
+		{
+			for (Statement s : statements.values())
+			{
+				try
+				{
+					s.close();
+				}
+				catch (SQLException e)
+				{
+				}
+			}
+			statements.clear();
+		}
+		return this;
+	}
+
 	public void clearBatch() throws SQLException
 	{
 		this.clearBatch(statement);
@@ -838,25 +868,40 @@ public class SQLKit
 
 	public void close()
 	{
-		statement = null;
-		if (statements != null)
-		{
-			for (Statement s : statements.values())
-			{
-				try
-				{
-					s.close();
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
-			}
-			statements.clear();
-			statements = null;
-		}
+		clean();
+		statements = null;
 		this.getSource().close(this);
 		connection = null;
+	}
+
+	public SQLKit closeStatement() throws SQLException
+	{
+		return closeStatement(statement);
+	}
+
+	public SQLKit closeStatement(Statement statement) throws SQLException
+	{
+		if (statement != null)
+		{
+			String sql = null;
+
+			for (Entry<String, Statement> entry : this.getStatements().entrySet())
+			{
+				if (Tools.equals(statement, entry.getValue()))
+				{
+					sql = entry.getKey();
+					break;
+				}
+			}
+
+			if (sql != null)
+			{
+				this.getStatements().remove(sql);
+			}
+
+			statement.close();
+		}
+		return this;
 	}
 
 	public void commit() throws SQLException
@@ -925,17 +970,17 @@ public class SQLKit
 
 	public Sequel execute(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(statement, fillParameters(statement, params).execute());
+		return new Sequel(this, statement, fillParameters(statement, params).execute());
 	}
 
 	public Sequel execute(PreparedStatement statement, Object... params) throws SQLException
 	{
-		return new Sequel(statement, fillParameters(statement, params).execute());
+		return new Sequel(this, statement, fillParameters(statement, params).execute());
 	}
 
 	public Sequel execute(Statement statement, String sql) throws SQLException
 	{
-		return new Sequel(statement, statement.execute(sql));
+		return new Sequel(this, statement, statement.execute(sql));
 	}
 
 	public Sequel execute(String sql) throws SQLException
