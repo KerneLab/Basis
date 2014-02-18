@@ -18,12 +18,12 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public ConnectionPool(ConnectionFactory factory, int limit)
 	{
-		this(factory, limit, false);
+		this(factory, limit, true);
 	}
 
 	public ConnectionPool(ConnectionFactory factory, int limit, boolean lazy)
 	{
-		super(limit);
+		super(limit, lazy);
 		this.setFactory(factory);
 	}
 
