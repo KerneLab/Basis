@@ -34,12 +34,13 @@ import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.kernelab.basis.JSON.Context;
 import org.kernelab.basis.io.DataReader;
 import org.kernelab.basis.test.TestBean;
 
 interface Hierarchical extends Copieable<Hierarchical>
 {
-	public JSON context();
+	public Context context();
 
 	public String entry();
 
@@ -264,7 +265,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return new Function(this);
 		}
 
-		public JSON context()
+		public Context context()
 		{
 			return outer == null ? null : outer.context();
 		}
@@ -3520,7 +3521,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return new Quotation(this).outer(null).entry(null);
 		}
 
-		public JSON context()
+		public Context context()
 		{
 			return outer == null ? null : outer.context();
 		}
@@ -3660,6 +3661,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		ESCAPED_CHAR.put('\n', "\\n");
 		ESCAPED_CHAR.put('\r', "\\r");
 		ESCAPED_CHAR.put('\t', "\\t");
+	}
+
+	public static final Context AsContext(Object o)
+	{
+		return Tools.as(o, Context.class);
 	}
 
 	public static final Function AsFunction(Object o)
@@ -5910,22 +5916,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return object().containsValue(value);
 	}
 
-	public JSON context()
+	public Context context()
 	{
-		JSON context = this;
 		JSON outer = this;
 
-		do
+		while (outer.outer() != null)
 		{
 			outer = outer.outer();
-			if (IsContext(outer))
-			{
-				context = outer;
+
+			if (outer == this)
+			{ // Avoid loop reference.
 				break;
 			}
-		} while (outer != null);
+		}
 
-		return context;
+		return AsContext(outer);
 	}
 
 	public String entry()
