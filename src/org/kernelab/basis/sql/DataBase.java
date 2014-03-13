@@ -1,5 +1,7 @@
 package org.kernelab.basis.sql;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -9,9 +11,13 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.kernelab.basis.Copieable;
 import org.kernelab.basis.Relation;
+import org.kernelab.basis.Tools;
+import org.kernelab.basis.io.DataReader;
 
 /**
  * The DataBase class is an abstract of database support.
@@ -748,6 +754,271 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		public OracleClassic setServerMode(String serverMode)
 		{
 			this.serverMode = serverMode;
+			return this;
+		}
+	}
+
+	public static class OracleClient extends DataBase
+	{
+		static class TNSNamesReader extends DataReader
+		{
+			private static final char	COMMENT	= '#';
+
+			private static final char	BEGIN	= '(';
+
+			private static final char	END		= ')';
+
+			private static final String	PATTERN	= "^(\\S+?)\\s*?=\\s*?(.+)$";
+
+			private String				sid		= null;
+
+			private String				tns		= null;
+
+			private StringBuilder		buffer	= new StringBuilder();
+
+			private boolean				started	= false;
+
+			TNSNamesReader(String sid)
+			{
+				this.sid = sid;
+			}
+
+			String getTNS()
+			{
+				return tns;
+			}
+
+			@Override
+			protected void readFinished()
+			{
+
+			}
+
+			@Override
+			protected void readLine(CharSequence line)
+			{
+				if (sid == null)
+				{
+					this.setReading(false);
+				}
+				else
+				{
+					String text = line.toString().trim();
+
+					if (text.length() > 0 && text.charAt(0) != COMMENT)
+					{
+						buffer.append(text);
+
+						if (!started)
+						{
+							started = true;
+						}
+						else
+						{
+							if (Tools.seekIndex(buffer, BEGIN) != -1
+									&& Tools.dualMatchCount(buffer, BEGIN, END, 0) == 0)
+							{
+								Matcher matcher = Pattern.compile(PATTERN, Pattern.DOTALL).matcher(buffer);
+
+								if (matcher.matches())
+								{
+									String key = matcher.group(1).trim().toUpperCase();
+									String value = matcher.group(2).trim();
+									if (Tools.equals(sid, key))
+									{
+										this.tns = value;
+										this.setReading(false);
+									}
+								}
+
+								started = false;
+								Tools.clearStringBuilder(buffer);
+							}
+						}
+					}
+				}
+			}
+
+			@Override
+			protected void readPrepare()
+			{
+
+			}
+		}
+
+		public static String	DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
+
+		public static int		DEFAULT_PORT_NUMBER	= 1521;
+
+		public static String getDefaultOracleSID()
+		{
+			String sid = null;
+			try
+			{
+				sid = System.getenv("ORACLE_SID");
+			}
+			catch (Exception e)
+			{
+			}
+			return sid;
+		}
+
+		public static String getDefaultTNSFilePath()
+		{
+			String path = null;
+
+			try
+			{
+				String home = System.getenv("ORACLE_HOME");
+
+				if (home != null)
+				{
+					File network = new File(home, "network");
+
+					if (!network.isDirectory())
+					{
+						network = new File(home, "NETWORK");
+					}
+
+					if (network.isDirectory())
+					{
+						File admin = new File(network, "admin");
+
+						if (!admin.isDirectory())
+						{
+							admin = new File(network, "ADMIN");
+						}
+
+						if (admin.isDirectory())
+						{
+							File tns = new File(admin, "tnsnames.ora");
+
+							if (!tns.isFile())
+							{
+								tns = new File(admin, "TNSNAMES.ORA");
+							}
+
+							if (tns.isFile())
+							{
+								path = tns.getCanonicalPath();
+							}
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+
+			return path;
+		}
+
+		private File	file;
+
+		public OracleClient()
+		{
+			super();
+		}
+
+		public OracleClient(String serverName, int portNumber, String catalog, Map<String, Object> information)
+		{
+			super(serverName, portNumber, catalog, information);
+		}
+
+		public OracleClient(String serverName, int portNumber, String catalog, String userName, String passWord)
+		{
+			super(serverName, portNumber, catalog, userName, passWord);
+		}
+
+		public OracleClient(String userName, String passWord)
+		{
+			this(null, userName, passWord);
+		}
+
+		public OracleClient(String catalog, String userName, String passWord)
+		{
+			this(null, catalog, userName, passWord);
+		}
+
+		public OracleClient(String serverName, String catalog, String userName, String passWord)
+		{
+			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
+		}
+
+		@Override
+		public String getDriverName()
+		{
+			return DRIVER_CLASS_NAME;
+		}
+
+		@Override
+		public String getURL()
+		{
+			String url = null;
+
+			TNSNamesReader reader = new TNSNamesReader(this.getCatalog());
+
+			try
+			{
+				reader.setDataFile(file).read();
+
+				String tns = reader.getTNS();
+
+				if (tns == null)
+				{
+					throw new RuntimeException("TNS identifier was missing: " + this.getCatalog());
+				}
+				else
+				{
+					url = "jdbc:oracle:thin:@" + tns;
+				}
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+
+			return url;
+		}
+
+		@Override
+		public OracleClient setCatalog(String sid)
+		{
+			if (sid == null)
+			{
+				sid = getDefaultOracleSID();
+			}
+
+			if (sid != null)
+			{
+				super.setCatalog(sid.trim().toUpperCase());
+			}
+			else
+			{
+				throw new RuntimeException("TNS identifier must not be null");
+			}
+
+			return this;
+		}
+
+		@Override
+		public OracleClient setServerName(String filePath)
+		{
+			if (filePath == null)
+			{
+				filePath = getDefaultTNSFilePath();
+			}
+
+			super.setServerName(filePath);
+
+			file = new File(filePath);
+
+			if (!file.isFile())
+			{
+				throw new RuntimeException("TNS names file could not be found: " + filePath);
+			}
+
 			return this;
 		}
 	}
