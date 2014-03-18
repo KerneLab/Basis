@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON.Context;
 import org.kernelab.basis.io.DataReader;
-import org.kernelab.basis.test.TestBean;
 
 interface Hierarchical extends Copieable<Hierarchical>
 {
@@ -3314,8 +3313,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			int quoteLength = quote.length() - 1;
 			if (quote.charAt(quoteLength) == NESTED_ATTRIBUTE_END)
 			{
-				int begin = JSON
-						.ReverseDualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, quoteLength);
+				int begin = JSON.LastDualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, quoteLength);
 				outer = JSON.AsJSON(Quote(context, quote.substring(0, begin)));
 				if (outer != null)
 				{
@@ -3593,30 +3591,38 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	 * 
 	 */
 	private static final long						serialVersionUID		= 6090747632739206720L;
+
 	public static final char						OBJECT_BEGIN_CHAR		= '{';
-
 	public static final String						OBJECT_BEGIN_MARK		= String.valueOf(OBJECT_BEGIN_CHAR);
+
 	public static final char						OBJECT_END_CHAR			= '}';
-
 	public static final String						OBJECT_END_MARK			= String.valueOf(OBJECT_END_CHAR);
+
 	public static final char						ARRAY_BEGIN_CHAR		= '[';
-
 	public static final String						ARRAY_BEGIN_MARK		= String.valueOf(ARRAY_BEGIN_CHAR);
+
 	public static final char						ARRAY_END_CHAR			= ']';
-
 	public static final String						ARRAY_END_MARK			= String.valueOf(ARRAY_END_CHAR);
+
 	public static final char						PAIR_CHAR				= ',';
-
 	public static final String						PAIR_MARK				= String.valueOf(PAIR_CHAR);
+
 	public static final char						ATTR_CHAR				= ':';
-
 	public static final String						ATTR_MARK				= String.valueOf(ATTR_CHAR);
+
 	public static final char						QUOTE_CHAR				= '"';
-
 	public static final String						QUOTE_MARK				= String.valueOf(QUOTE_CHAR);
-	public static final char						ESCAPE_CHAR				= '\\';
 
+	public static final char						ESCAPE_CHAR				= '\\';
 	public static final String						ESCAPE_MARK				= String.valueOf(ESCAPE_CHAR);
+
+	public static final char						COMMENT_CHAR			= '/';
+
+	public static final char						LINE_COMMENT_CHAR		= COMMENT_CHAR;
+
+	public static final char						BLOCK_COMMENT_CHAR		= '*';
+
+	public static final String						BLOCK_COMMENT_END		= BLOCK_COMMENT_CHAR + "" + COMMENT_CHAR;
 
 	public static final int							NOT_BEGIN				= -1;
 
@@ -4090,9 +4096,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		boolean inString = false;
 
+		char c;
+
 		i: for (int i = Math.max(0, from); i < sequence.length(); i++)
 		{
-			char c = sequence.charAt(i);
+			c = sequence.charAt(i);
 
 			if (c == ESCAPE_CHAR)
 			{
@@ -4114,6 +4122,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			if (inString)
 			{
+				continue i;
+			}
+
+			if (c == COMMENT_CHAR)
+			{
+				i = EndOfComment(sequence, i);
 				continue i;
 			}
 
@@ -4137,9 +4151,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		boolean inString = false;
 
+		char c;
+
 		i: for (int i = Math.max(0, from); i < sequence.length(); i++)
 		{
-			char c = sequence.charAt(i);
+			c = sequence.charAt(i);
 
 			if (c == ESCAPE_CHAR)
 			{
@@ -4164,6 +4180,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				continue i;
 			}
 
+			if (c == COMMENT_CHAR)
+			{
+				i = EndOfComment(sequence, i);
+				continue i;
+			}
+
 			if (c == a)
 			{
 				match--;
@@ -4180,6 +4202,50 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		return index;
+	}
+
+	public static int EndOfComment(CharSequence sequence, int start)
+	{
+		int end = NOT_BEGIN;
+
+		char c = sequence.charAt(start);
+
+		if (c == COMMENT_CHAR)
+		{
+			try
+			{
+				c = sequence.charAt(start + 1);
+
+				switch (c)
+				{
+					case LINE_COMMENT_CHAR:
+						end = Tools.seekIndex(sequence, '\n', start + 2);
+						if (end == NOT_BEGIN)
+						{
+							end = Tools.seekIndex(sequence, '\r', start + 2);
+						}
+						break;
+
+					case BLOCK_COMMENT_CHAR:
+						end = Tools.seekIndex(sequence, BLOCK_COMMENT_END, start + 2);
+						if (end != NOT_BEGIN)
+						{
+							end += BLOCK_COMMENT_END.length() - 1;
+						}
+						break;
+				}
+
+				if (end == NOT_BEGIN)
+				{
+					end = sequence.length() - 1;
+				}
+			}
+			catch (IndexOutOfBoundsException e)
+			{
+			}
+		}
+
+		return end;
 	}
 
 	public static String EscapeString(String string)
@@ -4260,33 +4326,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static final int FirstNonWhitespaceIndex(CharSequence sequence, int from)
 	{
-		int index = -1;
-
+		int index = NOT_BEGIN;
+		char c;
 		int code;
 
 		for (int i = from; i < sequence.length(); i++)
 		{
-			code = sequence.charAt(i);
-			if (!Character.isWhitespace(code) && !Character.isSpaceChar(code))
+			code = (c = sequence.charAt(i));
+
+			if (c == COMMENT_CHAR)
 			{
-				index = i;
-				break;
+				i = EndOfComment(sequence, i);
+				continue;
 			}
-		}
 
-		return index;
-	}
-
-	public static final int FirstWhitespaceIndex(CharSequence sequence, int from)
-	{
-		int index = -1;
-
-		int code;
-
-		for (int i = from; i < sequence.length(); i++)
-		{
-			code = sequence.charAt(i);
-			if (Character.isWhitespace(code) || Character.isSpaceChar(code))
+			if (!Character.isWhitespace(code) && !Character.isSpaceChar(code))
 			{
 				index = i;
 				break;
@@ -4384,35 +4438,55 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return keys;
 	}
 
-	public static final int LastNonWhitespaceIndex(CharSequence sequence, int from)
+	public static int LastDualMatchIndex(CharSequence sequence, char a, char b, int from)
 	{
-		int index = -1;
+		int index = NOT_BEGIN;
+		int match = 0;
 
-		int code;
+		boolean inString = false;
 
-		for (int i = from; i >= 0; i--)
+		i: for (int i = Math.min(sequence.length() - 1, from); i >= 0; i--)
 		{
-			code = sequence.charAt(i);
-			if (!Character.isWhitespace(code) && !Character.isSpaceChar(code))
+			char c = sequence.charAt(i);
+
+			if (c == QUOTE_CHAR && i > 0 && sequence.charAt(i - 1) != ESCAPE_CHAR)
 			{
-				index = i;
-				break;
+				inString = !inString;
+			}
+			if (inString)
+			{
+				continue i;
+			}
+
+			if (c == b)
+			{
+				match++;
+			}
+			else if (c == a)
+			{
+				match--;
+				if (match == 0)
+				{
+					index = i;
+					break;
+				}
 			}
 		}
 
 		return index;
 	}
 
-	public static final int LastWhitespaceIndex(CharSequence sequence, int from)
+	public static final int LastNonWhitespaceIndex(CharSequence sequence, int from)
 	{
-		int index = -1;
+		int index = NOT_BEGIN;
 
 		int code;
 
 		for (int i = from; i >= 0; i--)
 		{
 			code = sequence.charAt(i);
-			if (Character.isWhitespace(code) || Character.isSpaceChar(code))
+
+			if (!Character.isWhitespace(code) && !Character.isSpaceChar(code))
 			{
 				index = i;
 				break;
@@ -4427,9 +4501,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		TestBean b = new TestBean("id", "name", 1, true);
+		String s = "  /*fkdk\nkks*/ //ssf\n  {\"k\"//s\n:1}  /*fkdk\nkks*/ //sfdkk\n /*fkdk\nkks*/ ";
 
-		Project(b, new JSON());
+		Tools.debug(s);
+
+		JSON j = JSON.Parse(s);
+
+		Tools.debug(j.toString(0));
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -4445,6 +4523,28 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	public static JSON Parse(CharSequence source, JSON object, Context context)
 	{
 		String string = null;
+
+		Matcher tailLineComment = Pattern.compile("//.*?$").matcher("");
+		Matcher tailBlockComment = Pattern.compile("(.*)/\\*.*?\\*/\\s*?$", Pattern.DOTALL).matcher("");
+
+		boolean tailCommented = false;
+
+		do
+		{
+			tailCommented = false;
+
+			if (tailLineComment.reset(source).find())
+			{
+				source = tailLineComment.replaceFirst("").trim();
+				tailCommented = true;
+			}
+
+			if (tailBlockComment.reset(source).find())
+			{
+				source = tailBlockComment.replaceFirst("$1").trim();
+				tailCommented = true;
+			}
+		} while (tailCommented);
 
 		try
 		{
@@ -4481,7 +4581,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		int arrayIndex = NOT_BEGIN;
-		int nail = NOT_BEGIN;
+		int nail = NOT_BEGIN, tail = NOT_BEGIN;
 
 		String entry = null;
 		Object value = NOT_A_VALUE;
@@ -4516,11 +4616,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							json.insert(i, (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX));
 						}
 						continue i;
-
 					}
 					else if (c == QUOTE_CHAR)
 					{
 						inString = !inString;
+						tail = i;
 					}
 				}
 				else
@@ -4539,6 +4639,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							{
 								nail = FirstNonWhitespaceIndex(json, i + 1);
 							}
+							tail = NOT_BEGIN;
 							break;
 
 						case OBJECT_END_CHAR:
@@ -4546,7 +4647,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							{
 								if (nail != NOT_BEGIN)
 								{
-									value = ParseValueOf(json.substring(nail, i));
+									value = ParseValueOf(json.substring(nail, tail + 1));
 								}
 								if (value != NOT_A_VALUE)
 								{
@@ -4572,12 +4673,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 								nail = FirstNonWhitespaceIndex(json, i + 1);
 								arrayIndex++;
 							}
+							tail = NOT_BEGIN;
 							break;
 
 						case ARRAY_END_CHAR:
 							if (nail != NOT_BEGIN && nail != i)
 							{
-								value = ParseValueOf(json.substring(nail, i));
+								value = ParseValueOf(json.substring(nail, tail + 1));
 							}
 							if (value != NOT_A_VALUE)
 							{
@@ -4588,7 +4690,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 						case PAIR_CHAR:
 							if (nail != NOT_BEGIN)
 							{
-								value = ParseValueOf(json.substring(nail, i));
+								value = ParseValueOf(json.substring(nail, tail + 1));
 							}
 							if (value != NOT_A_VALUE)
 							{
@@ -4600,17 +4702,23 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 								object.put(entry, value);
 							}
 							nail = FirstNonWhitespaceIndex(json, i + 1);
+							tail = NOT_BEGIN;
 							entry = null;
 							value = NOT_A_VALUE;
 							break;
 
 						case ATTR_CHAR:
-							entry = TrimQuotes(json.substring(nail, i));
+							entry = TrimQuotes(json.substring(nail, tail + 1));
 							nail = FirstNonWhitespaceIndex(json, i + 1);
+							tail = NOT_BEGIN;
 							break;
 
 						case QUOTE_CHAR:
 							inString = !inString;
+							break;
+
+						case COMMENT_CHAR:
+							i = EndOfComment(json, i);
 							break;
 
 						case Function.DEFINE_FIRST_CHAR:
@@ -4621,10 +4729,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 								i = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i);
 							}
 							break;
+
+						default:
+							if (!Character.isWhitespace(c) && !Character.isSpaceChar(c))
+							{
+								tail = i;
+							}
+							break;
 					}
 				}
 			}
-
 		}
 		catch (RuntimeException e)
 		{
@@ -5500,45 +5614,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		return reflect;
-	}
-
-	public static int ReverseDualMatchIndex(CharSequence sequence, char a, char b, int from)
-	{
-		int index = -1;
-		int match = 0;
-
-		boolean inString = false;
-
-		i: for (int i = Math.min(sequence.length() - 1, from); i >= 0; i--)
-		{
-
-			char c = sequence.charAt(i);
-
-			if (c == QUOTE_CHAR && i > 0 && sequence.charAt(i - 1) != ESCAPE_CHAR)
-			{
-				inString = !inString;
-			}
-			if (inString)
-			{
-				continue i;
-			}
-
-			if (c == b)
-			{
-				match++;
-			}
-			else if (c == a)
-			{
-				match--;
-				if (match == 0)
-				{
-					index = i;
-					break;
-				}
-			}
-		}
-
-		return index;
 	}
 
 	public static StringBuilder Serialize(JSON json, StringBuilder buffer, int indent)
