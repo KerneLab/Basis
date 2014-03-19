@@ -92,6 +92,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			private Matcher				exitMatcher			= Tools.matcher(VAR_EXIT_REGEX, Pattern.DOTALL);
 
+			private boolean				inComment			= false;
+
 			@Override
 			protected void readFinished()
 			{
@@ -101,41 +103,65 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			@Override
 			protected void readLine(CharSequence line)
 			{
-				buffer.append(line);
-				buffer.append(VAR_NEXT_LINE_CHAR);
+				int from = 0;
 
-				if (entry == null)
+				if (inComment)
 				{
-					if (entryMatcher.reset(buffer).lookingAt())
+					int end = Tools.seekIndex(line, BLOCK_COMMENT_END, from);
+
+					if (end == NOT_FOUND)
 					{
-						entry = entryMatcher.group(2);
-						line = entryMatcher.group(3);
-						Tools.clearStringBuilder(buffer);
-						buffer.append(line);
+						from = line.length();
+					}
+					else
+					{
+						from = end + BLOCK_COMMENT_END.length();
+						inComment = false;
 					}
 				}
 
-				if (entry != null)
+				if (!inComment)
 				{
-					if (exitMatcher.reset(buffer).lookingAt()
-							&& JSON.DualMatchCount(buffer, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, 0) == 0)
+					inComment = FilterComments(buffer, line, from);
+				}
+
+				if (!inComment)
+				{
+					buffer.append(VAR_NEXT_LINE_CHAR);
+
+					if (entry == null)
 					{
-						line = exitMatcher.group(1);
-						Tools.clearStringBuilder(buffer);
-						buffer.append(line);
-
-						Object object = JSON.ParseValueOf(buffer.toString());
-
-						if (object == JSON.NOT_A_VALUE)
+						if (entryMatcher.reset(buffer).lookingAt())
 						{
-							object = JSON.Parse(buffer, null, Context.this);
-						}
-
-						if (object != JSON.NOT_A_VALUE)
-						{
-							Quotation.Quote(Context.this, entry, object);
-							entry = null;
+							entry = entryMatcher.group(2);
+							line = entryMatcher.group(3);
 							Tools.clearStringBuilder(buffer);
+							buffer.append(line);
+						}
+					}
+
+					if (entry != null)
+					{
+						if (exitMatcher.reset(buffer).lookingAt()
+								&& JSON.DualMatchCount(buffer, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, 0) == 0)
+						{
+							line = exitMatcher.group(1);
+							Tools.clearStringBuilder(buffer);
+							buffer.append(line);
+
+							Object object = JSON.ParseValueOf(buffer.toString());
+
+							if (object == JSON.NOT_A_VALUE)
+							{
+								object = JSON.Parse(buffer, null, Context.this);
+							}
+
+							if (object != JSON.NOT_A_VALUE)
+							{
+								Quotation.Quote(Context.this, entry, object);
+								entry = null;
+								Tools.clearStringBuilder(buffer);
+							}
 						}
 					}
 				}
@@ -145,6 +171,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			protected void readPrepare()
 			{
 				entry = null;
+				inComment = false;
 			}
 		}
 
@@ -3310,6 +3337,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			JSON outer = null;
 			String entry = null;
 
+			StringBuilder buffer = new StringBuilder(quote.length());
+
+			FilterComments(buffer, quote, 0);
+
+			quote = buffer.toString();
+
 			int quoteLength = quote.length() - 1;
 			if (quote.charAt(quoteLength) == NESTED_ATTRIBUTE_END)
 			{
@@ -3578,7 +3611,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public SyntaxErrorException(CharSequence source, int index)
 		{
-			super("Near\n" + source.subSequence(Math.max(index - 30, 0), Math.min(index + 30, source.length())));
+			this("Near", source, index);
+		}
+
+		public SyntaxErrorException(String msg)
+		{
+			super(msg);
+		}
+
+		public SyntaxErrorException(String msg, CharSequence source, int index)
+		{
+			super(msg + "\n" + source.subSequence(Math.max(index - 10, 0), Math.min(index + 10, source.length())));
 		}
 	}
 
@@ -3624,7 +3667,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static final String						BLOCK_COMMENT_END		= BLOCK_COMMENT_CHAR + "" + COMMENT_CHAR;
 
-	public static final int							NOT_BEGIN				= -1;
+	public static final int							NOT_FOUND				= -1;
 
 	public static final Object						NOT_A_VALUE				= new String("NOT A VALUE");
 
@@ -4128,6 +4171,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			if (c == COMMENT_CHAR)
 			{
 				i = EndOfComment(sequence, i);
+				if (i == NOT_FOUND)
+				{
+					i = sequence.length() - 1;
+				}
 				continue i;
 			}
 
@@ -4183,6 +4230,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			if (c == COMMENT_CHAR)
 			{
 				i = EndOfComment(sequence, i);
+				if (i == NOT_FOUND)
+				{
+					i = sequence.length() - 1;
+				}
 				continue i;
 			}
 
@@ -4206,7 +4257,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static int EndOfComment(CharSequence sequence, int start)
 	{
-		int end = NOT_BEGIN;
+		int end = NOT_FOUND;
 
 		char c = sequence.charAt(start);
 
@@ -4220,7 +4271,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				{
 					case LINE_COMMENT_CHAR:
 						end = Tools.seekIndex(sequence, '\n', start + 2);
-						if (end == NOT_BEGIN)
+						if (end == NOT_FOUND)
 						{
 							end = Tools.seekIndex(sequence, '\r', start + 2);
 						}
@@ -4228,20 +4279,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 					case BLOCK_COMMENT_CHAR:
 						end = Tools.seekIndex(sequence, BLOCK_COMMENT_END, start + 2);
-						if (end != NOT_BEGIN)
+						if (end != NOT_FOUND)
 						{
 							end += BLOCK_COMMENT_END.length() - 1;
 						}
 						break;
 				}
-
-				if (end == NOT_BEGIN)
-				{
-					end = sequence.length() - 1;
-				}
 			}
 			catch (IndexOutOfBoundsException e)
 			{
+				throw new SyntaxErrorException(sequence, start);
 			}
 		}
 
@@ -4324,9 +4371,69 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return fields;
 	}
 
+	public static boolean FilterComments(StringBuilder buffer, CharSequence seq, int from)
+	{
+		boolean inComment = false;
+
+		if (seq == null)
+		{
+			return inComment;
+		}
+		else
+		{
+			if (buffer == null)
+			{
+				buffer = new StringBuilder(seq.length());
+			}
+
+			boolean inString = false;
+
+			char c, l = 0;
+
+			for (int i = from; i < seq.length(); i++)
+			{
+				c = seq.charAt(i);
+
+				if (c == QUOTE_CHAR && l != ESCAPE_CHAR)
+				{
+					inString = !inString;
+				}
+				else if (c == COMMENT_CHAR && !inString)
+				{
+					int end = EndOfComment(seq, i);
+
+					if (end == NOT_FOUND)
+					{
+						end = seq.length() - 1;
+
+						try
+						{
+							if (seq.charAt(i + 1) == BLOCK_COMMENT_CHAR)
+							{
+								inComment = true;
+							}
+						}
+						catch (IndexOutOfBoundsException e)
+						{
+							throw new SyntaxErrorException(seq, i);
+						}
+					}
+
+					i = end;
+					continue;
+				}
+
+				buffer.append(c);
+				l = c;
+			}
+
+			return inComment;
+		}
+	}
+
 	public static final int FirstNonWhitespaceIndex(CharSequence sequence, int from)
 	{
-		int index = NOT_BEGIN;
+		int index = NOT_FOUND;
 		char c;
 		int code;
 
@@ -4337,6 +4444,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			if (c == COMMENT_CHAR)
 			{
 				i = EndOfComment(sequence, i);
+				if (i == NOT_FOUND)
+				{
+					i = sequence.length() - 1;
+				}
 				continue;
 			}
 
@@ -4440,7 +4551,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static int LastDualMatchIndex(CharSequence sequence, char a, char b, int from)
 	{
-		int index = NOT_BEGIN;
+		int index = NOT_FOUND;
 		int match = 0;
 
 		boolean inString = false;
@@ -4476,38 +4587,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return index;
 	}
 
-	public static final int LastNonWhitespaceIndex(CharSequence sequence, int from)
-	{
-		int index = NOT_BEGIN;
-
-		int code;
-
-		for (int i = from; i >= 0; i--)
-		{
-			code = sequence.charAt(i);
-
-			if (!Character.isWhitespace(code) && !Character.isSpaceChar(code))
-			{
-				index = i;
-				break;
-			}
-		}
-
-		return index;
-	}
-
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args)
 	{
-		String s = "  /*fkdk\nkks*/ //ssf\n  {\"k\"//s\n:1}  /*fkdk\nkks*/ //sfdkk\n /*fkdk\nkks*/ ";
 
-		Tools.debug(s);
-
-		JSON j = JSON.Parse(s);
-
-		Tools.debug(j.toString(0));
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -4524,42 +4609,32 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		String string = null;
 
-		Matcher tailLineComment = Pattern.compile("//.*?$").matcher("");
-		Matcher tailBlockComment = Pattern.compile("(.*)/\\*.*?\\*/\\s*?$", Pattern.DOTALL).matcher("");
+		int begin = FirstNonWhitespaceIndex(source, 0);
 
-		boolean tailCommented = false;
+		int end = NOT_FOUND;
 
-		do
+		if (begin != NOT_FOUND)
 		{
-			tailCommented = false;
-
-			if (tailLineComment.reset(source).find())
+			char c = source.charAt(begin);
+			switch (c)
 			{
-				source = tailLineComment.replaceFirst("").trim();
-				tailCommented = true;
-			}
+				case OBJECT_BEGIN_CHAR:
+					end = DualMatchIndex(source, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, begin);
+					break;
 
-			if (tailBlockComment.reset(source).find())
-			{
-				source = tailBlockComment.replaceFirst("$1").trim();
-				tailCommented = true;
+				case ARRAY_BEGIN_CHAR:
+					end = DualMatchIndex(source, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, begin);
+					break;
 			}
-		} while (tailCommented);
-
-		try
-		{
-			string = source.subSequence(FirstNonWhitespaceIndex(source, 0),
-					LastNonWhitespaceIndex(source, source.length() - 1) + 1).toString();
-		}
-		catch (StringIndexOutOfBoundsException e)
-		{
 		}
 
-		if (string == null
-				|| (!(string.startsWith(OBJECT_BEGIN_MARK) && string.endsWith(OBJECT_END_MARK)) && !(string
-						.startsWith(ARRAY_BEGIN_MARK) && string.endsWith(ARRAY_END_MARK))))
+		if (begin == NOT_FOUND || end == NOT_FOUND)
 		{
-			return null;
+			throw new SyntaxErrorException("Illegal begin/end mark", source, 0);
+		}
+		else
+		{
+			string = source.subSequence(begin, end + 1).toString();
 		}
 
 		StringBuilder json = new StringBuilder(string);
@@ -4580,8 +4655,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 		}
 
-		int arrayIndex = NOT_BEGIN;
-		int nail = NOT_BEGIN, tail = NOT_BEGIN;
+		int arrayIndex = NOT_FOUND;
+		int nail = NOT_FOUND, tail = NOT_FOUND;
 
 		String entry = null;
 		Object value = NOT_A_VALUE;
@@ -4630,22 +4705,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 						case OBJECT_BEGIN_CHAR:
 							if (i != 0)
 							{
-								int match = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i);
-								value = Parse(json.substring(i, match + 1), new JSON(), context);
-								i = match;
-								nail = NOT_BEGIN;
+								tail = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i);
+								value = Parse(json.substring(i, tail + 1), new JSON(), context);
+								i = tail;
+								tail = (nail = NOT_FOUND);
 							}
 							else
 							{
-								nail = FirstNonWhitespaceIndex(json, i + 1);
+								tail = (nail = FirstNonWhitespaceIndex(json, i + 1));
 							}
-							tail = NOT_BEGIN;
 							break;
 
 						case OBJECT_END_CHAR:
 							if (entry != null)
 							{
-								if (nail != NOT_BEGIN)
+								if (nail != NOT_FOUND)
 								{
 									value = ParseValueOf(json.substring(nail, tail + 1));
 								}
@@ -4657,27 +4731,27 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							break i;
 
 						case ARRAY_BEGIN_CHAR:
-							if (nail != NOT_BEGIN && nail != i)
+							if (nail != NOT_FOUND && nail != i)
 							{
-								i = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i);
+								i = (tail = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i));
 							}
 							else if (i != 0)
 							{
-								int match = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i);
-								value = Parse(json.substring(i, match + 1), new JSAN(), context);
-								i = match;
-								nail = NOT_BEGIN;
+								tail = DualMatchIndex(json, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, i);
+								value = Parse(json.substring(i, tail + 1), new JSAN(), context);
+								i = tail;
+								nail = NOT_FOUND;
+								tail = NOT_FOUND;
 							}
 							else
 							{
-								nail = FirstNonWhitespaceIndex(json, i + 1);
+								tail = (nail = FirstNonWhitespaceIndex(json, i + 1));
 								arrayIndex++;
 							}
-							tail = NOT_BEGIN;
 							break;
 
 						case ARRAY_END_CHAR:
-							if (nail != NOT_BEGIN && nail != i)
+							if (nail != NOT_FOUND && nail != i)
 							{
 								value = ParseValueOf(json.substring(nail, tail + 1));
 							}
@@ -4688,29 +4762,27 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							break i;
 
 						case PAIR_CHAR:
-							if (nail != NOT_BEGIN)
+							if (nail != NOT_FOUND)
 							{
 								value = ParseValueOf(json.substring(nail, tail + 1));
 							}
 							if (value != NOT_A_VALUE)
 							{
-								if (arrayIndex > NOT_BEGIN)
+								if (arrayIndex > NOT_FOUND)
 								{
 									entry = JSAN.Index(arrayIndex);
 									arrayIndex++;
 								}
 								object.put(entry, value);
 							}
-							nail = FirstNonWhitespaceIndex(json, i + 1);
-							tail = NOT_BEGIN;
+							tail = (nail = FirstNonWhitespaceIndex(json, i + 1));
 							entry = null;
 							value = NOT_A_VALUE;
 							break;
 
 						case ATTR_CHAR:
 							entry = TrimQuotes(json.substring(nail, tail + 1));
-							nail = FirstNonWhitespaceIndex(json, i + 1);
-							tail = NOT_BEGIN;
+							tail = (nail = FirstNonWhitespaceIndex(json, i + 1));
 							break;
 
 						case QUOTE_CHAR:
@@ -4719,6 +4791,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 						case COMMENT_CHAR:
 							i = EndOfComment(json, i);
+							if (i == NOT_FOUND)
+							{
+								i = json.length() - 1;
+							}
 							break;
 
 						case Function.DEFINE_FIRST_CHAR:
@@ -4726,9 +4802,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 									&& Function.DEFINE_MARK.equals(json.substring(i,
 											Math.min(json.length(), i + Function.DEFINE_MARK.length()))))
 							{
-								i = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i);
+								i = (tail = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i));
 							}
-							break;
 
 						default:
 							if (!Character.isWhitespace(c) && !Character.isSpaceChar(c))
@@ -4739,6 +4814,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					}
 				}
 			}
+		}
+		catch (SyntaxErrorException e)
+		{
+			throw e;
 		}
 		catch (RuntimeException e)
 		{
