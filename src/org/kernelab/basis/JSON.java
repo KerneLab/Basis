@@ -88,9 +88,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			private StringBuilder		buffer				= new StringBuilder();
 
-			private Matcher				entryMatcher		= Tools.matcher(VAR_ENTRY_REGEX, Pattern.DOTALL);
+			private Matcher				entryMatcher		= VAR_ENTRY_PATTERN.matcher("");
 
-			private Matcher				exitMatcher			= Tools.matcher(VAR_EXIT_REGEX, Pattern.DOTALL);
+			private Matcher				exitMatcher			= VAR_EXIT_PATTERN.matcher("");
 
 			private boolean				inComment			= false;
 
@@ -192,9 +192,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static final String		VAR_END_MARK		= String.valueOf(VAR_END_CHAR);
 
-		public static final String		VAR_ENTRY_REGEX		= "^\\s*?(var\\s+)?\\s*?(\\w+)\\s*?=\\s*(.*);?\\s*$";
+		public static final Pattern		VAR_ENTRY_PATTERN	= Pattern.compile(
+																	"^\\s*?(var\\s+)?\\s*?(\\w+)\\s*?=\\s*(.*);?\\s*$",
+																	Pattern.DOTALL);
 
-		public static final String		VAR_EXIT_REGEX		= "^\\s*(.*?)\\s*;\\s*$";
+		public static final Pattern		VAR_EXIT_PATTERN	= Pattern.compile("^\\s*(.*?)\\s*;\\s*$", Pattern.DOTALL);
 
 		private transient DataReader	reader;
 
@@ -261,7 +263,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public static final char	DEFINE_FIRST_CHAR	= 'f';
 
-		public static final String	DEFINE_REGEX		= "^(function)\\s*?([^(]*?)(\\()([^)]*?)(\\))";
+		public static final Pattern	DEFINE_PATTERN		= Pattern.compile("^(function)\\s*?([^(]*?)(\\()([^)]*?)(\\))");
 
 		public static final String	DEFAULT_NAME_PREFIX	= "_";
 
@@ -335,7 +337,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		protected Function expression(String expression)
 		{
-			Matcher matcher = Tools.matcher(DEFINE_REGEX, expression);
+			Matcher matcher = DEFINE_PATTERN.matcher(expression);
 
 			if (matcher.find())
 			{
@@ -403,7 +405,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public String toString(String name)
 		{
-			return expression().replaceFirst(DEFINE_REGEX, "$1 " + (name == null ? name() : name.trim()) + "$3$4$5");
+			return DEFINE_PATTERN.matcher(expression()).replaceFirst(
+					"$1 " + (name == null ? name() : name.trim()) + "$3$4$5");
 		}
 	}
 
@@ -4611,41 +4614,22 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		int begin = FirstNonWhitespaceIndex(source, 0);
 
-		int end = NOT_FOUND;
-
-		if (begin != NOT_FOUND)
+		if (begin == NOT_FOUND)
 		{
-			char c = source.charAt(begin);
-			switch (c)
-			{
-				case OBJECT_BEGIN_CHAR:
-					end = DualMatchIndex(source, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, begin);
-					break;
-
-				case ARRAY_BEGIN_CHAR:
-					end = DualMatchIndex(source, ARRAY_BEGIN_CHAR, ARRAY_END_CHAR, begin);
-					break;
-			}
+			return null;
 		}
 
-		if (begin == NOT_FOUND || end == NOT_FOUND)
-		{
-			throw new SyntaxErrorException("Illegal begin/end mark", source, 0);
-		}
-		else
-		{
-			string = source.subSequence(begin, end + 1).toString();
-		}
+		string = source.subSequence(begin, source.length()).toString();
 
 		StringBuilder json = new StringBuilder(string);
 
 		if (object == null)
 		{
-			if (string.startsWith(ARRAY_BEGIN_MARK) && string.endsWith(ARRAY_END_MARK))
+			if (string.startsWith(ARRAY_BEGIN_MARK))
 			{
 				object = new JSAN();
 			}
-			else if (string.startsWith(OBJECT_BEGIN_MARK) && string.endsWith(OBJECT_END_MARK))
+			else if (string.startsWith(OBJECT_BEGIN_MARK))
 			{
 				object = new JSON();
 			}
