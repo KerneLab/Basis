@@ -2,8 +2,9 @@ package org.kernelab.basis;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON.JSAN;
@@ -12,9 +13,304 @@ public class Arbiter
 {
 	public static interface ConditionInterpreter
 	{
-		public boolean identify(Object value, String condition);
+		/**
+		 * To identify whether this interpreter could interpret the condition.
+		 * 
+		 * @param condition
+		 * @param value
+		 * @param key
+		 * @param object
+		 * @return true if this interpreter could interpret the condition,
+		 *         otherwise false.
+		 */
+		public boolean identify(String condition, Object value, String key, JSON object);
 
-		public boolean judge(Object value, String condition);
+		/**
+		 * To judge whether this condition is true or false according to the
+		 * given value and other information.
+		 * 
+		 * @param condition
+		 * @param value
+		 * @param key
+		 * @param object
+		 * @return true if the condition is true, otherwise false.
+		 */
+		public boolean judge(String condition, Object value, String key, JSON object);
+	}
+
+	public static class DefinedConditionInterpreter implements ConditionInterpreter
+	{
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return Tools.equals("=#", condition);
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			return object.has(key);
+		}
+	}
+
+	public static class EqualConditionInterpreter implements ConditionInterpreter
+	{
+		public static final Pattern	PATTERN	= Pattern.compile("==([\\d\\D]+)");
+
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return (value instanceof Number || value instanceof String || value instanceof Boolean)
+					&& PATTERN.matcher(condition).matches();
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			boolean judge = false;
+
+			Matcher matcher = PATTERN.matcher(condition);
+
+			if (matcher.matches())
+			{
+				String s = value.toString();
+				if (value instanceof Number)
+				{
+					judge = Double.valueOf(s).compareTo(Double.valueOf(matcher.group(1))) == 0;
+				}
+				else
+				{
+					judge = s.compareTo(matcher.group(1)) == 0;
+				}
+			}
+
+			return judge;
+		}
+	}
+
+	public static class GreaterConditionInterpreter implements ConditionInterpreter
+	{
+		public static final Pattern	PATTERN	= Pattern.compile(">([\\d\\D]+)");
+
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return (value instanceof Number || value instanceof String) && PATTERN.matcher(condition).matches();
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			boolean judge = false;
+
+			Matcher matcher = PATTERN.matcher(condition);
+
+			if (matcher.matches())
+			{
+				String s = value.toString();
+				if (value instanceof Number)
+				{
+					judge = Double.valueOf(s).compareTo(Double.valueOf(matcher.group(1))) > 0;
+				}
+				else
+				{
+					judge = s.compareTo(matcher.group(1)) > 0;
+				}
+			}
+
+			return judge;
+		}
+	}
+
+	public static class GreaterEqualConditionInterpreter implements ConditionInterpreter
+	{
+		public static final Pattern	PATTERN	= Pattern.compile(">=([\\d\\D]+)");
+
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return (value instanceof Number || value instanceof String) && PATTERN.matcher(condition).matches();
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			boolean judge = false;
+
+			Matcher matcher = PATTERN.matcher(condition);
+
+			if (matcher.matches())
+			{
+				String s = value.toString();
+				if (value instanceof Number)
+				{
+					judge = Double.valueOf(s).compareTo(Double.valueOf(matcher.group(1))) >= 0;
+				}
+				else
+				{
+					judge = s.compareTo(matcher.group(1)) >= 0;
+				}
+			}
+
+			return judge;
+		}
+	}
+
+	public static class LessConditionInterpreter implements ConditionInterpreter
+	{
+		public static final Pattern	PATTERN	= Pattern.compile("<([\\d\\D]+)");
+
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return (value instanceof Number || value instanceof String) && PATTERN.matcher(condition).matches();
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			boolean judge = false;
+
+			Matcher matcher = PATTERN.matcher(condition);
+
+			if (matcher.matches())
+			{
+				String s = value.toString();
+				if (value instanceof Number)
+				{
+					judge = Double.valueOf(s).compareTo(Double.valueOf(matcher.group(1))) < 0;
+				}
+				else
+				{
+					judge = s.compareTo(matcher.group(1)) < 0;
+				}
+			}
+
+			return judge;
+		}
+	}
+
+	public static class LessEqualConditionInterpreter implements ConditionInterpreter
+	{
+		public static final Pattern	PATTERN	= Pattern.compile("<=([\\d\\D]+)");
+
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return (value instanceof Number || value instanceof String) && PATTERN.matcher(condition).matches();
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			boolean judge = false;
+
+			Matcher matcher = PATTERN.matcher(condition);
+
+			if (matcher.matches())
+			{
+				String s = value.toString();
+				if (value instanceof Number)
+				{
+					judge = Double.valueOf(s).compareTo(Double.valueOf(matcher.group(1))) <= 0;
+				}
+				else
+				{
+					judge = s.compareTo(matcher.group(1)) <= 0;
+				}
+			}
+
+			return judge;
+		}
+	}
+
+	public static class NotEqualConditionInterpreter implements ConditionInterpreter
+	{
+		public static final Pattern	PATTERN	= Pattern.compile("!=([\\d\\D]+)");
+
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return (value instanceof Number || value instanceof String || value instanceof Boolean)
+					&& PATTERN.matcher(condition).matches();
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			boolean judge = false;
+
+			Matcher matcher = PATTERN.matcher(condition);
+
+			if (matcher.matches())
+			{
+				String s = value.toString();
+				if (value instanceof Number)
+				{
+					judge = Double.valueOf(s).compareTo(Double.valueOf(matcher.group(1))) != 0;
+				}
+				else
+				{
+					judge = s.compareTo(matcher.group(1)) != 0;
+				}
+			}
+
+			return judge;
+		}
+	}
+
+	public static class RegexConditionInterpreter implements ConditionInterpreter
+	{
+		public static final Pattern	PATTERN	= Pattern.compile("=~\\/(.*)\\/([gi]*)");
+
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return PATTERN.matcher(condition).matches();
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			boolean judge = false;
+
+			Matcher matcher = PATTERN.matcher(condition);
+
+			if (matcher.matches())
+			{
+				String expr = matcher.group(1);
+				String flag = matcher.group(2);
+
+				int flags = 0;
+				if (flag.contains("i"))
+				{
+					flags |= Pattern.CASE_INSENSITIVE;
+				}
+
+				matcher = Pattern.compile(expr, flags).matcher(value.toString());
+
+				if (flag.contains("g"))
+				{
+					judge = matcher.matches();
+				}
+				else
+				{
+					judge = matcher.find();
+				}
+			}
+
+			return judge;
+		}
+	}
+
+	public static class UndefinedConditionInterpreter implements ConditionInterpreter
+	{
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return Tools.equals("!#", condition);
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			return !object.has(key);
+		}
+	}
+
+	public static class ValuedConditionInterpreter implements ConditionInterpreter
+	{
+		public boolean identify(String condition, Object value, String key, JSON object)
+		{
+			return Tools.equals("=$", condition);
+		}
+
+		public boolean judge(String condition, Object value, String key, JSON object)
+		{
+			return value != null;
+		}
 	}
 
 	protected static final int		LOGICAL_NOT			= -1;
@@ -32,8 +328,8 @@ public class Arbiter
 	{
 		boolean result = true;
 
-		if (values != null && condition != null && !condition.isEmpty()) {
-
+		if (values != null && condition != null && !condition.isEmpty())
+		{
 			result = false;
 
 			JSON cnd = null;
@@ -43,56 +339,58 @@ public class Arbiter
 
 			int logic = DEFAULT_LOGIC;
 
-			for (Object o : condition) {
-
-				if (JSON.IsJSON(o)) {
-
+			for (Object o : condition)
+			{
+				if (JSON.IsJSON(o))
+				{
 					boolean present = false;
 
-					if ((nst = JSON.AsJSAN(o)) != null) {
-
+					if ((nst = JSON.AsJSAN(o)) != null)
+					{
 						present = Arbitrate(values, nst, interpreters);
-
-					} else if ((cnd = JSON.AsJSON(o)) != null) {
-
+					}
+					else if ((cnd = JSON.AsJSON(o)) != null)
+					{
 						present = true;
 
-						for (String k : cnd.keySet()) {
-
+						for (String k : cnd.keySet())
+						{
 							v = values.attr(k);
 							c = cnd.attr(k);
 
-							if ((v == null && c != null) || (v != null && c == null)) {
-								present = false;
-							} else if (v != null && c != null) {
+							String cs = c == null ? null : c.toString();
 
-								String vs = v.toString();
-								String cs = c.toString();
+							boolean hit = false;
 
-								boolean hit = false;
-
-								if (interpreters != null) {
-									for (ConditionInterpreter interpreter : interpreters) {
-										if (interpreter.identify(v, cs)) {
-											hit = true;
-											present = interpreter.judge(v, cs);
-											break;
-										}
-									}
-								}
-
-								if (!hit) {
-									if ((v instanceof Number && c instanceof Number)
-											|| (v instanceof Boolean && c instanceof Boolean))
+							if (interpreters != null)
+							{
+								for (ConditionInterpreter interpreter : interpreters)
+								{
+									if (interpreter.identify(cs, v, k, values))
 									{
-										present = v.equals(c);
-									} else {
-										present = Pattern.compile(cs).matcher(vs).find();
+										hit = true;
+										present = interpreter.judge(cs, v, k, values);
+										break;
 									}
 								}
 							}
 
-							if (!present) {
+							if (!hit)
+							{
+								if ((v instanceof CharSequence && c instanceof CharSequence)
+										|| (v instanceof Number && c instanceof Number)
+										|| (v instanceof Boolean && c instanceof Boolean))
+								{
+									present = v.equals(c);
+								}
+								else if (v != null)
+								{
+									present = Pattern.compile(cs).matcher(v.toString()).find();
+								}
+							}
+
+							if (!present)
+							{
 								break;
 							}
 						}
@@ -114,19 +412,27 @@ public class Arbiter
 					}
 
 					logic = DEFAULT_LOGIC;
-
-				} else if (o instanceof String) {
+				}
+				else if (o instanceof String)
+				{
 					String op = o.toString();
-					if (LOGICAL_NOT_MARK.equals(op)) {
+					if (LOGICAL_NOT_MARK.equals(op))
+					{
 						logic = LOGICAL_NOT;
-					} else if (LOGICAL_OR_MARK.equals(op)) {
+					}
+					else if (LOGICAL_OR_MARK.equals(op))
+					{
 						logic = LOGICAL_OR;
-						if (result) {
+						if (result)
+						{
 							break;
 						}
-					} else if (LOGICAL_AND_MARK.equals(op)) {
+					}
+					else if (LOGICAL_AND_MARK.equals(op))
+					{
 						logic = LOGICAL_AND;
-						if (!result) {
+						if (!result)
+						{
 							break;
 						}
 					}
@@ -135,6 +441,24 @@ public class Arbiter
 		}
 
 		return result;
+	}
+
+	public static Iterable<ConditionInterpreter> LoadInterpreters()
+	{
+		Set<ConditionInterpreter> loads = new LinkedHashSet<ConditionInterpreter>();
+
+		loads.add(new ValuedConditionInterpreter());
+		loads.add(new DefinedConditionInterpreter());
+		loads.add(new EqualConditionInterpreter());
+		loads.add(new NotEqualConditionInterpreter());
+		loads.add(new GreaterEqualConditionInterpreter());
+		loads.add(new LessEqualConditionInterpreter());
+		loads.add(new GreaterConditionInterpreter());
+		loads.add(new LessConditionInterpreter());
+		loads.add(new RegexConditionInterpreter());
+		loads.add(new UndefinedConditionInterpreter());
+
+		return loads;
 	}
 
 	public static Iterable<ConditionInterpreter> LoadInterpreters(File file)
@@ -150,30 +474,58 @@ public class Arbiter
 	@SuppressWarnings("unchecked")
 	public static Iterable<ConditionInterpreter> LoadInterpreters(Iterable<Object> classes)
 	{
-		List<ConditionInterpreter> interpreters = new LinkedList<ConditionInterpreter>();
+		Set<ConditionInterpreter> loads = new LinkedHashSet<ConditionInterpreter>();
 
-		for (Object object : classes) {
-			try {
-				Class<ConditionInterpreter> cls = null;
-				if (object instanceof Class<?>) {
-					cls = (Class<ConditionInterpreter>) object;
-				} else {
-					cls = (Class<ConditionInterpreter>) Class.forName(object.toString());
+		for (Object object : classes)
+		{
+			try
+			{
+				Object o = null;
+
+				if (object instanceof ConditionInterpreter)
+				{
+					o = (ConditionInterpreter) object;
 				}
-				Object o = cls.newInstance();
-				if (o instanceof ConditionInterpreter) {
-					interpreters.add((ConditionInterpreter) o);
+				else
+				{
+					Class<ConditionInterpreter> cls = null;
+
+					if (object instanceof Class<?>)
+					{
+						cls = (Class<ConditionInterpreter>) object;
+					}
+					else
+					{
+						cls = (Class<ConditionInterpreter>) Class.forName(object.toString());
+					}
+
+					o = cls.newInstance();
 				}
-			} catch (InstantiationException e) {
+
+				if (o instanceof ConditionInterpreter)
+				{
+					loads.add((ConditionInterpreter) o);
+				}
+			}
+			catch (ClassCastException e)
+			{
 				e.printStackTrace();
-			} catch (IllegalAccessException e) {
+			}
+			catch (InstantiationException e)
+			{
 				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
+			}
+			catch (IllegalAccessException e)
+			{
+				e.printStackTrace();
+			}
+			catch (ClassNotFoundException e)
+			{
 				e.printStackTrace();
 			}
 		}
 
-		return interpreters;
+		return loads;
 	}
 
 	/**
@@ -183,5 +535,4 @@ public class Arbiter
 	{
 
 	}
-
 }
