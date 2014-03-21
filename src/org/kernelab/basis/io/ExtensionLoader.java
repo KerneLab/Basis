@@ -47,7 +47,7 @@ public class ExtensionLoader
 		{
 			if (location.isFile())
 			{
-				success = load(location.toURL());
+				success = load(location.toURI().toURL());
 			}
 			else if (location.isDirectory())
 			{
