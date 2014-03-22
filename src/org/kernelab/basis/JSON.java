@@ -3485,7 +3485,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					{
 						nail = i + 1;
 					}
-					i = JSON.DualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, i) - 1;
+					i = CheckNext(quote, i, JSON.DualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, i)) - 1;
 					continue i;
 				}
 
@@ -3615,9 +3615,23 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		 */
 		private static final long	serialVersionUID	= 5584855948726666241L;
 
+		public static int			DEFAULT_VIEW		= 15;
+
+		public static String FormatMessage(String hint, CharSequence msg, int index)
+		{
+			hint = hint == null ? "" : hint.trim();
+			return hint + (hint.length() == 0 ? "" : " ") + "@" + index + "\n" //
+					+ msg;
+		}
+
+		public static CharSequence LocateMessage(CharSequence source, int index, int view)
+		{
+			return source.subSequence(Math.max(index - view, 0), Math.min(index + view, source.length()));
+		}
+
 		public SyntaxErrorException(CharSequence source, int index)
 		{
-			this("Near", source, index);
+			this("", source, index);
 		}
 
 		public SyntaxErrorException(String msg)
@@ -3625,9 +3639,19 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			super(msg);
 		}
 
-		public SyntaxErrorException(String msg, CharSequence source, int index)
+		public SyntaxErrorException(String hint, CharSequence source, int index)
 		{
-			super(msg + "\n" + source.subSequence(Math.max(index - 10, 0), Math.min(index + 10, source.length())));
+			super(FormatMessage(hint, LocateMessage(source, index, DEFAULT_VIEW), index));
+		}
+
+		public SyntaxErrorException(String hint, Throwable cause, CharSequence source, int index)
+		{
+			super(FormatMessage(hint, LocateMessage(source, index, DEFAULT_VIEW), index), cause);
+		}
+
+		public SyntaxErrorException(Throwable cause, CharSequence source, int index)
+		{
+			this(cause.getMessage(), cause, source, index);
 		}
 	}
 
@@ -4139,6 +4163,18 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return ESCAPED_CHAR.containsKey(c);
 	}
 
+	public static int CheckNext(CharSequence source, int now, int next)
+	{
+		if (next < 0)
+		{
+			throw new SyntaxErrorException(source, now);
+		}
+		else
+		{
+			return next;
+		}
+	}
+
 	public static int DualMatchCount(CharSequence sequence, char a, char b, int from)
 	{
 		int match = 0;
@@ -4315,7 +4351,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			catch (IndexOutOfBoundsException e)
 			{
-				throw new SyntaxErrorException(sequence, start);
+				throw new SyntaxErrorException(e, sequence, start);
 			}
 		}
 
@@ -4442,7 +4478,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 						}
 						catch (IndexOutOfBoundsException e)
 						{
-							throw new SyntaxErrorException(seq, i);
+							throw new SyntaxErrorException(e, seq, i);
 						}
 					}
 
@@ -4619,11 +4655,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	 */
 	public static void main(String[] args)
 	{
-		String s = "{\"k\":{ \"a\":1, true }}";
 
-		JSON j = Parse(s);
-
-		Tools.debug(j.toString(0));
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -4647,25 +4679,22 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			if (object != null)
 			{
-				Parse(new StringBuilder(source), begin + 1, object);
+				Parse(source, begin + 1, object);
 			}
 		}
 
 		return object;
 	}
 
-	public static JSON Parse(Reader reader)
-	{
-		return Parse(Tools.readerToStringBuilder(reader));
-	}
-
-	public static int Parse(StringBuilder json, int from, JSON object)
+	public static int Parse(CharSequence json, int from, JSON object)
 	{
 		int i = FirstNonWhitespaceIndex(json, from);
 
 		if (i != NOT_FOUND)
 		{
 			int nail = i, tail = i;
+
+			boolean ended = false;
 
 			int arrayIndex = object instanceof JSAN ? 0 : NOT_FOUND;
 
@@ -4683,7 +4712,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					switch (c)
 					{
 						case OBJECT_BEGIN_CHAR:
-							i = Parse(json, i + 1, (JSON) (value = new JSON()));
+							i = CheckNext(json, i, Parse(json, i + 1, (JSON) (value = new JSON())));
 							break;
 
 						case OBJECT_END_CHAR:
@@ -4691,7 +4720,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							{
 								if (value == NOT_A_VALUE && nail != NOT_FOUND)
 								{
-									value = ParseValueOf(json.substring(nail, tail + 1));
+									value = ParseValueOf(json.subSequence(nail, tail + 1).toString());
 								}
 								if (value != NOT_A_VALUE)
 								{
@@ -4699,27 +4728,29 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 									value = NOT_A_VALUE;
 								}
 							}
+							ended = true;
 							break i;
 
 						case ARRAY_BEGIN_CHAR:
-							i = Parse(json, i + 1, (JSAN) (value = new JSAN()));
+							i = CheckNext(json, i, Parse(json, i + 1, (JSAN) (value = new JSAN())));
 							break;
 
 						case ARRAY_END_CHAR:
 							if (value == NOT_A_VALUE && nail != NOT_FOUND && nail != i)
 							{
-								value = ParseValueOf(json.substring(nail, tail + 1));
+								value = ParseValueOf(json.subSequence(nail, tail + 1).toString());
 							}
 							if (value != NOT_A_VALUE)
 							{
 								object.put(JSAN.Index(arrayIndex), value);
 							}
+							ended = true;
 							break i;
 
 						case PAIR_CHAR:
 							if (value == NOT_A_VALUE && nail != NOT_FOUND)
 							{
-								value = ParseValueOf(json.substring(nail, tail + 1));
+								value = ParseValueOf(json.subSequence(nail, tail + 1).toString());
 							}
 							if (value != NOT_A_VALUE)
 							{
@@ -4732,17 +4763,17 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 								value = NOT_A_VALUE;
 								entry = null;
 							}
-							i = (tail = (nail = FirstNonWhitespaceIndex(json, i + 1))) - 1;
+							i = CheckNext(json, i, tail = (nail = FirstNonWhitespaceIndex(json, i + 1))) - 1;
 							break;
 
 						case ATTR_CHAR:
-							entry = RestoreString(json.substring(nail, tail + 1));
-							i = (tail = (nail = FirstNonWhitespaceIndex(json, i + 1))) - 1;
+							entry = RestoreString(json.subSequence(nail, tail + 1).toString());
+							i = CheckNext(json, i, tail = (nail = FirstNonWhitespaceIndex(json, i + 1))) - 1;
 							break;
 
 						case QUOTE_CHAR:
 							nail = i;
-							tail = (i = DualMatchIndex(json, QUOTE_CHAR, QUOTE_CHAR, i));
+							i = CheckNext(json, i, tail = DualMatchIndex(json, QUOTE_CHAR, QUOTE_CHAR, i));
 							break;
 
 						case COMMENT_CHAR:
@@ -4754,11 +4785,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							break;
 
 						case Function.DEFINE_FIRST_CHAR:
-							if (nail == i
-									&& Function.DEFINE_MARK.equals(json.substring(i,
-											Math.min(json.length(), i + Function.DEFINE_MARK.length()))))
+							if (nail == i && Function.DEFINE_MARK.equals( //
+									json.subSequence(i, Math.min(json.length(), i + Function.DEFINE_MARK.length())) //
+											.toString()))
 							{
-								tail = (i = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i));
+								i = CheckNext(json, i,
+										tail = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i));
 							}
 
 						default:
@@ -4769,6 +4801,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							break;
 					}
 				}
+
+				if (!ended)
+				{
+					throw new SyntaxErrorException("Not ended", json, i);
+				}
 			}
 			catch (SyntaxErrorException e)
 			{
@@ -4776,11 +4813,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			catch (RuntimeException e)
 			{
-				throw new SyntaxErrorException(json, i);
+				throw new SyntaxErrorException(e, json, i);
 			}
 		}
 
 		return i;
+	}
+
+	public static JSON Parse(Reader reader)
+	{
+		return Parse(Tools.readerToStringBuilder(reader));
 	}
 
 	public static Object ParseValueOf(String string)
