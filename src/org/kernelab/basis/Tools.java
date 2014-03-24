@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.Writer;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -4698,6 +4699,132 @@ public class Tools
 		}
 
 		return b;
+	}
+
+	/**
+	 * To output a String of n times repeat of a certain character.
+	 * 
+	 * @param w
+	 *            The Writer output the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @return The Writer.
+	 * @throws IOException
+	 * @see Tools#repeat(CharSequence, int)
+	 */
+	public static Writer repeat(Writer w, char c, int n) throws IOException
+	{
+		return repeat(w, String.valueOf(c), n);
+	}
+
+	/**
+	 * To output a String of n times repeat of a certain character.
+	 * 
+	 * @param w
+	 *            The Writer output the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The Writer.
+	 * @throws IOException
+	 * @see Tools#repeat(char, int, CharSequence)
+	 */
+	public static Writer repeat(Writer w, char c, int n, char delimiter) throws IOException
+	{
+		return repeat(w, c, n, String.valueOf(delimiter));
+	}
+
+	/**
+	 * To output a String of n times repeat of a certain character.
+	 * 
+	 * @param w
+	 *            The Writer output the repeat result.
+	 * @param c
+	 *            The character to be repeated.
+	 * @param n
+	 *            The times to repeat the character.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The Writer.
+	 * @throws IOException
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static Writer repeat(Writer w, char c, int n, CharSequence delimiter) throws IOException
+	{
+		return repeat(w, String.valueOf(c), n, delimiter);
+	}
+
+	/**
+	 * To output a String of n times repeat of a certain CharSequence.
+	 * 
+	 * @param w
+	 *            The Writer output the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @return The Writer.
+	 * @throws IOException
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static Writer repeat(Writer w, CharSequence s, int n) throws IOException
+	{
+		return repeat(w, s, n, "");
+	}
+
+	/**
+	 * To output a String of n times repeat of a certain CharSequence which
+	 * split by a given character.
+	 * 
+	 * @param w
+	 *            The Writer output the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The Writer.
+	 * @throws IOException
+	 * @see Tools#repeat(CharSequence, int, CharSequence)
+	 */
+	public static Writer repeat(Writer w, CharSequence s, int n, char delimiter) throws IOException
+	{
+		return repeat(w, s, n, String.valueOf(delimiter));
+	}
+
+	/**
+	 * To output a String of n times repeat of a certain CharSequence which
+	 * split by a given delimiter.
+	 * 
+	 * @param w
+	 *            The Writer output the repeat result.
+	 * @param s
+	 *            The CharSequence to be repeated.
+	 * @param n
+	 *            The times to repeat the CharSequence.
+	 * @param delimiter
+	 *            The delimiter which joints the whole String.
+	 * @return The Writer.
+	 * @throws IOException
+	 */
+	public static Writer repeat(Writer w, CharSequence s, int n, CharSequence delimiter) throws IOException
+	{
+		for (int i = 0; i < n; i++)
+		{
+			if (i != 0)
+			{
+				w.append(delimiter);
+			}
+			w.append(s);
+		}
+
+		return w;
 	}
 
 	/**
