@@ -23,6 +23,8 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.kernelab.basis.io.ExtensionLoader;
+
 /**
  * The Entrance of Basis or other project.
  * 
@@ -549,7 +551,15 @@ public class Entrance
 
 	public Entrance present()
 	{
-		if (this.parameter("main") != null)
+		if (parameters("jars") != null)
+		{
+			for (String file : parameters("jars"))
+			{
+				ExtensionLoader.getInstance().load(new File(file));
+			}
+		}
+
+		if (parameter("main") != null)
 		{
 			return this.delegate();
 		}

@@ -17,9 +17,9 @@ public class StringBuilderWriter extends Writer
 		this.setBuilder(new StringBuilder(capacity));
 	}
 
-	public StringBuilderWriter(StringBuilder buffer)
+	public StringBuilderWriter(StringBuilder builder)
 	{
-		this.setBuilder(buffer);
+		this.setBuilder(builder);
 	}
 
 	@Override

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -36,6 +38,7 @@ import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON.Context;
 import org.kernelab.basis.io.DataReader;
+import org.kernelab.basis.io.StringBuilderWriter;
 
 interface Hierarchical extends Copieable<Hierarchical>
 {
@@ -3717,7 +3720,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static final Map<Character, String>		ESCAPED_CHAR			= new HashMap<Character, String>();
 
-	public static String							LINE_INDENT				= "\t";
+	public static String							DEFAULT_LINE_INDENT		= "\t";
 
 	public static String							LINE_WRAP				= "\n";
 
@@ -4655,7 +4658,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	 */
 	public static void main(String[] args)
 	{
+		String s = "{\"k\":1}";
 
+		JSON j = Parse(s);
+
+		Tools.debug(j.toString());
 	}
 
 	public static JSON Parse(CharSequence source)
@@ -5742,14 +5749,58 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return string;
 	}
 
-	public static StringBuilder Serialize(JSON json, StringBuilder buffer, int indent)
+	public static StringBuilder Serialize(JSON json, StringBuilder buffer, int indents)
 	{
-		if (buffer == null)
+		return Serialize(json, buffer, indents, null);
+	}
+
+	public static StringBuilder Serialize(JSON json, StringBuilder buffer, int indents, String indent)
+	{
+		if (json != null)
 		{
-			buffer = new StringBuilder();
+			StringBuilderWriter writer = new StringBuilderWriter(buffer);
+
+			try
+			{
+				Serialize(json, writer, indents, indent);
+			}
+			catch (IOException e)
+			{
+			}
+		}
+		return buffer;
+	}
+
+	public static Writer Serialize(JSON json, Writer writer, int indents) throws IOException
+	{
+		return Serialize(json, writer, indents, null);
+	}
+
+	public static Writer Serialize(JSON json, Writer writer, int indents, String indent) throws IOException
+	{
+		if (writer == null)
+		{
+			writer = new StringWriter();
 		}
 
-		int inner = indent;
+		indent = indent == null ? DEFAULT_LINE_INDENT : indent;
+
+		boolean isJSAN = IsJSAN(json);
+		boolean isFirst = true;
+
+		if (!JSON.IsContext(json))
+		{
+			if (isJSAN)
+			{
+				writer.write(ARRAY_BEGIN_CHAR);
+			}
+			else
+			{
+				writer.write(OBJECT_BEGIN_CHAR);
+			}
+		}
+
+		int inner = indents;
 		if (inner > -1)
 		{
 			if (!JSON.IsContext(json))
@@ -5757,9 +5808,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				inner++;
 			}
 		}
-
-		boolean isJSAN = IsJSAN(json);
-		boolean isFirst = true;
 
 		String key;
 		Object object;
@@ -5778,12 +5826,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				}
 				else
 				{
-					buffer.append(PAIR_CHAR);
+					writer.append(PAIR_CHAR);
 				}
-				if (indent > -1)
+				if (indents > -1)
 				{
-					buffer.append(LINE_WRAP);
-					Tools.repeat(buffer, LINE_INDENT, indent + 1);
+					writer.append(LINE_WRAP);
+					Tools.repeat(writer, indent, indents + 1);
 				}
 			}
 
@@ -5791,30 +5839,30 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				if (key == null)
 				{
-					buffer.append(NULL_STRING);
+					writer.append(NULL_STRING);
 				}
 				else
 				{
 					if (JSON.IsContext(json))
 					{
-						buffer.append(Context.VAR_DEFINE_MARK);
-						buffer.append(' ');
+						writer.append(Context.VAR_DEFINE_MARK);
+						writer.append(' ');
 					}
 					else
 					{
-						buffer.append(QUOTE_CHAR);
+						writer.append(QUOTE_CHAR);
 					}
 
-					buffer.append(EscapeString(entry.getKey()));
+					writer.append(EscapeString(entry.getKey()));
 
 					if (JSON.IsContext(json))
 					{
-						buffer.append(Context.VAR_ASSIGN_CHAR);
+						writer.append(Context.VAR_ASSIGN_CHAR);
 					}
 					else
 					{
-						buffer.append(QUOTE_CHAR);
-						buffer.append(ATTR_CHAR);
+						writer.append(QUOTE_CHAR);
+						writer.append(ATTR_CHAR);
 					}
 				}
 			}
@@ -5825,7 +5873,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (IsJSON(object))
 			{
-				value = Serialize((JSON) object, null, inner);
+				Serialize((JSON) object, writer, inner, indent);
+				value = null;
 			}
 			else if (object instanceof CharSequence || object instanceof Character)
 			{
@@ -5844,12 +5893,15 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				value = object.toString();
 			}
 
-			buffer.append(value);
+			if (value != null)
+			{
+				writer.append(value);
+			}
 
 			if (JSON.IsContext(json))
 			{
-				buffer.append(Context.VAR_END_CHAR);
-				buffer.append(LINE_WRAP);
+				writer.append(Context.VAR_END_CHAR);
+				writer.append(LINE_WRAP);
 			}
 		}
 
@@ -5857,27 +5909,25 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			if (isJSAN)
 			{
-				buffer.insert(0, ARRAY_BEGIN_CHAR);
-				if (indent > -1)
+				if (indents > -1)
 				{
-					buffer.append(LINE_WRAP);
-					Tools.repeat(buffer, LINE_INDENT, indent);
+					writer.append(LINE_WRAP);
+					Tools.repeat(writer, indent, indents);
 				}
-				buffer.append(ARRAY_END_CHAR);
+				writer.append(ARRAY_END_CHAR);
 			}
 			else
 			{
-				buffer.insert(0, OBJECT_BEGIN_CHAR);
-				if (indent > -1)
+				if (indents > -1)
 				{
-					buffer.append(LINE_WRAP);
-					Tools.repeat(buffer, LINE_INDENT, indent);
+					writer.append(LINE_WRAP);
+					Tools.repeat(writer, indent, indents);
 				}
-				buffer.append(OBJECT_END_CHAR);
+				writer.append(OBJECT_END_CHAR);
 			}
 		}
 
-		return buffer;
+		return writer;
 	}
 
 	public static Object ValueOf(Object object)
@@ -6979,12 +7029,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	@Override
 	public String toString()
 	{
-		return Serialize(this, null, -1).toString();
+		return Serialize(this, new StringBuilder(), -1).toString();
 	}
 
 	public String toString(int indent)
 	{
-		return Serialize(this, null, indent).insert(0, Tools.repeat(LINE_INDENT, indent)).toString();
+		return Serialize(this, new StringBuilder(), indent).insert(0, Tools.repeat(DEFAULT_LINE_INDENT, indent))
+				.toString();
 	}
 
 	public JSON transformer(String entry, Transformer transformer)
