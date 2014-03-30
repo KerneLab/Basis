@@ -1,8 +1,12 @@
 package org.kernelab.basis;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -112,14 +116,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				{
 					int end = Tools.seekIndex(line, BLOCK_COMMENT_END, from);
 
-					if (end == NOT_FOUND)
-					{
-						from = line.length();
-					}
-					else
+					if (end > NOT_FOUND)
 					{
 						from = end + BLOCK_COMMENT_END.length();
 						inComment = false;
+					}
+					else
+					{
+						from = line.length();
 					}
 				}
 
@@ -3326,6 +3330,472 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
+	public static class Parser
+	{
+		public static final int	DISPOSED				= -1;
+
+		public static final int	DONE					= 0;
+
+		public static final int	IN_NONE					= 1;
+
+		public static final int	IN_STRING				= 2;
+
+		public static final int	IN_COMMENT				= 3;
+
+		public static final int	IN_FUNCTION				= 4;
+
+		/**
+		 * The buffer will be recycled if the jail index is above the ratio of
+		 * the buffer length. So if the ratio is 1 (or greater) that means never
+		 * being recycled, 0 (or less) means always being recycled.
+		 */
+		public static double	DEFAULT_RECYCLE_RATIO	= 0.9;
+
+		/**
+		 * This is the default buffer size which decides how many characters
+		 * will be read at most while parsing via a Reader.
+		 */
+		public static int		DEFAULT_READER_BUFFER	= 1000;
+
+		public static void main(String[] args) throws Exception
+		{
+			File file = new File("./dat/test.json");
+
+			BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+
+			JSON j = null;
+
+			Parser p = new Parser();
+
+			OutputStreamWriter w = new OutputStreamWriter(System.out);
+
+			do
+			{
+				j = p.parse(r, false).result();
+
+				if (j != null)
+				{
+					JSON.Serialize(j, w, 0);
+				}
+
+				w.flush();
+
+			} while (j != null);
+
+			w.close();
+
+			r.close();
+		}
+
+		private StringBuilder	buffer;
+
+		private JSON			object;
+
+		private String			entry;
+
+		private Object			value;
+
+		private int				arrayIndex;
+
+		private int				status;
+
+		private int				curr	= 0;
+
+		private int				nail	= NOT_FOUND;
+
+		private int				tail	= NOT_FOUND;
+
+		private int				jail	= NOT_FOUND;
+
+		private Parser			sub		= null;
+
+		protected Parser commit(StringBuilder buffer)
+		{
+			if (value == NOT_A_VALUE && nail > NOT_FOUND)
+			{
+				value = ParseValueOf(buffer.subSequence(nail, tail + 1).toString());
+			}
+
+			if (value != NOT_A_VALUE)
+			{
+				if (entry == null && arrayIndex > NOT_FOUND)
+				{
+					entry = JSAN.Index(arrayIndex);
+					arrayIndex++;
+				}
+				object.put(entry, value);
+				value = NOT_A_VALUE;
+				entry = null;
+			}
+
+			return this;
+		}
+
+		public Parser dispose()
+		{
+			if (sub != null)
+			{
+				sub.dispose();
+				sub = null;
+			}
+
+			if (buffer != null)
+			{
+				Tools.clearStringBuilder(buffer);
+				buffer = null;
+			}
+
+			entry = null;
+			value = null;
+
+			status(DISPOSED);
+
+			return this;
+		}
+
+		protected Parser entry(StringBuilder buffer)
+		{
+			entry = RestoreString(buffer.subSequence(nail, tail + 1).toString());
+			return this;
+		}
+
+		protected Parser follow()
+		{
+			if (sub != null)
+			{
+				curr = sub.curr;
+				nail = sub.nail;
+				tail = sub.tail;
+				jail = sub.jail;
+			}
+
+			return this;
+		}
+
+		protected boolean isRoot()
+		{
+			return buffer != null;
+		}
+
+		protected int next(StringBuilder buffer)
+		{
+			curr++;
+
+			int temp = (tail = (nail = FirstNonWhitespaceIndex(buffer, curr)));
+
+			if (temp > NOT_FOUND)
+			{
+				curr = temp - 1;
+			}
+
+			return temp;
+		}
+
+		public Parser parse(CharSequence source)
+		{
+			if (buffer != source)
+			{
+				if (buffer == null)
+				{
+					if (source instanceof StringBuilder)
+					{
+						buffer = (StringBuilder) source;
+					}
+					else
+					{
+						buffer = new StringBuilder(source);
+					}
+				}
+				else
+				{
+					this.recycle();
+					buffer.append(source);
+				}
+			}
+
+			object = null;
+
+			this.parse(buffer, curr);
+
+			return this;
+		}
+
+		public Parser parse(Reader reader, boolean closeAfterRead) throws IOException
+		{
+			return parse(reader, DEFAULT_READER_BUFFER, closeAfterRead);
+		}
+
+		public Parser parse(Reader reader, int buffers, boolean closeAfterRead) throws IOException
+		{
+			if (reader != null)
+			{
+				char[] chars = new char[Math.max(buffers, 1)];
+
+				if (buffer == null)
+				{
+					buffer = new StringBuilder(chars.length);
+				}
+				else
+				{
+					this.recycle();
+				}
+
+				object = null;
+
+				int length = -1;
+
+				while ((length = reader.read(chars)) != -1 //
+						|| (buffer.length() > 0 && curr < buffer.length()))
+				{
+					if (length > -1)
+					{
+						buffer.append(chars, 0, length);
+					}
+
+					parse(buffer);
+
+					if (result() != null)
+					{
+						break;
+					}
+				}
+
+				if (closeAfterRead)
+				{
+					reader.close();
+				}
+			}
+
+			return this;
+		}
+
+		protected int parse(StringBuilder buffer, int from)
+		{
+			curr = from;
+
+			if (sub != null && sub.status() != DONE)
+			{
+				curr = sub.parse(buffer, curr);
+
+				if (sub.status() == DONE)
+				{
+					this.pick().follow();
+				}
+			}
+
+			if (curr < buffer.length() && (sub == null || sub.status() == DONE))
+			{
+				int temp = NOT_FOUND;
+
+				char c;
+
+				try
+				{
+					i: for (; curr < buffer.length(); curr++)
+					{
+						c = buffer.charAt(curr);
+
+						j: switch (c)
+						{
+							case OBJECT_BEGIN_CHAR:
+							case ARRAY_BEGIN_CHAR:
+								if (sub == null)
+								{
+									sub = new Parser();
+								}
+								curr = sub.reset(c == OBJECT_BEGIN_CHAR ? new JSON() : new JSAN()) //
+										.parse(buffer, curr + 1);
+								if (sub.status() == DONE)
+								{
+									this.pick().follow();
+									if (this.isRoot())
+									{
+										break i;
+									}
+									else
+									{
+										curr--;
+									}
+								}
+								else
+								{
+									break i;
+								}
+								break j;
+
+							case OBJECT_END_CHAR:
+							case ARRAY_END_CHAR:
+								commit(buffer).status(DONE);
+								jail = curr;
+								curr++;
+								break i;
+
+							case PAIR_CHAR:
+								commit(buffer);
+								if (next(buffer) <= NOT_FOUND)
+								{
+									break i;
+								}
+								break j;
+
+							case ATTR_CHAR:
+								entry(buffer);
+								if (next(buffer) <= NOT_FOUND)
+								{
+									break i;
+								}
+								break j;
+
+							case QUOTE_CHAR:
+								nail = curr;
+								temp = DualMatchIndex(buffer, QUOTE_CHAR, QUOTE_CHAR, curr);
+								if (temp > NOT_FOUND)
+								{
+									status(IN_NONE);
+									tail = (curr = temp);
+								}
+								else
+								{
+									status(IN_STRING);
+									tail = buffer.length() - 1;
+									break i;
+								}
+								break j;
+
+							case COMMENT_CHAR:
+								temp = EndOfComment(buffer, curr);
+								if (temp > NOT_FOUND)
+								{
+									status(IN_NONE);
+									if (nail == curr)
+									{
+										nail = temp + 1;
+									}
+									if (tail == curr)
+									{
+										tail = temp + 1;
+									}
+									curr = temp;
+								}
+								else
+								{
+									status(IN_COMMENT);
+									break i;
+								}
+								break j;
+
+							case Function.DEFINE_FIRST_CHAR:
+								if (nail == curr
+										&& Function.DEFINE_MARK.equals( //
+												buffer.subSequence(curr,
+														Math.min(buffer.length(), curr + Function.DEFINE_MARK.length()) //
+												).toString()))
+								{
+									temp = (tail = DualMatchIndex(buffer, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, curr));
+									if (temp > NOT_FOUND)
+									{
+										status(IN_NONE);
+										curr = temp;
+									}
+									else
+									{
+										status(IN_FUNCTION);
+										break i;
+									}
+								}
+
+							default:
+								if (!Character.isWhitespace(c) && !Character.isSpaceChar(c))
+								{
+									if (nail <= NOT_FOUND)
+									{
+										nail = curr;
+									}
+									tail = curr;
+								}
+								break j;
+						}
+					}
+				}
+				catch (SyntaxErrorException e)
+				{
+					throw e;
+				}
+				catch (RuntimeException e)
+				{
+					throw new SyntaxErrorException(e, buffer, curr);
+				}
+			}
+
+			return curr;
+		}
+
+		protected Parser pick()
+		{
+			if (sub != null)
+			{
+				value = sub.result();
+
+				if (buffer != null)
+				{
+					object = sub.result();
+				}
+			}
+
+			return this;
+		}
+
+		protected Parser recycle()
+		{
+			int pos = jail + 1;
+
+			if (pos > 0 && pos > buffer.length() * DEFAULT_RECYCLE_RATIO)
+			{
+				buffer.delete(0, pos);
+				curr -= pos;
+				nail -= pos;
+				tail -= pos;
+				jail -= pos;
+			}
+
+			return this;
+		}
+
+		protected Parser reset(JSON object)
+		{
+			this.object = object;
+
+			nail = NOT_FOUND;
+			tail = NOT_FOUND;
+			jail = NOT_FOUND;
+
+			entry = null;
+			value = NOT_A_VALUE;
+
+			arrayIndex = IsJSAN(object) ? 0 : NOT_FOUND;
+
+			status(IN_NONE);
+
+			return this;
+		}
+
+		public JSON result()
+		{
+			return object;
+		}
+
+		protected int status()
+		{
+			return status;
+		}
+
+		protected Parser status(int status)
+		{
+			this.status = status;
+			return this;
+		}
+	}
+
 	public static interface Projector<T>
 	{
 		public T project(T obj, JSON json);
@@ -3649,7 +4119,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public SyntaxErrorException(String hint, Throwable cause, CharSequence source, int index)
 		{
-			super(FormatMessage(hint, LocateMessage(source, index, DEFAULT_VIEW), index), cause);
+			super(cause instanceof SyntaxErrorException //
+			? cause.getMessage() //
+					: FormatMessage(hint, LocateMessage(source, index, DEFAULT_VIEW), index), //
+					cause);
 		}
 
 		public SyntaxErrorException(Throwable cause, CharSequence source, int index)
@@ -3667,29 +4140,29 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	 * 
 	 */
 	private static final long						serialVersionUID		= 6090747632739206720L;
-
 	public static final char						OBJECT_BEGIN_CHAR		= '{';
+
 	public static final String						OBJECT_BEGIN_MARK		= String.valueOf(OBJECT_BEGIN_CHAR);
-
 	public static final char						OBJECT_END_CHAR			= '}';
+
 	public static final String						OBJECT_END_MARK			= String.valueOf(OBJECT_END_CHAR);
-
 	public static final char						ARRAY_BEGIN_CHAR		= '[';
+
 	public static final String						ARRAY_BEGIN_MARK		= String.valueOf(ARRAY_BEGIN_CHAR);
-
 	public static final char						ARRAY_END_CHAR			= ']';
+
 	public static final String						ARRAY_END_MARK			= String.valueOf(ARRAY_END_CHAR);
-
 	public static final char						PAIR_CHAR				= ',';
+
 	public static final String						PAIR_MARK				= String.valueOf(PAIR_CHAR);
-
 	public static final char						ATTR_CHAR				= ':';
+
 	public static final String						ATTR_MARK				= String.valueOf(ATTR_CHAR);
-
 	public static final char						QUOTE_CHAR				= '"';
-	public static final String						QUOTE_MARK				= String.valueOf(QUOTE_CHAR);
 
+	public static final String						QUOTE_MARK				= String.valueOf(QUOTE_CHAR);
 	public static final char						ESCAPE_CHAR				= '\\';
+
 	public static final String						ESCAPE_MARK				= String.valueOf(ESCAPE_CHAR);
 
 	public static final char						COMMENT_CHAR			= '/';
@@ -4178,30 +4651,44 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
-	public static int DualMatchCount(CharSequence sequence, char a, char b, int from)
+	public static int DualMatchCount(CharSequence seq, char a, char b, int from)
 	{
 		int match = 0;
+
+		int length = seq.length();
 
 		boolean inString = false;
 
 		char c;
 
-		for (int i = Math.max(0, from); i < sequence.length(); i++)
+		for (int i = Math.max(0, from); i < length; i++)
 		{
-			c = sequence.charAt(i);
+			c = seq.charAt(i);
 
 			if (c == ESCAPE_CHAR)
 			{
-				c = sequence.charAt(i + 1);
-				if (ESCAPING_CHAR.containsKey(c))
+				i++;
+				if (i < length)
 				{
-					i++;
+					c = seq.charAt(i);
+					if (c == UNICODE_ESCAPING_CHAR)
+					{
+						i += UNICODE_ESCAPED_LENGTH;
+						continue;
+					}
+					else if (ESCAPING_CHAR.containsKey(c))
+					{
+						continue;
+					}
+					else
+					{
+						i--;
+					}
 				}
-				else if (c == UNICODE_ESCAPING_CHAR)
+				else
 				{
-					i += UNICODE_ESCAPED_LENGTH + 1;
+					break;
 				}
-				continue;
 			}
 
 			if (c == QUOTE_CHAR)
@@ -4216,10 +4703,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			if (c == COMMENT_CHAR && !inString)
 			{
-				i = EndOfComment(sequence, i);
+				i = EndOfComment(seq, i);
 				if (i == NOT_FOUND)
 				{
-					i = sequence.length() - 1;
+					i = length - 1;
 				}
 				continue;
 			}
@@ -4246,29 +4733,44 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public static int DualMatchIndex(CharSequence seq, char a, char b, int from)
 	{
-		int index = -1;
+		int index = NOT_FOUND;
+
 		int match = 0;
+
+		int length = seq.length();
 
 		boolean inString = false;
 
 		char c;
 
-		for (int i = Math.max(0, from); i < seq.length(); i++)
+		for (int i = Math.max(0, from); i < length; i++)
 		{
 			c = seq.charAt(i);
 
 			if (c == ESCAPE_CHAR)
 			{
-				c = seq.charAt(i + 1);
-				if (ESCAPING_CHAR.containsKey(c))
+				i++;
+				if (i < length)
 				{
-					i++;
+					c = seq.charAt(i);
+					if (c == UNICODE_ESCAPING_CHAR)
+					{
+						i += UNICODE_ESCAPED_LENGTH;
+						continue;
+					}
+					else if (ESCAPING_CHAR.containsKey(c))
+					{
+						continue;
+					}
+					else
+					{
+						i--;
+					}
 				}
-				else if (c == UNICODE_ESCAPING_CHAR)
+				else
 				{
-					i += UNICODE_ESCAPED_LENGTH + 1;
+					break;
 				}
-				continue;
 			}
 
 			if (c == QUOTE_CHAR)
@@ -4286,7 +4788,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				i = EndOfComment(seq, i);
 				if (i == NOT_FOUND)
 				{
-					i = seq.length() - 1;
+					i = length - 1;
 				}
 				continue;
 			}
@@ -4321,40 +4823,43 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return index;
 	}
 
-	public static int EndOfComment(CharSequence sequence, int start)
+	public static int EndOfComment(CharSequence seq, int start)
+	{
+		return EndOfComment(seq, start, start + 2);
+	}
+
+	public static int EndOfComment(CharSequence seq, int start, int from)
 	{
 		int end = NOT_FOUND;
 
-		char c = sequence.charAt(start);
+		int length = seq.length();
+
+		char c = seq.charAt(start);
 
 		if (c == COMMENT_CHAR)
 		{
-			try
+			if (++start < length)
 			{
-				c = sequence.charAt(start + 1);
+				c = seq.charAt(start);
 
 				switch (c)
 				{
 					case LINE_COMMENT_CHAR:
-						end = Tools.seekIndex(sequence, '\n', start + 2);
+						end = Tools.seekIndex(seq, '\n', from);
 						if (end == NOT_FOUND)
 						{
-							end = Tools.seekIndex(sequence, '\r', start + 2);
+							end = Tools.seekIndex(seq, '\r', from);
 						}
 						break;
 
 					case BLOCK_COMMENT_CHAR:
-						end = Tools.seekIndex(sequence, BLOCK_COMMENT_END, start + 2);
+						end = Tools.seekIndex(seq, BLOCK_COMMENT_END, from);
 						if (end != NOT_FOUND)
 						{
 							end += BLOCK_COMMENT_END.length() - 1;
 						}
 						break;
 				}
-			}
-			catch (IndexOutOfBoundsException e)
-			{
-				throw new SyntaxErrorException(e, sequence, start);
 			}
 		}
 
@@ -4447,16 +4952,18 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 		else
 		{
+			int length = seq.length();
+
 			if (buffer == null)
 			{
-				buffer = new StringBuilder(seq.length());
+				buffer = new StringBuilder(length);
 			}
 
 			boolean inString = false;
 
 			char c, l = 0;
 
-			for (int i = from; i < seq.length(); i++)
+			for (int i = from; i < length; i++)
 			{
 				c = seq.charAt(i);
 
@@ -4470,18 +4977,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 					if (end == NOT_FOUND)
 					{
-						end = seq.length() - 1;
+						end = length - 1;
 
-						try
+						if (i + 1 < length && seq.charAt(i + 1) == BLOCK_COMMENT_CHAR)
 						{
-							if (seq.charAt(i + 1) == BLOCK_COMMENT_CHAR)
-							{
-								inComment = true;
-							}
-						}
-						catch (IndexOutOfBoundsException e)
-						{
-							throw new SyntaxErrorException(e, seq, i);
+							inComment = true;
 						}
 					}
 
@@ -4497,22 +4997,24 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
-	public static final int FirstNonWhitespaceIndex(CharSequence sequence, int from)
+	public static final int FirstNonWhitespaceIndex(CharSequence seq, int from)
 	{
 		int index = NOT_FOUND;
+
+		int length = seq.length();
 		char c;
 		int code;
 
-		for (int i = from; i < sequence.length(); i++)
+		for (int i = Math.max(0, from); i < length; i++)
 		{
-			code = (c = sequence.charAt(i));
+			code = (c = seq.charAt(i));
 
 			if (c == COMMENT_CHAR)
 			{
-				i = EndOfComment(sequence, i);
+				i = EndOfComment(seq, i);
 				if (i == NOT_FOUND)
 				{
-					i = sequence.length() - 1;
+					i = length - 1;
 				}
 				continue;
 			}
@@ -4615,18 +5117,18 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return keys;
 	}
 
-	public static int LastDualMatchIndex(CharSequence sequence, char a, char b, int from)
+	public static int LastDualMatchIndex(CharSequence seq, char a, char b, int from)
 	{
 		int index = NOT_FOUND;
 		int match = 0;
 
 		boolean inString = false;
 
-		i: for (int i = Math.min(sequence.length() - 1, from); i >= 0; i--)
+		i: for (int i = Math.min(seq.length() - 1, from); i >= 0; i--)
 		{
-			char c = sequence.charAt(i);
+			char c = seq.charAt(i);
 
-			if (c == QUOTE_CHAR && i > 0 && sequence.charAt(i - 1) != ESCAPE_CHAR)
+			if (c == QUOTE_CHAR && i > 0 && seq.charAt(i - 1) != ESCAPE_CHAR)
 			{
 				inString = !inString;
 			}
@@ -4662,174 +5164,32 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		JSON j = Parse(s);
 
-		Tools.debug(j.toString());
+		Tools.debug(j);
 	}
 
 	public static JSON Parse(CharSequence source)
 	{
-		JSON object = null;
-
-		int begin = FirstNonWhitespaceIndex(source, 0);
-
-		if (begin != NOT_FOUND)
-		{
-			switch (source.charAt(begin))
-			{
-				case ARRAY_BEGIN_CHAR:
-					object = new JSAN();
-					break;
-
-				case OBJECT_BEGIN_CHAR:
-					object = new JSON();
-					break;
-			}
-
-			if (object != null)
-			{
-				Parse(source, begin + 1, object);
-			}
-		}
-
-		return object;
-	}
-
-	public static int Parse(CharSequence json, int from, JSON object)
-	{
-		int i = FirstNonWhitespaceIndex(json, from);
-
-		if (i != NOT_FOUND)
-		{
-			int nail = i, tail = i;
-
-			boolean ended = false;
-
-			int arrayIndex = object instanceof JSAN ? 0 : NOT_FOUND;
-
-			String entry = null;
-			Object value = NOT_A_VALUE;
-
-			char c;
-
-			try
-			{
-				i: for (i = nail; i < json.length(); i++)
-				{
-					c = json.charAt(i);
-
-					switch (c)
-					{
-						case OBJECT_BEGIN_CHAR:
-							i = CheckNext(json, i, Parse(json, i + 1, (JSON) (value = new JSON())));
-							break;
-
-						case OBJECT_END_CHAR:
-							if (entry != null)
-							{
-								if (value == NOT_A_VALUE && nail != NOT_FOUND)
-								{
-									value = ParseValueOf(json.subSequence(nail, tail + 1).toString());
-								}
-								if (value != NOT_A_VALUE)
-								{
-									object.put(entry, value);
-									value = NOT_A_VALUE;
-								}
-							}
-							ended = true;
-							break i;
-
-						case ARRAY_BEGIN_CHAR:
-							i = CheckNext(json, i, Parse(json, i + 1, (JSAN) (value = new JSAN())));
-							break;
-
-						case ARRAY_END_CHAR:
-							if (value == NOT_A_VALUE && nail != NOT_FOUND && nail != i)
-							{
-								value = ParseValueOf(json.subSequence(nail, tail + 1).toString());
-							}
-							if (value != NOT_A_VALUE)
-							{
-								object.put(JSAN.Index(arrayIndex), value);
-							}
-							ended = true;
-							break i;
-
-						case PAIR_CHAR:
-							if (value == NOT_A_VALUE && nail != NOT_FOUND)
-							{
-								value = ParseValueOf(json.subSequence(nail, tail + 1).toString());
-							}
-							if (value != NOT_A_VALUE)
-							{
-								if (entry == null && arrayIndex > NOT_FOUND)
-								{
-									entry = JSAN.Index(arrayIndex);
-									arrayIndex++;
-								}
-								object.put(entry, value);
-								value = NOT_A_VALUE;
-								entry = null;
-							}
-							i = CheckNext(json, i, tail = (nail = FirstNonWhitespaceIndex(json, i + 1))) - 1;
-							break;
-
-						case ATTR_CHAR:
-							entry = RestoreString(json.subSequence(nail, tail + 1).toString());
-							i = CheckNext(json, i, tail = (nail = FirstNonWhitespaceIndex(json, i + 1))) - 1;
-							break;
-
-						case QUOTE_CHAR:
-							nail = i;
-							i = CheckNext(json, i, tail = DualMatchIndex(json, QUOTE_CHAR, QUOTE_CHAR, i));
-							break;
-
-						case COMMENT_CHAR:
-							i = EndOfComment(json, i);
-							if (i == NOT_FOUND)
-							{
-								i = json.length() - 1;
-							}
-							break;
-
-						case Function.DEFINE_FIRST_CHAR:
-							if (nail == i && Function.DEFINE_MARK.equals( //
-									json.subSequence(i, Math.min(json.length(), i + Function.DEFINE_MARK.length())) //
-											.toString()))
-							{
-								i = CheckNext(json, i,
-										tail = DualMatchIndex(json, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, i));
-							}
-
-						default:
-							if (!Character.isWhitespace(c) && !Character.isSpaceChar(c))
-							{
-								tail = i;
-							}
-							break;
-					}
-				}
-
-				if (!ended)
-				{
-					throw new SyntaxErrorException("Not ended", json, i);
-				}
-			}
-			catch (SyntaxErrorException e)
-			{
-				throw e;
-			}
-			catch (RuntimeException e)
-			{
-				throw new SyntaxErrorException(e, json, i);
-			}
-		}
-
-		return i;
+		return new Parser().parse(source).dispose().result();
 	}
 
 	public static JSON Parse(Reader reader)
 	{
-		return Parse(Tools.readerToStringBuilder(reader));
+		JSON json = null;
+
+		if (reader != null)
+		{
+			Parser parser = new Parser();
+			try
+			{
+				json = parser.parse(reader, true).dispose().result();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+
+		return json;
 	}
 
 	public static Object ParseValueOf(String string)
@@ -5723,11 +6083,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 						c = string.charAt(i);
 
-						if (ESCAPING_CHAR.containsKey(c))
-						{
-							c = ESCAPING_CHAR.get(c);
-						}
-						else if (c == UNICODE_ESCAPING_CHAR)
+						if (c == UNICODE_ESCAPING_CHAR)
 						{
 							i++;
 
@@ -5736,6 +6092,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 							c = (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX);
 
 							i += UNICODE_ESCAPED_LENGTH - 1;
+						}
+						else if (ESCAPING_CHAR.containsKey(c))
+						{
+							c = ESCAPING_CHAR.get(c);
 						}
 					}
 
