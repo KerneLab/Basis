@@ -128,18 +128,15 @@ public class Tools
 	 */
 	public static <T> boolean arrayHas(T[] array, T element)
 	{
-		boolean has = false;
-
 		for (T e : array)
 		{
 			if (e.equals(element))
 			{
-				has = true;
-				break;
+				return true;
 			}
 		}
 
-		return has;
+		return false;
 	}
 
 	/**
@@ -156,15 +153,14 @@ public class Tools
 	 */
 	public static <T> T as(Object obj, Class<T> cls)
 	{
-		T t = null;
 		try
 		{
-			t = cls.cast(obj);
+			return cls.cast(obj);
 		}
 		catch (ClassCastException e)
 		{
+			return null;
 		}
-		return t;
 	}
 
 	/**
@@ -177,7 +173,14 @@ public class Tools
 	@SuppressWarnings("unchecked")
 	public static <S, T extends S> T cast(S src)
 	{
-		return (T) src;
+		try
+		{
+			return (T) src;
+		}
+		catch (ClassCastException e)
+		{
+			return null;
+		}
 	}
 
 	/**
