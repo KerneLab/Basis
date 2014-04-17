@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -29,7 +28,7 @@ import org.kernelab.basis.io.DataReader;
  * 
  * @author Dilly King
  */
-public abstract class DataBase implements ConnectionFactory, ConnectionSource, Copieable<DataBase>
+public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 {
 	public static class DB2 extends DataBase
 	{
@@ -1261,10 +1260,6 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 	private Map<String, Object>	information;
 
-	private Connection			connection;
-
-	private Set<SQLKit>			kits		= new HashSet<SQLKit>();
-
 	public DataBase()
 	{
 		super();
@@ -1329,43 +1324,9 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		};
 	}
 
-	public void close(SQLKit kit)
-	{
-		synchronized (this.getKits())
-		{
-			this.getKits().remove(kit);
-
-			if (this.getKits().isEmpty())
-			{
-				this.closeConnection();
-			}
-		}
-	}
-
-	public void closeConnection()
-	{
-		try
-		{
-			if (this.getConnection() != null)
-			{
-				this.getConnection().close();
-				this.setConnection(null);
-			}
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-	}
-
 	public String getCatalog()
 	{
 		return catalog;
-	}
-
-	public Connection getConnection()
-	{
-		return connection;
 	}
 
 	public abstract String getDriverName();
@@ -1373,11 +1334,6 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 	public Properties getInformation()
 	{
 		return PropertiesOfMap(this.information);
-	}
-
-	private Set<SQLKit> getKits()
-	{
-		return kits;
 	}
 
 	protected String getPassWord()
@@ -1401,16 +1357,9 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 
 		try
 		{
-			synchronized (this.getKits())
-			{
-				this.openConnection();
-
-				kit = new SQLKit(this);
-
-				this.getKits().add(kit);
-			}
+			kit = new SQLKit(this);
 		}
-		catch (Exception e)
+		catch (SQLException e)
 		{
 			throw new InvalidDataBaseConnectionException(e.getMessage(), e.getCause());
 		}
@@ -1430,37 +1379,6 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		return userName;
 	}
 
-	public boolean isClosed()
-	{
-		boolean is = true;
-
-		if (this.getConnection() != null)
-		{
-			try
-			{
-				is = this.getConnection().isClosed();
-			}
-			catch (SQLException e)
-			{
-				e.printStackTrace();
-			}
-		}
-
-		return is;
-	}
-
-	public boolean isClosed(SQLKit kit)
-	{
-		boolean is = true;
-
-		synchronized (this.getKits())
-		{
-			is = !this.getKits().contains(kit);
-		}
-
-		return is;
-	}
-
 	public Connection newConnection() throws SQLException, InstantiationException, IllegalAccessException,
 			ClassNotFoundException
 	{
@@ -1470,24 +1388,38 @@ public abstract class DataBase implements ConnectionFactory, ConnectionSource, C
 		return DriverManager.getConnection(this.getURL(), this.getInformation());
 	}
 
-	public void openConnection() throws SQLException, InstantiationException, IllegalAccessException,
-			ClassNotFoundException
+	public Connection provideConnection() throws SQLException
 	{
-		if (this.isClosed())
+		Connection c = null;
+
+		try
 		{
-			this.setConnection(this.newConnection());
+			c = this.newConnection();
 		}
+		catch (InstantiationException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IllegalAccessException e)
+		{
+			e.printStackTrace();
+		}
+		catch (ClassNotFoundException e)
+		{
+			e.printStackTrace();
+		}
+
+		return c;
+	}
+
+	public void recycleConnection(Connection c) throws SQLException
+	{
+		c.close();
 	}
 
 	public DataBase setCatalog(String catalog)
 	{
 		this.catalog = catalog;
-		return this;
-	}
-
-	public DataBase setConnection(Connection connection)
-	{
-		this.connection = connection;
 		return this;
 	}
 

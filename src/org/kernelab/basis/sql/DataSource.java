@@ -2,8 +2,6 @@ package org.kernelab.basis.sql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -44,7 +42,7 @@ import javax.naming.NamingException;
  * @version 1.1.0
  * @update 2010-02-18
  */
-public class DataSource implements ConnectionFactory, ConnectionSource
+public class DataSource implements ConnectionManager
 {
 	/**
 	 * @param args
@@ -57,8 +55,6 @@ public class DataSource implements ConnectionFactory, ConnectionSource
 	private String					dataSourceName;
 
 	private javax.sql.DataSource	dataSource;
-
-	private Set<SQLKit>				kits	= new HashSet<SQLKit>();
 
 	/**
 	 * Create a Data Source with the given data source object.
@@ -80,48 +76,6 @@ public class DataSource implements ConnectionFactory, ConnectionSource
 	public DataSource(String dataSourceName)
 	{
 		this.setDataSourceName(dataSourceName);
-
-		javax.sql.DataSource dataSource = null;
-
-		try
-		{
-			InitialContext initialContext = new InitialContext();
-			dataSource = (javax.sql.DataSource) initialContext.lookup("java:comp/env/" + this.getDataSourceName());
-		}
-		catch (NamingException e)
-		{
-			e.printStackTrace();
-		}
-
-		this.setDataSource(dataSource);
-	}
-
-	public void close(SQLKit kit)
-	{
-		synchronized (this.getKits())
-		{
-			this.getKits().remove(kit);
-			try
-			{
-				kit.getConnection().close();
-			}
-			catch (SQLException e)
-			{
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public Connection getConnection()
-	{
-		try
-		{
-			return this.newConnection();
-		}
-		catch (Exception e)
-		{
-			return null;
-		}
 	}
 
 	public javax.sql.DataSource getDataSource()
@@ -134,39 +88,30 @@ public class DataSource implements ConnectionFactory, ConnectionSource
 		return dataSourceName;
 	}
 
-	private Set<SQLKit> getKits()
-	{
-		return kits;
-	}
-
 	public SQLKit getSQLKit()
 	{
 		SQLKit kit = null;
 
-		synchronized (this.getKits())
+		try
 		{
 			kit = new SQLKit(this);
-			this.getKits().add(kit);
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
 		}
 
 		return kit;
 	}
 
-	public boolean isClosed(SQLKit kit)
-	{
-		boolean is = true;
-
-		synchronized (this.getKits())
-		{
-			is = !this.getKits().contains(kit);
-		}
-
-		return is;
-	}
-
-	public Connection newConnection() throws SQLException
+	public Connection provideConnection() throws SQLException
 	{
 		return this.getDataSource().getConnection();
+	}
+
+	public void recycleConnection(Connection c) throws SQLException
+	{
+		c.close();
 	}
 
 	public void setDataSource(javax.sql.DataSource dataSource)
@@ -176,6 +121,14 @@ public class DataSource implements ConnectionFactory, ConnectionSource
 
 	public void setDataSourceName(String dataSourceName)
 	{
-		this.dataSourceName = dataSourceName;
+		try
+		{
+			this.setDataSource((javax.sql.DataSource) new InitialContext().lookup("java:comp/env/" + dataSourceName));
+			this.dataSourceName = dataSourceName;
+		}
+		catch (NamingException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

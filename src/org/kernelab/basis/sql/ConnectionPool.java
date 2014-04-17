@@ -1,10 +1,11 @@
 package org.kernelab.basis.sql;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.kernelab.basis.AbstractPool;
 
-public class ConnectionPool extends AbstractPool<Connection> implements ConnectionSource
+public class ConnectionPool extends AbstractPool<Connection> implements ConnectionManager
 {
 	/**
 	 * @param args
@@ -14,41 +15,38 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	}
 
-	private ConnectionFactory	factory;
+	private ConnectionProvider	factory;
 
-	public ConnectionPool(ConnectionFactory factory, int limit)
+	public ConnectionPool(ConnectionProvider factory, int limit)
 	{
 		this(factory, limit, true);
 	}
 
-	public ConnectionPool(ConnectionFactory factory, int limit, boolean lazy)
+	public ConnectionPool(ConnectionProvider factory, int limit, boolean lazy)
 	{
 		super(limit, lazy);
 		this.setFactory(factory);
 	}
 
-	public void close(SQLKit kit)
-	{
-		Connection c = kit.getConnection();
-
-		kit.setConnection(null);
-
-		this.recycle(c);
-	}
-
-	public Connection getConnection()
-	{
-		return this.provide();
-	}
-
-	public ConnectionFactory getFactory()
+	public ConnectionProvider getFactory()
 	{
 		return factory;
 	}
 
 	public SQLKit getSQLKit()
 	{
-		return new SQLKit(this);
+		SQLKit kit = null;
+
+		try
+		{
+			kit = new SQLKit(this);
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return kit;
 	}
 
 	@Override
@@ -56,7 +54,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	{
 		try
 		{
-			return factory.newConnection();
+			return factory.provideConnection();
 		}
 		catch (Exception e)
 		{
@@ -64,7 +62,17 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 		}
 	}
 
-	protected ConnectionPool setFactory(ConnectionFactory factory)
+	public Connection provideConnection() throws SQLException
+	{
+		return this.provide();
+	}
+
+	public void recycleConnection(Connection c) throws SQLException
+	{
+		this.recycle(c);
+	}
+
+	protected ConnectionPool setFactory(ConnectionProvider factory)
 	{
 		this.factory = factory;
 		return this;

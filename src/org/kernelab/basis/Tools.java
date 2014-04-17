@@ -153,11 +153,11 @@ public class Tools
 	 */
 	public static <T> T as(Object obj, Class<T> cls)
 	{
-		try
+		if (cls.isInstance(obj))
 		{
 			return cls.cast(obj);
 		}
-		catch (ClassCastException e)
+		else
 		{
 			return null;
 		}

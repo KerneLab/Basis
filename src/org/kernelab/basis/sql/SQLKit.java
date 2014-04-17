@@ -729,7 +729,7 @@ public class SQLKit
 		return filler.toString();
 	}
 
-	private ConnectionSource						source;
+	private ConnectionManager						manager;
 
 	private Connection								connection;
 
@@ -745,17 +745,10 @@ public class SQLKit
 
 	private int										resultSetHoldability	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][2];
 
-	public SQLKit(ConnectionSource source)
+	public SQLKit(ConnectionManager manager) throws SQLException
 	{
-		this.setSource(source);
-		try
-		{
-			this.setConnection(source.getConnection());
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
+		this.setConnection(manager.provideConnection());
+		this.setManager(manager);
 		this.setStatements(new HashMap<String, Statement>());
 	}
 
@@ -870,7 +863,13 @@ public class SQLKit
 	{
 		clean();
 		statements = null;
-		this.getSource().close(this);
+		try
+		{
+			this.getManager().recycleConnection(connection);
+		}
+		catch (SQLException e)
+		{
+		}
 		connection = null;
 	}
 
@@ -1104,6 +1103,11 @@ public class SQLKit
 		return connection;
 	}
 
+	public ConnectionManager getManager()
+	{
+		return manager;
+	}
+
 	public ResultSet getResultSet()
 	{
 		return getResultSet(statement);
@@ -1125,11 +1129,6 @@ public class SQLKit
 		}
 
 		return rs;
-	}
-
-	public ConnectionSource getSource()
-	{
-		return source;
 	}
 
 	public Statement getStatement()
@@ -1179,7 +1178,19 @@ public class SQLKit
 
 	public boolean isClosed()
 	{
-		return connection == null;
+		boolean is = connection == null;
+		if (!is)
+		{
+			try
+			{
+				is = connection.isClosed();
+			}
+			catch (SQLException e)
+			{
+				is = false;
+			}
+		}
+		return is;
 	}
 
 	public SQLKit optimizingAs(byte i)
@@ -1709,9 +1720,9 @@ public class SQLKit
 		this.connection = connection;
 	}
 
-	public void setSource(ConnectionSource source)
+	private void setManager(ConnectionManager source)
 	{
-		this.source = source;
+		this.manager = source;
 	}
 
 	public void setStatement(Statement statement)
