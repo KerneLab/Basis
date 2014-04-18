@@ -15,7 +15,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	}
 
-	private ConnectionProvider	factory;
+	private ConnectionProvider	provider;
 
 	public ConnectionPool(ConnectionProvider factory, int limit)
 	{
@@ -25,12 +25,12 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	public ConnectionPool(ConnectionProvider factory, int limit, boolean lazy)
 	{
 		super(limit, lazy);
-		this.setFactory(factory);
+		this.setProvider(factory);
 	}
 
-	public ConnectionProvider getFactory()
+	public ConnectionProvider getProvider()
 	{
-		return factory;
+		return provider;
 	}
 
 	public SQLKit getSQLKit()
@@ -54,7 +54,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	{
 		try
 		{
-			return factory.provideConnection();
+			return provider.provideConnection();
 		}
 		catch (Exception e)
 		{
@@ -69,12 +69,15 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public void recycleConnection(Connection c) throws SQLException
 	{
-		this.recycle(c);
+		if (c != null)
+		{
+			this.recycle(c);
+		}
 	}
 
-	protected ConnectionPool setFactory(ConnectionProvider factory)
+	protected ConnectionPool setProvider(ConnectionProvider factory)
 	{
-		this.factory = factory;
+		this.provider = factory;
 		return this;
 	}
 }

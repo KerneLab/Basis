@@ -44,14 +44,6 @@ import javax.naming.NamingException;
  */
 public class DataSource implements ConnectionManager
 {
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args)
-	{
-
-	}
-
 	private String					dataSourceName;
 
 	private javax.sql.DataSource	dataSource;
@@ -111,7 +103,10 @@ public class DataSource implements ConnectionManager
 
 	public void recycleConnection(Connection c) throws SQLException
 	{
-		c.close();
+		if (c != null)
+		{
+			c.close();
+		}
 	}
 
 	public void setDataSource(javax.sql.DataSource dataSource)

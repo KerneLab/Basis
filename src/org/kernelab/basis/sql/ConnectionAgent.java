@@ -24,6 +24,9 @@ public class ConnectionAgent implements ConnectionManager
 
 	public void recycleConnection(Connection c) throws SQLException
 	{
-		c.close();
+		if (c != null)
+		{
+			c.close();
+		}
 	}
 }

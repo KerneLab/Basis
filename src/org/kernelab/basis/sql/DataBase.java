@@ -1414,7 +1414,10 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public void recycleConnection(Connection c) throws SQLException
 	{
-		c.close();
+		if (c != null)
+		{
+			c.close();
+		}
 	}
 
 	public DataBase setCatalog(String catalog)
