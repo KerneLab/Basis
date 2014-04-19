@@ -70,7 +70,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		return executorService;
 	}
 
-	public int getTasks()
+	public Integer getTasks()
 	{
 		synchronized (tasks)
 		{
@@ -78,10 +78,18 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		}
 	}
 
+	/**
+	 * Retrieves and removes the Future representing the next completed task,
+	 * directly return null if none task was running, waiting if some task is to
+	 * be done.
+	 * 
+	 * @return the Future representing the next completed task, or null if none
+	 *         task was running.
+	 * @throws InterruptedException
+	 */
 	public Future<V> grab() throws InterruptedException
 	{
-		int tasks = this.getTasks();
-		if (tasks > 0)
+		if (this.getTasks() > 0)
 		{
 			this.delTask();
 			return completionService.take();
