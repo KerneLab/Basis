@@ -38,10 +38,10 @@ public abstract class WrappedPool<E> extends AbstractPool<Element<E>>
 	}
 
 	@Override
-	protected Element<E> newElement()
+	protected Element<E> newElement(long timeout)
 	{
-		return new Element<E>(this, newElementInstance());
+		return new Element<E>(this, newElementInstance(timeout));
 	}
 
-	protected abstract E newElementInstance();
+	protected abstract E newElementInstance(long timeout);
 }

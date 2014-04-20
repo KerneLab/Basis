@@ -96,7 +96,7 @@ public class DataSource implements ConnectionManager
 		return kit;
 	}
 
-	public Connection provideConnection() throws SQLException
+	public Connection provideConnection(long timeout) throws SQLException
 	{
 		return this.getDataSource().getConnection();
 	}

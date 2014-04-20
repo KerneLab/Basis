@@ -50,11 +50,11 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	}
 
 	@Override
-	protected Connection newElement()
+	protected Connection newElement(long timeout)
 	{
 		try
 		{
-			return provider.provideConnection();
+			return provider.provideConnection(timeout);
 		}
 		catch (Exception e)
 		{
@@ -64,7 +64,12 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public Connection provideConnection() throws SQLException
 	{
-		return this.provide();
+		return provideConnection(0L);
+	}
+
+	public Connection provideConnection(long timeout) throws SQLException
+	{
+		return this.provide(timeout);
 	}
 
 	public void recycleConnection(Connection c) throws SQLException

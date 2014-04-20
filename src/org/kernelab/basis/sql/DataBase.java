@@ -1388,7 +1388,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return DriverManager.getConnection(this.getURL(), this.getInformation());
 	}
 
-	public Connection provideConnection() throws SQLException
+	public Connection provideConnection(long timeout) throws SQLException
 	{
 		Connection c = null;
 

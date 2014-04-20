@@ -13,6 +13,8 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	private boolean	lazy;
 
+	private boolean	closed;
+
 	public AbstractPool(int limit)
 	{
 		this(limit, true);
@@ -20,17 +22,30 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	public AbstractPool(int limit, boolean lazy)
 	{
-		this(new LinkedList<E>(), limit, lazy);
+		this(new LinkedList<E>(), limit, true);
 	}
 
 	protected AbstractPool(List<E> pool, int limit, boolean lazy)
 	{
-		this.elements = pool;
-		this.trace = 0;
-		this.limit = Math.max(limit, 1);
-		this.lazy = lazy;
+		this.setClosed(false);
+		this.setElements(pool);
+		this.setTrace(0);
+		this.setLazy(lazy);
+		this.setLimit(limit);
+	}
 
-		this.init();
+	/**
+	 * Close the pool which would stop waiting the provide request and attempt
+	 * to provide with the current elements.
+	 */
+	public void close()
+	{
+		synchronized (elements)
+		{
+			this.setClosed(true);
+
+			elements.notifyAll();
+		}
 	}
 
 	protected List<E> getElements()
@@ -48,16 +63,9 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return trace;
 	}
 
-	protected void init()
+	public boolean isClosed()
 	{
-		if (!lazy)
-		{
-			for (int i = 0; i < limit; i++)
-			{
-				elements.add(newElement());
-			}
-			trace = limit;
-		}
+		return closed;
 	}
 
 	public boolean isLazy()
@@ -65,57 +73,99 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return lazy;
 	}
 
-	protected abstract E newElement();
+	protected abstract E newElement(long timeout);
 
-	public E provide()
+	public E provide(long timeout)
 	{
 		E element = null;
 
-		do
+		synchronized (elements)
 		{
-			synchronized (elements)
+			while (elements.isEmpty() && !closed)
 			{
-				if (elements.isEmpty())
+				if (trace < limit)
 				{
-					if (trace < limit)
-					{
-						element = newElement();
-						trace++;
-					}
-					else
-					{
-						try
-						{
-							elements.wait();
-						}
-						catch (InterruptedException e)
-						{
-							e.printStackTrace();
-						}
-					}
+					supplyElement(timeout);
+					break;
 				}
 				else
 				{
-					element = elements.remove(0);
+					try
+					{
+						elements.wait(timeout);
+					}
+					catch (InterruptedException e)
+					{
+						e.printStackTrace();
+					}
+
+					if (timeout != 0L)
+					{
+						break;
+					}
 				}
 			}
-		} while (element == null);
+
+			if (!elements.isEmpty())
+			{
+				element = elements.remove(0);
+			}
+		}
 
 		return element;
 	}
 
 	public void recycle(E element)
 	{
-		synchronized (elements)
+		if (element != null)
 		{
-			elements.add(element);
-			elements.notifyAll();
+			synchronized (elements)
+			{
+				elements.add(element);
+				elements.notifyAll();
+			}
 		}
+	}
+
+	private void setClosed(boolean closed)
+	{
+		this.closed = closed;
+	}
+
+	private AbstractPool<E> setElements(List<E> elements)
+	{
+		this.elements = elements;
+		return Tools.cast(this);
+	}
+
+	private AbstractPool<E> setLazy(boolean lazy)
+	{
+		this.lazy = lazy;
+		return Tools.cast(this);
 	}
 
 	public AbstractPool<E> setLimit(int limit)
 	{
-		this.limit = limit;
+		this.limit = Math.max(limit, 1);
+
+		if (!lazy && trace < this.limit)
+		{
+			synchronized (elements)
+			{
+				for (; trace < this.limit;)
+				{
+					supplyElement(0);
+				}
+				elements.notifyAll();
+			}
+		}
+
+		return Tools.cast(this);
+	}
+
+	private AbstractPool<E> setTrace(int trace)
+	{
+		this.trace = trace;
 		return Tools.cast(this);
 	}
 
@@ -124,6 +174,20 @@ public abstract class AbstractPool<E> implements Pool<E>
 		synchronized (elements)
 		{
 			return elements.size();
+		}
+	}
+
+	protected void supplyElement(long timeout)
+	{
+		E element = newElement(timeout);
+		if (element == null)
+		{
+			throw new NullPointerException("Can not supply null element.");
+		}
+		else
+		{
+			elements.add(element);
+			trace++;
 		}
 	}
 }

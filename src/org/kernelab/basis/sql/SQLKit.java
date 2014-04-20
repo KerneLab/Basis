@@ -747,7 +747,7 @@ public class SQLKit
 
 	public SQLKit(ConnectionManager manager) throws SQLException
 	{
-		this.setConnection(manager.provideConnection());
+		this.setConnection(manager.provideConnection(0));
 		this.setManager(manager);
 		this.setStatements(new HashMap<String, Statement>());
 	}

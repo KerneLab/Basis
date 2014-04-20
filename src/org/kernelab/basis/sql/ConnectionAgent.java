@@ -17,7 +17,7 @@ public class ConnectionAgent implements ConnectionManager
 		return new SQLKit(this);
 	}
 
-	public Connection provideConnection() throws SQLException
+	public Connection provideConnection(long timeout) throws SQLException
 	{
 		return connection;
 	}
