@@ -1,16 +1,14 @@
 package org.kernelab.basis;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-public abstract class AbstractAccomplishable implements Accomplishable
+public abstract class AbstractAccomplishable<E> implements Accomplishable<E>
 {
+	private Collection<AccomplishListener<E>>	accomplishListeners;
 
-	private List<ActionListener>	accomplishedListeners;
-
-	private boolean					accomplished;
+	private boolean								accomplished;
 
 	public AbstractAccomplishable()
 	{
@@ -27,42 +25,42 @@ public abstract class AbstractAccomplishable implements Accomplishable
 	 */
 	public void accomplished()
 	{
-		if (!isAccomplished()) {
-
+		if (!isAccomplished())
+		{
 			setAccomplished(true);
 
-			ActionEvent accomplishedEvent = this.getAccomplishedEvent();
-
-			if (accomplishedEvent == null) {
-				accomplishedEvent = new ActionEvent(this,
-						Accomplishable.ACCOMPLISHED_CODE,
-						Accomplishable.ACCOMPLISHED_MARK, Tools.getTimeStamp(), 0);
+			if (accomplishListeners != null)
+			{
+				for (AccomplishListener<E> listener : accomplishListeners)
+				{
+					listener.accomplish(this.getAccomplishableSubject());
+				}
 			}
-
-			for (ActionListener listener : accomplishedListeners) {
-				listener.actionPerformed(accomplishedEvent);
-			}
-
 		}
 	}
 
-	// @Override
-	public void addAccomplishedListener(ActionListener listener)
+	public void addAccomplishedListener(AccomplishListener<E> listener)
 	{
-		accomplishedListeners.add(listener);
+		accomplishListeners.add(listener);
 	}
 
-	// @Override
 	public void clearAccomplishedListeners()
 	{
-		accomplishedListeners = new ArrayList<ActionListener>();
+		if (accomplishListeners == null)
+		{
+			accomplishListeners = new ArrayList<AccomplishListener<E>>();
+		}
+		else
+		{
+			accomplishListeners.clear();
+		}
 	}
 
-	public abstract ActionEvent getAccomplishedEvent();
+	protected abstract E getAccomplishableSubject();
 
-	public List<ActionListener> getAccomplishedListeners()
+	public Collection<AccomplishListener<E>> getAccomplishListeners()
 	{
-		return accomplishedListeners;
+		return accomplishListeners;
 	}
 
 	public boolean isAccomplished()
@@ -70,9 +68,9 @@ public abstract class AbstractAccomplishable implements Accomplishable
 		return accomplished;
 	}
 
-	public void removeAccomplishedListener(ActionListener listener)
+	public void removeAccomplishedListener(AccomplishListener<E> listener)
 	{
-		accomplishedListeners.remove(listener);
+		accomplishListeners.remove(listener);
 	}
 
 	/**
@@ -92,9 +90,8 @@ public abstract class AbstractAccomplishable implements Accomplishable
 		this.accomplished = accomplished;
 	}
 
-	protected void setAccomplishedListeners(List<ActionListener> listeners)
+	protected void setAccomplishedListeners(List<AccomplishListener<E>> listeners)
 	{
-		accomplishedListeners = listeners;
+		accomplishListeners = listeners;
 	}
-
 }

@@ -1,6 +1,5 @@
 package org.kernelab.basis.io;
 
-import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +18,7 @@ import org.kernelab.basis.Tools;
  * 
  * @author Dilly King
  */
-public abstract class DataReader extends AbstractAccomplishable implements Runnable, Callable<Integer>
+public abstract class DataReader extends AbstractAccomplishable<DataReader> implements Runnable, Callable<Integer>
 {
 	private static final char	CR				= '\r';
 
@@ -56,9 +55,9 @@ public abstract class DataReader extends AbstractAccomplishable implements Runna
 		return lines;
 	}
 
-	public ActionEvent getAccomplishedEvent()
+	protected DataReader getAccomplishableSubject()
 	{
-		return null;
+		return this;
 	}
 
 	public Charset getCharset()

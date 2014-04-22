@@ -1,6 +1,5 @@
 package org.kernelab.basis.io;
 
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -20,7 +19,7 @@ import org.kernelab.basis.Tools;
  * 
  * @author Dilly King
  */
-public class DataWriter extends AbstractAccomplishable implements Runnable
+public class DataWriter extends AbstractAccomplishable<DataWriter> implements Runnable
 {
 	protected class DataOutputStream extends OutputStream
 	{
@@ -109,9 +108,9 @@ public class DataWriter extends AbstractAccomplishable implements Runnable
 	}
 
 	@Override
-	public ActionEvent getAccomplishedEvent()
+	protected DataWriter getAccomplishableSubject()
 	{
-		return null;
+		return this;
 	}
 
 	public Charset getCharset()

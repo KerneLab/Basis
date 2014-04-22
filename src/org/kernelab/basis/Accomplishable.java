@@ -1,35 +1,29 @@
 package org.kernelab.basis;
 
-import java.awt.event.ActionListener;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * The Additional interface for Runnable objects.<br />
- * In this interface, the call-back methods are available in a List.<br />
+ * In this interface, the call-back methods are available in a Collection.<br />
  * When the Runnable objects accomplished its task, these call-back method would
  * be called via {@code accomplished()}.
  * 
  * @author Dilly King
  * 
  */
-public interface Accomplishable
+public interface Accomplishable<E>
 {
-	public static final int		ACCOMPLISHED_CODE	= 0;
-
-	public static final String	ACCOMPLISHED_MARK	= "ACCOMPLISHED";
+	public static interface AccomplishListener<E>
+	{
+		public void accomplish(E e);
+	}
 
 	/**
 	 * This method should be called at the end of "run" in Runnable interface.
 	 */
 	public void accomplished();
 
-	// public void addAccomplishedListener(ActionListener listener);
-
-	// public void clearAccomplishedListeners();
-
-	public List<ActionListener> getAccomplishedListeners();
+	public Collection<AccomplishListener<E>> getAccomplishListeners();
 
 	public boolean isAccomplished();
-
-	// public void removeAccomplishedListener(ActionListener listener);
 }

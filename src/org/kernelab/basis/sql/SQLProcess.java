@@ -1,6 +1,5 @@
 package org.kernelab.basis.sql;
 
-import java.awt.event.ActionEvent;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -16,7 +15,7 @@ import org.kernelab.basis.sql.DataBase.MySQL;
  * @author Dilly King
  * 
  */
-public abstract class SQLProcess extends AbstractAccomplishable implements Runnable
+public abstract class SQLProcess extends AbstractAccomplishable<SQLProcess> implements Runnable
 {
 	/**
 	 * @param args
@@ -48,12 +47,6 @@ public abstract class SQLProcess extends AbstractAccomplishable implements Runna
 
 	private boolean		processing;
 
-	@Override
-	public ActionEvent getAccomplishedEvent()
-	{
-		return null;
-	}
-
 	public DataBase getDataBase()
 	{
 		return dataBase;
@@ -62,6 +55,11 @@ public abstract class SQLProcess extends AbstractAccomplishable implements Runna
 	public SQLKit getKit()
 	{
 		return kit;
+	}
+
+	protected SQLProcess getAccomplishableSubject()
+	{
+		return this;
 	}
 
 	public boolean isProcessing()

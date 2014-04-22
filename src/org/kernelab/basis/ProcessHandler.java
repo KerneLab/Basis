@@ -1,6 +1,5 @@
 package org.kernelab.basis;
 
-import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -9,16 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public class ProcessHandler extends AbstractAccomplishable implements Callable<Integer>, Runnable
+public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> implements Callable<ProcessHandler>,
+		Runnable
 {
-	public static final String	PROCESS_ACCOMPLISHED_COMMAND	= "ACCOMPLISHED";
-
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args)
 	{
-		ProcessHandler ph = new ProcessHandler("notepad");
+		ProcessHandler ph = new ProcessHandler(args);
 		ph.run();
 	}
 
@@ -26,11 +24,11 @@ public class ProcessHandler extends AbstractAccomplishable implements Callable<I
 
 	private ProcessBuilder	processBuilder;
 
+	private Integer			result;
+
 	private boolean			terminated;
 
 	private PrintStream		printStream;
-
-	private ActionEvent		accomplishedEvent;
 
 	public ProcessHandler(String... cmd)
 	{
@@ -39,12 +37,11 @@ public class ProcessHandler extends AbstractAccomplishable implements Callable<I
 		processBuilder = new ProcessBuilder(cmd);
 		terminated = true;
 		printStream = null;
-		accomplishedEvent = null;
 	}
 
-	public Integer call() throws Exception
+	public ProcessHandler call() throws Exception
 	{
-		Integer result = null;
+		result = null;
 
 		String line = null;
 
@@ -71,26 +68,23 @@ public class ProcessHandler extends AbstractAccomplishable implements Callable<I
 			this.accomplished();
 		}
 
-		return result;
+		return this;
 	}
 
 	@Override
-	public ActionEvent getAccomplishedEvent()
+	protected ProcessHandler getAccomplishableSubject()
 	{
-		ActionEvent event = accomplishedEvent;
-
-		if (event == null)
-		{
-			event = new ActionEvent(this, process.exitValue(), ProcessHandler.PROCESS_ACCOMPLISHED_COMMAND,
-					Tools.getTimeStamp(), 0);
-		}
-
-		return event;
+		return this;
 	}
 
 	public List<String> getCommand()
 	{
 		return processBuilder.command();
+	}
+
+	public String getCommandLine()
+	{
+		return Tools.jointStrings(" ", this.getCommand());
 	}
 
 	public File getDirectory()
@@ -118,6 +112,11 @@ public class ProcessHandler extends AbstractAccomplishable implements Callable<I
 		return processBuilder;
 	}
 
+	public Integer getResult()
+	{
+		return result;
+	}
+
 	public boolean isTerminated()
 	{
 		return terminated;
@@ -133,13 +132,6 @@ public class ProcessHandler extends AbstractAccomplishable implements Callable<I
 		{
 			e.printStackTrace();
 		}
-	}
-
-	public ProcessHandler setAccomplishedEvent(ActionEvent finishedEvent)
-	{
-		this.accomplishedEvent = finishedEvent;
-
-		return this;
 	}
 
 	public ProcessHandler setCommand(List<String> cmd)

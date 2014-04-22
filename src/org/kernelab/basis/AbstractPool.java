@@ -73,6 +73,13 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return lazy;
 	}
 
+	/**
+	 * Create a new element which should not be null. Any null element return by
+	 * this method will be ignored which would not increase the trace.
+	 * 
+	 * @param timeout
+	 * @return The new element.
+	 */
 	protected abstract E newElement(long timeout);
 
 	public E provide(long timeout)
@@ -86,7 +93,6 @@ public abstract class AbstractPool<E> implements Pool<E>
 				if (trace < limit)
 				{
 					supplyElement(timeout);
-					break;
 				}
 				else
 				{
@@ -98,11 +104,11 @@ public abstract class AbstractPool<E> implements Pool<E>
 					{
 						e.printStackTrace();
 					}
+				}
 
-					if (timeout != 0L)
-					{
-						break;
-					}
+				if (timeout != 0L)
+				{
+					break;
 				}
 			}
 
@@ -152,7 +158,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 		{
 			synchronized (elements)
 			{
-				for (; trace < this.limit;)
+				for (int i = trace; i < this.limit; i++)
 				{
 					supplyElement(0);
 				}
@@ -180,11 +186,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 	protected void supplyElement(long timeout)
 	{
 		E element = newElement(timeout);
-		if (element == null)
-		{
-			throw new NullPointerException("Can not supply null element.");
-		}
-		else
+		if (element != null)
 		{
 			elements.add(element);
 			trace++;
