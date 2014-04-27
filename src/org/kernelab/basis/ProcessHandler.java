@@ -117,6 +117,11 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return result;
 	}
 
+	public boolean isRedirectErrorStream()
+	{
+		return processBuilder.redirectErrorStream();
+	}
+
 	public boolean isTerminated()
 	{
 		return terminated;
@@ -158,6 +163,13 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	public ProcessHandler setPrintStream(PrintStream printStream)
 	{
 		this.printStream = printStream;
+
+		return this;
+	}
+
+	public ProcessHandler setRedirectErrorStream(boolean redirect)
+	{
+		processBuilder.redirectErrorStream(redirect);
 
 		return this;
 	}
