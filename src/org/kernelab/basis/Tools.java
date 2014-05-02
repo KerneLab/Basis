@@ -552,7 +552,10 @@ public class Tools
 	/**
 	 * Copy the content from source File to the target File.<br />
 	 * If the target is a directory, then the source will be copied into the
-	 * directory as the same name.
+	 * directory as the same name.<br />
+	 * If the source is a directory, then each file in source will be copied
+	 * into the target directory, and the target directory would be created in
+	 * case that the target directory doesn't exist.
 	 * 
 	 * @param source
 	 *            The source File.
@@ -565,16 +568,38 @@ public class Tools
 	{
 		boolean copied = false;
 
-		if (target.isDirectory())
+		if (source.isDirectory())
 		{
-			target = new File(target, source.getName());
+			if (!target.isDirectory())
+			{
+				if (!target.mkdirs())
+				{
+					return false;
+				}
+			}
+
+			copied = true;
+			for (File file : source.listFiles())
+			{
+				copied &= copy(file, new File(target, file.getName()));
+			}
 		}
+		else if (source.isFile())
+		{
+			if (target.isDirectory())
+			{
+				target = new File(target, source.getName());
+			}
 
-		FileChannel src = new FileInputStream(source).getChannel();
+			if (!equals(source, target))
+			{
+				FileChannel src = new FileInputStream(source).getChannel();
 
-		copied = copy(src, target);
+				copied = copy(src, target);
 
-		src.close();
+				src.close();
+			}
+		}
 
 		return copied;
 	}
@@ -597,7 +622,7 @@ public class Tools
 	{
 		boolean copied = false;
 
-		if (source.isOpen() && target != null)
+		if (source.isOpen())
 		{
 			FileChannel tar = new FileOutputStream(target).getChannel();
 
