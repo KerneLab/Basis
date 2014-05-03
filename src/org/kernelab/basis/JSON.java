@@ -1147,33 +1147,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				else if (reflect != null)
 				{
 					// Reflect Object using template
-					Class<?> cls = object.getClass();
-
 					int i = 0;
 
-					for (Object obj : reflect)
+					for (Object field : reflect)
 					{
 						try
 						{
-							String field = obj.toString();
-
-							String methodName = field.substring(0, 1).toUpperCase() + field.substring(1);
-
-							Method method = null;
-
-							try
-							{
-								method = cls.getMethod("get" + methodName);
-							}
-							catch (NoSuchMethodException e)
-							{
-								method = cls.getMethod("is" + methodName);
-							}
-
-							if (method != null && method.getParameterTypes().length == 0)
-							{
-								jsan.attr(i, method.invoke(object));
-							}
+							jsan.attr(i, Access(object, field.toString()));
 						}
 						catch (Exception e)
 						{
@@ -2169,13 +2149,12 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				// If in a Context.
 				if (formalOuter != null && IsContext(formalContext) && IsJSON(hirch))
-				{ // The formal outer would quote the
-					// value at its new
+				{
+					// The formal outer would quote the value at its new
 					// location.
 					if (formalContext == this.context())
-					{ // A quote would be
-						// made only in the
-						// same Context.
+					{
+						// A quote would be made only in the same Context.
 						formalOuter.put(formalEntry, AsJSON(hirch).quote());
 					}
 				}
@@ -4218,6 +4197,103 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		ESCAPED_CHAR.put('\t', "\\t");
 	}
 
+	public static Object Access(Object object, String fieldName) throws Exception
+	{
+		Object value = null;
+
+		if (object != null && fieldName != null)
+		{
+			if (JSON.IsJSON(object))
+			{
+				value = ((JSON) object).attr(fieldName);
+			}
+			else if (object instanceof Map)
+			{
+				value = ((Map<?, ?>) object).get(fieldName);
+			}
+			else
+			{
+				Class<?> cls = object.getClass();
+
+				String methodName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+
+				Method method = null;
+
+				try
+				{
+					method = cls.getMethod("get" + methodName);
+				}
+				catch (NoSuchMethodException e)
+				{
+					try
+					{
+						method = cls.getMethod("is" + methodName);
+					}
+					catch (NoSuchMethodException ex)
+					{
+						method = cls.getMethod(fieldName);
+					}
+				}
+
+				if (method != null && method.getParameterTypes().length == 0)
+				{
+					value = method.invoke(object);
+				}
+			}
+		}
+
+		return value;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void Access(Object object, String fieldName, Object value) throws Exception
+	{
+		if (object != null && fieldName != null)
+		{
+			if (JSON.IsJSON(object))
+			{
+				((JSON) object).attr(fieldName, value);
+			}
+			else if (object instanceof Map)
+			{
+				try
+				{
+					((Map<String, Object>) object).put(fieldName, value);
+				}
+				catch (Exception e)
+				{
+				}
+			}
+			else
+			{
+				Class<?> cls = object.getClass();
+
+				Field field = FieldOf(cls, fieldName);
+
+				if (field != null)
+				{
+					String methodName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+
+					Method method = null;
+
+					try
+					{
+						method = cls.getMethod("set" + methodName, field.getType());
+					}
+					catch (NoSuchMethodException e)
+					{
+						method = cls.getMethod(fieldName, field.getType());
+					}
+
+					if (method != null && method.getParameterTypes().length == 1)
+					{
+						method.invoke(object, value);
+					}
+				}
+			}
+		}
+	}
+
 	public static final Context AsContext(Object o)
 	{
 		return Tools.as(o, Context.class);
@@ -5354,8 +5430,6 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		if (object != null)
 		{
-			Class<T> cls = (Class<T>) object.getClass();
-
 			if (IsJSON(object))
 			{
 				JSON obj = (JSON) object;
@@ -5411,34 +5485,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 							if (json.has(key))
 							{
-								String suffix = name.substring(0, 1).toUpperCase() + name.substring(1);
-
-								Method set = cls.getMethod("set" + suffix, field.getType());
-
-								Object value = null;
-
-								try
-								{
-									Method get = null;
-
-									try
-									{
-										get = cls.getMethod("get" + suffix);
-									}
-									catch (NoSuchMethodException e)
-									{
-										get = cls.getMethod("is" + suffix);
-									}
-
-									value = get.invoke(object);
-								}
-								catch (Exception e)
-								{
-								}
+								Object value = Access(object, name);
 
 								value = ProjectTo(json.attr(key), field.getType(), value, json.projects());
 
-								set.invoke(object, value);
+								Access(object, name, value);
 							}
 						}
 						catch (Exception e)
@@ -5894,33 +5945,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			else if (reflect != null)
 			{
 				// Reflect Object using template
-				Class<?> cls = object.getClass();
-
 				for (Pair pair : reflect.pairs())
 				{
 					try
 					{
 						if (pair.getKey() != null)
 						{
-							String name = pair.getValue().toString();
-
-							if (name.length() > 0)
-							{
-								String methodName = name.substring(0, 1).toUpperCase() + name.substring(1);
-
-								Method method = null;
-
-								try
-								{
-									method = cls.getMethod("get" + methodName);
-								}
-								catch (NoSuchMethodException e)
-								{
-									method = cls.getMethod("is" + methodName);
-								}
-
-								json.attr(pair.getKey(), method.invoke(object));
-							}
+							json.attr(pair.getKey(), Access(object, pair.getValue().toString()));
 						}
 					}
 					catch (Exception e)
