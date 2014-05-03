@@ -566,7 +566,7 @@ public class Tools
 	 */
 	public static boolean copy(File source, File target) throws IOException
 	{
-		boolean copied = false;
+		boolean copied = true;
 
 		if (source.isDirectory())
 		{
@@ -578,7 +578,6 @@ public class Tools
 				}
 			}
 
-			copied = true;
 			for (File file : source.listFiles())
 			{
 				copied &= copy(file, new File(target, file.getName()));
