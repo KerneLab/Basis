@@ -4231,7 +4231,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					}
 					catch (NoSuchMethodException ex)
 					{
-						method = cls.getMethod(fieldName);
+						try
+						{
+							method = cls.getMethod(fieldName);
+						}
+						catch (NoSuchMethodException err)
+						{
+							value = cls.getField(fieldName).get(object);
+						}
 					}
 				}
 
@@ -4256,13 +4263,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (object instanceof Map)
 			{
-				try
-				{
-					((Map<String, Object>) object).put(fieldName, value);
-				}
-				catch (Exception e)
-				{
-				}
+				((Map<String, Object>) object).put(fieldName, value);
 			}
 			else
 			{
@@ -4282,7 +4283,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					}
 					catch (NoSuchMethodException e)
 					{
-						method = cls.getMethod(fieldName, field.getType());
+						try
+						{
+							method = cls.getMethod(fieldName, field.getType());
+						}
+						catch (NoSuchMethodException ex)
+						{
+							field.set(object, value);
+						}
 					}
 
 					if (method != null && method.getParameterTypes().length == 1)
