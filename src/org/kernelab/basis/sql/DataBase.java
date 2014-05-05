@@ -777,8 +777,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 			private StringBuilder		buffer	= new StringBuilder();
 
-			private boolean				started	= false;
-
 			public Map<String, String> getMap()
 			{
 				return map;
@@ -804,31 +802,23 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 				{
 					buffer.append(text);
 
-					if (!started)
+					if (Tools.seekIndex(buffer, BEGIN) != -1 && Tools.dualMatchCount(buffer, BEGIN, END, 0) == 0)
 					{
-						started = true;
-					}
-					else
-					{
-						if (Tools.seekIndex(buffer, BEGIN) != -1 && Tools.dualMatchCount(buffer, BEGIN, END, 0) == 0)
+						Matcher matcher = Pattern.compile(PATTERN, Pattern.DOTALL).matcher(buffer);
+
+						if (matcher.matches())
 						{
-							Matcher matcher = Pattern.compile(PATTERN, Pattern.DOTALL).matcher(buffer);
-
-							if (matcher.matches())
+							String key = matcher.group(1).trim().toUpperCase();
+							String value = matcher.group(2).trim();
+							map.put(key, value);
+							if (Tools.equals(name, key))
 							{
-								String key = matcher.group(1).trim().toUpperCase();
-								String value = matcher.group(2).trim();
-								map.put(key, value);
-								if (Tools.equals(name, key))
-								{
-									this.value = value;
-									this.setReading(false);
-								}
+								this.value = value;
+								this.setReading(false);
 							}
-
-							started = false;
-							Tools.clearStringBuilder(buffer);
 						}
+
+						Tools.clearStringBuilder(buffer);
 					}
 				}
 			}
@@ -836,7 +826,9 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			@Override
 			protected void readPrepare()
 			{
+				value = null;
 				map.clear();
+				Tools.clearStringBuilder(buffer);
 			}
 
 			public <T extends TNSNamesReader> T setMap(Map<String, String> map)
