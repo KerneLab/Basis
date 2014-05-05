@@ -316,6 +316,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Array getValueArray(int column, Array defaultValue)
+	{
+		Array value = getValueArray(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Array getValueArray(String column)
 	{
 		Array value = null;
@@ -332,6 +338,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Array getValueArray(String column, Array defaultValue)
+	{
+		Array value = getValueArray(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public InputStream getValueAsciiStream(int column)
@@ -352,6 +364,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public InputStream getValueAsciiStream(int column, InputStream defaultValue)
+	{
+		InputStream value = getValueAsciiStream(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public InputStream getValueAsciiStream(String column)
 	{
 		InputStream value = null;
@@ -368,6 +386,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public InputStream getValueAsciiStream(String column, InputStream defaultValue)
+	{
+		InputStream value = getValueAsciiStream(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public BigDecimal getValueBigDecimal(int column)
@@ -388,6 +412,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public BigDecimal getValueBigDecimal(int column, BigDecimal defaultValue)
+	{
+		BigDecimal value = getValueBigDecimal(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public BigDecimal getValueBigDecimal(String column)
 	{
 		BigDecimal value = null;
@@ -404,6 +434,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public BigDecimal getValueBigDecimal(String column, BigDecimal defaultValue)
+	{
+		BigDecimal value = getValueBigDecimal(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public InputStream getValueBinaryStream(int column)
@@ -424,6 +460,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public InputStream getValueBinaryStream(int column, InputStream defaultValue)
+	{
+		InputStream value = getValueBinaryStream(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public InputStream getValueBinaryStream(String column)
 	{
 		InputStream value = null;
@@ -440,6 +482,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public InputStream getValueBinaryStream(String column, InputStream defaultValue)
+	{
+		InputStream value = getValueBinaryStream(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Blob getValueBlob(int column)
@@ -460,6 +508,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Blob getValueBlob(int column, Blob defaultValue)
+	{
+		Blob value = getValueBlob(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Blob getValueBlob(String column)
 	{
 		Blob value = null;
@@ -478,6 +532,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Blob getValueBlob(String column, Blob defaultValue)
+	{
+		Blob value = getValueBlob(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Boolean getValueBoolean(int column)
 	{
 		Boolean value = null;
@@ -486,7 +546,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getBoolean(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getBoolean(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -494,6 +557,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Boolean getValueBoolean(int column, Boolean defaultValue)
+	{
+		Boolean value = getValueBoolean(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Boolean getValueBoolean(String column)
@@ -504,7 +573,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getBoolean(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getBoolean(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -512,6 +584,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Boolean getValueBoolean(String column, Boolean defaultValue)
+	{
+		Boolean value = getValueBoolean(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Byte getValueByte(int column)
@@ -522,7 +600,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getByte(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getByte(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -530,6 +611,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Byte getValueByte(int column, Byte defaultValue)
+	{
+		Byte value = getValueByte(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Byte getValueByte(String column)
@@ -540,7 +627,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getByte(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getByte(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -548,6 +638,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Byte getValueByte(String column, Byte defaultValue)
+	{
+		Byte value = getValueByte(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public byte[] getValueBytes(int column)
@@ -568,6 +664,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public byte[] getValueBytes(int column, byte[] defaultValue)
+	{
+		byte[] value = getValueBytes(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public byte[] getValueBytes(String column)
 	{
 		byte[] value = null;
@@ -584,6 +686,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public byte[] getValueBytes(String column, byte[] defaultValue)
+	{
+		byte[] value = getValueBytes(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Reader getValueCharacterStream(int column)
@@ -604,6 +712,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Reader getValueCharacterStream(int column, Reader defaultValue)
+	{
+		Reader value = getValueCharacterStream(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Reader getValueCharacterStream(String column)
 	{
 		Reader value = null;
@@ -620,6 +734,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Reader getValueCharacterStream(String column, Reader defaultValue)
+	{
+		Reader value = getValueCharacterStream(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Clob getValueClob(int column)
@@ -640,6 +760,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Clob getValueClob(int column, Clob defaultValue)
+	{
+		Clob value = getValueClob(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Clob getValueClob(String column)
 	{
 		Clob value = null;
@@ -656,6 +782,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Clob getValueClob(String column, Clob defaultValue)
+	{
+		Clob value = getValueClob(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Date getValueDate(int column)
@@ -694,6 +826,18 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Date getValueDate(int column, Calendar calendar, Date defaultValue)
+	{
+		Date value = getValueDate(column, calendar);
+		return value == null ? defaultValue : value;
+	}
+
+	public Date getValueDate(int column, Date defaultValue)
+	{
+		Date value = getValueDate(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Date getValueDate(String column)
 	{
 		Date value = null;
@@ -730,6 +874,18 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Date getValueDate(String column, Calendar calendar, Date defaultValue)
+	{
+		Date value = getValueDate(column, calendar);
+		return value == null ? defaultValue : value;
+	}
+
+	public Date getValueDate(String column, Date defaultValue)
+	{
+		Date value = getValueDate(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Double getValueDouble(int column)
 	{
 		Double value = null;
@@ -738,7 +894,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getDouble(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getDouble(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -746,6 +905,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Double getValueDouble(int column, Double defaultValue)
+	{
+		Double value = getValueDouble(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Double getValueDouble(String column)
@@ -756,7 +921,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getDouble(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getDouble(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -764,6 +932,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Double getValueDouble(String column, Double defaultValue)
+	{
+		Double value = getValueDouble(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Float getValueFloat(int column)
@@ -774,7 +948,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getFloat(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getFloat(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -782,6 +959,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Float getValueFloat(int column, Float defaultValue)
+	{
+		Float value = getValueFloat(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Float getValueFloat(String column)
@@ -792,7 +975,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getFloat(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getFloat(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -800,6 +986,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Float getValueFloat(String column, Float defaultValue)
+	{
+		Float value = getValueFloat(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Integer getValueInteger(int column)
@@ -810,7 +1002,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getInt(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getInt(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -818,6 +1013,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Integer getValueInteger(int column, Integer defaultValue)
+	{
+		Integer value = getValueInteger(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Integer getValueInteger(String column)
@@ -828,7 +1029,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getInt(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getInt(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -836,6 +1040,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Integer getValueInteger(String column, Integer defaultValue)
+	{
+		Integer value = getValueInteger(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Long getValueLong(int column)
@@ -846,7 +1056,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getLong(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getLong(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -854,6 +1067,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Long getValueLong(int column, Long defaultValue)
+	{
+		Long value = getValueLong(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Long getValueLong(String column)
@@ -864,7 +1083,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getLong(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getLong(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -872,6 +1094,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Long getValueLong(String column, Long defaultValue)
+	{
+		Long value = getValueLong(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Object getValueObject(int column)
@@ -910,6 +1138,18 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Object getValueObject(int column, Map<String, Class<?>> map, Object defaultValue)
+	{
+		Object value = getValueObject(column, map);
+		return value == null ? defaultValue : value;
+	}
+
+	public Object getValueObject(int column, Object defaultValue)
+	{
+		Object value = getValueObject(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Object getValueObject(String column)
 	{
 		Object value = null;
@@ -946,6 +1186,18 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Object getValueObject(String column, Map<String, Class<?>> map, Object defaultValue)
+	{
+		Object value = getValueObject(column, map);
+		return value == null ? defaultValue : value;
+	}
+
+	public Object getValueObject(String column, Object defaultValue)
+	{
+		Object value = getValueObject(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Ref getValueRef(int column)
 	{
 		Ref value = null;
@@ -962,6 +1214,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Ref getValueRef(int column, Ref defaultValue)
+	{
+		Ref value = getValueRef(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Ref getValueRef(String column)
@@ -982,6 +1240,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Ref getValueRef(String column, Ref defaultValue)
+	{
+		Ref value = getValueRef(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Short getValueShort(int column)
 	{
 		Short value = null;
@@ -990,7 +1254,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getShort(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getShort(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -998,6 +1265,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Short getValueShort(int column, Short defaultValue)
+	{
+		Short value = getValueShort(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Short getValueShort(String column)
@@ -1008,7 +1281,10 @@ public class Sequel implements Iterable<Sequel>
 		{
 			try
 			{
-				value = this.getResultSet().getShort(column);
+				if (this.getResultSet().getObject(column) != null)
+				{
+					value = this.getResultSet().getShort(column);
+				}
 			}
 			catch (SQLException e)
 			{
@@ -1016,6 +1292,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Short getValueShort(String column, Short defaultValue)
+	{
+		Short value = getValueShort(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public String getValueString(int column)
@@ -1036,6 +1318,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public String getValueString(int column, String defaultValue)
+	{
+		String value = getValueString(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public String getValueString(String column)
 	{
 		String value = null;
@@ -1052,6 +1340,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public String getValueString(String column, String defaultValue)
+	{
+		String value = getValueString(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Time getValueTime(int column)
@@ -1090,6 +1384,18 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Time getValueTime(int column, Calendar calendar, Time defaultValue)
+	{
+		Time value = getValueTime(column, calendar);
+		return value == null ? defaultValue : value;
+	}
+
+	public Time getValueTime(int column, Time defaultValue)
+	{
+		Time value = getValueTime(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Time getValueTime(String column)
 	{
 		Time value = null;
@@ -1124,6 +1430,18 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public Time getValueTime(String column, Calendar calendar, Time defaultValue)
+	{
+		Time value = getValueTime(column, calendar);
+		return value == null ? defaultValue : value;
+	}
+
+	public Time getValueTime(String column, Time defaultValue)
+	{
+		Time value = getValueTime(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public Timestamp getValueTimestamp(int column)
@@ -1162,6 +1480,18 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Timestamp getValueTimestamp(int column, Calendar calendar, Timestamp defaultValue)
+	{
+		Timestamp value = getValueTimestamp(column, calendar);
+		return value == null ? defaultValue : value;
+	}
+
+	public Timestamp getValueTimestamp(int column, Timestamp defaultValue)
+	{
+		Timestamp value = getValueTimestamp(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public Timestamp getValueTimestamp(String column)
 	{
 		Timestamp value = null;
@@ -1198,6 +1528,18 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public Timestamp getValueTimestamp(String column, Calendar calendar, Timestamp defaultValue)
+	{
+		Timestamp value = getValueTimestamp(column, calendar);
+		return value == null ? defaultValue : value;
+	}
+
+	public Timestamp getValueTimestamp(String column, Timestamp defaultValue)
+	{
+		Timestamp value = getValueTimestamp(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public URL getValueURL(int column)
 	{
 		URL value = null;
@@ -1216,6 +1558,12 @@ public class Sequel implements Iterable<Sequel>
 		return value;
 	}
 
+	public URL getValueURL(int column, URL defaultValue)
+	{
+		URL value = getValueURL(column);
+		return value == null ? defaultValue : value;
+	}
+
 	public URL getValueURL(String column)
 	{
 		URL value = null;
@@ -1232,6 +1580,12 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return value;
+	}
+
+	public URL getValueURL(String column, URL defaultValue)
+	{
+		URL value = getValueURL(column);
+		return value == null ? defaultValue : value;
 	}
 
 	public boolean hasResult()

@@ -759,7 +759,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class OracleClient extends DataBase
 	{
-		static class TNSNamesReader extends DataReader
+		public static class TNSNamesReader extends DataReader
 		{
 			private static final char	COMMENT	= '#';
 
@@ -769,22 +769,24 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 			private static final String	PATTERN	= "^(\\S+?)\\s*?=\\s*?(.+)$";
 
-			private String				sid		= null;
+			private Map<String, String>	map		= new LinkedHashMap<String, String>();
 
-			private String				tns		= null;
+			private String				name	= null;
+
+			private String				value	= null;
 
 			private StringBuilder		buffer	= new StringBuilder();
 
 			private boolean				started	= false;
 
-			TNSNamesReader(String sid)
+			public Map<String, String> getMap()
 			{
-				this.sid = sid;
+				return map;
 			}
 
-			String getTNS()
+			public String getValue()
 			{
-				return tns;
+				return value;
 			}
 
 			@Override
@@ -796,43 +798,36 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			@Override
 			protected void readLine(CharSequence line)
 			{
-				if (sid == null)
-				{
-					this.setReading(false);
-				}
-				else
-				{
-					String text = line.toString().trim();
+				String text = line.toString().trim();
 
-					if (text.length() > 0 && text.charAt(0) != COMMENT)
+				if (text.length() > 0 && text.charAt(0) != COMMENT)
+				{
+					buffer.append(text);
+
+					if (!started)
 					{
-						buffer.append(text);
+						started = true;
+					}
+					else
+					{
+						if (Tools.seekIndex(buffer, BEGIN) != -1 && Tools.dualMatchCount(buffer, BEGIN, END, 0) == 0)
+						{
+							Matcher matcher = Pattern.compile(PATTERN, Pattern.DOTALL).matcher(buffer);
 
-						if (!started)
-						{
-							started = true;
-						}
-						else
-						{
-							if (Tools.seekIndex(buffer, BEGIN) != -1
-									&& Tools.dualMatchCount(buffer, BEGIN, END, 0) == 0)
+							if (matcher.matches())
 							{
-								Matcher matcher = Pattern.compile(PATTERN, Pattern.DOTALL).matcher(buffer);
-
-								if (matcher.matches())
+								String key = matcher.group(1).trim().toUpperCase();
+								String value = matcher.group(2).trim();
+								map.put(key, value);
+								if (Tools.equals(name, key))
 								{
-									String key = matcher.group(1).trim().toUpperCase();
-									String value = matcher.group(2).trim();
-									if (Tools.equals(sid, key))
-									{
-										this.tns = value;
-										this.setReading(false);
-									}
+									this.value = value;
+									this.setReading(false);
 								}
-
-								started = false;
-								Tools.clearStringBuilder(buffer);
 							}
+
+							started = false;
+							Tools.clearStringBuilder(buffer);
 						}
 					}
 				}
@@ -841,7 +836,23 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			@Override
 			protected void readPrepare()
 			{
+				map.clear();
+			}
 
+			public <T extends TNSNamesReader> T setMap(Map<String, String> map)
+			{
+				this.map = map;
+				return Tools.cast(this);
+			}
+
+			public <T extends TNSNamesReader> T setName(String name)
+			{
+				this.name = name;
+				if (this.name != null)
+				{
+					this.name = this.name.toUpperCase();
+				}
+				return Tools.cast(this);
 			}
 		}
 
@@ -913,6 +924,33 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			return path;
 		}
 
+		public static Map<String, String> listTNS()
+		{
+			return listTNS(new File(getDefaultTNSFilePath()));
+		}
+
+		public static Map<String, String> listTNS(File file)
+		{
+			return listTNS(file, null);
+		}
+
+		public static Map<String, String> listTNS(File file, String name)
+		{
+			try
+			{
+				return ((TNSNamesReader) new TNSNamesReader().setName(name).setDataFile(file).read()).getMap();
+			}
+			catch (IOException e)
+			{
+				return new LinkedHashMap<String, String>();
+			}
+		}
+
+		public static Map<String, String> listTNS(String name)
+		{
+			return listTNS(new File(getDefaultTNSFilePath()), name);
+		}
+
 		private File	file;
 
 		public OracleClient()
@@ -956,26 +994,18 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		{
 			String url = null;
 
-			TNSNamesReader reader = new TNSNamesReader(this.getCatalog());
+			Map<String, String> map = listTNS(file, this.getCatalog());
 
-			try
+			String tns = map.get(this.getCatalog());
+
+			if (tns == null)
 			{
-				reader.setDataFile(file).read();
-
-				String tns = reader.getTNS();
-
-				if (tns == null)
-				{
-					throw new RuntimeException("TNS identifier was missing: " + this.getCatalog());
-				}
-				else
-				{
-					url = "jdbc:oracle:thin:@" + tns;
-				}
+				throw new RuntimeException("TNS identifier was missing: " + this.getCatalog() + " in "
+						+ this.getServerName());
 			}
-			catch (IOException e)
+			else
 			{
-				e.printStackTrace();
+				url = "jdbc:oracle:thin:@" + tns;
 			}
 
 			return url;
