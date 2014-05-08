@@ -395,7 +395,7 @@ public class SQLKit
 				String name;
 				for (int column = 1; column <= columns; column++)
 				{
-					name = meta.getColumnName(column);
+					name = meta.getColumnLabel(column);
 					map.put(name, name);
 				}
 			}
@@ -480,6 +480,57 @@ public class SQLKit
 	public static JSON jsonOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
 	{
 		return jsonOfResultRow(rs, new JSON(), map);
+	}
+
+	/**
+	 * List the column names.
+	 * 
+	 * @param rs
+	 *            The ResultSet.
+	 * @return The List of the column names.
+	 */
+	public static List<String> listNameOfMetaData(ResultSet rs)
+	{
+		List<String> list = null;
+
+		try
+		{
+			list = listNameOfMetaData(rs.getMetaData());
+		}
+		catch (Exception e)
+		{
+		}
+
+		return list;
+	}
+
+	/**
+	 * List the column names.
+	 * 
+	 * @param meta
+	 *            The ResultSetMetaData.
+	 * @return The List of the column names.
+	 */
+	public static List<String> listNameOfMetaData(ResultSetMetaData meta)
+	{
+		List<String> list = null;
+
+		try
+		{
+			int columns = meta.getColumnCount();
+
+			list = new LinkedList<String>();
+
+			for (int i = 0; i < columns; i++)
+			{
+				list.add(meta.getColumnLabel(i + 1));
+			}
+		}
+		catch (SQLException e)
+		{
+		}
+
+		return list;
 	}
 
 	/**
@@ -576,7 +627,7 @@ public class SQLKit
 
 			for (int i = 0; i < columns; i++)
 			{
-				map.put(String.valueOf(i), meta.getColumnName(i + 1));
+				map.put(String.valueOf(i), meta.getColumnLabel(i + 1));
 			}
 		}
 		catch (SQLException e)
@@ -612,7 +663,7 @@ public class SQLKit
 	 * Map the column names using the column names.
 	 * 
 	 * @param rs
-	 *            The ResultSet.
+	 *            The ResultSetMetaData.
 	 * @return The map of column name against the column name.
 	 */
 	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta)
@@ -627,7 +678,7 @@ public class SQLKit
 
 			for (int i = 0; i < columns; i++)
 			{
-				map.put(meta.getColumnName(i + 1), meta.getColumnName(i + 1));
+				map.put(meta.getColumnLabel(i + 1), meta.getColumnLabel(i + 1));
 			}
 		}
 		catch (SQLException e)

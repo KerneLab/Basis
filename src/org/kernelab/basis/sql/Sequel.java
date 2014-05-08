@@ -10,6 +10,7 @@ import java.sql.Clob;
 import java.sql.Date;
 import java.sql.Ref;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
@@ -139,15 +140,17 @@ public class Sequel implements Iterable<Sequel>
 		return new ResultSetIterator(rs);
 	}
 
-	private SQLKit		kit;
+	private SQLKit				kit;
 
-	private Statement	statement;
+	private Statement			statement;
 
-	private boolean		resultSetObject	= false;
+	private boolean				resultSetObject	= false;
 
-	private ResultSet	resultSet;
+	private ResultSet			resultSet;
 
-	private int			updateCount		= N_A;
+	private int					updateCount		= N_A;
+
+	private Map<String, Object>	metaMap			= null;
 
 	public Sequel(SQLKit kit, Statement statement, boolean resultSet)
 	{
@@ -177,6 +180,33 @@ public class Sequel implements Iterable<Sequel>
 	public SQLKit getKit()
 	{
 		return kit;
+	}
+
+	public ResultSetMetaData getMetaData()
+	{
+		ResultSetMetaData metaData = null;
+
+		if (this.isResultSet())
+		{
+			try
+			{
+				metaData = this.getResultSet().getMetaData();
+			}
+			catch (SQLException e)
+			{
+			}
+		}
+
+		return metaData;
+	}
+
+	public Map<String, Object> getMetaMap()
+	{
+		if (metaMap == null)
+		{
+			metaMap = SQLKit.mapNameOfMetaData(this.getResultSet());
+		}
+		return metaMap;
 	}
 
 	public JSAN getNextRowAsJSAN()
@@ -249,7 +279,7 @@ public class Sequel implements Iterable<Sequel>
 			{
 				if (map == null)
 				{
-					map = SQLKit.mapIndexOfMetaData(this.getResultSet());
+					map = this.getMetaMap();
 				}
 				jsan = SQLKit.jsanOfResultRow(this.getResultSet(), map);
 			}
@@ -276,7 +306,7 @@ public class Sequel implements Iterable<Sequel>
 			{
 				if (map == null)
 				{
-					map = SQLKit.mapNameOfMetaData(this.getResultSet());
+					map = this.getMetaMap();
 				}
 				json = SQLKit.jsonOfResultRow(this.getResultSet(), map);
 			}
