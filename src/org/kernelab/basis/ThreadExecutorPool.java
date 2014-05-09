@@ -15,7 +15,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	private CompletionService<V>	completionService	= null;
 
-	private Integer					tasks				= 0;
+	private Variable<Integer>		tasks				= new Variable<Integer>(0);
 
 	public ThreadExecutorPool()
 	{
@@ -39,7 +39,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		{
 			if (!this.isShutdown())
 			{
-				this.tasks++;
+				this.tasks.value++;
 			}
 		}
 	}
@@ -53,9 +53,9 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	{
 		synchronized (tasks)
 		{
-			if (this.tasks > 0)
+			if (this.tasks.value > 0)
 			{
-				this.tasks--;
+				this.tasks.value--;
 			}
 		}
 	}
@@ -74,7 +74,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	{
 		synchronized (tasks)
 		{
-			return tasks;
+			return tasks.value;
 		}
 	}
 
@@ -87,17 +87,24 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	 *         task was running.
 	 * @throws InterruptedException
 	 */
-	public Future<V> grab() throws InterruptedException
+	public Future<V> grab()
 	{
+		Future<V> future = null;
+
 		if (this.getTasks() > 0)
 		{
 			this.delTask();
-			return completionService.take();
+
+			try
+			{
+				future = completionService.take();
+			}
+			catch (InterruptedException e)
+			{
+			}
 		}
-		else
-		{
-			return null;
-		}
+
+		return future;
 	}
 
 	public boolean isEmpty()
@@ -118,20 +125,24 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	public Future<V> poll()
 	{
 		Future<V> future = completionService.poll();
+
 		if (future != null)
 		{
 			this.delTask();
 		}
+
 		return future;
 	}
 
 	public Future<V> poll(long timeout, TimeUnit unit) throws InterruptedException
 	{
 		Future<V> future = completionService.poll(timeout, unit);
+
 		if (future != null)
 		{
 			this.delTask();
 		}
+
 		return future;
 	}
 
@@ -147,18 +158,12 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public void shutdown()
 	{
-		synchronized (executorService)
-		{
-			executorService.shutdown();
-		}
+		executorService.shutdown();
 	}
 
 	public List<Runnable> shutdownNow()
 	{
-		synchronized (executorService)
-		{
-			return executorService.shutdownNow();
-		}
+		return executorService.shutdownNow();
 	}
 
 	public Future<V> submit(Callable<V> task)
