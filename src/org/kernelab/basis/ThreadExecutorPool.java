@@ -37,10 +37,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	{
 		synchronized (tasks)
 		{
-			if (!this.isShutdown())
-			{
-				this.tasks.value++;
-			}
+			this.tasks.value++;
 		}
 	}
 
@@ -83,28 +80,33 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	 * directly return null if none task was running, waiting if some task is to
 	 * be done.
 	 * 
-	 * @return the Future representing the next completed task, or null if none
-	 *         task was running.
-	 * @throws InterruptedException
+	 * @return the Future representing the next completed task, or null if could
+	 *         not fetch a complete task.
 	 */
 	public Future<V> grab()
 	{
-		Future<V> future = null;
-
-		if (this.getTasks() > 0)
+		synchronized (tasks)
 		{
-			this.delTask();
-
-			try
+			if (tasks.value > 0)
 			{
-				future = completionService.take();
+				tasks.value--;
 			}
-			catch (InterruptedException e)
+			else
 			{
+				return null;
 			}
 		}
 
-		return future;
+		try
+		{
+			return completionService.take();
+		}
+		catch (InterruptedException e)
+		{
+			this.addTask();
+		}
+
+		return null;
 	}
 
 	public boolean isEmpty()
@@ -168,14 +170,30 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public Future<V> submit(Callable<V> task)
 	{
-		this.addTask();
-		return completionService.submit(task);
+		try
+		{
+			Future<V> future = completionService.submit(task);
+			this.addTask();
+			return future;
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 
 	public Future<V> submit(Runnable task, V result)
 	{
-		this.addTask();
-		return completionService.submit(task, result);
+		try
+		{
+			Future<V> future = completionService.submit(task, result);
+			this.addTask();
+			return future;
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 
 	public Future<V> take() throws InterruptedException
