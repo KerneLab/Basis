@@ -58,6 +58,11 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return limit;
 	}
 
+	public int getRemain()
+	{
+		return elements.size();
+	}
+
 	public int getTrace()
 	{
 		return trace;
@@ -173,14 +178,6 @@ public abstract class AbstractPool<E> implements Pool<E>
 	{
 		this.trace = trace;
 		return Tools.cast(this);
-	}
-
-	public int size()
-	{
-		synchronized (elements)
-		{
-			return elements.size();
-		}
 	}
 
 	protected void supplyElement(long timeout)

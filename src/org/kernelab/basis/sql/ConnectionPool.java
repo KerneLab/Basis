@@ -1,6 +1,7 @@
 package org.kernelab.basis.sql;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.kernelab.basis.AbstractPool;
@@ -17,15 +18,15 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	private ConnectionProvider	provider;
 
-	public ConnectionPool(ConnectionProvider factory, int limit)
+	public ConnectionPool(ConnectionProvider provider, int limit)
 	{
-		this(factory, limit, true);
+		this(provider, limit, true);
 	}
 
-	public ConnectionPool(ConnectionProvider factory, int limit, boolean lazy)
+	public ConnectionPool(ConnectionProvider provider, int limit, boolean lazy)
 	{
 		super(limit, lazy);
-		this.setProvider(factory);
+		this.setProvider(provider);
 	}
 
 	public ConnectionProvider getProvider()
@@ -69,14 +70,48 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public Connection provideConnection(long timeout) throws SQLException
 	{
-		return this.provide(timeout);
+		Connection conn = this.provide(timeout);
+
+		if (conn != null)
+		{
+			try
+			{
+				conn.setHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT);
+			}
+			catch (SQLException e)
+			{
+			}
+		}
+
+		return conn;
 	}
 
-	public void recycleConnection(Connection c) throws SQLException
+	public void recycleConnection(Connection conn) throws SQLException
 	{
-		if (c != null)
+		if (conn != null)
 		{
-			this.recycle(c);
+			if (conn.isClosed())
+			{
+				throw new SQLException("Connection has already been closed.");
+			}
+
+			try
+			{
+				if (!conn.getAutoCommit())
+				{
+					conn.rollback();
+					conn.setAutoCommit(true);
+				}
+
+				conn.setReadOnly(false);
+				conn.setTransactionIsolation(conn.getMetaData().getDefaultTransactionIsolation());
+				conn.setHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT);
+			}
+			catch (SQLException e)
+			{
+			}
+
+			this.recycle(conn);
 		}
 	}
 

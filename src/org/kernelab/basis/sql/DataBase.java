@@ -1375,18 +1375,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public SQLKit getSQLKit()
 	{
-		SQLKit kit = null;
-
 		try
 		{
-			kit = new SQLKit(this);
+			return new SQLKit(this);
 		}
 		catch (SQLException e)
 		{
 			throw new InvalidDataBaseConnectionException(e.getMessage(), e.getCause());
 		}
-
-		return kit;
 	}
 
 	/**
