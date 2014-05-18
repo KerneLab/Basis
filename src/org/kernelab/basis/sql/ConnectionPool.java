@@ -105,7 +105,6 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 				conn.setReadOnly(false);
 				conn.setTransactionIsolation(conn.getMetaData().getDefaultTransactionIsolation());
-				conn.setHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT);
 			}
 			catch (SQLException e)
 			{
