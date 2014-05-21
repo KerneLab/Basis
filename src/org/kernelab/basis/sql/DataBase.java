@@ -984,36 +984,29 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		@Override
 		public String getURL()
 		{
-			String url = null;
-
 			Map<String, String> map = listTNS(file, this.getCatalog());
 
 			String tns = map.get(this.getCatalog());
 
 			if (tns == null)
 			{
-				throw new RuntimeException("TNS identifier was missing: " + this.getCatalog() + " in "
-						+ this.getServerName());
-			}
-			else
-			{
-				url = "jdbc:oracle:thin:@" + tns;
+				tns = this.getCatalog();
 			}
 
-			return url;
+			return "jdbc:oracle:thin:@" + tns;
 		}
 
 		@Override
-		public OracleClient setCatalog(String sid)
+		public OracleClient setCatalog(String tns)
 		{
-			if (sid == null)
+			if (tns == null)
 			{
-				sid = getDefaultOracleSID();
+				tns = getDefaultOracleSID();
 			}
 
-			if (sid != null)
+			if (tns != null)
 			{
-				super.setCatalog(sid.trim().toUpperCase());
+				super.setCatalog(tns.trim().toUpperCase());
 			}
 			else
 			{
@@ -1033,12 +1026,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 			super.setServerName(filePath);
 
-			file = new File(filePath);
-
-			if (!file.isFile())
-			{
-				throw new RuntimeException("TNS names file could not be found: " + filePath);
-			}
+			this.file = new File(filePath);
 
 			return this;
 		}
