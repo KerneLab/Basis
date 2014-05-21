@@ -107,7 +107,6 @@ public abstract class AbstractPool<E> implements Pool<E>
 					}
 					catch (InterruptedException e)
 					{
-						e.printStackTrace();
 					}
 				}
 
