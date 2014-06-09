@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Date;
 import java.sql.Ref;
@@ -177,6 +178,11 @@ public class Sequel implements Iterable<Sequel>
 		return this;
 	}
 
+	protected CallableStatement getCallableStatement()
+	{
+		return this.isCallResult() ? (CallableStatement) this.getStatement() : null;
+	}
+
 	public SQLKit getKit()
 	{
 		return kit;
@@ -332,15 +338,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Array value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getArray(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getArray(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -356,15 +366,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Array value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getArray(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getArray(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -380,15 +394,15 @@ public class Sequel implements Iterable<Sequel>
 	{
 		InputStream value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getAsciiStream(column);
 			}
-			catch (SQLException e)
-			{
-			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -428,15 +442,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		BigDecimal value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getBigDecimal(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getBigDecimal(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -452,15 +470,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		BigDecimal value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getBigDecimal(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getBigDecimal(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -524,15 +546,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Blob value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getBlob(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getBlob(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -548,15 +574,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Blob value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getBlob(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getBlob(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -572,18 +602,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Boolean value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getBoolean(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getBoolean(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -599,18 +636,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Boolean value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getBoolean(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getBoolean(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -626,18 +670,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Byte value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getByte(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getByte(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -653,18 +704,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Byte value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getByte(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getByte(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -680,15 +738,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		byte[] value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getBytes(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getBytes(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -704,15 +766,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		byte[] value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getBytes(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getBytes(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -776,15 +842,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Clob value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getClob(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getClob(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -800,15 +870,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Clob value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getClob(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getClob(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -824,15 +898,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Date value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getDate(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getDate(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -842,15 +920,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Date value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getDate(column, calendar);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getDate(column, calendar);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -872,15 +954,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Date value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getDate(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getDate(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -890,15 +976,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Date value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getDate(column, calendar);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getDate(column, calendar);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -920,18 +1010,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Double value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getDouble(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getDouble(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -947,18 +1044,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Double value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getDouble(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getDouble(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -974,18 +1078,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Float value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getFloat(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getFloat(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1001,18 +1112,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Float value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getFloat(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getFloat(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1028,18 +1146,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Integer value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getInt(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getInt(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1055,18 +1180,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Integer value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getInt(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getInt(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1082,18 +1214,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Long value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getLong(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getLong(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1109,18 +1248,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Long value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getLong(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getLong(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1136,15 +1282,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Object value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getObject(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getObject(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1154,15 +1304,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Object value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getObject(column, map);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getObject(column, map);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1184,15 +1338,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Object value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getObject(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getObject(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1202,15 +1360,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Object value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getObject(column, map);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getObject(column, map);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1232,15 +1394,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Ref value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getRef(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getRef(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1256,15 +1422,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Ref value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getRef(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getRef(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1280,18 +1450,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Short value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getShort(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getShort(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1307,18 +1484,25 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Short value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				if (this.getResultSet().getObject(column) != null)
 				{
 					value = this.getResultSet().getShort(column);
 				}
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				if (this.getCallableStatement().getObject(column) != null)
+				{
+					value = this.getCallableStatement().getShort(column);
+				}
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1334,15 +1518,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		String value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getString(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getString(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1358,15 +1546,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		String value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getString(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getString(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1382,15 +1574,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Time value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getTime(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getTime(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1400,15 +1596,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Time value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getTime(column, calendar);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getTime(column, calendar);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1430,15 +1630,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Time value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getTime(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getTime(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1448,15 +1652,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Time value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getTime(column, calendar);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getTime(column, calendar);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1478,15 +1686,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Timestamp value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getTimestamp(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getTimestamp(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1496,15 +1708,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Timestamp value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getTimestamp(column, calendar);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getTimestamp(column, calendar);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1526,15 +1742,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Timestamp value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getTimestamp(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getTimestamp(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1544,15 +1764,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		Timestamp value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getTimestamp(column, calendar);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getTimestamp(column, calendar);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1574,15 +1798,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		URL value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getURL(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getURL(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1598,15 +1826,19 @@ public class Sequel implements Iterable<Sequel>
 	{
 		URL value = null;
 
-		if (this.preparedResultSet())
+		try
 		{
-			try
+			if (this.preparedResultSet())
 			{
 				value = this.getResultSet().getURL(column);
 			}
-			catch (SQLException e)
+			else if (this.isCallResult())
 			{
+				value = this.getCallableStatement().getURL(column);
 			}
+		}
+		catch (SQLException e)
+		{
 		}
 
 		return value;
@@ -1649,6 +1881,11 @@ public class Sequel implements Iterable<Sequel>
 		}
 
 		return this;
+	}
+
+	public boolean isCallResult()
+	{
+		return this.getStatement() instanceof CallableStatement;
 	}
 
 	public boolean isClosed()

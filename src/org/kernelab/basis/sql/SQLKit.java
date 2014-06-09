@@ -1,6 +1,7 @@
 package org.kernelab.basis.sql;
 
 import java.lang.reflect.Array;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -1018,6 +1019,16 @@ public class SQLKit
 		return statement;
 	}
 
+	public Sequel execute(CallableStatement statement, Iterable<?> params) throws SQLException
+	{
+		return new Sequel(this, statement, fillParameters(statement, params).execute());
+	}
+
+	public Sequel execute(CallableStatement statement, Object... params) throws SQLException
+	{
+		return new Sequel(this, statement, fillParameters(statement, params).execute());
+	}
+
 	public Sequel execute(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
 		return new Sequel(this, statement, fillParameters(statement, params).execute());
@@ -1264,6 +1275,44 @@ public class SQLKit
 			}
 		}
 		return this;
+	}
+
+	public CallableStatement prepareCall(String call) throws SQLException
+	{
+		return prepareCall(call, resultSetType);
+	}
+
+	public CallableStatement prepareCall(String call, int resultSetType) throws SQLException
+	{
+		return prepareCall(call, resultSetType, resultSetConcurrency);
+	}
+
+	public CallableStatement prepareCall(String call, int resultSetType, int resultSetConcurrency) throws SQLException
+	{
+		return prepareCall(call, resultSetType, resultSetConcurrency, resultSetHoldability);
+	}
+
+	public CallableStatement prepareCall(String call, int resultSetType, int resultSetConcurrency,
+			int resultSetHoldability) throws SQLException
+	{
+		CallableStatement cs = (CallableStatement) statements.get(call);
+
+		if (cs == null)
+		{
+			try
+			{
+				cs = this.getConnection().prepareCall(call, resultSetType, resultSetConcurrency, resultSetHoldability);
+			}
+			catch (SQLException e)
+			{
+				cs = this.getConnection().prepareCall(call);
+			}
+			statements.put(call, cs);
+		}
+
+		statement = cs;
+
+		return cs;
 	}
 
 	/**
