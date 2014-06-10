@@ -136,6 +136,11 @@ public class Sequel implements Iterable<Sequel>
 	 */
 	public static final int	RESULT_COUNT	= 1;
 
+	/**
+	 * Current result is a call result.
+	 */
+	public static final int	RESULT_CALL		= 2;
+
 	public static ResultSetIterator iterate(ResultSet rs)
 	{
 		return new ResultSetIterator(rs);
@@ -145,13 +150,16 @@ public class Sequel implements Iterable<Sequel>
 
 	private Statement			statement;
 
-	private boolean				resultSetObject	= false;
-
 	private ResultSet			resultSet;
 
-	private int					updateCount		= N_A;
+	private int					updateCount	= N_A;
 
-	private Map<String, Object>	metaMap			= null;
+	private Map<String, Object>	metaMap		= null;
+
+	public Sequel(ResultSet rs)
+	{
+		this.setResultSet(rs);
+	}
 
 	public Sequel(SQLKit kit, Statement statement, boolean resultSet)
 	{
@@ -160,12 +168,18 @@ public class Sequel implements Iterable<Sequel>
 
 	public Sequel close() throws SQLException
 	{
+		this.closeResultSet();
+
 		if (statement != null)
 		{
-			kit.closeStatement(statement);
-			kit = null;
+			if (kit != null)
+			{
+				kit.closeStatement(statement);
+				kit = null;
+			}
 			statement = null;
 		}
+
 		return this;
 	}
 
@@ -183,7 +197,7 @@ public class Sequel implements Iterable<Sequel>
 		return this.isCallResult() ? (CallableStatement) this.getStatement() : null;
 	}
 
-	public SQLKit getKit()
+	protected SQLKit getKit()
 	{
 		return kit;
 	}
@@ -258,13 +272,17 @@ public class Sequel implements Iterable<Sequel>
 	{
 		int type = RESULT_NONE;
 
-		if (this.getResultSet() != null)
+		if (this.isResultSet())
 		{
 			type = RESULT_SET;
 		}
 		else if (this.getUpdateCount() != N_A)
 		{
 			type = RESULT_COUNT;
+		}
+		else if (this.isCallResult())
+		{
+			type = RESULT_CALL;
 		}
 
 		return type;
@@ -1852,18 +1870,11 @@ public class Sequel implements Iterable<Sequel>
 
 	public boolean hasResult()
 	{
-		return this.hasResultSetObject() || this.getUpdateCount() != N_A;
-	}
-
-	private boolean hasResultSetObject()
-	{
-		return resultSetObject;
+		return this.isResultSet() || this.getUpdateCount() != N_A;
 	}
 
 	private Sequel hasResultSetObject(boolean resultSetObject)
 	{
-		this.resultSetObject = resultSetObject;
-
 		if (resultSetObject)
 		{
 			try
@@ -1941,17 +1952,14 @@ public class Sequel implements Iterable<Sequel>
 
 	public boolean nextRow()
 	{
-		boolean next = false;
-
 		try
 		{
-			next = this.getResultSet().next();
+			return this.getResultSet().next();
 		}
 		catch (Exception e)
 		{
+			return false;
 		}
-
-		return next;
 	}
 
 	private boolean preparedResultSet()
@@ -1960,14 +1968,17 @@ public class Sequel implements Iterable<Sequel>
 
 		try
 		{
-			if (this.getResultSet().isBeforeFirst())
+			if (this.isResultSet())
 			{
-				ok = this.getResultSet().next();
-			}
+				if (this.getResultSet().isBeforeFirst())
+				{
+					ok = this.getResultSet().next();
+				}
 
-			if (!ok)
-			{
-				ok = this.getResultSet().getRow() != 0;
+				if (!ok)
+				{
+					ok = this.getResultSet().getRow() != 0;
+				}
 			}
 		}
 		catch (Exception e)
