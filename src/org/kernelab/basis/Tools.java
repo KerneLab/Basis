@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -2534,6 +2535,44 @@ public class Tools
 		}
 
 		return result;
+	}
+
+	/**
+	 * To test the port on localhost is occupied or not.
+	 * 
+	 * @param port
+	 *            The target port.
+	 * @return true if and only if the port is occupied otherwise false.
+	 */
+	public static boolean isPortOccupied(int port)
+	{
+		boolean occupy = false;
+
+		ServerSocket s = null;
+
+		try
+		{
+			s = new ServerSocket(port);
+		}
+		catch (IOException e)
+		{
+			occupy = true;
+		}
+		finally
+		{
+			if (s != null)
+			{
+				try
+				{
+					s.close();
+				}
+				catch (IOException e)
+				{
+				}
+			}
+		}
+
+		return occupy;
 	}
 
 	/**
