@@ -2490,6 +2490,8 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN splice(int index, int cover, Collection<?> collection)
 		{
+			JSAN result = new JSAN().reflects(this).transformers(this);
+
 			int trace = length();
 			index = bound(index);
 			cover = Tools.limitNumber(cover, 0, trace - index);
@@ -2507,7 +2509,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				if (iter.index() >= 0 && iter.index() < index + cover)
 				{
-					this.remove(iter.key());
+					result.add(this.remove(iter.key()));
 				}
 				else
 				{
@@ -2562,11 +2564,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				i++;
 			}
 
-			return this;
+			return result;
 		}
 
 		public JSAN splice(int index, int cover, JSAN jsan)
 		{
+			JSAN result = new JSAN().reflects(this).transformers(this);
+
 			int trace = length();
 			index = bound(index);
 			cover = Tools.limitNumber(cover, 0, trace - index);
@@ -2584,7 +2588,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				if (iter.index() >= 0 && iter.index() < index + cover)
 				{
-					this.remove(iter.key());
+					result.add(this.remove(iter.key()));
 				}
 				else
 				{
@@ -2639,11 +2643,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				i++;
 			}
 
-			return this;
+			return result;
 		}
 
 		public JSAN splice(int index, int cover, Object... objects)
 		{
+			JSAN result = new JSAN().reflects(this).transformers(this);
+
 			int trace = length();
 			index = bound(index);
 			cover = Tools.limitNumber(cover, 0, trace - index);
@@ -2661,7 +2667,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				if (iter.index() >= 0 && iter.index() < index + cover)
 				{
-					this.remove(iter.key());
+					result.add(this.remove(iter.key()));
 				}
 				else
 				{
@@ -2714,7 +2720,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				this.put(i + index, objects[i]);
 			}
 
-			return this;
+			return result;
 		}
 
 		public Object[] toArray()
