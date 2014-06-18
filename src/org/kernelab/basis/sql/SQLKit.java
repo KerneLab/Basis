@@ -1039,7 +1039,7 @@ public class SQLKit
 		return new Sequel(this, statement, fillParameters(statement, params).execute());
 	}
 
-	public Sequel execute(Statement statement, String sql) throws SQLException
+	protected Sequel execute(Statement statement, String sql) throws SQLException
 	{
 		return new Sequel(this, statement, statement.execute(sql));
 	}
@@ -1709,7 +1709,7 @@ public class SQLKit
 		return fillParameters(statement, params).executeQuery();
 	}
 
-	public ResultSet query(Statement statement, String sql) throws SQLException
+	protected ResultSet query(Statement statement, String sql) throws SQLException
 	{
 		return statement.executeQuery(sql);
 	}
@@ -1858,7 +1858,7 @@ public class SQLKit
 		return fillParameters(statement, params).executeUpdate();
 	}
 
-	public int update(Statement statement, String sql) throws SQLException
+	protected int update(Statement statement, String sql) throws SQLException
 	{
 		return statement.executeUpdate(sql);
 	}
