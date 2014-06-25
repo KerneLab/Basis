@@ -112,13 +112,16 @@ public class SQLKit
 
 	public static final byte		OPTIMIZING_AS_TRACER		= 1;
 
-	public static final byte		OPTIMIZING_AS_ARCHER		= 2;
+	public static final byte		OPTIMIZING_AS_SENTRY		= 2;
 
-	public static final byte		OPTIMIZING_AS_HUNTER		= 3;
+	public static final byte		OPTIMIZING_AS_ARCHER		= 3;
+
+	public static final byte		OPTIMIZING_AS_HUNTER		= 4;
 
 	protected static final int[][]	OPTIMIZING_PRESET_SCHEMES	= {
 			{ ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT },
 			{ ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT },
+			{ ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT },
 			{ ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT },
 			{ ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE, ResultSet.HOLD_CURSORS_OVER_COMMIT } };
 
