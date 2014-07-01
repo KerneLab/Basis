@@ -11,27 +11,27 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	private int		limit;
 
-	private boolean	lazy;
+	private int		init;
 
 	private boolean	closed;
 
 	public AbstractPool(int limit)
 	{
-		this(limit, true);
+		this(limit, 0);
 	}
 
-	public AbstractPool(int limit, boolean lazy)
+	public AbstractPool(int limit, int init)
 	{
-		this(new LinkedList<E>(), limit, true);
+		this(new LinkedList<E>(), limit, init);
 	}
 
-	protected AbstractPool(List<E> pool, int limit, boolean lazy)
+	protected AbstractPool(List<E> pool, int limit, int init)
 	{
 		this.setClosed(false);
 		this.setElements(pool);
 		this.setTrace(0);
-		this.setLazy(lazy);
 		this.setLimit(limit);
+		this.setInit(0);
 	}
 
 	/**
@@ -53,6 +53,11 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return elements;
 	}
 
+	public int getInit()
+	{
+		return init;
+	}
+
 	public int getLimit()
 	{
 		return limit;
@@ -71,11 +76,6 @@ public abstract class AbstractPool<E> implements Pool<E>
 	public boolean isClosed()
 	{
 		return closed;
-	}
-
-	public boolean isLazy()
-	{
-		return lazy;
 	}
 
 	/**
@@ -148,27 +148,24 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return Tools.cast(this);
 	}
 
-	private AbstractPool<E> setLazy(boolean lazy)
+	private AbstractPool<E> setInit(int init)
 	{
-		this.lazy = lazy;
+		this.init = Tools.limitNumber(init, 0, this.getLimit());
+
+		if (this.init > 0 && trace < this.init)
+		{
+			for (int i = trace; i < this.init; i++)
+			{
+				supplyElement(0);
+			}
+		}
+
 		return Tools.cast(this);
 	}
 
 	public AbstractPool<E> setLimit(int limit)
 	{
 		this.limit = Math.max(limit, 1);
-
-		if (!lazy && trace < this.limit)
-		{
-			synchronized (elements)
-			{
-				for (int i = trace; i < this.limit; i++)
-				{
-					supplyElement(0);
-				}
-				elements.notifyAll();
-			}
-		}
 
 		return Tools.cast(this);
 	}

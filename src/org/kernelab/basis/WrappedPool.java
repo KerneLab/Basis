@@ -32,9 +32,9 @@ public abstract class WrappedPool<E> extends AbstractPool<Element<E>>
 		super(limit);
 	}
 
-	public WrappedPool(int limit, boolean lazy)
+	public WrappedPool(int limit, int init)
 	{
-		super(limit, lazy);
+		super(limit, init);
 	}
 
 	@Override

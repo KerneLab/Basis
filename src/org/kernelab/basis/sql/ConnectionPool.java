@@ -20,12 +20,12 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public ConnectionPool(ConnectionProvider provider, int limit)
 	{
-		this(provider, limit, true);
+		this(provider, limit, 0);
 	}
 
-	public ConnectionPool(ConnectionProvider provider, int limit, boolean lazy)
+	public ConnectionPool(ConnectionProvider provider, int limit, int init)
 	{
-		super(limit, lazy);
+		super(limit, init);
 		this.setProvider(provider);
 	}
 
