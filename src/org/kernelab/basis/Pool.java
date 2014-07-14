@@ -11,9 +11,8 @@ public interface Pool<E>
 {
 	/**
 	 * To discard an element which means it would no longer be provided again.
-	 * This method should only be called after {@code provide(long)} returned
-	 * the element which means this method would not remove the element in the
-	 * pool.
+	 * This method should only be called after {@code provide(long)} has
+	 * returned the element.
 	 * 
 	 * @param element
 	 */
@@ -34,8 +33,8 @@ public interface Pool<E>
 	/**
 	 * To recycle an element back into the pool so that this pool could provide
 	 * the element to others again. This method should only be called after
-	 * {@code provide(long)} returned the element which means the method must
-	 * not recycle the element in the pool.
+	 * {@code provide(long)} has returned the element which means the method
+	 * must not recycle the element in the pool.
 	 * 
 	 * @param element
 	 */
