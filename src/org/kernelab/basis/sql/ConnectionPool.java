@@ -8,6 +8,34 @@ import org.kernelab.basis.AbstractPool;
 
 public class ConnectionPool extends AbstractPool<Connection> implements ConnectionManager
 {
+	public static boolean isValid(Connection c)
+	{
+		boolean is = true;
+
+		try
+		{
+			boolean ac = c.getAutoCommit();
+
+			if (ac)
+			{
+				c.setAutoCommit(false);
+			}
+
+			c.rollback();
+
+			if (ac)
+			{
+				c.setAutoCommit(true);
+			}
+		}
+		catch (SQLException e)
+		{
+			is = false;
+		}
+
+		return is;
+	}
+
 	/**
 	 * @param args
 	 */
@@ -90,19 +118,18 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	{
 		if (conn != null)
 		{
-			if (conn.isClosed())
+			if (conn.isClosed() || !isValid(conn))
 			{
-				throw new SQLException("Connection has already been closed.");
+				this.discard(conn);
+				return;
 			}
 
 			try
 			{
 				if (!conn.getAutoCommit())
 				{
-					conn.rollback();
 					conn.setAutoCommit(true);
 				}
-
 				conn.setReadOnly(false);
 				conn.setTransactionIsolation(conn.getMetaData().getDefaultTransactionIsolation());
 			}

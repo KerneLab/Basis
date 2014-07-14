@@ -48,6 +48,17 @@ public abstract class AbstractPool<E> implements Pool<E>
 		}
 	}
 
+	public void discard(E element)
+	{
+		if (element != null)
+		{
+			synchronized (elements)
+			{
+				trace--;
+			}
+		}
+	}
+
 	protected List<E> getElements()
 	{
 		return elements;
