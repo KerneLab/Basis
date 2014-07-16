@@ -23,8 +23,11 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -1856,6 +1859,46 @@ public class Tools
 	}
 
 	/**
+	 * Get the address of local host.
+	 * 
+	 * @return the address.
+	 */
+	public static String getLocalHostAddress()
+	{
+		String addr = null;
+
+		try
+		{
+			addr = InetAddress.getLocalHost().getHostAddress();
+		}
+		catch (UnknownHostException e)
+		{
+		}
+
+		return addr;
+	}
+
+	/**
+	 * Get the name of local host.
+	 * 
+	 * @return the name.
+	 */
+	public static String getLocalHostName()
+	{
+		String name = null;
+
+		try
+		{
+			name = InetAddress.getLocalHost().getHostName();
+		}
+		catch (UnknownHostException e)
+		{
+		}
+
+		return name;
+	}
+
+	/**
 	 * Get the Calendar information according to the system current date time.
 	 * 
 	 * @return The CALENDAR Singleton defined in Tools.
@@ -1910,6 +1953,25 @@ public class Tools
 		path = path.substring(0, path.lastIndexOf('/') + 1);
 
 		return path;
+	}
+
+	/**
+	 * To get the Process Identification of current program.
+	 * 
+	 * @return the PID.
+	 */
+	public static String getPID()
+	{
+		String pid = ManagementFactory.getRuntimeMXBean().getName();
+
+		int at = pid.indexOf('@');
+
+		if (at != -1)
+		{
+			pid = pid.substring(0, at);
+		}
+
+		return pid;
 	}
 
 	/**
