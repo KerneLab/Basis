@@ -1964,11 +1964,14 @@ public class Tools
 	{
 		String pid = ManagementFactory.getRuntimeMXBean().getName();
 
-		int at = pid.indexOf('@');
-
-		if (at != -1)
+		if (pid != null)
 		{
-			pid = pid.substring(0, at);
+			int at = pid.indexOf('@');
+
+			if (at != -1)
+			{
+				pid = pid.substring(0, at);
+			}
 		}
 
 		return pid;
@@ -2071,22 +2074,43 @@ public class Tools
 	 */
 	public static Graphics2D graphics2D(Graphics g)
 	{
-		return (Graphics2D) g;
+		if (g instanceof Graphics2D)
+		{
+			return (Graphics2D) g;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
 	 * Make the graphics possess the anti-aliasing feature.
 	 * 
 	 * @param g
-	 *            The Graphics.
+	 *            The Graphics2D object.
 	 * @return The Graphics2D object which possess the anti-aliasing feature.
 	 */
-	public static Graphics2D graphicsAntiAliasing(Graphics g)
+	public static Graphics2D graphicsAntiAliasing(Graphics2D g)
 	{
-		Graphics2D g2 = graphics2D(g);
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		return g2;
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		return g;
+	}
+
+	/**
+	 * To make the Graphics translucent according to the alpha.
+	 * 
+	 * @param g
+	 *            The Graphics2D object.
+	 * @param alpha
+	 *            The alpha value.
+	 * @return Graphics2D object.
+	 */
+	public static Graphics2D graphicsTranslucent(Graphics2D g, float alpha)
+	{
+		g.setComposite(graphicsTranslucentComposite(alpha));
+		return g;
 	}
 
 	/**
