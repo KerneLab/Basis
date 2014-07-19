@@ -555,7 +555,7 @@ public class Entrance
 		{
 			for (String file : parameters("jars"))
 			{
-				ExtensionLoader.getInstance().load(new File(file));
+				ExtensionLoader.load(new File(file), "^.+\\.jar$");
 			}
 		}
 

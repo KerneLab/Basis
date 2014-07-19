@@ -1,123 +1,179 @@
 package org.kernelab.basis.io;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Enumeration;
 
 import org.kernelab.basis.JSON.JSAN;
 
 public class ExtensionLoader
 {
-	private static final ExtensionLoader	Loader	= new ExtensionLoader();
-
-	public static ExtensionLoader getInstance()
+	public static class ClassLoader extends URLClassLoader
 	{
-		return Loader;
-	}
-
-	protected URLClassLoader	loader;
-
-	protected Method			load;
-
-	private ExtensionLoader()
-	{
-		try
+		public ClassLoader(java.lang.ClassLoader parent)
 		{
-			loader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-			load = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
-			load.setAccessible(true);
+			super(new URL[0], parent);
 		}
-		catch (SecurityException e)
-		{
-			e.printStackTrace();
-		}
-		catch (NoSuchMethodException e)
-		{
-			e.printStackTrace();
-		}
-	}
 
-	public boolean load(File location)
-	{
-		boolean success = false;
-		try
+		@Override
+		public void addURL(URL url)
 		{
-			if (location.isFile())
+			super.addURL(url);
+		}
+
+		public boolean load(File location)
+		{
+			return load(location, null);
+		}
+
+		public boolean load(File location, String pattern)
+		{
+			boolean success = false;
+			try
 			{
-				success = load(location.toURI().toURL());
-			}
-			else if (location.isDirectory())
-			{
-				success = true;
-				for (File l : location.listFiles())
+				if (location.isFile())
 				{
-					success &= load(l);
+					if (pattern == null || location.getCanonicalPath().matches(pattern))
+					{
+						success = load(location.toURI().toURL());
+					}
+				}
+				else if (location.isDirectory())
+				{
+					success = true;
+					for (File l : location.listFiles())
+					{
+						success &= load(l, pattern);
+					}
 				}
 			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			return success;
 		}
-		catch (MalformedURLException e)
+
+		public boolean load(JSAN locations)
 		{
-			e.printStackTrace();
+			boolean success = true;
+			for (Object o : locations)
+			{
+				success &= load(o.toString());
+			}
+			return success;
 		}
-		return success;
+
+		public boolean load(String location)
+		{
+			boolean success = false;
+			URL url = null;
+			File file = null;
+			try
+			{
+				url = new URL(location);
+			}
+			catch (MalformedURLException e)
+			{
+				file = new File(location);
+			}
+			if (url != null)
+			{
+				success = load(url);
+			}
+			else if (file != null)
+			{
+				success = load(file);
+			}
+			return success;
+		}
+
+		public boolean load(URL location)
+		{
+			this.addURL(location);
+			return true;
+		}
 	}
 
-	public boolean load(JSAN locations)
+	private static final ExtensionLoader	Singleton	= new ExtensionLoader();
+
+	public static Class<?> forName(String className) throws ClassNotFoundException
 	{
-		boolean success = true;
-		for (Object o : locations)
-		{
-			success &= load(o.toString());
-		}
-		return success;
+		return Class.forName(className, true, instance().getLoader());
 	}
 
-	public boolean load(String location)
+	public static URL getResource(String name)
 	{
-		boolean success = false;
-		URL url = null;
-		File file = null;
-		try
-		{
-			url = new URL(location);
-		}
-		catch (MalformedURLException e)
-		{
-			file = new File(location);
-		}
-		if (url != null)
-		{
-			success = load(url);
-		}
-		else if (file != null)
-		{
-			success = load(file);
-		}
-		return success;
+		return instance().getLoader().getResource(name);
 	}
 
-	public boolean load(URL location)
+	public static InputStream getResourceAsStream(String name)
 	{
-		boolean success = false;
-		try
+		return instance().getLoader().getResourceAsStream(name);
+	}
+
+	public static Enumeration<URL> getResources(String name) throws IOException
+	{
+		return instance().getLoader().getResources(name);
+	}
+
+	public static ExtensionLoader instance()
+	{
+		return Singleton;
+	}
+
+	public static boolean load(File location)
+	{
+		return instance().getLoader().load(location);
+	}
+
+	public static boolean load(File location, String pattern)
+	{
+		return instance().getLoader().load(location, pattern);
+	}
+
+	public static boolean load(JSAN locations)
+	{
+		return instance().getLoader().load(locations);
+	}
+
+	public static boolean load(String location)
+	{
+		return instance().getLoader().load(location);
+	}
+
+	public static boolean load(URL location)
+	{
+		return instance().getLoader().load(location);
+	}
+
+	private ClassLoader	loader;
+
+	protected ExtensionLoader()
+	{
+		this(java.lang.ClassLoader.getSystemClassLoader());
+	}
+
+	protected ExtensionLoader(java.lang.ClassLoader cl)
+	{
+		this.setLoader(new ClassLoader(cl));
+	}
+
+	public ClassLoader getLoader()
+	{
+		return loader;
+	}
+
+	public ExtensionLoader setLoader(ClassLoader loader)
+	{
+		if (loader != null)
 		{
-			load.invoke(loader, location);
+			this.loader = loader;
 		}
-		catch (IllegalArgumentException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IllegalAccessException e)
-		{
-			e.printStackTrace();
-		}
-		catch (InvocationTargetException e)
-		{
-			e.printStackTrace();
-		}
-		return success;
+		return this;
 	}
 }
