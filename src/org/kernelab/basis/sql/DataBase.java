@@ -17,6 +17,7 @@ import org.kernelab.basis.Copieable;
 import org.kernelab.basis.Relation;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.io.DataReader;
+import org.kernelab.basis.io.ExtensionLoader;
 
 /**
  * The DataBase class is an abstract of database support.
@@ -1389,7 +1390,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			ClassNotFoundException
 	{
 		// No need for JDBC4.0 with Java6.0
-		Class.forName(this.getDriverName()).newInstance();
+		ExtensionLoader.forName(this.getDriverName()).newInstance();
 
 		return DriverManager.getConnection(this.getURL(), this.getInformation());
 	}

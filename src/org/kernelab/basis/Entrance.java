@@ -366,7 +366,7 @@ public class Entrance
 		String className = this.parameter("main");
 		try
 		{
-			Class<?> cls = Class.forName(className);
+			Class<?> cls = ExtensionLoader.forName(className);
 			for (Method m : cls.getMethods())
 			{
 				if ("main".equals(m.getName()) && m.getParameterTypes().length == 1
