@@ -23,7 +23,7 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.kernelab.basis.io.ExtensionLoader;
+import org.kernelab.basis.io.Extensions;
 
 /**
  * The Entrance of Basis or other project.
@@ -366,7 +366,7 @@ public class Entrance
 		String className = this.parameter("main");
 		try
 		{
-			Class<?> cls = ExtensionLoader.forName(className);
+			Class<?> cls = Extensions.forName(className);
 			for (Method m : cls.getMethods())
 			{
 				if ("main".equals(m.getName()) && m.getParameterTypes().length == 1
@@ -555,7 +555,7 @@ public class Entrance
 		{
 			for (String file : parameters("jars"))
 			{
-				ExtensionLoader.load(new File(file), "^.+\\.jar$");
+				Extensions.load(new File(file), "^.+\\.jar$");
 			}
 		}
 

@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON.JSAN;
-import org.kernelab.basis.io.ExtensionLoader;
+import org.kernelab.basis.io.Extensions;
 
 public class Arbiter
 {
@@ -497,7 +497,7 @@ public class Arbiter
 					}
 					else
 					{
-						cls = (Class<ConditionInterpreter>) ExtensionLoader.forName(object.toString());
+						cls = (Class<ConditionInterpreter>) Extensions.forName(object.toString());
 					}
 
 					o = cls.newInstance();

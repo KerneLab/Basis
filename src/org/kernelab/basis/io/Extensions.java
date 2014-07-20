@@ -10,7 +10,7 @@ import java.util.Enumeration;
 
 import org.kernelab.basis.JSON.JSAN;
 
-public class ExtensionLoader
+public class Extensions
 {
 	public static class ClassLoader extends URLClassLoader
 	{
@@ -99,7 +99,7 @@ public class ExtensionLoader
 		}
 	}
 
-	private static final ExtensionLoader	Singleton	= new ExtensionLoader();
+	private static final Extensions	Singleton	= new Extensions();
 
 	public static Class<?> forName(String className) throws ClassNotFoundException
 	{
@@ -121,7 +121,7 @@ public class ExtensionLoader
 		return instance().getLoader().getResources(name);
 	}
 
-	public static ExtensionLoader instance()
+	public static Extensions instance()
 	{
 		return Singleton;
 	}
@@ -153,12 +153,12 @@ public class ExtensionLoader
 
 	private ClassLoader	loader;
 
-	protected ExtensionLoader()
+	protected Extensions()
 	{
 		this(java.lang.ClassLoader.getSystemClassLoader());
 	}
 
-	protected ExtensionLoader(java.lang.ClassLoader cl)
+	protected Extensions(java.lang.ClassLoader cl)
 	{
 		this.setLoader(new ClassLoader(cl));
 	}
@@ -168,7 +168,7 @@ public class ExtensionLoader
 		return loader;
 	}
 
-	public ExtensionLoader setLoader(ClassLoader loader)
+	public Extensions setLoader(ClassLoader loader)
 	{
 		if (loader != null)
 		{
