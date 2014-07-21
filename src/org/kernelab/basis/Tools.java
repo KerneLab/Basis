@@ -1831,6 +1831,40 @@ public class Tools
 	}
 
 	/**
+	 * To get the canonical file path according to the given path. If the path
+	 * is not absolute then the parent path would be taken to construct the full
+	 * path.
+	 * 
+	 * @param path
+	 *            The path.
+	 * @param parent
+	 *            The parent path.
+	 * @return The path.
+	 */
+	public static String getFilePath(String path, String parent)
+	{
+		if (path != null)
+		{
+			File file = new File(path);
+
+			if (!file.isAbsolute() && parent != null)
+			{
+				file = new File(parent, path);
+			}
+
+			try
+			{
+				path = file.getCanonicalPath();
+			}
+			catch (IOException e)
+			{
+			}
+		}
+
+		return path;
+	}
+
+	/**
 	 * To get the first element of a T type array.
 	 * 
 	 * @param <T>
@@ -1842,6 +1876,37 @@ public class Tools
 	public static <T> T getFirstElement(T[] t)
 	{
 		return t[0];
+	}
+
+	/**
+	 * Get the path of a folder which will be ended up with the system default
+	 * separator.
+	 * 
+	 * @param folder
+	 *            The path of folder.
+	 * @return The path of folder ended up with the system default separator.
+	 */
+	public static String getFolderPath(String folder)
+	{
+		return getFolderPath(folder, File.separator);
+	}
+
+	/**
+	 * Get the path of a folder which will be ended up with the separator.
+	 * 
+	 * @param folder
+	 *            The path of folder.
+	 * @param sep
+	 *            The separator.
+	 * @return The path of folder ended up with the separator.
+	 */
+	public static String getFolderPath(String folder, String sep)
+	{
+		if (folder != null && !folder.endsWith(sep))
+		{
+			folder += sep;
+		}
+		return folder;
 	}
 
 	/**
