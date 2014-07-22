@@ -1191,6 +1191,96 @@ public class Tools
 	}
 
 	/**
+	 * Convert the each byte in the array into string within hexadecimal radix.
+	 * 
+	 * @param bytes
+	 *            The bytes array.
+	 * @return The result array.
+	 */
+	public static String[] dumpBytes(byte[] bytes)
+	{
+		return dumpBytes(bytes, 16);
+	}
+
+	/**
+	 * Convert the each byte in the array into string within given radix.
+	 * 
+	 * @param bytes
+	 *            The bytes array.
+	 * @param radix
+	 *            The radix within which the bytes will be converted to.
+	 * @return The result array.
+	 */
+	public static String[] dumpBytes(byte[] bytes, int radix)
+	{
+		String[] dump = null;
+
+		if (bytes != null)
+		{
+			dump = new String[bytes.length];
+
+			int i = 0;
+
+			for (byte b : bytes)
+			{
+				dump[i] = Integer.toString(b & 0xff, radix).toUpperCase();
+				i++;
+			}
+		}
+
+		return dump;
+	}
+
+	/**
+	 * To get the bytes array according to the dump within the given radix.
+	 * 
+	 * @param radix
+	 *            The radix.
+	 * @param dump
+	 *            The dump in which each element represents a byte.
+	 * @return The bytes array.
+	 */
+	public static byte[] dumpBytes(int radix, String... dump)
+	{
+		byte[] bytes = null;
+
+		if (dump != null)
+		{
+			bytes = new byte[dump.length];
+
+			int i = 0;
+
+			for (String d : dump)
+			{
+				byte b = 0;
+
+				if (d != null)
+				{
+					b = (byte) (Integer.parseInt(d, radix) | ~0xff);
+				}
+
+				bytes[i] = b;
+
+				i++;
+			}
+		}
+
+		return bytes;
+	}
+
+	/**
+	 * To get the bytes array according to the dump within hexadecimal radix.
+	 * 
+	 * @param dump
+	 *            The dump in which each element represents a byte.
+	 * @return The bytes array.
+	 */
+	public static byte[] dumpBytes(String... dump)
+	{
+		return dumpBytes(16, dump);
+	}
+
+	/**
 	 * Encode text to code by a certain encode algorithm like MD5, SHA-1
 	 * 
 	 * @param text
