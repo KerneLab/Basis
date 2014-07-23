@@ -1219,11 +1219,18 @@ public class Tools
 		{
 			dump = new String[bytes.length];
 
+			int len = Integer.toString(0xFF, radix).length();
+
 			int i = 0;
 
 			for (byte b : bytes)
 			{
-				dump[i] = Integer.toString(b & 0xff, radix).toUpperCase();
+				dump[i] = Integer.toString(b & 0xFF, radix).toUpperCase();
+
+				if (dump[i].length() < len)
+				{
+					dump[i] = Tools.repeat('0', len - dump[i].length()) + dump[i];
+				}
 				i++;
 			}
 		}
@@ -1256,7 +1263,7 @@ public class Tools
 
 				if (d != null)
 				{
-					b = (byte) (Integer.parseInt(d, radix) | ~0xff);
+					b = (byte) Integer.parseInt(d, radix);
 				}
 
 				bytes[i] = b;
