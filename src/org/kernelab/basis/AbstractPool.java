@@ -27,11 +27,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	protected AbstractPool(List<E> pool, int limit, int init)
 	{
-		this.setClosed(false);
-		this.setElements(pool);
-		this.setTrace(0);
-		this.setLimit(limit);
-		this.setInit(0);
+		this.setClosed(false).setElements(pool).setTrace(0).setLimit(limit).setInit(0);
 	}
 
 	/**
@@ -54,7 +50,10 @@ public abstract class AbstractPool<E> implements Pool<E>
 		{
 			synchronized (elements)
 			{
-				trace--;
+				if (trace > 0)
+				{
+					trace--;
+				}
 			}
 		}
 	}
@@ -148,9 +147,10 @@ public abstract class AbstractPool<E> implements Pool<E>
 		}
 	}
 
-	private void setClosed(boolean closed)
+	private AbstractPool<E> setClosed(boolean closed)
 	{
 		this.closed = closed;
+		return Tools.cast(this);
 	}
 
 	private AbstractPool<E> setElements(List<E> elements)

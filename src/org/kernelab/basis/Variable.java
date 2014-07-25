@@ -8,7 +8,6 @@ import java.text.DecimalFormat;
  * Variable class which can change its value.
  * 
  * @author Dilly King
- * @version 2011.10.04.2
  * 
  * @param <N>
  *            The generic type of number.
@@ -16,10 +15,9 @@ import java.text.DecimalFormat;
 public class Variable<N extends java.lang.Number & Comparable<N>> extends java.lang.Number implements
 		Comparable<Variable<N>>, Serializable, Copieable<Variable<N>>
 {
-
 	/**
-         * 
-         */
+     * 
+     */
 	private static final long			serialVersionUID	= -4353893839356953344L;
 
 	public static final DecimalFormat	DECIMAL_FORMAT		= new DecimalFormat();
@@ -50,16 +48,14 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static Byte asByte(String string, Byte defaultValue)
 	{
-		Byte value = null;
-		if (isInteger(string))
+		try
 		{
-			value = Byte.valueOf(string);
+			return Byte.valueOf(string);
 		}
-		else
+		catch (Exception e)
 		{
-			value = defaultValue;
+			return defaultValue;
 		}
-		return value;
 	}
 
 	/**
@@ -88,16 +84,14 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static Double asDouble(String string, Double defaultValue)
 	{
-		Double value = null;
-		if (isDouble(string))
+		try
 		{
-			value = Double.valueOf(string);
+			return Double.valueOf(string);
 		}
-		else
+		catch (Exception e)
 		{
-			value = defaultValue;
+			return defaultValue;
 		}
-		return value;
 	}
 
 	/**
@@ -126,16 +120,14 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static Float asFloat(String string, Float defaultValue)
 	{
-		Float value = null;
-		if (isDouble(string))
+		try
 		{
-			value = Float.valueOf(string);
+			return Float.valueOf(string);
 		}
-		else
+		catch (Exception e)
 		{
-			value = defaultValue;
+			return defaultValue;
 		}
-		return value;
 	}
 
 	/**
@@ -164,16 +156,14 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static Integer asInteger(String string, Integer defaultValue)
 	{
-		Integer value = null;
-		if (isInteger(string))
+		try
 		{
-			value = Integer.valueOf(string);
+			return Integer.valueOf(string);
 		}
-		else
+		catch (Exception e)
 		{
-			value = defaultValue;
+			return defaultValue;
 		}
-		return value;
 	}
 
 	/**
@@ -202,16 +192,14 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static Long asLong(String string, Long defaultValue)
 	{
-		Long value = null;
-		if (isInteger(string))
+		try
 		{
-			value = Long.valueOf(string);
+			return Long.valueOf(string);
 		}
-		else
+		catch (Exception e)
 		{
-			value = defaultValue;
+			return defaultValue;
 		}
-		return value;
 	}
 
 	/**
@@ -240,16 +228,14 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static Short asShort(String string, Short defaultValue)
 	{
-		Short value = null;
-		if (isInteger(string))
+		try
 		{
-			value = Short.valueOf(string);
+			return Short.valueOf(string);
 		}
-		else
+		catch (Exception e)
 		{
-			value = defaultValue;
+			return defaultValue;
 		}
-		return value;
 	}
 
 	/**
@@ -263,19 +249,22 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	{
 		Byte value = null;
 
-		if (number instanceof Byte)
+		if (number != null)
 		{
-			value = (Byte) number;
-		}
-		else
-		{
-			try
+			if (number instanceof Byte)
 			{
-				value = Byte.valueOf(number.toString());
+				value = (Byte) number;
 			}
-			catch (NumberFormatException e)
+			else
 			{
-				value = Variable.doubleValueOfNumber(number).byteValue();
+				try
+				{
+					value = Byte.valueOf(number.toString());
+				}
+				catch (Exception e)
+				{
+					value = Variable.doubleValueOfNumber(number).byteValue();
+				}
 			}
 		}
 
@@ -293,13 +282,16 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	{
 		Double value = null;
 
-		if (number instanceof Double)
+		if (number != null)
 		{
-			value = (Double) number;
-		}
-		else
-		{
-			value = Double.valueOf(number.toString());
+			if (number instanceof Double)
+			{
+				value = (Double) number;
+			}
+			else
+			{
+				value = Double.valueOf(number.toString());
+			}
 		}
 
 		return value;
@@ -316,19 +308,22 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	{
 		Float value = null;
 
-		if (number instanceof Float)
+		if (number != null)
 		{
-			value = (Float) number;
-		}
-		else
-		{
-			try
+			if (number instanceof Float)
 			{
-				value = Float.valueOf(number.toString());
+				value = (Float) number;
 			}
-			catch (NumberFormatException e)
+			else
 			{
-				value = Variable.doubleValueOfNumber(number).floatValue();
+				try
+				{
+					value = Float.valueOf(number.toString());
+				}
+				catch (Exception e)
+				{
+					value = Variable.doubleValueOfNumber(number).floatValue();
+				}
 			}
 		}
 
@@ -346,19 +341,22 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	{
 		Integer value = null;
 
-		if (number instanceof Integer)
+		if (number != null)
 		{
-			value = (Integer) number;
-		}
-		else
-		{
-			try
+			if (number instanceof Integer)
 			{
-				value = Integer.valueOf(number.toString());
+				value = (Integer) number;
 			}
-			catch (NumberFormatException e)
+			else
 			{
-				value = Variable.doubleValueOfNumber(number).intValue();
+				try
+				{
+					value = Integer.valueOf(number.toString());
+				}
+				catch (Exception e)
+				{
+					value = Variable.doubleValueOfNumber(number).intValue();
+				}
 			}
 		}
 
@@ -366,29 +364,45 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	}
 
 	/**
-	 * Determine whether a String is a Double number which contains '.'.
+	 * Determine whether the String represents a float number.
 	 * 
 	 * @param string
 	 *            the number string.
 	 * @return <code>TRUE</code> if the string is Double otherwise
 	 *         <code>FALSE</code>.
 	 */
-	public static boolean isDouble(String string)
+	public static boolean isFloatNumber(String string)
 	{
-		return string != null && !string.equals(".") && string.matches("^-?\\d*\\.\\d*$");
+		try
+		{
+			Double.parseDouble(string);
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
 	}
 
 	/**
-	 * Determine whether a String is a Integer number which doesn't contain '.'.
+	 * Determine whether the String represents a integer number.
 	 * 
 	 * @param string
 	 *            the number string.
 	 * @return <code>TRUE</code> if the string is Integer otherwise
 	 *         <code>FALSE</code>.
 	 */
-	public static boolean isInteger(String string)
+	public static boolean isIntegerNumber(String string)
 	{
-		return string != null && string.matches("^-?\\d+$");
+		try
+		{
+			Long.parseLong(string);
+			return true;
+		}
+		catch (Exception ex)
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -422,7 +436,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static boolean isNumber(String string)
 	{
-		return string != null && string.length() != 0 && string.matches("^-?\\d*\\.?\\d*$");
+		return isFloatNumber(string);
 	}
 
 	/**
@@ -436,19 +450,22 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	{
 		Long value = null;
 
-		if (number instanceof Long)
+		if (number != null)
 		{
-			value = (Long) number;
-		}
-		else
-		{
-			try
+			if (number instanceof Long)
 			{
-				value = Long.valueOf(number.toString());
+				value = (Long) number;
 			}
-			catch (NumberFormatException e)
+			else
 			{
-				value = Variable.doubleValueOfNumber(number).longValue();
+				try
+				{
+					value = Long.valueOf(number.toString());
+				}
+				catch (Exception e)
+				{
+					value = Variable.doubleValueOfNumber(number).longValue();
+				}
 			}
 		}
 
@@ -574,51 +591,26 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	{
 		Short value = null;
 
-		if (number instanceof Short)
+		if (number != null)
 		{
-			value = (Short) number;
-		}
-		else
-		{
-			try
+			if (number instanceof Short)
 			{
-				value = Short.valueOf(number.toString());
+				value = (Short) number;
 			}
-			catch (NumberFormatException e)
+			else
 			{
-				value = Variable.doubleValueOfNumber(number).shortValue();
+				try
+				{
+					value = Short.valueOf(number.toString());
+				}
+				catch (Exception e)
+				{
+					value = Variable.doubleValueOfNumber(number).shortValue();
+				}
 			}
 		}
 
 		return value;
-	}
-
-	/**
-	 * Parse the Variable value of a String.<br>
-	 * Here, first try Integer value, if not Integer format, then try Double
-	 * format, if still illegal format, then throws a NumberFormatException.
-	 * 
-	 * @param <N>
-	 *            The generic type of number value.
-	 * @param string
-	 *            The String to be parsed.
-	 * @return The Variable value.
-	 */
-	@SuppressWarnings("unchecked")
-	public static <N extends java.lang.Number> N valueOf(String string)
-	{
-		N number = null;
-
-		try
-		{
-			number = (N) Integer.valueOf(string);
-		}
-		catch (NumberFormatException ei)
-		{
-			number = (N) Double.valueOf(string);
-		}
-
-		return number;
 	}
 
 	public N	value;
@@ -665,9 +657,10 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 * @param variable
 	 *            The Variable which would holds the value of this Variable.
 	 */
-	public void get(Variable<N> variable)
+	public Variable<N> get(Variable<N> variable)
 	{
 		variable.value = this.value;
+		return variable;
 	}
 
 	public N getValue()
@@ -692,14 +685,16 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 *            The Variable according to which the value of this Variable
 	 *            would be set to.
 	 */
-	public void set(Variable<N> variable)
+	public Variable<N> set(Variable<N> variable)
 	{
 		this.value = variable.value;
+		return this;
 	}
 
-	public void setValue(N value)
+	public Variable<N> setValue(N value)
 	{
 		this.value = value;
+		return this;
 	}
 
 	@Override

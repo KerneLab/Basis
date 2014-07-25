@@ -977,7 +977,14 @@ public class Tools
 	 */
 	public static void debug(JSAN jsan)
 	{
-		debug(jsan.toString());
+		if (jsan == null)
+		{
+			debug("null");
+		}
+		else
+		{
+			debug(jsan.toString());
+		}
 	}
 
 	/**
@@ -988,7 +995,14 @@ public class Tools
 	 */
 	public static void debug(JSON json)
 	{
-		debug(json.toString());
+		if (json == null)
+		{
+			debug("null");
+		}
+		else
+		{
+			debug(json.toString());
+		}
 	}
 
 	/**

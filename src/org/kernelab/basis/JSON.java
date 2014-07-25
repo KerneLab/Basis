@@ -3973,7 +3973,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				}
 			}
 
-			if (c == NESTED_ATTRIBUTE_QUOTE || Variable.isInteger(quote))
+			if (c == NESTED_ATTRIBUTE_QUOTE || Variable.isIntegerNumber(quote))
 			{
 				object = quote.substring(nail, i);
 			}
@@ -5298,18 +5298,18 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			{
 				value = RestoreString(string);
 			}
-			else if (Variable.isInteger(string))
+			else if (Variable.isIntegerNumber(string))
 			{
 				try
 				{
-					value = Integer.parseInt(string);
+					value = Integer.valueOf(string);
 				}
 				catch (NumberFormatException e)
 				{
-					value = Long.parseLong(string);
+					value = Long.valueOf(string);
 				}
 			}
-			else if (Variable.isDouble(string))
+			else if (Variable.isFloatNumber(string))
 			{
 				value = Double.parseDouble(string);
 			}
