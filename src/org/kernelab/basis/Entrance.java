@@ -294,10 +294,6 @@ public class Entrance
 
 					Object val = pair.val();
 
-					if (val == null)
-					{
-						out.append(lineWrap);
-					}
 					if (JSON.IsJSON(val))
 					{
 						JSON j = (JSON) val;
@@ -314,8 +310,11 @@ public class Entrance
 					}
 					else
 					{
-						out.append(indent);
-						out.append(val.toString());
+						if (val != null)
+						{
+							out.append(indent);
+							out.append(val.toString());
+						}
 						out.append(lineWrap);
 					}
 				}
