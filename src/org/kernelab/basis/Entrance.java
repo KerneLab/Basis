@@ -3,6 +3,7 @@ package org.kernelab.basis;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
@@ -23,6 +24,7 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.kernelab.basis.JSON.Pair;
 import org.kernelab.basis.io.Extensions;
 
 /**
@@ -245,6 +247,82 @@ public class Entrance
 	public static void main(String[] args)
 	{
 		new Entrance().handle(args).present();
+	}
+
+	/**
+	 * To output the manual information.<br />
+	 * The manual data should be formed as <br />
+	 * 
+	 * <pre>
+	 * {
+	 * 	"key":{
+	 * 		"":"main text of key",
+	 * 		"sub1":"sub1 direct text",
+	 * 		"sub2":{
+	 * 			...
+	 * 		}
+	 * 		...
+	 * 	},
+	 * 	"other key":{
+	 * 		...
+	 * 	}
+	 * }
+	 * </pre>
+	 * 
+	 * @param out
+	 * @param json
+	 * @param indents
+	 * @param indent
+	 * @param lineWrap
+	 * @return
+	 * @throws IOException
+	 */
+	public static final Writer Manual(Writer out, JSON json, int indents, String indent, String lineWrap)
+			throws IOException
+	{
+		if (out != null && json != null)
+		{
+			for (Pair pair : json.pairs())
+			{
+				String key = pair.key();
+
+				if (Tools.notNullOrEmpty(key))
+				{
+					Tools.repeat(out, indent, indents);
+
+					out.append(key);
+
+					Object val = pair.val();
+
+					if (val == null)
+					{
+						out.append(lineWrap);
+					}
+					if (JSON.IsJSON(val))
+					{
+						JSON j = (JSON) val;
+
+						String mainText = j.valString("");
+						if (Tools.notNullOrWhite(mainText))
+						{
+							out.append(indent);
+							out.append(mainText);
+						}
+						out.append(lineWrap);
+
+						Manual(out, j, indents + 1, indent, lineWrap);
+					}
+					else
+					{
+						out.append(indent);
+						out.append(val.toString());
+						out.append(lineWrap);
+					}
+				}
+			}
+		}
+
+		return out;
 	}
 
 	public static final String UpdateVersion(long time)
