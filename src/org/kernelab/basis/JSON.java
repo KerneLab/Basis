@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -5262,6 +5263,49 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return new Parser().parse(source).dispose().result();
 	}
 
+	public static JSON Parse(File file)
+	{
+		return Parse(file, Charset.defaultCharset());
+	}
+
+	public static JSON Parse(File file, Charset charset)
+	{
+		JSON json = null;
+
+		if (file.isFile())
+		{
+			Reader reader = null;
+			try
+			{
+				reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset));
+				json = Parse(reader);
+			}
+			catch (Exception e)
+			{
+			}
+			finally
+			{
+				if (reader != null)
+				{
+					try
+					{
+						reader.close();
+					}
+					catch (IOException e)
+					{
+					}
+				}
+			}
+		}
+
+		return json;
+	}
+
+	public static JSON Parse(File file, String charsetName)
+	{
+		return Parse(file, Charset.forName(charsetName));
+	}
+
 	public static JSON Parse(Reader reader)
 	{
 		JSON json = null;
@@ -5275,7 +5319,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
+			}
+			finally
+			{
+				if (parser != null)
+				{
+					parser.dispose();
+				}
 			}
 		}
 
