@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ThreadExecutorPool<V> implements CompletionService<V>
@@ -16,6 +18,8 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	private CompletionService<V>	completionService	= null;
 
 	private Variable<Integer>		tasks				= new Variable<Integer>(0);
+
+	private Integer					limit				= null;
 
 	public ThreadExecutorPool()
 	{
@@ -28,9 +32,15 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		this.setCompletionService(new ExecutorCompletionService<V>(this.executorService));
 	}
 
-	public ThreadExecutorPool(int threads)
+	public ThreadExecutorPool(int limit)
 	{
-		this(Executors.newFixedThreadPool(threads));
+		this(limit, limit);
+	}
+
+	public ThreadExecutorPool(int limit, int init)
+	{
+		this(new ThreadPoolExecutor(init, limit, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()));
+		this.limit = limit;
 	}
 
 	private void addTask()
@@ -57,6 +67,33 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		}
 	}
 
+	/**
+	 * Fetch the busy degree of the pool load between 0.0 and 1.0<br />
+	 * If the pool was not defined by limit, but also the executorService was
+	 * not a ThreadPoolExecutor, then this method returns -1.
+	 * 
+	 * @return The busy degree.
+	 */
+	public float getBusy()
+	{
+		if (this.getLimit() != null)
+		{
+			return 1f * this.getTasks() / this.getLimit();
+		}
+		else
+		{
+			if (executorService instanceof ThreadPoolExecutor)
+			{
+				ThreadPoolExecutor exec = (ThreadPoolExecutor) executorService;
+				return 1f * exec.getActiveCount() / exec.getLargestPoolSize();
+			}
+			else
+			{
+				return -1;
+			}
+		}
+	}
+
 	public CompletionService<V> getCompletionService()
 	{
 		return completionService;
@@ -65,6 +102,11 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	public ExecutorService getExecutorService()
 	{
 		return executorService;
+	}
+
+	public Integer getLimit()
+	{
+		return limit;
 	}
 
 	public Integer getTasks()

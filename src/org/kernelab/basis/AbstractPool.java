@@ -58,6 +58,11 @@ public abstract class AbstractPool<E> implements Pool<E>
 		}
 	}
 
+	public float getBusy()
+	{
+		return (this.getTrace() - this.getRemain()) * 1f / this.getLimit();
+	}
+
 	protected List<E> getElements()
 	{
 		return elements;
