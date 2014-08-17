@@ -39,9 +39,9 @@ public class DataWriter extends AbstractAccomplishable<DataWriter> implements Ru
 
 	public static final String	DOS_LINE_SEPARATOR		= "\r\n";
 
-	public static String		DEFAULT_LINE_SEPARATOR	= System.getProperty("line.separator", UNIX_LINE_SEPARATOR);
+	public static final String	DEFAULT_LINE_SEPARATOR	= System.getProperty("line.separator", UNIX_LINE_SEPARATOR);
 
-	public static Charset		DEFAULT_CHARSET			= Charset.defaultCharset();
+	public static final Charset	DEFAULT_CHARSET			= Charset.defaultCharset();
 
 	private String				lineSeparator			= DEFAULT_LINE_SEPARATOR;
 

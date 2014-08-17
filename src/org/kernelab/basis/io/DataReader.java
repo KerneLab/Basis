@@ -24,7 +24,7 @@ public abstract class DataReader extends AbstractAccomplishable<DataReader> impl
 
 	private static final char	LF				= '\n';
 
-	public static Charset		DEFAULT_CHARSET	= Charset.defaultCharset();
+	public static final Charset	DEFAULT_CHARSET	= Charset.defaultCharset();
 
 	private Charset				charset			= DEFAULT_CHARSET;
 
