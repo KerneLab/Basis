@@ -359,16 +359,9 @@ public class Entrance
 		initiate(BelongingJarFile(cls));
 	}
 
-	public Entrance(File file)
+	public Entrance(File file) throws IOException
 	{
-		try
-		{
-			initiate(new JarFile(file));
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		initiate(new JarFile(file));
 	}
 
 	public String argument(int index)
