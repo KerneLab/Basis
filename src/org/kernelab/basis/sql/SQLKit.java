@@ -125,6 +125,86 @@ public class SQLKit
 			{ ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT },
 			{ ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE, ResultSet.HOLD_CURSORS_OVER_COMMIT } };
 
+	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, Iterable<?> params)
+			throws SQLException
+	{
+		if (statement != null && params != null && params.iterator().hasNext())
+		{
+			statement.clearParameters();
+			int from = 1 + offset;
+			int index = from;
+			for (Object param : params)
+			{
+				if (param == EMPTY)
+				{
+					if (index != from)
+					{
+						throw new SQLException("SQLKit.EMPTY should be the first parameter.");
+					}
+					break;
+				}
+				else
+				{
+					if (param == NULL)
+					{
+						statement.setObject(index, null);
+					}
+					else
+					{
+						statement.setObject(index, param);
+					}
+					index++;
+				}
+			}
+		}
+		return statement;
+	}
+
+	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, Object... params)
+			throws SQLException
+	{
+		if (statement != null && params != null && params.length > 0)
+		{
+			statement.clearParameters();
+			int from = 1 + offset;
+			int index = from;
+			for (Object param : params)
+			{
+				if (param == EMPTY)
+				{
+					if (index != from)
+					{
+						throw new SQLException("SQLKit.EMPTY should be the first parameter.");
+					}
+					break;
+				}
+				else
+				{
+					if (param == NULL)
+					{
+						statement.setObject(index, null);
+					}
+					else
+					{
+						statement.setObject(index, param);
+					}
+					index++;
+				}
+			}
+		}
+		return statement;
+	}
+
+	public static PreparedStatement bindParameters(PreparedStatement statement, Iterable<?> params) throws SQLException
+	{
+		return bindParameters(0, statement, params);
+	}
+
+	public static PreparedStatement bindParameters(PreparedStatement statement, Object... params) throws SQLException
+	{
+		return bindParameters(0, statement, params);
+	}
+
 	/**
 	 * To fill a list of parameters according to the keys which are the names of
 	 * parameters.
@@ -134,11 +214,11 @@ public class SQLKit
 	 * @param params
 	 *            the parameters in form of key/value organized by JSON.
 	 * @return the parameters value list.
-	 * @see SQLKit#fillParametersList(Iterable, Map, List)
+	 * @see SQLKit#fillParameters(Iterable, Map, List)
 	 */
-	public static List<Object> fillParametersList(Iterable<String> keys, JSON params)
+	public static List<Object> fillParameters(Iterable<String> keys, JSON params)
 	{
-		return fillParametersList(keys, params, null);
+		return fillParameters(keys, params, null);
 	}
 
 	/**
@@ -156,7 +236,7 @@ public class SQLKit
 	 * 
 	 * @return the parameters value list.
 	 */
-	public static List<Object> fillParametersList(Iterable<String> keys, JSON params, List<Object> list)
+	public static List<Object> fillParameters(Iterable<String> keys, JSON params, List<Object> list)
 	{
 		if (list == null)
 		{
@@ -197,11 +277,11 @@ public class SQLKit
 	 *            the parameters in form of key/value organized by
 	 *            Map&lt;String,Object&gt;.
 	 * @return the parameters value list.
-	 * @see SQLKit#fillParametersList(Iterable, Map, List)
+	 * @see SQLKit#fillParameters(Iterable, Map, List)
 	 */
-	public static List<Object> fillParametersList(Iterable<String> keys, Map<String, ?> params)
+	public static List<Object> fillParameters(Iterable<String> keys, Map<String, ?> params)
 	{
-		return fillParametersList(keys, params, null);
+		return fillParameters(keys, params, null);
 	}
 
 	/**
@@ -220,7 +300,7 @@ public class SQLKit
 	 * 
 	 * @return the parameters value list.
 	 */
-	public static List<Object> fillParametersList(Iterable<String> keys, Map<String, ?> params, List<Object> list)
+	public static List<Object> fillParameters(Iterable<String> keys, Map<String, ?> params, List<Object> list)
 	{
 		if (list == null)
 		{
@@ -832,33 +912,53 @@ public class SQLKit
 
 	public void addBatch(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		this.fillParameters(statement, params);
+		bindParameters(statement, params);
 		statement.addBatch();
 	}
 
 	public void addBatch(PreparedStatement statement, JSON params) throws SQLException
 	{
 		List<String> keys = parameters.get(statement);
-		this.fillParameters(statement, fillParametersList(keys, params));
+		bindParameters(statement, fillParameters(keys, params));
 		statement.addBatch();
 	}
 
 	public void addBatch(PreparedStatement statement, Map<String, ?> params) throws SQLException
 	{
 		List<String> keys = parameters.get(statement);
-		this.fillParameters(statement, fillParametersList(keys, params));
+		bindParameters(statement, fillParameters(keys, params));
 		statement.addBatch();
 	}
 
 	public void addBatch(PreparedStatement statement, Object... params) throws SQLException
 	{
-		this.fillParameters(statement, params);
+		bindParameters(statement, params);
 		statement.addBatch();
 	}
 
 	public void addBatch(String sql) throws SQLException
 	{
 		statement.addBatch(sql);
+	}
+
+	public PreparedStatement bindParameters(int offset, Iterable<?> params) throws SQLException
+	{
+		return bindParameters(offset, (PreparedStatement) statement, params);
+	}
+
+	public PreparedStatement bindParameters(int offset, Object... params) throws SQLException
+	{
+		return bindParameters(offset, (PreparedStatement) statement, params);
+	}
+
+	public PreparedStatement bindParameters(Iterable<?> params) throws SQLException
+	{
+		return bindParameters(0, params);
+	}
+
+	public PreparedStatement bindParameters(Object... params) throws SQLException
+	{
+		return bindParameters(0, params);
 	}
 
 	public void cancel() throws SQLException
@@ -1027,22 +1127,22 @@ public class SQLKit
 
 	public Sequel execute(CallableStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(this, statement, fillParameters(statement, params).execute());
+		return new Sequel(this, statement, bindParameters(statement, params).execute());
 	}
 
 	public Sequel execute(CallableStatement statement, Object... params) throws SQLException
 	{
-		return new Sequel(this, statement, fillParameters(statement, params).execute());
+		return new Sequel(this, statement, bindParameters(statement, params).execute());
 	}
 
 	public Sequel execute(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(this, statement, fillParameters(statement, params).execute());
+		return new Sequel(this, statement, bindParameters(statement, params).execute());
 	}
 
 	public Sequel execute(PreparedStatement statement, Object... params) throws SQLException
 	{
-		return new Sequel(this, statement, fillParameters(statement, params).execute());
+		return new Sequel(this, statement, bindParameters(statement, params).execute());
 	}
 
 	protected Sequel execute(Statement statement, String sql) throws SQLException
@@ -1064,14 +1164,14 @@ public class SQLKit
 	{
 		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		List<String> keys = parameters.get(ps);
-		return execute(ps, fillParametersList(keys, params));
+		return execute(ps, fillParameters(keys, params));
 	}
 
 	public Sequel execute(String sql, Map<String, ?> params) throws SQLException
 	{
 		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		List<String> keys = parameters.get(ps);
-		return execute(ps, fillParametersList(keys, params));
+		return execute(ps, fillParameters(keys, params));
 	}
 
 	public Sequel execute(String sql, Object... params) throws SQLException
@@ -1087,77 +1187,6 @@ public class SQLKit
 	public int[] executeBatch(Statement statement) throws SQLException
 	{
 		return statement.executeBatch();
-	}
-
-	public PreparedStatement fillParameters(Iterable<?> params) throws SQLException
-	{
-		return fillParameters((PreparedStatement) statement, params);
-	}
-
-	public PreparedStatement fillParameters(Object[] params) throws SQLException
-	{
-		return fillParameters((PreparedStatement) statement, params);
-	}
-
-	public PreparedStatement fillParameters(PreparedStatement statement, Iterable<?> params) throws SQLException
-	{
-		statement.clearParameters();
-		int index = 1;
-		for (Object param : params)
-		{
-			if (param == EMPTY)
-			{
-				if (index != 1)
-				{
-					throw new SQLException("SQLKit.EMPTY should be the first parameter.");
-				}
-				break;
-			}
-			else
-			{
-				if (param == NULL)
-				{
-					statement.setObject(index, null);
-				}
-				else
-				{
-					statement.setObject(index, param);
-				}
-				index++;
-			}
-		}
-		return statement;
-	}
-
-	public PreparedStatement fillParameters(PreparedStatement statement, Object[] params) throws SQLException
-	{
-		statement.clearParameters();
-		int index = 1;
-		for (Object param : params)
-		{
-			if (param == EMPTY)
-			{
-				if (index != 1)
-				{
-					throw new SQLException("SQLKit.EMPTY should be the first parameter.");
-				}
-				break;
-			}
-			else
-			{
-				if (param == NULL)
-				{
-					statement.setObject(index, null);
-				}
-				else
-				{
-					statement.setObject(index, param);
-				}
-				index++;
-			}
-		}
-
-		return statement;
 	}
 
 	protected void finalize() throws Throwable
@@ -1319,6 +1348,90 @@ public class SQLKit
 		statement = cs;
 
 		return cs;
+	}
+
+	public CallableStatement prepareCall(String call, JSON params) throws SQLException
+	{
+		return prepareCall(call, params, resultSetType);
+	}
+
+	public CallableStatement prepareCall(String call, JSON params, int resultSetType) throws SQLException
+	{
+		return prepareCall(call, params, resultSetType, resultSetConcurrency);
+	}
+
+	public CallableStatement prepareCall(String call, JSON params, int resultSetType, int resultSetConcurrency)
+			throws SQLException
+	{
+		return prepareCall(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+	}
+
+	public CallableStatement prepareCall(String call, JSON params, int resultSetType, int resultSetConcurrency,
+			int resultSetHoldability) throws SQLException
+	{
+		CallableStatement ps = (CallableStatement) statements.get(call);
+
+		if (ps == null)
+		{
+			try
+			{
+				ps = this.getConnection().prepareCall(replaceParameters(call, params), resultSetType,
+						resultSetConcurrency, resultSetHoldability);
+			}
+			catch (SQLException e)
+			{
+				ps = this.getConnection().prepareCall(replaceParameters(call, params));
+			}
+			statements.put(call, ps);
+			TreeMap<Integer, String> index = indexOfParameters(call, params.keySet());
+			parameters.put(ps, new LinkedList<String>(index.values()));
+		}
+
+		statement = ps;
+
+		return ps;
+	}
+
+	public CallableStatement prepareCall(String call, Map<String, ?> params) throws SQLException
+	{
+		return prepareCall(call, params, resultSetType);
+	}
+
+	public CallableStatement prepareCall(String call, Map<String, ?> params, int resultSetType) throws SQLException
+	{
+		return prepareCall(call, params, resultSetType, resultSetConcurrency);
+	}
+
+	public CallableStatement prepareCall(String call, Map<String, ?> params, int resultSetType, int resultSetConcurrency)
+			throws SQLException
+	{
+		return prepareCall(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+	}
+
+	public CallableStatement prepareCall(String call, Map<String, ?> params, int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	{
+		CallableStatement ps = (CallableStatement) statements.get(call);
+
+		if (ps == null)
+		{
+			try
+			{
+				ps = this.getConnection().prepareCall(replaceParameters(call, params), resultSetType,
+						resultSetConcurrency, resultSetHoldability);
+			}
+			catch (SQLException e)
+			{
+				ps = this.getConnection().prepareCall(replaceParameters(call, params));
+			}
+			statements.put(call, ps);
+			TreeMap<Integer, String> index = indexOfParameters(call, params.keySet());
+			parameters.put(ps, new LinkedList<String>(index.values()));
+		}
+
+		statement = ps;
+
+		return ps;
 	}
 
 	/**
@@ -1707,12 +1820,12 @@ public class SQLKit
 
 	public ResultSet query(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return fillParameters(statement, params).executeQuery();
+		return bindParameters(statement, params).executeQuery();
 	}
 
 	public ResultSet query(PreparedStatement statement, Object... params) throws SQLException
 	{
-		return fillParameters(statement, params).executeQuery();
+		return bindParameters(statement, params).executeQuery();
 	}
 
 	protected ResultSet query(Statement statement, String sql) throws SQLException
@@ -1734,14 +1847,14 @@ public class SQLKit
 	{
 		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		List<String> keys = parameters.get(ps);
-		return query(ps, fillParametersList(keys, params));
+		return query(ps, fillParameters(keys, params));
 	}
 
 	public ResultSet query(String sql, Map<String, ?> params) throws SQLException
 	{
 		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		List<String> keys = parameters.get(ps);
-		return query(ps, fillParametersList(keys, params));
+		return query(ps, fillParameters(keys, params));
 	}
 
 	public ResultSet query(String sql, Object... params) throws SQLException
@@ -1843,7 +1956,7 @@ public class SQLKit
 
 	public int update(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return fillParameters(statement, params).executeUpdate();
+		return bindParameters(statement, params).executeUpdate();
 	}
 
 	/**
@@ -1861,7 +1974,7 @@ public class SQLKit
 	 */
 	public int update(PreparedStatement statement, Object... params) throws SQLException
 	{
-		return fillParameters(statement, params).executeUpdate();
+		return bindParameters(statement, params).executeUpdate();
 	}
 
 	protected int update(Statement statement, String sql) throws SQLException
@@ -1883,14 +1996,14 @@ public class SQLKit
 	{
 		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		List<String> keys = parameters.get(ps);
-		return update(ps, fillParametersList(keys, params));
+		return update(ps, fillParameters(keys, params));
 	}
 
 	public int update(String sql, Map<String, ?> params) throws SQLException
 	{
 		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		List<String> keys = parameters.get(ps);
-		return update(ps, fillParametersList(keys, params));
+		return update(ps, fillParameters(keys, params));
 	}
 
 	public int update(String sql, Object... params) throws SQLException
