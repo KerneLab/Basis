@@ -671,15 +671,35 @@ public class Tools
 	 * This method will NOT close the source.
 	 * 
 	 * @param source
+	 *            The source InputStream.
 	 * @param target
+	 *            The target File.
 	 * @return true only if the copy operation is successfully.
 	 * @throws IOException
 	 */
 	public static boolean copy(InputStream source, File target) throws IOException
 	{
+		return copy(source, target, null);
+	}
+
+	/**
+	 * Copy the content from source InputStream to the target File with a given
+	 * buffer.
+	 * 
+	 * @param source
+	 *            The source InputStream.
+	 * @param target
+	 *            The target File.
+	 * @param buffer
+	 *            The byte array buffer.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(InputStream source, File target, byte[] buffer) throws IOException
+	{
 		FileOutputStream fos = new FileOutputStream(target);
 
-		boolean copied = copy(source, fos);
+		boolean copied = copy(source, fos, buffer);
 
 		fos.close();
 
@@ -720,7 +740,7 @@ public class Tools
 	{
 		boolean copied = false;
 
-		if (buffer == null)
+		if (buffer == null || buffer.length == 0)
 		{
 			buffer = new byte[1024];
 		}
@@ -1510,6 +1530,8 @@ public class Tools
 		{
 			Enumeration<? extends ZipEntry> entries = zip.entries();
 
+			byte[] buffer = new byte[1024];
+
 			while (entries.hasMoreElements())
 			{
 				ZipEntry entry = entries.nextElement();
@@ -1524,7 +1546,7 @@ public class Tools
 				{
 					file.getParentFile().mkdirs();
 					InputStream is = zip.getInputStream(entry);
-					copy(is, file);
+					copy(is, file, buffer);
 					is.close();
 				}
 			}
