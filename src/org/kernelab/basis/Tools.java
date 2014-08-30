@@ -38,6 +38,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -49,6 +50,8 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -659,6 +662,77 @@ public class Tools
 
 			copied = true;
 		}
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source InputStream to the target File.<br />
+	 * This method will NOT close the source.
+	 * 
+	 * @param source
+	 * @param target
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(InputStream source, File target) throws IOException
+	{
+		FileOutputStream fos = new FileOutputStream(target);
+
+		boolean copied = copy(source, fos);
+
+		fos.close();
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source InputStream to the target OutputStream.<br />
+	 * This method will NOT close neither the source nor the target.
+	 * 
+	 * @param source
+	 *            The source InputStream.
+	 * @param target
+	 *            The target OutputStream.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(InputStream source, OutputStream target) throws IOException
+	{
+		return copy(source, target, null);
+	}
+
+	/**
+	 * Copy the content from source InputStream to the target OutputStream with
+	 * a given buffer.<br />
+	 * This method will NOT close neither the source nor the target.
+	 * 
+	 * @param source
+	 *            The source InputStream.
+	 * @param target
+	 *            The target OutputStream.
+	 * @param buffer
+	 *            The byte array buffer.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(InputStream source, OutputStream target, byte[] buffer) throws IOException
+	{
+		boolean copied = false;
+
+		if (buffer == null)
+		{
+			buffer = new byte[1024];
+		}
+
+		int length = -1;
+
+		while ((length = source.read(buffer)) != -1)
+		{
+			target.write(buffer, 0, length);
+		}
+
+		copied = true;
 
 		return copied;
 	}
@@ -1419,6 +1493,44 @@ public class Tools
 		}
 
 		return excerpt;
+	}
+
+	/**
+	 * Extract the content in a ZipFile into the given directory.
+	 * 
+	 * @param zip
+	 *            The ZipFile, could be zip or jar.
+	 * @param dir
+	 *            The target directory.
+	 * @throws IOException
+	 */
+	public static void extract(ZipFile zip, File dir) throws IOException
+	{
+		if (zip != null && dir != null)
+		{
+			Enumeration<? extends ZipEntry> entries = zip.entries();
+
+			while (entries.hasMoreElements())
+			{
+				ZipEntry entry = entries.nextElement();
+
+				File file = new File(dir, entry.getName());
+
+				if (entry.isDirectory())
+				{
+					file.mkdirs();
+				}
+				else
+				{
+					file.getParentFile().mkdirs();
+					InputStream is = zip.getInputStream(entry);
+					copy(is, file);
+					is.close();
+				}
+			}
+
+			zip.close();
+		}
 	}
 
 	/**
