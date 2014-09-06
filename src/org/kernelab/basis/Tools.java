@@ -2466,6 +2466,33 @@ public class Tools
 	}
 
 	/**
+	 * Try to get the canonical path of a File. If any Exception occurred, then
+	 * its absolute path would be returned.
+	 * 
+	 * @param file
+	 *            The file.
+	 * @return The path.
+	 */
+	public static String getFullPath(File file)
+	{
+		String path = null;
+
+		if (file != null)
+		{
+			try
+			{
+				path = file.getCanonicalPath();
+			}
+			catch (Exception e)
+			{
+				path = file.getAbsolutePath();
+			}
+		}
+
+		return path;
+	}
+
+	/**
 	 * To get the last element of a T type array.
 	 * 
 	 * @param <T>
