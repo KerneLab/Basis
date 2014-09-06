@@ -28,7 +28,12 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.GatheringByteChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.ScatteringByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -72,6 +77,8 @@ public class Tools
 	private static final PrintStream		STD_ERR							= System.err;
 
 	private static final Set<PrintStream>	Outs							= new LinkedHashSet<PrintStream>();
+
+	protected static final int				BUFFER_BYTES					= 1024;
 
 	protected static final Calendar			CALENDAR						= new GregorianCalendar();
 
@@ -611,6 +618,81 @@ public class Tools
 	}
 
 	/**
+	 * Copy the content from source which MUST be a real file (not a directory)
+	 * to the target FileChannel.<br />
+	 * The target FileChannel will NOT be closed after the operation.
+	 * 
+	 * @param source
+	 *            The source File.
+	 * @param target
+	 *            The target FileChannel.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(File source, FileChannel target) throws IOException
+	{
+		boolean copied = false;
+
+		if (source.isFile())
+		{
+			FileChannel src = new FileInputStream(source).getChannel();
+
+			copied = copy(src, target);
+
+			src.close();
+		}
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source which MUST be a real file (not a directory)
+	 * to the target OutputStream.<br />
+	 * The target OutputStream will NOT be closed after the operation.
+	 * 
+	 * @param source
+	 *            The source File.
+	 * @param target
+	 *            The target OutputStream.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(File source, OutputStream target) throws IOException
+	{
+		return copy(source, target, null);
+	}
+
+	/**
+	 * Copy the content from source which MUST be a real file (not a directory)
+	 * to the target OutputStream with a given byte array buffer.<br />
+	 * The target OutputStream will NOT be closed after the operation.
+	 * 
+	 * @param source
+	 *            The source File.
+	 * @param target
+	 *            The target OutputStream.
+	 * @param buffer
+	 *            The byte array buffer.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(File source, OutputStream target, byte[] buffer) throws IOException
+	{
+		boolean copied = false;
+
+		if (source.isFile())
+		{
+			InputStream src = new FileInputStream(source);
+
+			copied = copy(src, target, buffer);
+
+			src.close();
+		}
+
+		return copied;
+	}
+
+	/**
 	 * Copy the content from source FileChannel to the target file.<br />
 	 * The target MUST be a real file otherwise FileNotFoundException will be
 	 * thrown.<br />
@@ -684,7 +766,7 @@ public class Tools
 
 	/**
 	 * Copy the content from source InputStream to the target File with a given
-	 * buffer.
+	 * byte array buffer.
 	 * 
 	 * @param source
 	 *            The source InputStream.
@@ -724,7 +806,7 @@ public class Tools
 
 	/**
 	 * Copy the content from source InputStream to the target OutputStream with
-	 * a given buffer.<br />
+	 * a given byte array buffer.<br />
 	 * This method will NOT close neither the source nor the target.
 	 * 
 	 * @param source
@@ -742,7 +824,7 @@ public class Tools
 
 		if (buffer == null || buffer.length == 0)
 		{
-			buffer = new byte[1024];
+			buffer = new byte[BUFFER_BYTES];
 		}
 
 		int length = -1;
@@ -750,6 +832,235 @@ public class Tools
 		while ((length = source.read(buffer)) != -1)
 		{
 			target.write(buffer, 0, length);
+		}
+
+		copied = true;
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source InputStream to target WritableByteChannel.
+	 * 
+	 * @param source
+	 *            The source InputStream.
+	 * @param target
+	 *            The target WritableByteChannel.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(InputStream source, WritableByteChannel target) throws IOException
+	{
+		return copy(source, target, null);
+	}
+
+	/**
+	 * Copy the content from source InputStream to target WritableByteChannel
+	 * with a given byte array buffer.
+	 * 
+	 * @param source
+	 *            The source InputStream.
+	 * @param target
+	 *            The target WritableByteChannel.
+	 * @param buffer
+	 *            The byte array buffer.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(InputStream source, WritableByteChannel target, byte[] buffer) throws IOException
+	{
+		boolean copied = false;
+
+		if (buffer == null || buffer.length == 0)
+		{
+			buffer = new byte[BUFFER_BYTES];
+		}
+
+		ByteBuffer wrap = ByteBuffer.wrap(buffer);
+
+		int length = -1;
+
+		while ((length = source.read(buffer)) != -1)
+		{
+			wrap.limit(length);
+
+			target.write(wrap);
+
+			wrap.clear();
+		}
+
+		copied = true;
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source ReadableByteChannel to target OutputStream.
+	 * 
+	 * @param source
+	 *            The source ReadableByteChannel.
+	 * @param target
+	 *            The target OutputStream.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(ReadableByteChannel source, OutputStream target) throws IOException
+	{
+		return copy(source, target, null);
+	}
+
+	/**
+	 * Copy the content from source ReadableByteChannel to target OutputStream
+	 * with a given byte array buffer.
+	 * 
+	 * @param source
+	 *            The source ReadableByteChannel.
+	 * @param target
+	 *            The target OutputStream.
+	 * @param buffer
+	 *            The byte array buffer.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(ReadableByteChannel source, OutputStream target, byte[] buffer) throws IOException
+	{
+		boolean copied = false;
+
+		if (buffer == null || buffer.length == 0)
+		{
+			buffer = new byte[BUFFER_BYTES];
+		}
+
+		ByteBuffer wrap = ByteBuffer.wrap(buffer);
+
+		while (source.read(wrap) != -1)
+		{
+			wrap.flip();
+
+			target.write(buffer, 0, wrap.limit());
+
+			wrap.clear();
+		}
+
+		copied = true;
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source ReadableByteChannel to target
+	 * WritableByteChannel.
+	 * 
+	 * @param source
+	 *            The source ReadableByteChannel.
+	 * @param target
+	 *            The target WritableByteChannel.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(ReadableByteChannel source, WritableByteChannel target) throws IOException
+	{
+		return copy(source, target, null);
+	}
+
+	/**
+	 * Copy the content from source ReadableByteChannel to target
+	 * WritableByteChannel with a given ByteBufer.
+	 * 
+	 * @param source
+	 *            The source ReadableByteChannel.
+	 * @param target
+	 *            The target WritableByteChannel.
+	 * @param buffer
+	 *            The ByteBuffer.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(ReadableByteChannel source, WritableByteChannel target, ByteBuffer buffer)
+			throws IOException
+	{
+		boolean copied = false;
+
+		if (buffer == null || buffer.capacity() == 0)
+		{
+			buffer = ByteBuffer.allocate(BUFFER_BYTES);
+		}
+		else
+		{
+			buffer.clear();
+		}
+
+		while (source.read(buffer) != -1)
+		{
+			buffer.flip();
+			target.write(buffer);
+			buffer.clear();
+		}
+
+		copied = true;
+
+		return copied;
+	}
+
+	/**
+	 * Copy the content from source ScatteringByteChannel to target
+	 * GatheringByteChannel.
+	 * 
+	 * @param source
+	 *            The source ScatteringByteChannel.
+	 * @param target
+	 *            The target GatheringByteChannel.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(ScatteringByteChannel source, GatheringByteChannel target) throws IOException
+	{
+		return copy(source, target, (ByteBuffer[]) null);
+	}
+
+	/**
+	 * Copy the content from source ScatteringByteChannel to target
+	 * GatheringByteChannel with a given ByteBuffer array.
+	 * 
+	 * @param source
+	 *            The source ScatteringByteChannel.
+	 * @param target
+	 *            The target GatheringByteChannel.
+	 * @param buffers
+	 *            The ByteBuffer array.
+	 * @return true only if the copy operation is successfully.
+	 * @throws IOException
+	 */
+	public static boolean copy(ScatteringByteChannel source, GatheringByteChannel target, ByteBuffer[] buffers)
+			throws IOException
+	{
+		boolean copied = false;
+
+		if (buffers == null || buffers.length == 0)
+		{
+			buffers = new ByteBuffer[] { ByteBuffer.allocate(BUFFER_BYTES) };
+		}
+		else
+		{
+			for (ByteBuffer buffer : buffers)
+			{
+				buffer.clear();
+			}
+		}
+
+		while (source.read(buffers) != -1)
+		{
+			for (ByteBuffer buffer : buffers)
+			{
+				buffer.flip();
+			}
+
+			target.write(buffers);
+
+			for (ByteBuffer buffer : buffers)
+			{
+				buffer.clear();
+			}
 		}
 
 		copied = true;
@@ -1530,7 +1841,7 @@ public class Tools
 		{
 			Enumeration<? extends ZipEntry> entries = zip.entries();
 
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[BUFFER_BYTES];
 
 			while (entries.hasMoreElements())
 			{
@@ -4714,7 +5025,7 @@ public class Tools
 
 		int read = -1;
 
-		char[] buffer = new char[1024];
+		char[] buffer = new char[200];
 
 		try
 		{
