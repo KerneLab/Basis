@@ -125,6 +125,13 @@ public class SQLKit
 			{ ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT },
 			{ ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE, ResultSet.HOLD_CURSORS_OVER_COMMIT } };
 
+	/**
+	 * When SQLKit being initialized, Connection must be provided by the
+	 * ConnectionManager. If none Connection could be provided, SQLException
+	 * would be thrown with this message.
+	 */
+	public static final String		ERR_CONN_DB					= "Could not connect database.";
+
 	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, Iterable<?> params)
 			throws SQLException
 	{
@@ -875,7 +882,7 @@ public class SQLKit
 
 	private Map<String, Statement>					statements;
 
-	private Map<PreparedStatement, List<String>>	parameters				= new HashMap<PreparedStatement, List<String>>();
+	private Map<PreparedStatement, List<String>>	parameters;
 
 	private int										resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
 
@@ -885,9 +892,20 @@ public class SQLKit
 
 	public SQLKit(ConnectionManager manager) throws SQLException
 	{
-		this.setConnection(manager.provideConnection(0));
+		this(manager, 0L);
+	}
+
+	public SQLKit(ConnectionManager manager, long timeout) throws SQLException
+	{
+		Connection connection = manager.provideConnection(timeout);
+		if (connection == null)
+		{
+			throw new SQLException(ERR_CONN_DB);
+		}
+		this.setConnection(connection);
 		this.setManager(manager);
 		this.setStatements(new HashMap<String, Statement>());
+		this.setParameters(new HashMap<PreparedStatement, List<String>>());
 	}
 
 	public void addBatch(Iterable<?> params) throws SQLException
@@ -1203,6 +1221,11 @@ public class SQLKit
 	public ConnectionManager getManager()
 	{
 		return manager;
+	}
+
+	protected Map<PreparedStatement, List<String>> getParameters()
+	{
+		return parameters;
 	}
 
 	public ResultSet getResultSet()
@@ -2011,9 +2034,14 @@ public class SQLKit
 		this.connection = connection;
 	}
 
-	private void setManager(ConnectionManager source)
+	protected void setManager(ConnectionManager source)
 	{
 		this.manager = source;
+	}
+
+	private void setParameters(Map<PreparedStatement, List<String>> parameters)
+	{
+		this.parameters = parameters;
 	}
 
 	public void setStatement(Statement statement)

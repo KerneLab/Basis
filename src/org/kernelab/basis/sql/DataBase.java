@@ -1,7 +1,6 @@
 package org.kernelab.basis.sql;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -933,7 +932,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			{
 				return ((TNSNamesReader) new TNSNamesReader().setName(name).setDataFile(file).read()).getMap();
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
 				return new LinkedHashMap<String, String>();
 			}
@@ -1025,9 +1024,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 				filePath = getDefaultTNSFilePath();
 			}
 
-			super.setServerName(filePath);
-
-			this.file = new File(filePath);
+			if (filePath != null)
+			{
+				super.setServerName(filePath);
+				this.file = new File(filePath);
+			}
 
 			return this;
 		}
@@ -1386,11 +1387,10 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return userName;
 	}
 
-	public Connection newConnection() throws SQLException, InstantiationException, IllegalAccessException,
-			ClassNotFoundException
+	public Connection newConnection() throws ClassNotFoundException, SQLException
 	{
 		// No need for JDBC4.0 with Java6.0
-		Extensions.forName(this.getDriverName()).newInstance();
+		Extensions.forName(this.getDriverName());
 
 		return DriverManager.getConnection(this.getURL(), this.getInformation());
 	}
@@ -1402,14 +1402,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		try
 		{
 			c = this.newConnection();
-		}
-		catch (InstantiationException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IllegalAccessException e)
-		{
-			e.printStackTrace();
 		}
 		catch (ClassNotFoundException e)
 		{

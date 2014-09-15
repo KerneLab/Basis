@@ -24,9 +24,14 @@ public interface Pool<E>
 	 * 
 	 * @param timeout
 	 *            The maximum milliseconds to be waited, 0 means always wait
-	 *            until an available element is returned.
+	 *            until an available element is returned. Positive means the
+	 *            maximum milliseconds to wait before trying to provide an
+	 *            element if the pool could not provide an element. Negative
+	 *            means that the pool would always try to provide an element
+	 *            every abs(timeout) milliseconds until an available element has
+	 *            been provided.
 	 * 
-	 * @return
+	 * @return element
 	 */
 	public E provide(long timeout);
 

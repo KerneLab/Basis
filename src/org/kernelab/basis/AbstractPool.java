@@ -5,15 +5,17 @@ import java.util.List;
 
 public abstract class AbstractPool<E> implements Pool<E>
 {
-	private List<E>	elements;
+	public static final int	DEFAULT_INTERVAL	= 100;
 
-	private int		trace;
+	private List<E>			elements;
 
-	private int		limit;
+	private int				trace;
 
-	private int		init;
+	private int				limit;
 
-	private boolean	closed;
+	private int				init;
+
+	private boolean			closed;
 
 	public AbstractPool(int limit)
 	{
@@ -118,14 +120,25 @@ public abstract class AbstractPool<E> implements Pool<E>
 				{
 					try
 					{
-						elements.wait(timeout);
+						if (timeout > 0)
+						{
+							elements.wait(timeout);
+						}
+						else if (timeout == 0)
+						{
+							elements.wait(DEFAULT_INTERVAL);
+						}
+						else
+						{
+							elements.wait(-timeout);
+						}
 					}
 					catch (InterruptedException e)
 					{
 					}
 				}
 
-				if (timeout != 0L)
+				if (timeout > 0L)
 				{
 					break;
 				}
@@ -200,5 +213,14 @@ public abstract class AbstractPool<E> implements Pool<E>
 			elements.add(element);
 			trace++;
 		}
+	}
+
+	public AbstractPool<E> wakeUp()
+	{
+		synchronized (elements)
+		{
+			elements.notifyAll();
+		}
+		return Tools.cast(this);
 	}
 }

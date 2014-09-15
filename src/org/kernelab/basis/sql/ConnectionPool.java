@@ -64,18 +64,19 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public SQLKit getSQLKit()
 	{
-		SQLKit kit = null;
+		return getSQLKit(0);
+	}
 
+	public SQLKit getSQLKit(long timeout)
+	{
 		try
 		{
-			kit = new SQLKit(this);
+			return new SQLKit(this, timeout);
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
+			return null;
 		}
-
-		return kit;
 	}
 
 	@Override
