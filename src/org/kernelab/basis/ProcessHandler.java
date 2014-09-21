@@ -30,27 +30,23 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 	private volatile boolean	started;
 
-	private Object				startLock;
+	private Object				startMutex;
 
 	private volatile boolean	terminated;
 
+	/**
+	 * Streams of Process.
+	 */
 	private OutputStream		pos;
 
 	private InputStream			pis;
 
-	/*
-	 * Streams of Process.
-	 */
-
 	private InputStream			pes;
 
-	private InputStream			inputStream;
-
-	private OutputStream		outputStream;
-
-	/*
+	/**
 	 * Streams of delegation.
 	 */
+	private OutputStream		outputStream;
 
 	private OutputStream		errorStream;
 
@@ -60,21 +56,21 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		process = null;
 		processBuilder = new ProcessBuilder(cmd);
 		started = false;
-		startLock = new byte[0];
+		startMutex = new byte[0];
 		terminated = true;
-		inputStream = null;
 		outputStream = null;
+		errorStream = null;
 	}
 
 	public ProcessHandler call() throws Exception
 	{
+		started = false;
+
+		terminated = false;
+
 		result = null;
 
 		process = processBuilder.start();
-
-		started = true;
-
-		terminated = false;
 
 		pos = process.getOutputStream();
 
@@ -82,15 +78,15 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 		pes = process.getErrorStream();
 
-		new Thread(new StreamTransfer(inputStream, pos)).start();
-
 		new Thread(new StreamTransfer(pis, outputStream)).start();
 
 		new Thread(new StreamTransfer(pes, errorStream)).start();
 
-		synchronized (startLock)
+		started = true;
+
+		synchronized (startMutex)
 		{
-			startLock.notifyAll();
+			startMutex.notifyAll();
 		}
 
 		try
@@ -114,39 +110,42 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return this;
 	}
 
-	protected ProcessHandler closeStream()
+	protected ProcessHandler closeProcessStream()
 	{
-		if (inputStream != null)
+		if (pos != null)
 		{
 			try
 			{
-				inputStream.close();
+				pos.close();
 			}
 			catch (IOException e)
 			{
 			}
+			pos = null;
 		}
 
-		if (outputStream != null)
+		if (pis != null)
 		{
 			try
 			{
-				outputStream.close();
+				pis.close();
 			}
 			catch (IOException e)
 			{
 			}
+			pis = null;
 		}
 
-		if (errorStream != null)
+		if (pes != null)
 		{
 			try
 			{
-				errorStream.close();
+				pes.close();
 			}
 			catch (IOException e)
 			{
 			}
+			pes = null;
 		}
 
 		return this;
@@ -208,9 +207,9 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return result;
 	}
 
-	public Object getStartLock()
+	protected Object getStartMutex()
 	{
-		return startLock;
+		return startMutex;
 	}
 
 	public boolean isRedirectErrorStream()
@@ -268,13 +267,6 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return this;
 	}
 
-	public ProcessHandler setInputStream(InputStream inputStream)
-	{
-		this.inputStream = inputStream;
-
-		return this;
-	}
-
 	public ProcessHandler setOutputStream(OutputStream targetStream)
 	{
 		this.outputStream = targetStream;
@@ -299,9 +291,33 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		{
 			terminated = true;
 
-			closeStream();
+			closeProcessStream();
 
 			process.destroy();
 		}
+	}
+
+	/**
+	 * Waiting and blocked until the process is started.
+	 * 
+	 * @return
+	 */
+	public ProcessHandler waitForStarted()
+	{
+		synchronized (startMutex)
+		{
+			while (!started)
+			{
+				try
+				{
+					startMutex.wait();
+				}
+				catch (InterruptedException e)
+				{
+				}
+			}
+		}
+
+		return this;
 	}
 }

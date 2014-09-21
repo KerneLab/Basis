@@ -12,9 +12,9 @@ public class ByteQueueInputStream extends InputStream
 {
 	private volatile boolean	closed;
 
-	private Queue<Byte>	queue;
+	private Queue<Byte>			queue;
 
-	private String		charset;
+	private String				charset;
 
 	public ByteQueueInputStream()
 	{
@@ -226,9 +226,8 @@ public class ByteQueueInputStream extends InputStream
 	}
 
 	@Override
-	public synchronized void reset() throws IOException
+	public synchronized void reset()
 	{
-		this.ensure();
 		queue.clear();
 	}
 
@@ -239,7 +238,7 @@ public class ByteQueueInputStream extends InputStream
 			charset = Charset.defaultCharset().name();
 		}
 		this.charset = charset;
-		return this.remind();
+		return Tools.cast(this);
 	}
 
 	private <T extends ByteQueueInputStream> T setClosed(boolean closed)
@@ -255,6 +254,6 @@ public class ByteQueueInputStream extends InputStream
 			queue = new LinkedList<Byte>();
 		}
 		this.queue = queue;
-		return this.remind();
+		return Tools.cast(this);
 	}
 }

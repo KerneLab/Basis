@@ -85,9 +85,8 @@ public class StringBuilderWriter extends Writer
 		return closed;
 	}
 
-	public void reset() throws IOException
+	public void reset()
 	{
-		this.ensure();
 		Tools.clearStringBuilder(builder);
 	}
 

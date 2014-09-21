@@ -76,9 +76,8 @@ public class ByteQueueOutputStream extends OutputStream
 		return closed;
 	}
 
-	public void reset() throws IOException
+	public void reset()
 	{
-		this.ensure();
 		queue.clear();
 	}
 

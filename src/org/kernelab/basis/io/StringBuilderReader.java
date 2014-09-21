@@ -178,9 +178,8 @@ public class StringBuilderReader extends Reader
 	}
 
 	@Override
-	public synchronized void reset() throws IOException
+	public synchronized void reset()
 	{
-		this.ensure();
 		Tools.clearStringBuilder(builder);
 	}
 
@@ -191,7 +190,7 @@ public class StringBuilderReader extends Reader
 			builder = new StringBuilder();
 		}
 		this.builder = builder;
-		return this.remind();
+		return Tools.cast(this);
 	}
 
 	private <T extends StringBuilderReader> T setClosed(boolean closed)
