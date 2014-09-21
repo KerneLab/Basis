@@ -11,39 +11,60 @@ public class StreamTransfer implements Runnable
 
 	private OutputStream	outputStream;
 
+	private byte[]			buffer;
+
 	public StreamTransfer(InputStream inputStream, OutputStream outputStream)
+	{
+		this(inputStream, outputStream, null);
+	}
+
+	public StreamTransfer(InputStream inputStream, OutputStream outputStream, byte[] buffer)
 	{
 		this.inputStream = inputStream;
 		this.outputStream = outputStream;
+		this.buffer = buffer;
+	}
+
+	protected void close()
+	{
+		buffer = null;
+		inputStream = null;
+		outputStream = null;
 	}
 
 	public void run()
 	{
-		if (inputStream != null)
+		try
 		{
-			byte[] buffer = new byte[Tools.BUFFER_BYTES];
-
-			int length = -1;
-
-			try
+			if (inputStream != null)
 			{
-				while ((length = inputStream.read(buffer)) != -1)
+				if (buffer == null || buffer.length == 0)
 				{
-					if (outputStream != null)
-					{
-						outputStream.write(buffer, 0, length);
-						outputStream.flush();
-					}
+					buffer = new byte[Tools.BUFFER_BYTES];
 				}
+
+				transfer();
 			}
-			catch (Exception e)
+		}
+		catch (Exception e)
+		{
+		}
+		finally
+		{
+			close();
+		}
+	}
+
+	protected void transfer() throws Exception
+	{
+		int length = -1;
+
+		while ((length = inputStream.read(buffer)) != -1)
+		{
+			if (outputStream != null)
 			{
-			}
-			finally
-			{
-				buffer = null;
-				inputStream = null;
-				outputStream = null;
+				outputStream.write(buffer, 0, length);
+				outputStream.flush();
 			}
 		}
 	}
