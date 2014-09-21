@@ -7,21 +7,23 @@ import org.kernelab.basis.Tools;
 
 public class StringBuilderWriter extends Writer
 {
-	private StringBuilder	builder;
+	private volatile boolean	closed;
+
+	private StringBuilder		builder;
 
 	public StringBuilderWriter()
 	{
-		this.setBuilder(new StringBuilder());
+		this(new StringBuilder());
 	}
 
 	public StringBuilderWriter(int capacity)
 	{
-		this.setBuilder(new StringBuilder(capacity));
+		this(new StringBuilder(capacity));
 	}
 
 	public StringBuilderWriter(StringBuilder builder)
 	{
-		this.setBuilder(builder);
+		this.setClosed(false).setBuilder(builder);
 	}
 
 	@Override
@@ -57,12 +59,12 @@ public class StringBuilderWriter extends Writer
 	@Override
 	public void close() throws IOException
 	{
-		builder = null;
+		this.setClosed(true);
 	}
 
 	protected void ensure() throws IOException
 	{
-		if (builder == null)
+		if (this.isClosed())
 		{
 			throw new IOException();
 		}
@@ -80,7 +82,7 @@ public class StringBuilderWriter extends Writer
 
 	public boolean isClosed()
 	{
-		return builder == null;
+		return closed;
 	}
 
 	public void reset() throws IOException
@@ -89,13 +91,19 @@ public class StringBuilderWriter extends Writer
 		Tools.clearStringBuilder(builder);
 	}
 
-	public <T extends StringBuilderWriter> T setBuilder(StringBuilder builder)
+	private <T extends StringBuilderWriter> T setBuilder(StringBuilder builder)
 	{
 		if (builder == null)
 		{
 			builder = new StringBuilder();
 		}
 		this.builder = builder;
+		return Tools.cast(this);
+	}
+
+	private <T extends StringBuilderWriter> T setClosed(boolean closed)
+	{
+		this.closed = closed;
 		return Tools.cast(this);
 	}
 

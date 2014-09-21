@@ -1,12 +1,14 @@
 package org.kernelab.basis;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+
+import org.kernelab.basis.io.StreamTransfer;
 
 public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> implements Callable<ProcessHandler>,
 		Runnable
@@ -20,52 +22,131 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		ph.run();
 	}
 
-	private Process			process;
+	private Process				process;
 
-	private ProcessBuilder	processBuilder;
+	private ProcessBuilder		processBuilder;
 
-	private Integer			result;
+	private Integer				result;
 
-	private boolean			terminated;
+	private volatile boolean	started;
 
-	private PrintStream		printStream;
+	private Object				startLock;
+
+	private volatile boolean	terminated;
+
+	private OutputStream		pos;
+
+	private InputStream			pis;
+
+	/*
+	 * Streams of Process.
+	 */
+
+	private InputStream			pes;
+
+	private InputStream			inputStream;
+
+	private OutputStream		outputStream;
+
+	/*
+	 * Streams of delegation.
+	 */
+
+	private OutputStream		errorStream;
 
 	public ProcessHandler(String... cmd)
 	{
 		super();
 		process = null;
 		processBuilder = new ProcessBuilder(cmd);
+		started = false;
+		startLock = new byte[0];
 		terminated = true;
-		printStream = null;
+		inputStream = null;
+		outputStream = null;
 	}
 
 	public ProcessHandler call() throws Exception
 	{
 		result = null;
 
-		String line = null;
-
 		process = processBuilder.start();
+
+		started = true;
 
 		terminated = false;
 
-		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		pos = process.getOutputStream();
 
-		while (!terminated && (line = bufferedReader.readLine()) != null)
+		pis = process.getInputStream();
+
+		pes = process.getErrorStream();
+
+		new Thread(new StreamTransfer(inputStream, pos)).start();
+
+		new Thread(new StreamTransfer(pis, outputStream)).start();
+
+		new Thread(new StreamTransfer(pes, errorStream)).start();
+
+		synchronized (startLock)
 		{
-			if (printStream != null)
+			startLock.notifyAll();
+		}
+
+		try
+		{
+			result = process.waitFor();
+		}
+		catch (InterruptedException e)
+		{
+		}
+
+		try
+		{
+			this.terminate();
+		}
+		catch (Exception e)
+		{
+		}
+
+		this.accomplished();
+
+		return this;
+	}
+
+	protected ProcessHandler closeStream()
+	{
+		if (inputStream != null)
+		{
+			try
 			{
-				printStream.println(line);
+				inputStream.close();
+			}
+			catch (IOException e)
+			{
 			}
 		}
 
-		if (!terminated)
+		if (outputStream != null)
 		{
-			result = this.getProcess().waitFor();
+			try
+			{
+				outputStream.close();
+			}
+			catch (IOException e)
+			{
+			}
+		}
 
-			this.terminate();
-
-			this.accomplished();
+		if (errorStream != null)
+		{
+			try
+			{
+				errorStream.close();
+			}
+			catch (IOException e)
+			{
+			}
 		}
 
 		return this;
@@ -97,11 +178,6 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return processBuilder.environment();
 	}
 
-	public PrintStream getPrintStream()
-	{
-		return printStream;
-	}
-
 	public Process getProcess()
 	{
 		return process;
@@ -112,14 +188,39 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return processBuilder;
 	}
 
+	public InputStream getProcessErrorStream()
+	{
+		return pes;
+	}
+
+	public InputStream getProcessInputStream()
+	{
+		return pis;
+	}
+
+	public OutputStream getProcessOutputStream()
+	{
+		return pos;
+	}
+
 	public Integer getResult()
 	{
 		return result;
 	}
 
+	public Object getStartLock()
+	{
+		return startLock;
+	}
+
 	public boolean isRedirectErrorStream()
 	{
 		return processBuilder.redirectErrorStream();
+	}
+
+	public boolean isStarted()
+	{
+		return started;
 	}
 
 	public boolean isTerminated()
@@ -160,9 +261,23 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return this;
 	}
 
-	public ProcessHandler setPrintStream(PrintStream printStream)
+	public ProcessHandler setErrorStream(OutputStream errorStream)
 	{
-		this.printStream = printStream;
+		this.errorStream = errorStream;
+
+		return this;
+	}
+
+	public ProcessHandler setInputStream(InputStream inputStream)
+	{
+		this.inputStream = inputStream;
+
+		return this;
+	}
+
+	public ProcessHandler setOutputStream(OutputStream targetStream)
+	{
+		this.outputStream = targetStream;
 
 		return this;
 	}
@@ -176,13 +291,15 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 	/**
 	 * Terminate the Process.<br>
-	 * Attention, this operation would not trigger any finishedListener.
+	 * Attention, this operation would not trigger any AccomplishListener.
 	 */
 	public void terminate()
 	{
 		if (!terminated)
 		{
 			terminated = true;
+
+			closeStream();
 
 			process.destroy();
 		}

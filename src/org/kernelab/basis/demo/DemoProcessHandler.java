@@ -19,11 +19,10 @@ public class DemoProcessHandler
 		// 设定执行命令的环境目录
 		ph.setDirectory(new File("D:"));
 		// 设定执行的打印输出流
-		ph.setPrintStream(System.out);
+		ph.setOutputStream(System.out);
 
 		// 上述三个设定等价于下面的链式风格
-		ph.setCommand("cmd", "/c", "dir").setDirectory(new File("D:"))
-				.setPrintStream(System.out);
+		ph.setCommand("cmd", "/c", "dir").setDirectory(new File("D:")).setOutputStream(System.out);
 
 		// 同步执行
 		ph.run();

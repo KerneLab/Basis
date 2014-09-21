@@ -7,33 +7,35 @@ import org.kernelab.basis.Tools;
 
 public class StringBuilderReader extends Reader
 {
-	private StringBuilder	builder;
+	private volatile boolean	closed;
+
+	private StringBuilder		builder;
 
 	public StringBuilderReader()
 	{
-		this.setBuilder(new StringBuilder());
+		this(new StringBuilder());
 	}
 
 	public StringBuilderReader(int capacity)
 	{
-		this.setBuilder(new StringBuilder(capacity));
+		this(new StringBuilder(capacity));
 	}
 
 	public StringBuilderReader(StringBuilder builder)
 	{
-		this.setBuilder(builder);
+		this.setClosed(false).setBuilder(builder);
 	}
 
 	@Override
 	public synchronized void close() throws IOException
 	{
-		builder = null;
+		this.setClosed(true);
 		this.remind();
 	}
 
 	protected void ensure() throws IOException
 	{
-		if (builder == null)
+		if (this.isClosed())
 		{
 			throw new IOException();
 		}
@@ -120,7 +122,7 @@ public class StringBuilderReader extends Reader
 
 	public boolean isClosed()
 	{
-		return builder == null;
+		return closed;
 	}
 
 	@Override
@@ -136,7 +138,7 @@ public class StringBuilderReader extends Reader
 			return 0;
 		}
 
-		while (builder != null && builder.length() == 0)
+		while (!this.isClosed() && builder.length() == 0)
 		{
 			try
 			{
@@ -147,7 +149,7 @@ public class StringBuilderReader extends Reader
 			}
 		}
 
-		if (builder == null)
+		if (this.isClosed())
 		{
 			return -1;
 		}
@@ -190,5 +192,11 @@ public class StringBuilderReader extends Reader
 		}
 		this.builder = builder;
 		return this.remind();
+	}
+
+	private <T extends StringBuilderReader> T setClosed(boolean closed)
+	{
+		this.closed = closed;
+		return Tools.cast(this);
 	}
 }

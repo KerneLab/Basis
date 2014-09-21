@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -78,7 +79,7 @@ public class Tools
 
 	private static final Set<PrintStream>	Outs							= new LinkedHashSet<PrintStream>();
 
-	protected static final int				BUFFER_BYTES					= 1024;
+	public static final int					BUFFER_BYTES					= 1024;
 
 	protected static final Calendar			CALENDAR						= new GregorianCalendar();
 
@@ -2623,6 +2624,41 @@ public class Tools
 		}
 
 		return pid;
+	}
+
+	/**
+	 * Get the platform charset name.<br />
+	 * This charset is differnt to {@link Charset#defaultCharset()} since it is
+	 * the sun.jnu.encoding but not the file.encoding.
+	 * 
+	 * @return The platform charset name.
+	 */
+	public static String getPlatformCharset()
+	{
+		String charset = null;
+
+		try
+		{
+			charset = System.getProperty("sun.jnu.encoding");
+		}
+		catch (Exception e)
+		{
+		}
+
+		return charset;
+	}
+
+	/**
+	 * Try to get the platform charset name. The default charset name would be
+	 * returned if could not get the platform charset.
+	 * 
+	 * @param defaultCharset
+	 * @return
+	 */
+	public static String getPlatformCharset(String defaultCharset)
+	{
+		String charset = getPlatformCharset();
+		return charset == null ? defaultCharset : charset;
 	}
 
 	/**
@@ -6834,6 +6870,42 @@ public class Tools
 		}
 
 		return c;
+	}
+
+	/**
+	 * Transform the encoding of a String to the target charset and represent as
+	 * a new String with the given render charset.
+	 * 
+	 * @param string
+	 *            The String to be transformed.
+	 * @param targetCSN
+	 *            The target charset name.
+	 * @param renderCSN
+	 *            The render charset name.
+	 * @return A new String.
+	 * @throws UnsupportedEncodingException
+	 */
+	public static String transEncoding(String string, String targetCSN, String renderCSN)
+			throws UnsupportedEncodingException
+	{
+		return new String(string.getBytes(targetCSN), renderCSN);
+	}
+
+	/**
+	 * Transform the encoding of a String to the target charset and represent as
+	 * a new String with the platform charset.
+	 * 
+	 * @param string
+	 *            The String to be transformed.
+	 * @param targetCSN
+	 *            The target charset name.
+	 * @return A new String.
+	 * @throws UnsupportedEncodingException
+	 * @see {@link Tools#getPlatformCharset()}
+	 */
+	public static String transPlatformEncoding(String string, String targetCSN) throws UnsupportedEncodingException
+	{
+		return transEncoding(string, targetCSN, getPlatformCharset());
 	}
 
 	/**
