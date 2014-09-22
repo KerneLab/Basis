@@ -3,7 +3,6 @@ package org.kernelab.basis.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channel;
 import java.nio.channels.ReadableByteChannel;
 
 import org.kernelab.basis.Tools;
@@ -14,39 +13,34 @@ public class ChannelInputStream extends InputStream
 
 	private ByteBuffer			buffer;
 
-	public ChannelInputStream()
+	public ChannelInputStream(ReadableByteChannel channel)
 	{
-		this(null);
+		this(channel, ByteBuffer.allocate(Tools.BUFFER_BYTES));
 	}
 
-	public ChannelInputStream(Channel channel)
+	public ChannelInputStream(ReadableByteChannel channel, ByteBuffer buffer)
 	{
-		this(channel, ByteBuffer.allocate(8192));
-	}
-
-	public ChannelInputStream(Channel channel, ByteBuffer buffer)
-	{
-		this.setChannel((ReadableByteChannel) channel).setBuffer(buffer);
+		this.setChannel(channel).setBuffer(buffer);
 	}
 
 	@Override
-	public void close() throws IOException
+	public synchronized void close() throws IOException
 	{
 		channel.close();
 	}
 
-	public ByteBuffer getBuffer()
+	protected ByteBuffer getBuffer()
 	{
 		return buffer;
 	}
 
-	public ReadableByteChannel getChannel()
+	protected ReadableByteChannel getChannel()
 	{
 		return channel;
 	}
 
 	@Override
-	public int read() throws IOException
+	public synchronized int read() throws IOException
 	{
 		buffer.limit(1).rewind();
 
@@ -61,7 +55,7 @@ public class ChannelInputStream extends InputStream
 	}
 
 	@Override
-	public int read(byte b[], int off, int len) throws IOException
+	public synchronized int read(byte b[], int off, int len) throws IOException
 	{
 		if (b == null || channel == null || buffer == null)
 		{
@@ -95,13 +89,13 @@ public class ChannelInputStream extends InputStream
 		return read == 0 ? -1 : read;
 	}
 
-	public <T extends ChannelInputStream> T setBuffer(ByteBuffer buffer)
+	private <T extends ChannelInputStream> T setBuffer(ByteBuffer buffer)
 	{
 		this.buffer = buffer;
 		return Tools.cast(this);
 	}
 
-	public <T extends ChannelInputStream> T setChannel(ReadableByteChannel channel)
+	private <T extends ChannelInputStream> T setChannel(ReadableByteChannel channel)
 	{
 		this.channel = channel;
 		return Tools.cast(this);

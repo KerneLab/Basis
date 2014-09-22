@@ -27,14 +27,14 @@ public class StringBuilderWriter extends Writer
 	}
 
 	@Override
-	public StringBuilderWriter append(char c) throws IOException
+	public synchronized StringBuilderWriter append(char c) throws IOException
 	{
 		write(c);
 		return this;
 	}
 
 	@Override
-	public StringBuilderWriter append(CharSequence seq) throws IOException
+	public synchronized StringBuilderWriter append(CharSequence seq) throws IOException
 	{
 		this.ensure();
 		if (seq == null)
@@ -49,7 +49,7 @@ public class StringBuilderWriter extends Writer
 	}
 
 	@Override
-	public StringBuilderWriter append(CharSequence seq, int start, int end) throws IOException
+	public synchronized StringBuilderWriter append(CharSequence seq, int start, int end) throws IOException
 	{
 		this.ensure();
 		builder.append(seq, start, end);
@@ -57,7 +57,7 @@ public class StringBuilderWriter extends Writer
 	}
 
 	@Override
-	public void close() throws IOException
+	public synchronized void close() throws IOException
 	{
 		this.setClosed(true);
 	}
@@ -85,7 +85,7 @@ public class StringBuilderWriter extends Writer
 		return closed;
 	}
 
-	public void reset()
+	public synchronized void reset()
 	{
 		Tools.clearStringBuilder(builder);
 	}
@@ -113,8 +113,10 @@ public class StringBuilderWriter extends Writer
 	}
 
 	@Override
-	public void write(char cs[], int offset, int length) throws IOException
+	public synchronized void write(char cs[], int offset, int length) throws IOException
 	{
+		this.ensure();
+
 		if ((offset < 0) || (offset > cs.length) || (length < 0) || ((offset + length) > cs.length)
 				|| ((offset + length) < 0))
 		{
@@ -124,26 +126,26 @@ public class StringBuilderWriter extends Writer
 		{
 			return;
 		}
-		this.ensure();
+
 		builder.append(cs, offset, length);
 	}
 
 	@Override
-	public void write(int c) throws IOException
+	public synchronized void write(int c) throws IOException
 	{
 		this.ensure();
 		builder.append((char) c);
 	}
 
 	@Override
-	public void write(String string) throws IOException
+	public synchronized void write(String string) throws IOException
 	{
 		this.ensure();
 		builder.append(string);
 	}
 
 	@Override
-	public void write(String string, int offset, int length) throws IOException
+	public synchronized void write(String string, int offset, int length) throws IOException
 	{
 		this.ensure();
 		builder.append(string, offset, offset + length);

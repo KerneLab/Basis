@@ -34,8 +34,6 @@ public class ByteQueueInputStream extends InputStream
 	@Override
 	public synchronized int available() throws IOException
 	{
-		this.ensure();
-
 		return queue.size();
 	}
 
@@ -166,7 +164,7 @@ public class ByteQueueInputStream extends InputStream
 			}
 		}
 
-		if (this.isClosed())
+		if (this.isClosed() && queue.isEmpty())
 		{
 			return -1;
 		}
@@ -200,7 +198,7 @@ public class ByteQueueInputStream extends InputStream
 			}
 		}
 
-		if (this.isClosed())
+		if (this.isClosed() && queue.isEmpty())
 		{
 			return -1;
 		}
@@ -231,7 +229,7 @@ public class ByteQueueInputStream extends InputStream
 		queue.clear();
 	}
 
-	private synchronized <T extends ByteQueueInputStream> T setCharset(String charset)
+	private <T extends ByteQueueInputStream> T setCharset(String charset)
 	{
 		if (charset == null)
 		{
@@ -247,7 +245,7 @@ public class ByteQueueInputStream extends InputStream
 		return Tools.cast(this);
 	}
 
-	private synchronized <T extends ByteQueueInputStream> T setQueue(Queue<Byte> queue)
+	private <T extends ByteQueueInputStream> T setQueue(Queue<Byte> queue)
 	{
 		if (queue == null)
 		{

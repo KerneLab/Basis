@@ -1,7 +1,6 @@
 package org.kernelab.basis;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
@@ -30,7 +29,9 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 	private volatile boolean	started;
 
-	private Object				startMutex;
+	private volatile boolean	running;
+
+	private Exception			exception;
 
 	private volatile boolean	terminated;
 
@@ -53,99 +54,63 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	public ProcessHandler(String... cmd)
 	{
 		super();
-		process = null;
 		processBuilder = new ProcessBuilder(cmd);
-		started = false;
-		startMutex = new byte[0];
-		terminated = true;
-		outputStream = null;
-		errorStream = null;
 	}
 
 	public ProcessHandler call() throws Exception
 	{
 		started = false;
-
+		running = false;
 		terminated = false;
 
 		result = null;
 
-		process = processBuilder.start();
-
-		pos = process.getOutputStream();
-
-		pis = process.getInputStream();
-
-		pes = process.getErrorStream();
-
-		new Thread(new StreamTransfer(pis, outputStream)).start();
-
-		new Thread(new StreamTransfer(pes, errorStream)).start();
-
-		started = true;
-
-		synchronized (startMutex)
-		{
-			startMutex.notifyAll();
-		}
-
 		try
 		{
-			result = process.waitFor();
-		}
-		catch (InterruptedException e)
-		{
-		}
+			process = processBuilder.start();
 
-		try
-		{
-			this.terminate();
+			pos = process.getOutputStream();
+
+			pis = process.getInputStream();
+
+			pes = process.getErrorStream();
+
+			new Thread(new StreamTransfer(pis, outputStream)).start();
+
+			new Thread(new StreamTransfer(pes, errorStream)).start();
+
+			running = true;
 		}
 		catch (Exception e)
 		{
+			exception = e;
 		}
+
+		started = true;
+
+		synchronized (this)
+		{
+			this.notifyAll();
+		}
+
+		if (process != null)
+		{
+			try
+			{
+				result = process.waitFor();
+			}
+			catch (InterruptedException e)
+			{
+			}
+		}
+
+		this.terminate();
 
 		this.accomplished();
 
-		return this;
-	}
-
-	protected ProcessHandler closeProcessStream()
-	{
-		if (pos != null)
+		if (exception != null)
 		{
-			try
-			{
-				pos.close();
-			}
-			catch (IOException e)
-			{
-			}
-			pos = null;
-		}
-
-		if (pis != null)
-		{
-			try
-			{
-				pis.close();
-			}
-			catch (IOException e)
-			{
-			}
-			pis = null;
-		}
-
-		if (pes != null)
-		{
-			try
-			{
-				pes.close();
-			}
-			catch (IOException e)
-			{
-			}
-			pes = null;
+			throw exception;
 		}
 
 		return this;
@@ -175,6 +140,11 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	public Map<String, String> getEnvironment()
 	{
 		return processBuilder.environment();
+	}
+
+	public Exception getException()
+	{
+		return exception;
 	}
 
 	public Process getProcess()
@@ -207,14 +177,14 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return result;
 	}
 
-	protected Object getStartMutex()
-	{
-		return startMutex;
-	}
-
 	public boolean isRedirectErrorStream()
 	{
 		return processBuilder.redirectErrorStream();
+	}
+
+	public boolean isRunning()
+	{
+		return running;
 	}
 
 	public boolean isStarted()
@@ -242,42 +212,36 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	public ProcessHandler setCommand(List<String> cmd)
 	{
 		processBuilder.command(cmd);
-
 		return this;
 	}
 
 	public ProcessHandler setCommand(String... cmd)
 	{
 		processBuilder.command(cmd);
-
 		return this;
 	}
 
 	public ProcessHandler setDirectory(File directory)
 	{
 		processBuilder.directory(directory);
-
 		return this;
 	}
 
 	public ProcessHandler setErrorStream(OutputStream errorStream)
 	{
 		this.errorStream = errorStream;
-
 		return this;
 	}
 
-	public ProcessHandler setOutputStream(OutputStream targetStream)
+	public ProcessHandler setOutputStream(OutputStream outputStream)
 	{
-		this.outputStream = targetStream;
-
+		this.outputStream = outputStream;
 		return this;
 	}
 
 	public ProcessHandler setRedirectErrorStream(boolean redirect)
 	{
 		processBuilder.redirectErrorStream(redirect);
-
 		return this;
 	}
 
@@ -285,15 +249,31 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	 * Terminate the Process.<br>
 	 * Attention, this operation would not trigger any AccomplishListener.
 	 */
-	public void terminate()
+	public synchronized void terminate()
 	{
 		if (!terminated)
 		{
-			terminated = true;
+			try
+			{
+				running = false;
+				terminated = true;
 
-			closeProcessStream();
+				try
+				{
+					process.destroy();
+				}
+				catch (Exception e)
+				{
+				}
 
-			process.destroy();
+				pis = null;
+				pos = null;
+				pes = null;
+			}
+			finally
+			{
+				this.notifyAll();
+			}
 		}
 	}
 
@@ -302,22 +282,38 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	 * 
 	 * @return
 	 */
-	public ProcessHandler waitForStarted()
+	public synchronized ProcessHandler waitForStarted()
 	{
-		synchronized (startMutex)
+		while (!this.isStarted())
 		{
-			while (!started)
+			try
 			{
-				try
-				{
-					startMutex.wait();
-				}
-				catch (InterruptedException e)
-				{
-				}
+				this.wait();
+			}
+			catch (InterruptedException e)
+			{
 			}
 		}
+		return this;
+	}
 
+	/**
+	 * Waiting and blocked until the process is terminated.
+	 * 
+	 * @return
+	 */
+	public synchronized ProcessHandler waitForTerminated()
+	{
+		while (!this.isTerminated())
+		{
+			try
+			{
+				this.wait();
+			}
+			catch (InterruptedException e)
+			{
+			}
+		}
 		return this;
 	}
 }

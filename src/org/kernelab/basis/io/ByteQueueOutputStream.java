@@ -43,7 +43,7 @@ public class ByteQueueOutputStream extends OutputStream
 	}
 
 	@Override
-	public void close() throws IOException
+	public synchronized void close() throws IOException
 	{
 		this.setClosed(true);
 	}
@@ -76,7 +76,7 @@ public class ByteQueueOutputStream extends OutputStream
 		return closed;
 	}
 
-	public void reset()
+	public synchronized void reset()
 	{
 		queue.clear();
 	}
@@ -128,16 +128,17 @@ public class ByteQueueOutputStream extends OutputStream
 
 		for (Byte b : queue)
 		{
-			bs[i] = b;
-			i++;
+			bs[i++] = b;
 		}
 
 		return new String(bs, charsetName);
 	}
 
 	@Override
-	public void write(byte bs[], int offset, int length) throws IOException
+	public synchronized void write(byte bs[], int offset, int length) throws IOException
 	{
+		this.ensure();
+
 		if ((offset < 0) || (offset > bs.length) || (length < 0) || ((offset + length) > bs.length)
 				|| ((offset + length) < 0))
 		{
@@ -147,8 +148,9 @@ public class ByteQueueOutputStream extends OutputStream
 		{
 			return;
 		}
-		this.ensure();
+
 		int end = offset + length;
+
 		for (int i = offset; i < end; i++)
 		{
 			queue.add(bs[i]);
@@ -156,7 +158,7 @@ public class ByteQueueOutputStream extends OutputStream
 	}
 
 	@Override
-	public void write(int b) throws IOException
+	public synchronized void write(int b) throws IOException
 	{
 		this.ensure();
 		queue.add((byte) b);

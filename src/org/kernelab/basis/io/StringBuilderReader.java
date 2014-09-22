@@ -149,7 +149,7 @@ public class StringBuilderReader extends Reader
 			}
 		}
 
-		if (this.isClosed())
+		if (this.isClosed() && builder.length() == 0)
 		{
 			return -1;
 		}
@@ -183,7 +183,7 @@ public class StringBuilderReader extends Reader
 		Tools.clearStringBuilder(builder);
 	}
 
-	private synchronized <T extends StringBuilderReader> T setBuilder(StringBuilder builder)
+	private <T extends StringBuilderReader> T setBuilder(StringBuilder builder)
 	{
 		if (builder == null)
 		{
