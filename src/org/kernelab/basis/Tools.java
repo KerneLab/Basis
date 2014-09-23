@@ -12,15 +12,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
@@ -2827,7 +2826,8 @@ public class Tools
 	}
 
 	/**
-	 * Input object from InputStream to the object reference.
+	 * Input object from InputStream to the object reference.<br />
+	 * The InputStream would NOT be closed after the operation.
 	 * 
 	 * @param input
 	 *            the InputStream from which to input.
@@ -2839,31 +2839,12 @@ public class Tools
 	{
 		T object = null;
 
-		ObjectInputStream in = null;
-
 		try
 		{
-			in = new ObjectInputStream(input);
-
-			object = (T) in.readObject();
+			object = (T) new ObjectInputStream(input).readObject();
 		}
-		catch (ClassNotFoundException e)
+		catch (Exception e)
 		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			try
-			{
-				if (in != null)
-				{
-					in.close();
-				}
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
 		}
 
 		return object;
@@ -2876,34 +2857,70 @@ public class Tools
 	 *            the File from which to input.
 	 * 
 	 * @return the object input from the File.
+	 * @throws IOException
 	 */
 	public static <T> T inputObjectFromFile(File file) throws IOException
 	{
-		T object = null;
+		FileInputStream fis = null;
 
 		try
 		{
-			object = inputObject(new FileInputStream(file));
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		}
+			fis = new FileInputStream(file);
 
-		return object;
+			return inputObject(fis);
+		}
+		finally
+		{
+			if (fis != null)
+			{
+				try
+				{
+					fis.close();
+				}
+				catch (IOException e)
+				{
+				}
+			}
+		}
 	}
 
 	/**
-	 * Input the content in InputStream as a single String and using the default
-	 * charSet.
+	 * To input a whole File as a String.<br />
+	 * If the file is very huge and contains great amount of lines, this method
+	 * would perform in low efficiency. {@link DataReader} is recommended for
+	 * this situation.
 	 * 
-	 * @param inputStream
-	 *            the InputStream.
-	 * @return the String.
+	 * @param file
+	 *            the file to be input.
+	 * @param charSetName
+	 *            the CharSet name of the file.
+	 * @return the string.
 	 */
-	public static String inputStreamToString(InputStream inputStream)
+	public static String inputStringFromFile(File file, String charSetName)
 	{
-		return inputStreamToString(inputStream, null);
+		FileInputStream fis = null;
+
+		try
+		{
+			return inputStringFromStream((fis = new FileInputStream(file)), charSetName);
+		}
+		catch (FileNotFoundException e)
+		{
+			return null;
+		}
+		finally
+		{
+			if (fis != null)
+			{
+				try
+				{
+					fis.close();
+				}
+				catch (IOException e)
+				{
+				}
+			}
+		}
 	}
 
 	/**
@@ -2915,7 +2932,7 @@ public class Tools
 	 *            the name of CharSet.
 	 * @return the String.
 	 */
-	public static String inputStreamToString(InputStream inputStream, String charSetName)
+	public static String inputStringFromStream(InputStream inputStream, String charSetName)
 	{
 		StringBuilder builder = new StringBuilder();
 
@@ -2933,7 +2950,7 @@ public class Tools
 
 		try
 		{
-			char[] buffer = new char[3072];
+			char[] buffer = new char[BUFFER_BYTES];
 			int length = -1;
 			while ((length = reader.read(buffer)) != -1)
 			{
@@ -2942,7 +2959,6 @@ public class Tools
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
 		}
 		finally
 		{
@@ -2963,30 +2979,46 @@ public class Tools
 	}
 
 	/**
-	 * Input the content in InputStream into a List of Strings.
+	 * To input strings from a File. Each line in the file will be input as a
+	 * String in a List.<br />
+	 * If the file is very huge and contains great amount of lines, this method
+	 * would perform in low efficiency. {@link DataReader} is recommended for
+	 * this situation.
 	 * 
-	 * @param inputStream
-	 *            the InputStream.
-	 * @return the List of Strings.
-	 */
-	public static List<String> inputStreamToStrings(InputStream inputStream)
-	{
-		return inputStreamToStrings(inputStream, null, null);
-	}
-
-	/**
-	 * Input the content in InputStream into a List of Strings.
-	 * 
-	 * @param inputStream
-	 *            the InputStream.
+	 * @param file
+	 *            the file to be input.
 	 * @param list
-	 *            the List which holds the Strings. A new LinkedList object
-	 *            would be created if list is null.
-	 * @return the List of Strings.
+	 *            A list which would hold the result Strings. A LinkedList
+	 *            Object would be create if list is null.
+	 * @param charSetName
+	 *            the CharSet name of the file.
+	 * @return a List of String or {@code null} if file doesn't exist.
 	 */
-	public static List<String> inputStreamToStrings(InputStream inputStream, List<String> list)
+	public static List<String> inputStringsFromFile(File file, List<String> list, String charSetName)
 	{
-		return inputStreamToStrings(inputStream, list, null);
+		FileInputStream fis = null;
+
+		try
+		{
+			return inputStringsFromStream((fis = new FileInputStream(file)), list, charSetName);
+		}
+		catch (FileNotFoundException e)
+		{
+			return list;
+		}
+		finally
+		{
+			if (fis != null)
+			{
+				try
+				{
+					fis.close();
+				}
+				catch (IOException e)
+				{
+				}
+			}
+		}
 	}
 
 	/**
@@ -3002,7 +3034,7 @@ public class Tools
 	 *            the name of CharSet.
 	 * @return the List of Strings.
 	 */
-	public static List<String> inputStreamToStrings(InputStream inputStream, List<String> list, String charSetName)
+	public static List<String> inputStringsFromStream(InputStream inputStream, List<String> list, String charSetName)
 	{
 		if (list == null)
 		{
@@ -3031,7 +3063,6 @@ public class Tools
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
 		}
 		finally
 		{
@@ -3040,208 +3071,6 @@ public class Tools
 				try
 				{
 					bufferedReader.close();
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
-			}
-		}
-
-		return list;
-	}
-
-	/**
-	 * Input the content in InputStream into a List of Strings within a special
-	 * CharSet.
-	 * 
-	 * @param inputStream
-	 *            the InputStream.
-	 * @param charSetName
-	 *            the name of CharSet.
-	 * @return the List of Strings.
-	 */
-	public static List<String> inputStreamToStrings(InputStream inputStream, String charSetName)
-	{
-		return inputStreamToStrings(inputStream, null, charSetName);
-	}
-
-	/**
-	 * To input a whole File as a String and using the default CharSet.<br />
-	 * If the file is very huge and contains great amount of lines, this method
-	 * would perform in low efficiency. {@link DataReader} is recommended for
-	 * this situation.
-	 * 
-	 * @param file
-	 *            the file to be input.
-	 * @return the string.
-	 */
-	public static String inputStringFromFile(File file)
-	{
-		return inputStringFromFile(file, null);
-	}
-
-	/**
-	 * To input a whole File as a String.<br />
-	 * If the file is very huge and contains great amount of lines, this method
-	 * would perform in low efficiency. {@link DataReader} is recommended for
-	 * this situation.
-	 * 
-	 * @param file
-	 *            the file to be input.
-	 * @param charSetName
-	 *            the CharSet name of the file.
-	 * @return the string.
-	 */
-	public static String inputStringFromFile(File file, String charSetName)
-	{
-		StringBuilder builder = new StringBuilder();
-
-		Charset charSet = null;
-		if (charSetName == null)
-		{
-			charSet = Charset.defaultCharset();
-		}
-		else
-		{
-			charSet = Charset.forName(charSetName);
-		}
-
-		InputStreamReader reader = null;
-
-		try
-		{
-			reader = new InputStreamReader(new FileInputStream(file), charSet);
-			char[] buffer = new char[3072];
-			int length = -1;
-			while ((length = reader.read(buffer)) != -1)
-			{
-				builder.append(buffer, 0, length);
-			}
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			if (reader != null)
-			{
-				try
-				{
-					reader.close();
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
-			}
-		}
-
-		return builder.toString();
-	}
-
-	/**
-	 * To input strings from a File. Each line in the file will be input as a
-	 * String in a LinkedList&lt;String&gt;.<br />
-	 * If the file is very huge and contains great amount of lines, this method
-	 * would perform in low efficiency. {@link DataReader} is recommended for
-	 * this situation.
-	 * 
-	 * @param file
-	 *            the file to be input.
-	 * @return a List of String or {@code null} if file doesn't exist.
-	 */
-	public static List<String> inputStringsFromFile(File file)
-	{
-		return inputStringsFromFile(file, null);
-	}
-
-	/**
-	 * To input strings from a File. Each line in the file will be input as a
-	 * String in a List.<br />
-	 * If the file is very huge and contains great amount of lines, this method
-	 * would perform in low efficiency. {@link DataReader} is recommended for
-	 * this situation.
-	 * 
-	 * @param file
-	 *            the file to be input.
-	 * @param list
-	 *            A list which would hold the result Strings. A LinkedList
-	 *            Object would be create if list is null.
-	 * @return a List of String or {@code null} if file doesn't exist.
-	 */
-	public static List<String> inputStringsFromFile(File file, List<String> list)
-	{
-		return inputStringsFromFile(file, list, null);
-	}
-
-	/**
-	 * To input strings from a File. Each line in the file will be input as a
-	 * String in a List.<br />
-	 * If the file is very huge and contains great amount of lines, this method
-	 * would perform in low efficiency. {@link DataReader} is recommended for
-	 * this situation.
-	 * 
-	 * @param file
-	 *            the file to be input.
-	 * @param list
-	 *            A list which would hold the result Strings. A LinkedList
-	 *            Object would be create if list is null.
-	 * @param charSetName
-	 *            the CharSet name of the file.
-	 * @return a List of String or {@code null} if file doesn't exist.
-	 */
-	public static List<String> inputStringsFromFile(File file, List<String> list, String charSetName)
-	{
-		if (list == null)
-		{
-			list = new LinkedList<String>();
-		}
-
-		Charset charSet = null;
-		if (charSetName == null)
-		{
-			charSet = Charset.defaultCharset();
-		}
-		else
-		{
-			charSet = Charset.forName(charSetName);
-		}
-
-		InputStreamReader reader = null;
-
-		try
-		{
-			reader = new InputStreamReader(new FileInputStream(file), charSet);
-
-			BufferedReader bufferedReader = new BufferedReader(reader);
-
-			String line = null;
-			while ((line = bufferedReader.readLine()) != null)
-			{
-				list.add(line);
-			}
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			if (reader != null)
-			{
-				try
-				{
-					reader.close();
 				}
 				catch (IOException e)
 				{
@@ -4697,7 +4526,8 @@ public class Tools
 	}
 
 	/**
-	 * Output object to the OuputStream from the object reference.
+	 * Output object to the OuputStream from the object reference.<br />
+	 * The OutputStream would NOT be closed after the operation.
 	 * 
 	 * @param object
 	 *            the object reference to be output.
@@ -4709,34 +4539,18 @@ public class Tools
 	{
 		boolean success = false;
 
-		ObjectOutputStream out = null;
 		try
 		{
-
-			out = new ObjectOutputStream(output);
+			ObjectOutputStream out = new ObjectOutputStream(output);
 
 			out.writeObject(object);
 
-			success = true;
+			out.flush();
 
+			success = true;
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			if (out != null)
-			{
-				try
-				{
-					out.close();
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
-			}
 		}
 
 		return success;
@@ -4753,21 +4567,33 @@ public class Tools
 	 */
 	public static boolean outputObjectToFile(Object object, File file)
 	{
-		boolean success = false;
+		FileOutputStream fos = null;
+
 		try
 		{
-			success = outputObject(object, new FileOutputStream(file));
+			return outputObject(object, (fos = new FileOutputStream(file)));
 		}
 		catch (FileNotFoundException e)
 		{
-			e.printStackTrace();
+			return false;
 		}
-		return success;
+		finally
+		{
+			if (fos != null)
+			{
+				try
+				{
+					fos.close();
+				}
+				catch (IOException e)
+				{
+				}
+			}
+		}
 	}
 
 	/**
-	 * To output a Collection of String to a File. By default, this method isn't
-	 * append mode.<br />
+	 * To output a Collection of String to a File.<br />
 	 * If the collection of string contains great amount of lines, this method
 	 * would perform in low efficiency. {@link DataWriter} is recommended for
 	 * this situation.
@@ -4776,78 +4602,91 @@ public class Tools
 	 *            the file to be output.
 	 * @param strings
 	 *            the Collection of Strings to be output.
+	 * @param charSetName
+	 *            the charSet name.
+	 * @param append
+	 *            decide whether the strings should be appended to the end of
+	 *            the file.
 	 * @return true if output does succeed otherwise false.
 	 */
-	public static boolean outputStringsToFile(File file, Collection<String> strings)
+	public static boolean outputStringsToFile(File file, Iterable<String> strings, String charSetName, boolean append)
 	{
-		boolean success = false;
-
-		FileWriter fileWriter = null;
+		FileOutputStream fos = null;
 
 		try
 		{
-
-			fileWriter = new FileWriter(file);
-
-			success = Tools.outputStringsToFile(fileWriter, strings);
-
+			return Tools.outputStringsToStream((fos = new FileOutputStream(file, append)), strings, charSetName);
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			return false;
 		}
 		finally
 		{
-			if (fileWriter != null)
+			if (fos != null)
 			{
 				try
 				{
-					fileWriter.close();
+					fos.close();
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
 				}
 			}
 		}
-
-		return success;
 	}
 
 	/**
-	 * To output a Collection of String to a FileWriter. The FileWriter could be
-	 * defined as {@code new FileWriter(File,true)} to let this method be append
-	 * mode.<br />
-	 * If the collection of string contains great amount of lines, this method
-	 * would perform in low efficiency. {@link DataWriter} is recommended for
-	 * this situation.
+	 * To output a Collection of String to an OutputStream. If the collection of
+	 * string contains great amount of lines, this method would perform in low
+	 * efficiency. {@link DataWriter} is recommended for this situation. The
+	 * OutputStream would NOT be closed after the operation.
 	 * 
-	 * @param fileWriter
-	 *            the FileWriter to output the strings.
+	 * @param outputStream
+	 *            the OutputStream to output the strings.
 	 * @param strings
 	 *            the Collection of Strings to be output.
+	 * @param charSetName
+	 *            the name of CharSet.
 	 * @return true if output does succeed otherwise false.
 	 */
-	public static boolean outputStringsToFile(FileWriter fileWriter, Collection<String> strings)
+	public static boolean outputStringsToStream(OutputStream outputStream, Iterable<String> strings, String charSetName)
 	{
 		boolean success = false;
 
-		PrintWriter printWriter = new PrintWriter(fileWriter, true);
+		Charset charSet = null;
 
-		for (String string : strings)
+		if (charSetName == null)
 		{
-			printWriter.println(string);
+			charSet = Charset.defaultCharset();
+		}
+		else
+		{
+			charSet = Charset.forName(charSetName);
 		}
 
-		printWriter.close();
+		OutputStreamWriter writer = new OutputStreamWriter(outputStream, charSet);
 
-		success = true;
+		try
+		{
+			for (String string : strings)
+			{
+				writer.write(string);
+			}
+
+			writer.flush();
+
+			success = true;
+		}
+		catch (IOException e)
+		{
+		}
 
 		return success;
 	}
 
 	/**
-	 * To output a String to a File. By default, this method isn't append mode.<br />
+	 * To output a String to a File.<br />
 	 * If the string contains great amount of chars, this method would perform
 	 * in low efficiency. {@link DataWriter} is recommended for this situation.
 	 * 
@@ -4855,67 +4694,81 @@ public class Tools
 	 *            the file to be output.
 	 * @param strings
 	 *            the String to be output.
+	 * @param charSetName
+	 *            the charSet name.
+	 * @param append
+	 *            decide whether the string should be appended to the end of the
+	 *            file.
 	 * @return true if output does succeed otherwise false.
 	 */
-	public static boolean outputStringToFile(File file, String string)
+	public static boolean outputStringToFile(File file, String string, String charSetName, boolean append)
 	{
-		boolean success = false;
-
-		FileWriter fileWriter = null;
+		FileOutputStream fos = null;
 
 		try
 		{
-
-			fileWriter = new FileWriter(file);
-
-			success = Tools.outputStringToFile(fileWriter, string);
-
+			return Tools.outputStringToStream((fos = new FileOutputStream(file, append)), string, charSetName);
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			return false;
 		}
 		finally
 		{
-			if (fileWriter != null)
+			if (fos != null)
 			{
 				try
 				{
-					fileWriter.close();
+					fos.close();
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
 				}
 			}
 		}
-
-		return success;
 	}
 
 	/**
-	 * To output a String to a FileWriter. The FileWriter could be defined as
-	 * {@code new FileWriter(File,true)} to let this method be append mode.<br />
-	 * If the string contains great amount of chars, this method would perform
-	 * in low efficiency. {@link DataWriter} is recommended for this situation.
+	 * To output a String to an OutputStream. If the string contains great
+	 * amount of chars, this method would perform in low efficiency.
+	 * {@link DataWriter} is recommended for this situation.
 	 * 
-	 * @param fileWriter
-	 *            the FileWriter to output the string.
+	 * @param outputStream
+	 *            the OutputStream to output the string.
 	 * @param string
 	 *            the String to be output.
+	 * @param charSetName
+	 *            the charSet name.
 	 * @return true if output does succeed otherwise false.
 	 */
-	public static boolean outputStringToFile(FileWriter fileWriter, String string)
+	public static boolean outputStringToStream(OutputStream outputStream, String string, String charSetName)
 	{
 		boolean success = false;
 
-		PrintWriter printWriter = new PrintWriter(fileWriter, true);
+		Charset charSet = null;
 
-		printWriter.println(string);
+		if (charSetName == null)
+		{
+			charSet = Charset.defaultCharset();
+		}
+		else
+		{
+			charSet = Charset.forName(charSetName);
+		}
 
-		printWriter.close();
+		OutputStreamWriter writer = new OutputStreamWriter(outputStream, charSet);
 
-		success = true;
+		try
+		{
+			writer.write(string);
+
+			writer.flush();
+
+			success = true;
+		}
+		catch (IOException e)
+		{
+		}
 
 		return success;
 	}

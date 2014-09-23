@@ -5274,6 +5274,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		if (file.isFile())
 		{
+			if (charset == null)
+			{
+				charset = Charset.defaultCharset();
+			}
+
 			Reader reader = null;
 			try
 			{

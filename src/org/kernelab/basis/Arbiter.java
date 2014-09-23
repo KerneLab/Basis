@@ -1,7 +1,11 @@
 package org.kernelab.basis;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -464,12 +468,30 @@ public class Arbiter
 
 	public static Iterable<ConditionInterpreter> LoadInterpreters(File file)
 	{
-		return LoadInterpreters(JSAN.Parse(Tools.inputStringFromFile(file)).toJSAN());
+		return LoadInterpreters(JSAN.Parse(file).toJSAN());
 	}
 
 	public static Iterable<ConditionInterpreter> LoadInterpreters(InputStream is)
 	{
-		return LoadInterpreters(JSAN.Parse(Tools.inputStreamToString(is)).toJSAN());
+		Reader reader = null;
+
+		try
+		{
+			return LoadInterpreters(JSAN.Parse(reader = new InputStreamReader(is, Charset.defaultCharset())).toJSAN());
+		}
+		finally
+		{
+			if (reader != null)
+			{
+				try
+				{
+					reader.close();
+				}
+				catch (IOException e)
+				{
+				}
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
