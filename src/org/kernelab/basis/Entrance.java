@@ -560,7 +560,7 @@ public class Entrance
 	public String parameter(String key)
 	{
 		List<String> values = this.parameters(key);
-		return values == null || values.isEmpty() ? null : values.get(0);
+		return values == null || values.isEmpty() ? null : values.get(values.size() - 1);
 	}
 
 	public String parameter(String key, String defaultValue)
