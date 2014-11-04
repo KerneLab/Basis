@@ -51,6 +51,10 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 	private OutputStream		errorStream;
 
+	private StreamTransfer		tos;
+
+	private StreamTransfer		tes;
+
 	public ProcessHandler(String... cmd)
 	{
 		super();
@@ -59,9 +63,12 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 	public ProcessHandler call() throws Exception
 	{
-		started = false;
-		running = false;
-		terminated = false;
+		synchronized (this)
+		{
+			started = false;
+			running = false;
+			terminated = false;
+		}
 
 		result = null;
 
@@ -75,22 +82,27 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 			pes = process.getErrorStream();
 
-			new Thread(new StreamTransfer(pis, outputStream)).start();
+			tos = new StreamTransfer(pis, outputStream);
 
-			new Thread(new StreamTransfer(pes, errorStream)).start();
+			tes = new StreamTransfer(pes, errorStream);
 
-			running = true;
+			new Thread(tos).start();
+
+			new Thread(tes).start();
 		}
 		catch (Exception e)
 		{
 			exception = e;
 		}
-
-		started = true;
-
-		synchronized (this)
+		finally
 		{
-			this.notifyAll();
+			synchronized (this)
+			{
+				started = true;
+				running = true;
+				terminated = false;
+				this.notifyAll();
+			}
 		}
 
 		if (process != null)
@@ -251,9 +263,9 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	 */
 	public synchronized void terminate()
 	{
-		if (!terminated)
+		try
 		{
-			try
+			if (!terminated)
 			{
 				running = false;
 				terminated = true;
@@ -266,14 +278,50 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 				{
 				}
 
+				if (tos != null)
+				{
+					synchronized (tos)
+					{
+						while (!tos.isClosed())
+						{
+							try
+							{
+								tos.wait();
+							}
+							catch (InterruptedException e)
+							{
+							}
+						}
+					}
+					tos = null;
+				}
+
+				if (tes != null)
+				{
+					synchronized (tes)
+					{
+						while (!tes.isClosed())
+						{
+							try
+							{
+								tes.wait();
+							}
+							catch (InterruptedException e)
+							{
+							}
+						}
+					}
+					tes = null;
+				}
+
 				pis = null;
 				pos = null;
 				pes = null;
 			}
-			finally
-			{
-				this.notifyAll();
-			}
+		}
+		finally
+		{
+			this.notifyAll();
 		}
 	}
 

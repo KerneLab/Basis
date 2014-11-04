@@ -25,11 +25,17 @@ public class StreamTransfer implements Runnable
 		this.buffer = buffer;
 	}
 
-	protected void close()
+	protected synchronized void close()
 	{
 		buffer = null;
 		inputStream = null;
 		outputStream = null;
+		this.notifyAll();
+	}
+
+	public boolean isClosed()
+	{
+		return inputStream == null;
 	}
 
 	public void run()
