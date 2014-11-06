@@ -5110,7 +5110,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				continue;
 			}
 
-			if (!Character.isWhitespace(code) && !Character.isSpaceChar(code))
+			if (!Character.isSpaceChar(code) && !Character.isWhitespace(code))
 			{
 				index = i;
 				break;

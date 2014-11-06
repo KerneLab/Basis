@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -160,7 +161,7 @@ public class Entrance
 	public static final byte[]			CLASS_MAGIC_NUMBER	= new byte[] { (byte) 0xCA, (byte) 0xFE, (byte) 0xBA,
 			(byte) 0xBE									};
 
-	public static final JarFile BelongingJarFile(Class<?> cls)
+	public static JarFile BelongingJarFile(Class<?> cls)
 	{
 		JarFile jarFile = null;
 
@@ -180,7 +181,7 @@ public class Entrance
 		return jarFile;
 	}
 
-	public static final Map<String, ClassFile> Classes(JarFile file)
+	public static Map<String, ClassFile> Classes(JarFile file)
 	{
 		Map<String, ClassFile> map = new TreeMap<String, ClassFile>();
 
@@ -202,7 +203,131 @@ public class Entrance
 		return map;
 	}
 
-	public static final String Level(JarFile file, JarEntry entry)
+	private static int DualMatchIndex(CharSequence seq, char a, char b, int from)
+	{
+		int index = JSON.NOT_FOUND;
+
+		int match = 0;
+
+		int length = seq.length();
+
+		boolean inString = false;
+
+		char c;
+
+		for (int i = Math.max(0, from); i < length; i++)
+		{
+			c = seq.charAt(i);
+
+			if (c == JSON.ESCAPE_CHAR)
+			{
+				i++;
+				if (i < length)
+				{
+					c = seq.charAt(i);
+					if (c == JSON.UNICODE_ESCAPING_CHAR)
+					{
+						i += JSON.UNICODE_ESCAPED_LENGTH;
+						continue;
+					}
+					else if (JSON.ESCAPING_CHAR.containsKey(c))
+					{
+						continue;
+					}
+					else
+					{
+						i--;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			if (c == JSON.QUOTE_CHAR)
+			{
+				inString = !inString;
+			}
+
+			if (inString && (a != JSON.QUOTE_CHAR || b != JSON.QUOTE_CHAR))
+			{
+				continue;
+			}
+
+			if (c == a)
+			{
+				if (a == b && match < 0)
+				{
+					match++;
+					if (match == 0)
+					{
+						index = i;
+						break;
+					}
+				}
+				else
+				{
+					match--;
+				}
+			}
+			else if (c == b)
+			{
+				match++;
+				if (match == 0)
+				{
+					index = i;
+					break;
+				}
+			}
+		}
+
+		return index;
+	}
+
+	private static int FirstNonWhitespaceIndex(CharSequence seq, int from)
+	{
+		int index = JSON.NOT_FOUND;
+
+		int length = seq.length();
+		int code;
+
+		for (int i = Math.max(0, from); i < length; i++)
+		{
+			code = seq.charAt(i);
+
+			if (!Character.isSpaceChar(code) && !Character.isWhitespace(code))
+			{
+				index = i;
+				break;
+			}
+		}
+
+		return index;
+	}
+
+	private static int FirstWhitespaceIndex(CharSequence seq, int from)
+	{
+		int index = JSON.NOT_FOUND;
+
+		int length = seq.length();
+		int code;
+
+		for (int i = Math.max(0, from); i < length; i++)
+		{
+			code = seq.charAt(i);
+
+			if (Character.isSpaceChar(code) || Character.isWhitespace(code))
+			{
+				index = i;
+				break;
+			}
+		}
+
+		return index;
+	}
+
+	public static String Level(JarFile file, JarEntry entry)
 	{
 		String level = null;
 
@@ -277,8 +402,7 @@ public class Entrance
 	 * @return
 	 * @throws IOException
 	 */
-	public static final Writer Manual(Writer out, JSON json, int indents, String indent, String lineWrap)
-			throws IOException
+	public static Writer Manual(Writer out, JSON json, int indents, String indent, String lineWrap) throws IOException
 	{
 		if (out != null && json != null)
 		{
@@ -324,7 +448,56 @@ public class Entrance
 		return out;
 	}
 
-	public static final String UpdateVersion(long time)
+	public static List<String> ParseSplit(CharSequence line, List<String> params)
+	{
+		if (line != null)
+		{
+			if (params == null)
+			{
+				params = new LinkedList<String>();
+			}
+
+			if (line.length() > 0)
+			{
+				int p = 0, q;
+				char c;
+				String item = null;
+
+				do
+				{
+					p = FirstNonWhitespaceIndex(line, p);
+
+					if (p == JSON.NOT_FOUND)
+					{
+						break;
+					}
+
+					c = line.charAt(p);
+					if (c == JSON.QUOTE_CHAR)
+					{
+						q = DualMatchIndex(line, JSON.QUOTE_CHAR, JSON.QUOTE_CHAR, p);
+						q = q == JSON.NOT_FOUND ? line.length() : q + 1;
+						item = JSON.RestoreString(line.subSequence(p, q).toString());
+					}
+					else
+					{
+						q = FirstWhitespaceIndex(line, p);
+						q = q == JSON.NOT_FOUND ? line.length() : q;
+						item = line.subSequence(p, q).toString();
+					}
+
+					params.add(item);
+
+					p = q;
+
+				} while (true);
+			}
+		}
+
+		return params;
+	}
+
+	public static String UpdateVersion(long time)
 	{
 		String version = Tools.getDateTimeString(time, VERSION_FORMAT);
 
