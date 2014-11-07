@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
@@ -203,130 +202,6 @@ public class Entrance
 		return map;
 	}
 
-	private static int DualMatchIndex(CharSequence seq, char a, char b, int from)
-	{
-		int index = JSON.NOT_FOUND;
-
-		int match = 0;
-
-		int length = seq.length();
-
-		boolean inString = false;
-
-		char c;
-
-		for (int i = Math.max(0, from); i < length; i++)
-		{
-			c = seq.charAt(i);
-
-			if (c == JSON.ESCAPE_CHAR)
-			{
-				i++;
-				if (i < length)
-				{
-					c = seq.charAt(i);
-					if (c == JSON.UNICODE_ESCAPING_CHAR)
-					{
-						i += JSON.UNICODE_ESCAPED_LENGTH;
-						continue;
-					}
-					else if (JSON.ESCAPING_CHAR.containsKey(c))
-					{
-						continue;
-					}
-					else
-					{
-						i--;
-					}
-				}
-				else
-				{
-					break;
-				}
-			}
-
-			if (c == JSON.QUOTE_CHAR)
-			{
-				inString = !inString;
-			}
-
-			if (inString && (a != JSON.QUOTE_CHAR || b != JSON.QUOTE_CHAR))
-			{
-				continue;
-			}
-
-			if (c == a)
-			{
-				if (a == b && match < 0)
-				{
-					match++;
-					if (match == 0)
-					{
-						index = i;
-						break;
-					}
-				}
-				else
-				{
-					match--;
-				}
-			}
-			else if (c == b)
-			{
-				match++;
-				if (match == 0)
-				{
-					index = i;
-					break;
-				}
-			}
-		}
-
-		return index;
-	}
-
-	private static int FirstNonWhitespaceIndex(CharSequence seq, int from)
-	{
-		int index = JSON.NOT_FOUND;
-
-		int length = seq.length();
-		int code;
-
-		for (int i = Math.max(0, from); i < length; i++)
-		{
-			code = seq.charAt(i);
-
-			if (!Character.isSpaceChar(code) && !Character.isWhitespace(code))
-			{
-				index = i;
-				break;
-			}
-		}
-
-		return index;
-	}
-
-	private static int FirstWhitespaceIndex(CharSequence seq, int from)
-	{
-		int index = JSON.NOT_FOUND;
-
-		int length = seq.length();
-		int code;
-
-		for (int i = Math.max(0, from); i < length; i++)
-		{
-			code = seq.charAt(i);
-
-			if (Character.isSpaceChar(code) || Character.isWhitespace(code))
-			{
-				index = i;
-				break;
-			}
-		}
-
-		return index;
-	}
-
 	public static String Level(JarFile file, JarEntry entry)
 	{
 		String level = null;
@@ -465,7 +340,7 @@ public class Entrance
 
 				do
 				{
-					p = FirstNonWhitespaceIndex(line, p);
+					p = Tools.firstNonWhitespaceIndex(line, p);
 
 					if (p == JSON.NOT_FOUND)
 					{
@@ -475,13 +350,13 @@ public class Entrance
 					c = line.charAt(p);
 					if (c == JSON.QUOTE_CHAR)
 					{
-						q = DualMatchIndex(line, JSON.QUOTE_CHAR, JSON.QUOTE_CHAR, p);
+						q = Tools.dualMatchIndexAdvanced(line, JSON.QUOTE_CHAR, JSON.QUOTE_CHAR, p);
 						q = q == JSON.NOT_FOUND ? line.length() : q + 1;
 						item = JSON.RestoreString(line.subSequence(p, q).toString());
 					}
 					else
 					{
-						q = FirstWhitespaceIndex(line, p);
+						q = Tools.firstWhitespaceIndex(line, p);
 						q = q == JSON.NOT_FOUND ? line.length() : q;
 						item = line.subSequence(p, q).toString();
 					}
@@ -606,38 +481,27 @@ public class Entrance
 
 	protected Entrance delegate()
 	{
-		String className = this.parameter("main");
+		List<String> params = this.parameters("main");
 		try
 		{
+			String className = params.get(0);
 			Class<?> cls = Extensions.forName(className);
 			for (Method m : cls.getMethods())
 			{
 				if ("main".equals(m.getName()) && m.getParameterTypes().length == 1
 						&& "java.lang.String[]".equals(m.getParameterTypes()[0].getCanonicalName()))
 				{
-					String[] argv = new String[arguments().length - 2];
+					String[] argv = new String[params.size() - 1];
 					for (int i = 0; i < argv.length; i++)
 					{
-						argv[i] = argument(i + 2);
+						argv[i] = params.get(i + 1);
 					}
 					m.invoke(null, new Object[] { argv });
 					break;
 				}
 			}
 		}
-		catch (ClassNotFoundException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IllegalArgumentException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IllegalAccessException e)
-		{
-			e.printStackTrace();
-		}
-		catch (InvocationTargetException e)
+		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
@@ -794,7 +658,7 @@ public class Entrance
 
 	public Entrance present()
 	{
-		if (parameters("jars") != null)
+		if (hasParameter("jars"))
 		{
 			for (String file : parameters("jars"))
 			{
@@ -802,7 +666,7 @@ public class Entrance
 			}
 		}
 
-		if (parameter("main") != null)
+		if (hasParameter("main"))
 		{
 			return this.delegate();
 		}

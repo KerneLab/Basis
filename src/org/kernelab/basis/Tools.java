@@ -1566,13 +1566,13 @@ public class Tools
 	 * 
 	 * <pre>
 	 * Example:
-	 * &quot;(morning(afternoon)evening)&quot;
+	 * (morning(afternoon)evening)
 	 * We find a='(' and b=')' for the dual match.
 	 * If from 0, this method would returns 26.
 	 * If from 8 or less but greater than 0, this method returns 18.
 	 * </pre>
 	 * 
-	 * @param sequence
+	 * @param seq
 	 *            The CharSequence in which we find the dual match.
 	 * @param a
 	 *            The left character.
@@ -1582,18 +1582,123 @@ public class Tools
 	 *            From which position we start to find the dual match.
 	 * @return The position that we find the right character for the dual match.
 	 */
-	public static int dualMatchIndex(CharSequence sequence, char a, char b, int from)
+	public static int dualMatchIndex(CharSequence seq, char a, char b, int from)
 	{
 		int match = 0;
 		int index = -1;
 
-		for (int i = Math.max(0, from); i < sequence.length(); i++)
+		for (int i = Math.max(0, from); i < seq.length(); i++)
 		{
-			char c = sequence.charAt(i);
+			char c = seq.charAt(i);
 
 			if (c == a)
 			{
 				match--;
+			}
+			else if (c == b)
+			{
+				match++;
+				if (match == 0)
+				{
+					index = i;
+					break;
+				}
+			}
+		}
+
+		return index;
+	}
+
+	/**
+	 * Find the dual match character in a CharSequence from the given position
+	 * to the end. Which would also recognize the string mode and parse the
+	 * escaping characters.
+	 * 
+	 * <pre>
+	 * Example:
+	 * (morni&quot;ng(aftern&quot;oon)evening)
+	 * We find a='(' and b=')' for the dual match.
+	 * If from 0, this method would returns 20.
+	 * If from 9, this method returns -1.
+	 * </pre>
+	 * 
+	 * @param seq
+	 *            The CharSequence in which we find the dual match.
+	 * @param a
+	 *            The left character.
+	 * @param b
+	 *            The right character.
+	 * @param from
+	 *            From which position we start to find the dual match.
+	 * @return The position that we find the right character for the dual match.
+	 */
+	public static int dualMatchIndexAdvanced(CharSequence seq, char a, char b, int from)
+	{
+		int index = JSON.NOT_FOUND;
+
+		int match = 0;
+
+		int length = seq.length();
+
+		boolean inString = false;
+
+		char c;
+
+		for (int i = Math.max(0, from); i < length; i++)
+		{
+			c = seq.charAt(i);
+
+			if (c == JSON.ESCAPE_CHAR)
+			{
+				i++;
+				if (i < length)
+				{
+					c = seq.charAt(i);
+					if (c == JSON.UNICODE_ESCAPING_CHAR)
+					{
+						i += JSON.UNICODE_ESCAPED_LENGTH;
+						continue;
+					}
+					else if (JSON.ESCAPING_CHAR.containsKey(c))
+					{
+						continue;
+					}
+					else
+					{
+						i--;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			if (c == JSON.QUOTE_CHAR)
+			{
+				inString = !inString;
+			}
+
+			if (inString && (a != JSON.QUOTE_CHAR || b != JSON.QUOTE_CHAR))
+			{
+				continue;
+			}
+
+			if (c == a)
+			{
+				if (a == b && match < 0)
+				{
+					match++;
+					if (match == 0)
+					{
+						index = i;
+						break;
+					}
+				}
+				else
+				{
+					match--;
+				}
 			}
 			else if (c == b)
 			{
@@ -1902,6 +2007,68 @@ public class Tools
 		{
 		}
 		return result;
+	}
+
+	/**
+	 * To find the first index of non-white character from the given position.
+	 * 
+	 * @param seq
+	 *            The CharSequence to be found.
+	 * @param from
+	 *            The given position.
+	 * @return The first index of non-white character found or -1 which means
+	 *         not found.
+	 */
+	public static int firstNonWhitespaceIndex(CharSequence seq, int from)
+	{
+		int index = JSON.NOT_FOUND;
+
+		int length = seq.length();
+		int code;
+
+		for (int i = Math.max(0, from); i < length; i++)
+		{
+			code = seq.charAt(i);
+
+			if (!Character.isSpaceChar(code) && !Character.isWhitespace(code))
+			{
+				index = i;
+				break;
+			}
+		}
+
+		return index;
+	}
+
+	/**
+	 * To find the first index of white character from the given position.
+	 * 
+	 * @param seq
+	 *            The CharSequence to be found.
+	 * @param from
+	 *            The given position.
+	 * @return The first index of white character found or -1 which means not
+	 *         found.
+	 */
+	public static int firstWhitespaceIndex(CharSequence seq, int from)
+	{
+		int index = JSON.NOT_FOUND;
+
+		int length = seq.length();
+		int code;
+
+		for (int i = Math.max(0, from); i < length; i++)
+		{
+			code = seq.charAt(i);
+
+			if (Character.isSpaceChar(code) || Character.isWhitespace(code))
+			{
+				index = i;
+				break;
+			}
+		}
+
+		return index;
 	}
 
 	/**
