@@ -393,7 +393,7 @@ public class Entrance
 
 	private String[]					arguments;
 
-	private Map<String, List<String>>	parameters;
+	private Map<String, List<String>>	parameters	= new LinkedHashMap<String, List<String>>();
 
 	private Map<String, ClassFile>		classes;
 
@@ -785,7 +785,7 @@ public class Entrance
 	{
 		arguments = args;
 
-		parameters = new LinkedHashMap<String, List<String>>();
+		parameters.clear();
 
 		return this;
 	}
