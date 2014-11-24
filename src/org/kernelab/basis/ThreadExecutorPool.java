@@ -21,6 +21,8 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	private Integer					limit				= null;
 
+	private int						fakes				= 0;
+
 	public ThreadExecutorPool()
 	{
 		this(Executors.newCachedThreadPool());
@@ -69,6 +71,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	/**
 	 * Fetch the busy degree of the pool load between 0.0 and 1.0<br />
+	 * The value beyond 1.0 is the ratio of tasks awaiting to be executed.<br />
 	 * If the pool was not defined by limit, but also the executorService was
 	 * not a ThreadPoolExecutor, then this method returns -1.
 	 * 
@@ -113,7 +116,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	{
 		synchronized (tasks)
 		{
-			return tasks.value;
+			return tasks.value + fakes;
 		}
 	}
 
@@ -132,6 +135,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 			if (tasks.value > 0)
 			{
 				tasks.value--;
+				fakes++;
 			}
 			else
 			{
@@ -146,6 +150,13 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		catch (InterruptedException e)
 		{
 			this.addTask();
+		}
+		finally
+		{
+			synchronized (tasks)
+			{
+				fakes--;
+			}
 		}
 
 		return null;
