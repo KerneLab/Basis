@@ -81,7 +81,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	{
 		if (this.getLimit() != null)
 		{
-			return 1f * this.getTasks() / this.getLimit();
+			return 1f * this.getRemain() / this.getLimit();
 		}
 		else
 		{
@@ -112,11 +112,19 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		return limit;
 	}
 
-	public Integer getTasks()
+	public Integer getRemain()
 	{
 		synchronized (tasks)
 		{
 			return tasks.value + fakes;
+		}
+	}
+
+	public Integer getTasks()
+	{
+		synchronized (tasks)
+		{
+			return tasks.value;
 		}
 	}
 
@@ -164,7 +172,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public boolean isEmpty()
 	{
-		return this.getTasks() == 0;
+		return this.getRemain() == 0;
 	}
 
 	public boolean isShutdown()
