@@ -484,12 +484,17 @@ public class SQLKit
 			if (map == null)
 			{
 				map = new LinkedHashMap<String, Object>();
+
 				ResultSetMetaData meta = rs.getMetaData();
+
 				int columns = meta.getColumnCount();
+
 				String name;
+
 				for (int column = 1; column <= columns; column++)
 				{
 					name = meta.getColumnLabel(column);
+
 					map.put(name, name);
 				}
 			}
@@ -498,7 +503,8 @@ public class SQLKit
 			{
 				while (rs.next())
 				{
-					jsan.add(jsonOfResultRow(rs, cls.newInstance(), map));
+					jsan.add(jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transformers(jsan),
+							map));
 				}
 			}
 			catch (InstantiationException e)
