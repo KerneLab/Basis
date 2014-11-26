@@ -2132,7 +2132,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			value = ValueOf(value, reflects());
 
-			Transformer transformer = this.transformerOf(key);
+			Transformer transformer = this.transformerOf(key, value);
 			if (transformer != null)
 			{
 				value = transformer.transform(this, key, value);
@@ -2765,7 +2765,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		@Override
-		public JSAN transformer(String entry, Transformer transformer)
+		public JSAN transformer(Object entry, Transformer transformer)
 		{
 			super.transformer(entry, transformer);
 			return this;
@@ -2779,14 +2779,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		@Override
-		public JSAN transformers(Map<String, Transformer> transformers)
+		public JSAN transformers(Map<Object, Transformer> transformers)
 		{
 			super.transformers(transformers);
 			return this;
 		}
 
 		@Override
-		public JSAN transformersRemove(String entry)
+		public JSAN transformersRemove(Object entry)
 		{
 			super.transformersRemove(entry);
 			return this;
@@ -6455,7 +6455,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	private transient Map<Class<?>, Object>		projects;
 
-	private transient Map<String, Transformer>	transformers;
+	private transient Map<Object, Transformer>	transformers;
 
 	public JSON()
 	{
@@ -7019,7 +7019,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			value = ValueOf(value, reflects());
 
-			Transformer transformer = this.transformerOf(key);
+			Transformer transformer = this.transformerOf(key, value);
 			if (transformer != null)
 			{
 				value = transformer.transform(this, key, value);
@@ -7498,9 +7498,9 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				.toString();
 	}
 
-	public JSON transformer(String entry, Transformer transformer)
+	public JSON transformer(Object entry, Transformer transformer)
 	{
-		if (entry != null && transformer != null)
+		if (transformer != null && (entry instanceof String || entry instanceof Class))
 		{
 			transformersSingleton();
 			transformers().put(entry, transformer);
@@ -7508,19 +7508,34 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
-	public Transformer transformerOf(String entry)
+	public Transformer transformerOf(String entry, Object value)
 	{
 		Transformer transformer = null;
 
-		if (entry != null && transformers() != null)
+		if (entry != null && transformers() != null && !transformers().isEmpty())
 		{
 			transformer = transformers().get(entry);
+
+			if (transformer == null)
+			{
+				for (Entry<Object, Transformer> e : transformers().entrySet())
+				{
+					if (e.getKey() instanceof Class)
+					{
+						if (((Class<?>) e.getKey()).isInstance(value))
+						{
+							transformer = e.getValue();
+							break;
+						}
+					}
+				}
+			}
 		}
 
 		return transformer;
 	}
 
-	public Map<String, Transformer> transformers()
+	public Map<Object, Transformer> transformers()
 	{
 		return transformers;
 	}
@@ -7534,13 +7549,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		return this;
 	}
 
-	public JSON transformers(Map<String, Transformer> transformers)
+	public JSON transformers(Map<Object, Transformer> transformers)
 	{
 		this.transformers = transformers;
 		return this;
 	}
 
-	public JSON transformersRemove(String entry)
+	public JSON transformersRemove(Object entry)
 	{
 		if (entry != null && transformers() != null)
 		{
@@ -7553,7 +7568,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		if (transformers() == null)
 		{
-			transformers(new LinkedHashMap<String, Transformer>());
+			transformers(new LinkedHashMap<Object, Transformer>());
 		}
 		return this;
 	}
