@@ -49,6 +49,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -72,29 +73,23 @@ import org.kernelab.basis.io.DataWriter;
  */
 public class Tools
 {
-	private static final PrintStream		STD_OUT							= System.out;
+	private static final PrintStream		STD_OUT					= System.out;
 
-	private static final PrintStream		STD_ERR							= System.err;
+	private static final PrintStream		STD_ERR					= System.err;
 
-	private static final Set<PrintStream>	Outs							= new LinkedHashSet<PrintStream>();
+	private static final Set<PrintStream>	Outs					= new LinkedHashSet<PrintStream>();
 
-	public static final int					BUFFER_BYTES					= 1024;
+	public static final int					BUFFER_BYTES			= 1024;
 
-	protected static final Calendar			CALENDAR						= new GregorianCalendar();
+	protected static final Calendar			CALENDAR				= new GregorianCalendar();
 
-	public static final String				LOCAL_DATETIME_FORMAT_STRING	= "yyyy-MM-dd HH:mm:ss";
+	public static final String				LOCAL_DATETIME_FORMAT	= "yyyy-MM-dd HH:mm:ss";
 
-	public static final DateFormat			LOCAL_DATETIME_FORMAT			= new SimpleDateFormat(
-																					LOCAL_DATETIME_FORMAT_STRING);
+	public static final String				FULL_DATETIME_FORMAT	= "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
-	public static final String				FULL_DATETIME_FORMAT_STRING		= "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+	public static final String				SCRIPT_DATETIME_FORMAT	= "MM-dd-yyyy HH:mm:ss 'GMT'Z";
 
-	public static final DateFormat			FULL_DATETIME_FORMAT			= new SimpleDateFormat(
-																					FULL_DATETIME_FORMAT_STRING);
-
-	public static String					DEFAULT_DATETIME_FORMAT_STRING	= LOCAL_DATETIME_FORMAT_STRING;
-
-	public static DateFormat				DEFAULT_DATETIME_FORMAT			= LOCAL_DATETIME_FORMAT;
+	public static String					DEFAULT_DATETIME_FORMAT	= LOCAL_DATETIME_FORMAT;
 
 	static
 	{
@@ -2010,6 +2005,45 @@ public class Tools
 	}
 
 	/**
+	 * To filter some element from a certain Iterable object into another
+	 * Collection.
+	 * 
+	 * @param <E>
+	 *            The generic type of the elements in the Iterable object.
+	 * @param iterable
+	 *            The Iterable object which is to be filtered.
+	 * @param filter
+	 *            The IndexedFilter object which indicates the elements should
+	 *            be preserved if filter returns false.
+	 * @param result
+	 *            The Collection holding the result of filter. If null, an empty
+	 *            LinkedList would be created.
+	 * @return The result Collection.
+	 */
+	public static <E> Collection<E> filter(Iterable<E> iterable, IndexedFilter<E> filter, Collection<E> result)
+	{
+		if (result == null)
+		{
+			result = new LinkedList<E>();
+		}
+		int index = 0;
+		try
+		{
+			for (E element : iterable)
+			{
+				if (!filter.filter(element, index++))
+				{
+					result.add(element);
+				}
+			}
+		}
+		catch (Terminator t)
+		{
+		}
+		return result;
+	}
+
+	/**
 	 * To find the first index of non-white character from the given position.
 	 * 
 	 * @param seq
@@ -2072,45 +2106,6 @@ public class Tools
 	}
 
 	/**
-	 * To filter some element from a certain Iterable object into another
-	 * Collection.
-	 * 
-	 * @param <E>
-	 *            The generic type of the elements in the Iterable object.
-	 * @param iterable
-	 *            The Iterable object which is to be filtered.
-	 * @param filter
-	 *            The IndexedFilter object which indicates the elements should
-	 *            be preserved if filter returns false.
-	 * @param result
-	 *            The Collection holding the result of filter. If null, an empty
-	 *            LinkedList would be created.
-	 * @return The result Collection.
-	 */
-	public static <E> Collection<E> filter(Iterable<E> iterable, IndexedFilter<E> filter, Collection<E> result)
-	{
-		if (result == null)
-		{
-			result = new LinkedList<E>();
-		}
-		int index = 0;
-		try
-		{
-			for (E element : iterable)
-			{
-				if (!filter.filter(element, index++))
-				{
-					result.add(element);
-				}
-			}
-		}
-		catch (Terminator t)
-		{
-		}
-		return result;
-	}
-
-	/**
 	 * Get the Calendar object according to the datetime String which is
 	 * formatted by {@link Tools#DEFAULT_DATETIME_FORMAT_STRING}.
 	 * 
@@ -2120,7 +2115,7 @@ public class Tools
 	 */
 	public static Calendar getCalendar(String datetime)
 	{
-		return getCalendar(datetime, DEFAULT_DATETIME_FORMAT_STRING);
+		return getCalendar(datetime, DEFAULT_DATETIME_FORMAT);
 	}
 
 	/**
@@ -2287,7 +2282,7 @@ public class Tools
 	 */
 	public static Date getDate(String datetime)
 	{
-		return getDate(datetime, DEFAULT_DATETIME_FORMAT_STRING);
+		return getDate(datetime, DEFAULT_DATETIME_FORMAT);
 	}
 
 	/**
@@ -2303,7 +2298,7 @@ public class Tools
 	 */
 	public static Date getDate(String datetime, Date date)
 	{
-		return getDate(datetime, DEFAULT_DATETIME_FORMAT_STRING, date);
+		return getDate(datetime, DEFAULT_DATETIME_FORMAT, date);
 	}
 
 	/**
@@ -2394,7 +2389,24 @@ public class Tools
 	 */
 	public static String getDateTimeString(Calendar calendar, String format)
 	{
-		return getDateTimeString(calendar.getTime(), format);
+		return getDateTimeString(calendar, format, Locale.getDefault());
+	}
+
+	/**
+	 * Get the String of a Calendar form as the given format.
+	 * 
+	 * @param calendar
+	 *            The Calendar.
+	 * @param format
+	 *            The Date format string.
+	 * @param The
+	 *            locale of the date string.
+	 * @return The String of the Calendar.
+	 * @see java.text.SimpleDateFormat
+	 */
+	public static String getDateTimeString(Calendar calendar, String format, Locale locale)
+	{
+		return getDateTimeString(calendar.getTime(), format, locale);
 	}
 
 	/**
@@ -2435,7 +2447,24 @@ public class Tools
 	 */
 	public static String getDateTimeString(Date date, String format)
 	{
-		return getDateTimeString(date, new SimpleDateFormat(format));
+		return getDateTimeString(date, format, Locale.getDefault());
+	}
+
+	/**
+	 * Get the String of a Date form as a given Date format.
+	 * 
+	 * @param date
+	 *            The Date.
+	 * @param format
+	 *            The Date format string.
+	 * @param locale
+	 *            The locale of the date string.
+	 * @return The String of the Date Time.
+	 * @see java.text.SimpleDateFormat
+	 */
+	public static String getDateTimeString(Date date, String format, Locale locale)
+	{
+		return getDateTimeString(date, new SimpleDateFormat(format, locale));
 	}
 
 	/**
@@ -2492,7 +2521,26 @@ public class Tools
 	 */
 	public static String getDateTimeString(long timeStamp, String format)
 	{
-		return getDateTimeString(new Date(timeStamp), format);
+		return getDateTimeString(timeStamp, format, Locale.getDefault());
+	}
+
+	/**
+	 * Get the String of a long time variable form as a given Date format
+	 * string.
+	 * 
+	 * @param timeStamp
+	 *            The long type variable, may be given by
+	 *            {@link System#currentTimeMillis()}.
+	 * @param format
+	 *            The Date format string.
+	 * @param locale
+	 *            The locale of the date string.
+	 * @return The String of the Date Time.
+	 * @see java.text.SimpleDateFormat
+	 */
+	public static String getDateTimeString(long timeStamp, String format, Locale locale)
+	{
+		return getDateTimeString(new Date(timeStamp), format, locale);
 	}
 
 	/**
