@@ -32,17 +32,6 @@ public class Sequel implements Iterable<ResultSet>
 		public ResultSetIterator(ResultSet rs)
 		{
 			this.rs = rs;
-
-			if (this.rs != null)
-			{
-				try
-				{
-					this.rs.beforeFirst();
-				}
-				catch (SQLException e)
-				{
-				}
-			}
 		}
 
 		public boolean hasNext()
