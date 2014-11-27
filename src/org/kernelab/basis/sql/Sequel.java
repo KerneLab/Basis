@@ -41,7 +41,6 @@ public class Sequel implements Iterable<ResultSet>
 				}
 				catch (SQLException e)
 				{
-					this.rs = null;
 				}
 			}
 		}
