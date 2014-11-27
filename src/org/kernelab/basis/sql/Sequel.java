@@ -40,7 +40,15 @@ public class Sequel implements Iterable<ResultSet>
 			{
 				try
 				{
-					return rs.next();
+					if (rs.next())
+					{
+						return true;
+					}
+					else
+					{
+						rs = null;
+						return false;
+					}
 				}
 				catch (SQLException e)
 				{
