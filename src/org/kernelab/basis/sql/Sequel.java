@@ -23,7 +23,7 @@ import java.util.Map;
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
 
-public class Sequel implements Iterable<Sequel>
+public class Sequel implements Iterable<ResultSet>
 {
 	public static class ResultSetIterator implements Iterable<ResultSet>, Iterator<ResultSet>
 	{
@@ -33,28 +33,37 @@ public class Sequel implements Iterable<Sequel>
 		{
 			this.rs = rs;
 
-			try
+			if (this.rs != null)
 			{
-				this.rs.beforeFirst();
-			}
-			catch (Exception e)
-			{
+				try
+				{
+					this.rs.beforeFirst();
+				}
+				catch (SQLException e)
+				{
+					this.rs = null;
+				}
 			}
 		}
 
 		public boolean hasNext()
 		{
-			boolean has = false;
-
-			try
+			if (rs != null)
 			{
-				has = rs.next();
+				try
+				{
+					return rs.next();
+				}
+				catch (SQLException e)
+				{
+					rs = null;
+					return false;
+				}
 			}
-			catch (Exception e)
+			else
 			{
+				return false;
 			}
-
-			return has;
 		}
 
 		public Iterator<ResultSet> iterator()
@@ -69,7 +78,6 @@ public class Sequel implements Iterable<Sequel>
 
 		public void remove()
 		{
-
 		}
 	}
 
@@ -1914,19 +1922,19 @@ public class Sequel implements Iterable<Sequel>
 		return this.getUpdateCount() != N_A;
 	}
 
-	public ResultSetIterator iterate()
-	{
-		return new ResultSetIterator(this.getResultSet());
-	}
-
-	public SequelIterator iterator()
+	public SequelIterator iterate()
 	{
 		return new SequelIterator();
 	}
 
-	public SequelIterator iterator(int current)
+	public SequelIterator iterate(int current)
 	{
 		return new SequelIterator(current);
+	}
+
+	public ResultSetIterator iterator()
+	{
+		return new ResultSetIterator(this.getResultSet());
 	}
 
 	public Sequel nextResult()
