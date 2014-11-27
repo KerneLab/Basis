@@ -2130,13 +2130,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				hirch.outer(null).entry(null);
 			}
 
-			value = ValueOf(value, reflects());
-
 			Transformer transformer = this.transformerOf(key, value);
 			if (transformer != null)
 			{
 				value = transformer.transform(this, key, value);
 			}
+
+			value = ValueOf(value, reflects());
 
 			hirch = AsHierarchical(value);
 			if (hirch != null)
@@ -6811,16 +6811,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSON pairs(Object... pairs)
 	{
-		for (int i = 0; i < pairs.length; i += 2)
+		for (int i = 0; i < pairs.length; i++)
 		{
 			Object key = pairs[i];
 			Object value = null;
-			try
+			i++;
+			if (i < pairs.length)
 			{
-				value = pairs[i + 1];
-			}
-			catch (ArrayIndexOutOfBoundsException e)
-			{
+				value = pairs[i];
 			}
 
 			if (key != null)
@@ -7017,13 +7015,13 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				hirch.outer(null).entry(null);
 			}
 
-			value = ValueOf(value, reflects());
-
 			Transformer transformer = this.transformerOf(key, value);
 			if (transformer != null)
 			{
 				value = transformer.transform(this, key, value);
 			}
+
+			value = ValueOf(value, reflects());
 
 			hirch = AsHierarchical(value);
 			if (hirch != null)
