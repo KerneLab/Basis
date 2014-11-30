@@ -191,14 +191,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
-		protected ArrayIterator<T> reset(int sequence)
+		public ArrayIterator<T> reset(int sequence)
 		{
 			iter = keys.listIterator(sequence);
 			key = null;
 			return this;
 		}
 
-		protected ArrayIterator<T> reset(String key)
+		public ArrayIterator<T> reset(String key)
 		{
 			int seq = 0;
 
@@ -1969,7 +1969,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			if (containsValue(value))
 			{
-				ArrayIterator<Object> iter = new ArrayIterator<Object>(Object.class).reset(size());
+				ArrayIterator<Object> iter = new ArrayIterator<Object>().reset(size());
 				while (iter.hasPrevious())
 				{
 					iter.previous();
@@ -6784,7 +6784,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	 */
 	public ArrayIterator<Object> iterator(String key)
 	{
-		return new ArrayIterator<Object>().reset(key);
+		return iterator().reset(key);
 	}
 
 	/**
