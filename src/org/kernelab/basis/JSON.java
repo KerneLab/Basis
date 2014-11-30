@@ -65,184 +65,6 @@ interface Hierarchical extends Copieable<Hierarchical>
  */
 public class JSON implements Map<String, Object>, Iterable<Object>, Serializable, Hierarchical
 {
-	protected class ArrayIterator<T> implements Iterator<T>, Iterable<T>, Serializable
-	{
-		/**
-		 * 
-		 */
-		private static final long		serialVersionUID	= 7218728241929428448L;
-
-		private Class<T>				cls;
-
-		private Transform<T>			tran;
-
-		private LinkedList<String>		keys				= new LinkedList<String>();
-
-		private ListIterator<String>	iter;
-
-		private String					key;
-
-		protected ArrayIterator()
-		{
-			this.keys.addAll(keySet());
-			this.iter = this.keys.listIterator();
-		}
-
-		protected ArrayIterator(Class<T> cls)
-		{
-			this();
-			this.cls = cls;
-		}
-
-		protected ArrayIterator(Transform<T> tran)
-		{
-			this();
-			this.tran = tran;
-		}
-
-		@SuppressWarnings("unchecked")
-		protected T get()
-		{
-			Object o = JSON.this.attr(key);
-
-			if (tran != null)
-			{
-				return tran.transform(JSON.this, key, o);
-			}
-			else if (cls == null || cls.isInstance(o))
-			{
-				return (T) o;
-			}
-			else
-			{
-				return null;
-			}
-		}
-
-		public boolean hasNext()
-		{
-			return iter.hasNext();
-		}
-
-		public boolean hasPrevious()
-		{
-			return iter.hasPrevious();
-		}
-
-		protected int index()
-		{
-			int index = JSAN.LAST;
-
-			try
-			{
-				index = Integer.parseInt(key);
-
-				if (index < 0)
-				{
-					index = JSAN.LAST;
-				}
-			}
-			catch (NumberFormatException e)
-			{
-			}
-
-			return index;
-		}
-
-		protected ListIterator<String> iter()
-		{
-			return iter;
-		}
-
-		public Iterator<T> iterator()
-		{
-			return this;
-		}
-
-		protected String key()
-		{
-			return key;
-		}
-
-		protected LinkedList<String> keys()
-		{
-			return keys;
-		}
-
-		public T next()
-		{
-			key = iter.next();
-			return get();
-		}
-
-		public T previous()
-		{
-			key = iter.previous();
-			return get();
-		}
-
-		public void remove()
-		{
-			if (key != null)
-			{
-				JSON.this.remove(key);
-				iter.remove();
-				key = null;
-			}
-		}
-
-		public ArrayIterator<T> reset(int sequence)
-		{
-			iter = keys.listIterator(sequence);
-			key = null;
-			return this;
-		}
-
-		public ArrayIterator<T> reset(String key)
-		{
-			int seq = 0;
-
-			try
-			{
-				int index = Integer.parseInt(key);
-
-				if (index < 0)
-				{
-					throw new NumberFormatException();
-				}
-
-				for (String k : keys)
-				{
-					try
-					{
-						if (index <= Integer.parseInt(k))
-						{
-							break;
-						}
-					}
-					catch (NumberFormatException e)
-					{
-						break;
-					}
-					seq++;
-				}
-			}
-			catch (NumberFormatException e)
-			{
-				for (String k : keys)
-				{
-					if (Tools.equals(key, k))
-					{
-						break;
-					}
-					seq++;
-				}
-			}
-
-			return reset(seq);
-		}
-	}
-
 	private static class ArrayLengthReverseComparator<T> implements Comparator<T[]>, Serializable
 	{
 		/**
@@ -1969,7 +1791,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			if (containsValue(value))
 			{
-				ArrayIterator<Object> iter = new ArrayIterator<Object>().reset(size());
+				ValueIterator<Object> iter = new ValueIterator<Object>().reset(size());
 				while (iter.hasPrevious())
 				{
 					iter.previous();
@@ -2017,6 +1839,20 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		@Override
+		public JSAN pairs(JSAN jsan)
+		{
+			super.pairs(jsan);
+			return this;
+		}
+
+		@Override
+		public JSAN pairs(JSON json)
+		{
+			super.pairs(json);
+			return this;
+		}
+
+		@Override
 		public JSAN pairs(Map<? extends String, ? extends Object> map)
 		{
 			super.pairs(map);
@@ -2050,6 +1886,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public JSAN projects(Class<?> cls, Iterable<?> fields)
 		{
 			super.projects(cls, fields);
+			return this;
+		}
+
+		@Override
+		public JSON projects(Class<?> cls, JSAN project)
+		{
+			super.projects(cls, project);
 			return this;
 		}
 
@@ -2439,7 +2282,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			start = bound(start);
 			end = bound(end);
 
-			ArrayIterator<Object> iter = this.iterator(Index(start));
+			ValueIterator<Object> iter = this.iterator(Index(start));
 
 			while (iter.hasNext())
 			{
@@ -2507,7 +2350,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			int fills = collection.size();
 			int delta = fills - cover;
 
-			ArrayIterator<Object> iter = this.iterator(Index(index));
+			ValueIterator<Object> iter = this.iterator(Index(index));
 
 			// Clean
 			while (iter.hasNext())
@@ -2586,7 +2429,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			int fills = jsan.size();
 			int delta = fills - cover;
 
-			ArrayIterator<Object> iter = this.iterator(Index(index));
+			ValueIterator<Object> iter = this.iterator(Index(index));
 
 			// Clean
 			while (iter.hasNext())
@@ -2665,7 +2508,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			int fills = objects.length;
 			int delta = fills - cover;
 
-			ArrayIterator<Object> iter = this.iterator(Index(index));
+			ValueIterator<Object> iter = this.iterator(Index(index));
 
 			// Clean
 			while (iter.hasNext())
@@ -4140,6 +3983,184 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public T transform(JSON json, String entry, Object value);
 	}
 
+	protected class ValueIterator<T> implements Iterator<T>, Iterable<T>, Serializable
+	{
+		/**
+		 * 
+		 */
+		private static final long		serialVersionUID	= 7218728241929428448L;
+
+		private Class<T>				cls;
+
+		private Transform<T>			tran;
+
+		private LinkedList<String>		keys				= new LinkedList<String>();
+
+		private ListIterator<String>	iter;
+
+		private String					key;
+
+		protected ValueIterator()
+		{
+			this.keys.addAll(keySet());
+			this.iter = this.keys.listIterator();
+		}
+
+		protected ValueIterator(Class<T> cls)
+		{
+			this();
+			this.cls = cls;
+		}
+
+		protected ValueIterator(Transform<T> tran)
+		{
+			this();
+			this.tran = tran;
+		}
+
+		@SuppressWarnings("unchecked")
+		protected T get()
+		{
+			Object o = JSON.this.attr(key);
+
+			if (tran != null)
+			{
+				return tran.transform(JSON.this, key, o);
+			}
+			else if (cls == null || cls.isInstance(o))
+			{
+				return (T) o;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		public boolean hasNext()
+		{
+			return iter.hasNext();
+		}
+
+		public boolean hasPrevious()
+		{
+			return iter.hasPrevious();
+		}
+
+		protected int index()
+		{
+			int index = JSAN.LAST;
+
+			try
+			{
+				index = Integer.parseInt(key);
+
+				if (index < 0)
+				{
+					index = JSAN.LAST;
+				}
+			}
+			catch (NumberFormatException e)
+			{
+			}
+
+			return index;
+		}
+
+		protected ListIterator<String> iter()
+		{
+			return iter;
+		}
+
+		public Iterator<T> iterator()
+		{
+			return this;
+		}
+
+		protected String key()
+		{
+			return key;
+		}
+
+		protected LinkedList<String> keys()
+		{
+			return keys;
+		}
+
+		public T next()
+		{
+			key = iter.next();
+			return get();
+		}
+
+		public T previous()
+		{
+			key = iter.previous();
+			return get();
+		}
+
+		public void remove()
+		{
+			if (key != null)
+			{
+				JSON.this.remove(key);
+				iter.remove();
+				key = null;
+			}
+		}
+
+		public ValueIterator<T> reset(int sequence)
+		{
+			iter = keys.listIterator(sequence);
+			key = null;
+			return this;
+		}
+
+		public ValueIterator<T> reset(String key)
+		{
+			int seq = 0;
+
+			try
+			{
+				int index = Integer.parseInt(key);
+
+				if (index < 0)
+				{
+					throw new NumberFormatException();
+				}
+
+				for (String k : keys)
+				{
+					try
+					{
+						if (index <= Integer.parseInt(k))
+						{
+							break;
+						}
+					}
+					catch (NumberFormatException e)
+					{
+						break;
+					}
+					seq++;
+				}
+			}
+			catch (NumberFormatException e)
+			{
+				for (String k : keys)
+				{
+					if (Tools.equals(key, k))
+					{
+						break;
+					}
+					seq++;
+				}
+			}
+
+			return reset(seq);
+		}
+	}
+
 	/**
 	 * 
 	 */
@@ -4406,9 +4427,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			int length = 0;
 
-			if (object instanceof JSAN)
+			if (object instanceof JSON)
 			{
-				length = ((JSAN) object).size();
+				length = ((JSON) object).size();
 			}
 			else if (object instanceof Collection)
 			{
@@ -6419,7 +6440,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		if (ReflectOf(object, reflects) != null)
 		{
-			if (IsArray(object) || object instanceof Iterable)
+			if (IsArray(object) || (object instanceof Iterable && !IsPlainJSON(object)))
 			{
 				result = JSAN.Reflect(reflects, object);
 			}
@@ -6756,9 +6777,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return object().isEmpty();
 	}
 
-	public ArrayIterator<Object> iterator()
+	public ValueIterator<Object> iterator()
 	{
-		return new ArrayIterator<Object>();
+		return new ValueIterator<Object>();
 	}
 
 	/**
@@ -6769,9 +6790,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	 *            The target class, null means iterate all.
 	 * @return An iterator.
 	 */
-	public <T> ArrayIterator<T> iterator(Class<T> cls)
+	public <T> ValueIterator<T> iterator(Class<T> cls)
 	{
-		return new ArrayIterator<T>(cls);
+		return new ValueIterator<T>(cls);
 	}
 
 	/**
@@ -6782,7 +6803,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	 *            From where the iteration would be started.
 	 * @return An iterator.
 	 */
-	public ArrayIterator<Object> iterator(String key)
+	public ValueIterator<Object> iterator(String key)
 	{
 		return iterator().reset(key);
 	}
@@ -6795,9 +6816,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	 *            The transform which would transform each element.
 	 * @return An iterator.
 	 */
-	public <T> ArrayIterator<T> iterator(Transform<T> tran)
+	public <T> ValueIterator<T> iterator(Transform<T> tran)
 	{
-		return new ArrayIterator<T>(tran);
+		return new ValueIterator<T>(tran);
 	}
 
 	public Set<String> keySet()
@@ -6863,6 +6884,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			this.attr(key.toString(), value);
 		}
 		return this;
+	}
+
+	public JSON pairs(JSAN jsan)
+	{
+		return pairs((Iterable<? extends Object>) jsan);
+	}
+
+	public JSON pairs(JSON json)
+	{
+		return pairs((Map<? extends String, ? extends Object>) json);
 	}
 
 	public JSON pairs(Map<? extends String, ? extends Object> map)
@@ -6962,6 +6993,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			projects(cls, project);
 		}
+		return this;
+	}
+
+	public JSON projects(Class<?> cls, JSAN project)
+	{
+		projects(cls, (Iterable<?>) project);
 		return this;
 	}
 
