@@ -503,7 +503,7 @@ public class SQLKit
 			{
 				while (rs.next())
 				{
-					jsan.add(jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transformers(jsan),
+					jsan.add(jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transforms(jsan),
 							map));
 				}
 			}

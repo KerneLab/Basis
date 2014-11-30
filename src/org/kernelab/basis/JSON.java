@@ -457,12 +457,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 		}
 
-		protected class ArrayIterator implements Iterator<Object>, Serializable
+		protected class ArrayIterator<T> implements Iterator<T>, Iterable<T>, Serializable
 		{
 			/**
 			 * 
 			 */
 			private static final long		serialVersionUID	= 7218728241929428448L;
+
+			private Class<T>				cls;
+
+			private Transform<T>			tran;
 
 			private LinkedList<String>		keys				= new LinkedList<String>();
 
@@ -472,25 +476,39 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			protected ArrayIterator()
 			{
-				keys.addAll(keySet());
-				iter = keys.listIterator();
+				this.keys.addAll(keySet());
+				this.iter = this.keys.listIterator();
 			}
 
-			public ArrayIterator(int sequence)
+			protected ArrayIterator(Class<T> cls)
 			{
 				this();
-				reset(sequence);
+				this.cls = cls;
 			}
 
-			public ArrayIterator(String key)
+			protected ArrayIterator(Transform<T> tran)
 			{
 				this();
-				reset(key);
+				this.tran = tran;
 			}
 
-			protected Object get()
+			@SuppressWarnings("unchecked")
+			protected T get()
 			{
-				return JSAN.this.attr(key());
+				Object o = JSAN.this.attr(key);
+
+				if (tran != null)
+				{
+					return tran.transform(JSAN.this, key, o);
+				}
+				else if (cls == null || cls.isInstance(o))
+				{
+					return (T) o;
+				}
+				else
+				{
+					return null;
+				}
 			}
 
 			public boolean hasNext()
@@ -528,6 +546,11 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				return iter;
 			}
 
+			public Iterator<T> iterator()
+			{
+				return this;
+			}
+
 			protected String key()
 			{
 				return key;
@@ -538,16 +561,16 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				return keys;
 			}
 
-			public Object next()
+			public T next()
 			{
 				key = iter.next();
-				return JSAN.this.attr(key);
+				return get();
 			}
 
-			public Object previous()
+			public T previous()
 			{
 				key = iter.previous();
-				return JSAN.this.attr(key);
+				return get();
 			}
 
 			public void remove()
@@ -560,14 +583,14 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				}
 			}
 
-			protected ArrayIterator reset(int sequence)
+			protected ArrayIterator<T> reset(int sequence)
 			{
 				iter = keys.listIterator(sequence);
 				key = null;
 				return this;
 			}
 
-			protected ArrayIterator reset(String key)
+			protected ArrayIterator<T> reset(String key)
 			{
 				int seq = 0;
 
@@ -608,9 +631,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 					}
 				}
 
-				reset(seq);
-
-				return this;
+				return reset(seq);
 			}
 		}
 
@@ -1274,7 +1295,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 				if (target == null)
 				{
-					target = new JSAN().reflects(source).transformers(source);
+					target = new JSAN().reflects(source).transforms(source);
 				}
 
 				sorter.addAll(source.values());
@@ -1758,7 +1779,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		@Override
 		public JSAN clone()
 		{
-			return new JSAN().reflects(this).transformers(this).clone(this);
+			return new JSAN().reflects(this).transforms(this).clone(this);
 		}
 
 		public boolean containsAll(Iterable<? extends Object> iterable)
@@ -1911,19 +1932,49 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			return array().isEmpty() && super.isEmpty();
 		}
 
-		public ArrayIterator iterator()
+		public ArrayIterator<Object> iterator()
 		{
-			return new ArrayIterator("0");
+			return new ArrayIterator<Object>();
 		}
 
-		public ArrayIterator iterator(int sequence)
+		/**
+		 * Fetch the iterator which would iterate all the elements in this JSAN
+		 * that could be cast to the given class.
+		 * 
+		 * @param cls
+		 *            The target class, null means iterate all.
+		 * @return An iterator.
+		 */
+		public <T> ArrayIterator<T> iterator(Class<T> cls)
 		{
-			return new ArrayIterator(sequence);
+			return new ArrayIterator<T>(cls);
 		}
 
-		public ArrayIterator iterator(String key)
+		/**
+		 * Fetch the iterator which would iterate all the elements in this JSAN
+		 * start with the given key.
+		 * 
+		 * @param key
+		 *            From where the iteration would be started.
+		 * @return An iterator.
+		 */
+		public ArrayIterator<Object> iterator(String key)
 		{
-			return new ArrayIterator(key);
+			return new ArrayIterator<Object>().reset(key);
+		}
+
+		/**
+		 * Fetch the iterator which would iterate all the elements in this JSAN
+		 * that has been transformed to the target class with the given
+		 * Transform.
+		 * 
+		 * @param tran
+		 *            The transform which would transform each element.
+		 * @return An iterator.
+		 */
+		public <T> ArrayIterator<T> iterator(Transform<T> tran)
+		{
+			return new ArrayIterator<T>(tran);
 		}
 
 		public String keyOf(Object value)
@@ -1963,7 +2014,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 			if (containsValue(value))
 			{
-				ArrayIterator iter = new ArrayIterator(size());
+				ArrayIterator<Object> iter = new ArrayIterator<Object>(Object.class).reset(size());
 				while (iter.hasPrevious())
 				{
 					iter.previous();
@@ -2130,10 +2181,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				hirch.outer(null).entry(null);
 			}
 
-			Transformer transformer = this.transformerOf(key, value);
-			if (transformer != null)
+			Transform<?> transform = this.transformOf(key, value);
+			if (transform != null)
 			{
-				value = transformer.transform(this, key, value);
+				value = transform.transform(this, key, value);
 			}
 
 			value = ValueOf(value, reflects());
@@ -2423,7 +2474,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		{
 			if (jsan == null)
 			{
-				jsan = new JSAN().reflects(this).transformers(this);
+				jsan = new JSAN().reflects(this).transforms(this);
 			}
 			else
 			{
@@ -2433,7 +2484,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			start = bound(start);
 			end = bound(end);
 
-			ArrayIterator iter = this.iterator(Index(start));
+			ArrayIterator<Object> iter = this.iterator(Index(start));
 
 			while (iter.hasNext())
 			{
@@ -2491,7 +2542,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN splice(int index, int cover, Collection<?> collection)
 		{
-			JSAN result = new JSAN().reflects(this).transformers(this);
+			JSAN result = new JSAN().reflects(this).transforms(this);
 
 			int trace = length();
 			index = bound(index);
@@ -2501,7 +2552,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			int fills = collection.size();
 			int delta = fills - cover;
 
-			ArrayIterator iter = this.iterator(Index(index));
+			ArrayIterator<Object> iter = this.iterator(Index(index));
 
 			// Clean
 			while (iter.hasNext())
@@ -2570,7 +2621,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN splice(int index, int cover, JSAN jsan)
 		{
-			JSAN result = new JSAN().reflects(this).transformers(this);
+			JSAN result = new JSAN().reflects(this).transforms(this);
 
 			int trace = length();
 			index = bound(index);
@@ -2580,7 +2631,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			int fills = jsan.size();
 			int delta = fills - cover;
 
-			ArrayIterator iter = this.iterator(Index(index));
+			ArrayIterator<Object> iter = this.iterator(Index(index));
 
 			// Clean
 			while (iter.hasNext())
@@ -2649,7 +2700,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 		public JSAN splice(int index, int cover, Object... objects)
 		{
-			JSAN result = new JSAN().reflects(this).transformers(this);
+			JSAN result = new JSAN().reflects(this).transforms(this);
 
 			int trace = length();
 			index = bound(index);
@@ -2659,7 +2710,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			int fills = objects.length;
 			int delta = fills - cover;
 
-			ArrayIterator iter = this.iterator(Index(index));
+			ArrayIterator<Object> iter = this.iterator(Index(index));
 
 			// Clean
 			while (iter.hasNext())
@@ -2765,37 +2816,37 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 
 		@Override
-		public JSAN transformer(Object entry, Transformer transformer)
+		public JSAN transform(Object entry, Transform<?> transform)
 		{
-			super.transformer(entry, transformer);
+			super.transform(entry, transform);
 			return this;
 		}
 
 		@Override
-		public JSAN transformers(JSON json)
+		public JSAN transforms(JSON json)
 		{
-			super.transformers(json);
+			super.transforms(json);
 			return this;
 		}
 
 		@Override
-		public JSAN transformers(Map<Object, Transformer> transformers)
+		public JSAN transforms(Map<Object, Transform<?>> transforms)
 		{
-			super.transformers(transformers);
+			super.transforms(transforms);
 			return this;
 		}
 
 		@Override
-		public JSAN transformersRemove(Object entry)
+		public JSAN transformsRemove(Object entry)
 		{
-			super.transformersRemove(entry);
+			super.transformsRemove(entry);
 			return this;
 		}
 
 		@Override
-		protected JSAN transformersSingleton()
+		protected JSAN transformsSingleton()
 		{
-			super.transformersSingleton();
+			super.transformsSingleton();
 			return this;
 		}
 
@@ -4117,9 +4168,21 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 		}
 	}
 
-	public static interface Transformer
+	public static interface Transform<T>
 	{
-		public Object transform(JSON json, String entry, Object value);
+		/**
+		 * To transform the value that would be stored in the given JSON object
+		 * with the entry key.
+		 * 
+		 * @param json
+		 *            The JSON object would store the value.
+		 * @param entry
+		 *            The entry key that would be associated with the value.
+		 * @param value
+		 *            The given value to be transformed.
+		 * @return The transform result.
+		 */
+		public T transform(JSON json, String entry, Object value);
 	}
 
 	/**
@@ -5959,7 +6022,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (object instanceof Iterable)
 			{
-				JSAN temp = JSAN.Reflect(new JSAN().reflects(json).transformers(json), object);
+				JSAN temp = JSAN.Reflect(new JSAN().reflects(json).transforms(json), object);
 
 				if (reflect == null)
 				{
@@ -5986,7 +6049,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 			else if (IsArray(object))
 			{
-				JSAN temp = JSAN.Reflect(new JSAN().reflects(json).transformers(json), object);
+				JSAN temp = JSAN.Reflect(new JSAN().reflects(json).transforms(json), object);
 
 				if (reflect == null)
 				{
@@ -6455,7 +6518,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	private transient Map<Class<?>, Object>		projects;
 
-	private transient Map<Object, Transformer>	transformers;
+	private transient Map<Object, Transform<?>>	transforms;
 
 	public JSON()
 	{
@@ -6575,7 +6638,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	@Override
 	public JSON clone()
 	{
-		return new JSON().reflects(this).transformers(this).clone(this);
+		return new JSON().reflects(this).transforms(this).clone(this);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -7015,10 +7078,10 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				hirch.outer(null).entry(null);
 			}
 
-			Transformer transformer = this.transformerOf(key, value);
-			if (transformer != null)
+			Transform<?> transform = this.transformOf(key, value);
+			if (transform != null)
 			{
-				value = transformer.transform(this, key, value);
+				value = transform.transform(this, key, value);
 			}
 
 			value = ValueOf(value, reflects());
@@ -7466,7 +7529,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 	{
 		if (json == null)
 		{
-			json = new JSON().reflects(this).transformers(this);
+			json = new JSON().reflects(this).transforms(this);
 		}
 
 		for (String key : this.keySet())
@@ -7479,7 +7542,7 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 
 	public JSAN toJSAN()
 	{
-		JSAN jsan = new JSAN().reflects(this).transformers(this);
+		JSAN jsan = new JSAN().reflects(this).transforms(this);
 		jsan.addAll(this.values());
 		return jsan;
 	}
@@ -7496,33 +7559,33 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 				.toString();
 	}
 
-	public JSON transformer(Object entry, Transformer transformer)
+	public JSON transform(Object entry, Transform<?> transform)
 	{
-		if (transformer != null && (entry instanceof String || entry instanceof Class))
+		if (transform != null && (entry instanceof String || entry instanceof Class))
 		{
-			transformersSingleton();
-			transformers().put(entry, transformer);
+			transformsSingleton();
+			transforms().put(entry, transform);
 		}
 		return this;
 	}
 
-	public Transformer transformerOf(String entry, Object value)
+	public Transform<?> transformOf(String entry, Object value)
 	{
-		Transformer transformer = null;
+		Transform<?> transform = null;
 
-		if (entry != null && transformers() != null && !transformers().isEmpty())
+		if (entry != null && transforms() != null && !transforms().isEmpty())
 		{
-			transformer = transformers().get(entry);
+			transform = transforms().get(entry);
 
-			if (transformer == null)
+			if (transform == null)
 			{
-				for (Entry<Object, Transformer> e : transformers().entrySet())
+				for (Entry<Object, Transform<?>> e : transforms().entrySet())
 				{
 					if (e.getKey() instanceof Class)
 					{
 						if (((Class<?>) e.getKey()).isInstance(value))
 						{
-							transformer = e.getValue();
+							transform = e.getValue();
 							break;
 						}
 					}
@@ -7530,43 +7593,43 @@ public class JSON implements Map<String, Object>, Serializable, Hierarchical
 			}
 		}
 
-		return transformer;
+		return transform;
 	}
 
-	public Map<Object, Transformer> transformers()
+	public Map<Object, Transform<?>> transforms()
 	{
-		return transformers;
+		return transforms;
 	}
 
-	public JSON transformers(JSON json)
+	public JSON transforms(JSON json)
 	{
 		if (json != null)
 		{
-			transformers(json.transformers());
+			transforms(json.transforms());
 		}
 		return this;
 	}
 
-	public JSON transformers(Map<Object, Transformer> transformers)
+	public JSON transforms(Map<Object, Transform<?>> transforms)
 	{
-		this.transformers = transformers;
+		this.transforms = transforms;
 		return this;
 	}
 
-	public JSON transformersRemove(Object entry)
+	public JSON transformsRemove(Object entry)
 	{
-		if (entry != null && transformers() != null)
+		if (entry != null && transforms() != null)
 		{
-			transformers().remove(entry);
+			transforms().remove(entry);
 		}
 		return this;
 	}
 
-	protected JSON transformersSingleton()
+	protected JSON transformsSingleton()
 	{
-		if (transformers() == null)
+		if (transforms() == null)
 		{
-			transformers(new LinkedHashMap<Object, Transformer>());
+			transforms(new LinkedHashMap<Object, Transform<?>>());
 		}
 		return this;
 	}
