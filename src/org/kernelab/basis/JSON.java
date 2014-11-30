@@ -2614,13 +2614,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		@Override
-		public JSAN transform(Object entry, Transform<?> transform)
-		{
-			super.transform(entry, transform);
-			return this;
-		}
-
-		@Override
 		public JSAN transforms(JSON json)
 		{
 			super.transforms(json);
@@ -2631,6 +2624,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public JSAN transforms(Map<Object, Transform<?>> transforms)
 		{
 			super.transforms(transforms);
+			return this;
+		}
+
+		@Override
+		public JSAN transforms(Object entry, Transform<?> transform)
+		{
+			super.transforms(entry, transform);
 			return this;
 		}
 
@@ -7595,16 +7595,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				.toString();
 	}
 
-	public JSON transform(Object entry, Transform<?> transform)
-	{
-		if (transform != null && (entry instanceof String || entry instanceof Class))
-		{
-			transformsSingleton();
-			transforms().put(entry, transform);
-		}
-		return this;
-	}
-
 	public Transform<?> transformOf(String entry, Object value)
 	{
 		Transform<?> transform = null;
@@ -7649,6 +7639,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public JSON transforms(Map<Object, Transform<?>> transforms)
 	{
 		this.transforms = transforms;
+		return this;
+	}
+
+	public JSON transforms(Object entry, Transform<?> transform)
+	{
+		if (transform != null && (entry instanceof String || entry instanceof Class))
+		{
+			transformsSingleton();
+			transforms().put(entry, transform);
+		}
 		return this;
 	}
 
