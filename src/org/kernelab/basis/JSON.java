@@ -1890,7 +1890,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		@Override
-		public JSON projects(Class<?> cls, JSAN project)
+		public JSAN projects(Class<?> cls, JSAN project)
 		{
 			super.projects(cls, project);
 			return this;
@@ -2121,6 +2121,20 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		@Override
+		public JSAN reflectsJSAN(Class<?> cls, JSAN fields)
+		{
+			super.reflectsJSAN(cls, fields);
+			return this;
+		}
+
+		@Override
+		public JSAN reflectsJSAN(Class<?> cls, JSON fields)
+		{
+			super.reflectsJSAN(cls, fields);
+			return this;
+		}
+
+		@Override
 		public JSAN reflectsJSAN(Class<?> cls, Map<String, ?> fields)
 		{
 			super.reflectsJSAN(cls, fields);
@@ -2136,6 +2150,20 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		@Override
 		public JSAN reflectsJSON(Class<?> cls, Iterable<?> fields)
+		{
+			super.reflectsJSON(cls, fields);
+			return this;
+		}
+
+		@Override
+		public JSAN reflectsJSON(Class<?> cls, JSAN fields)
+		{
+			super.reflectsJSON(cls, fields);
+			return this;
+		}
+
+		@Override
+		public JSAN reflectsJSON(Class<?> cls, JSON fields)
 		{
 			super.reflectsJSON(cls, fields);
 			return this;
@@ -7380,6 +7408,29 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	public JSON reflectsJSAN(Class<?> cls, JSAN fields)
+	{
+		return reflectsJSAN(cls, (Iterable<?>) fields);
+	}
+
+	public JSON reflectsJSAN(Class<?> cls, JSON fields)
+	{
+		if (cls != null && fields != null)
+		{
+			JSAN reflect = new JSAN();
+
+			for (Pair pair : fields.pairs())
+			{
+				if (pair.getKey() != null && pair.getValue() != null)
+				{
+					reflect.put(pair.getKey(), pair.getValue());
+				}
+			}
+			reflects(cls, reflect);
+		}
+		return this;
+	}
+
 	public JSON reflectsJSAN(Class<?> cls, Map<String, ?> fields)
 	{
 		if (cls != null && fields != null)
@@ -7428,6 +7479,29 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				if (field != null)
 				{
 					reflect.put(field.toString(), field);
+				}
+			}
+			reflects(cls, reflect);
+		}
+		return this;
+	}
+
+	public JSON reflectsJSON(Class<?> cls, JSAN fields)
+	{
+		return reflectsJSON(cls, (Iterable<?>) fields);
+	}
+
+	public JSON reflectsJSON(Class<?> cls, JSON fields)
+	{
+		if (cls != null && fields != null)
+		{
+			JSON reflect = new JSON();
+
+			for (Pair pair : fields.pairs())
+			{
+				if (pair.getKey() != null && pair.getValue() != null)
+				{
+					reflect.put(pair.getKey(), pair.getValue());
 				}
 			}
 			reflects(cls, reflect);
