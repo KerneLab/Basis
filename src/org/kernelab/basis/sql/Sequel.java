@@ -31,6 +31,8 @@ public class Sequel implements Iterable<ResultSet>
 
 		private boolean		closing;
 
+		private Sequel		sequel;
+
 		public ResultSetIterator(ResultSet rs)
 		{
 			this.rs = rs;
@@ -72,6 +74,7 @@ public class Sequel implements Iterable<ResultSet>
 			}
 			else
 			{
+				release();
 				return false;
 			}
 		}
@@ -88,28 +91,55 @@ public class Sequel implements Iterable<ResultSet>
 
 		protected void release()
 		{
-			try
+			if (closing)
 			{
-				if (closing && rs != null)
+				if (sequel != null)
 				{
-					Statement st = rs.getStatement();
-
-					if (st != null)
+					try
 					{
-						st.close();
+						sequel.close();
 					}
+					catch (SQLException e)
+					{
+					}
+				}
 
-					rs.close();
+				if (rs != null)
+				{
+					try
+					{
+						Statement st = rs.getStatement();
+
+						if (st != null)
+						{
+							st.close();
+						}
+
+						rs.close();
+					}
+					catch (SQLException e)
+					{
+					}
 				}
 			}
-			catch (SQLException e)
-			{
-			}
+
 			rs = null;
+			sequel = null;
 		}
 
 		public void remove()
 		{
+		}
+
+		public Sequel sequel()
+		{
+			return sequel;
+		}
+
+		public ResultSetIterator sequel(Sequel sequel)
+		{
+			this.sequel = sequel;
+			return this;
 		}
 	}
 
@@ -203,15 +233,13 @@ public class Sequel implements Iterable<ResultSet>
 		this.setResultSet(rs);
 	}
 
-	public Sequel(SQLKit kit, Statement statement, boolean resultSet)
+	public Sequel(SQLKit kit, Statement statement, boolean hasResultSet)
 	{
-		this.setKit(kit).setStatement(statement).hasResultSetObject(resultSet).refreshUpdateCount();
+		this.setKit(kit).setStatement(statement).hasResultSetObject(hasResultSet).refreshUpdateCount();
 	}
 
 	public Sequel close() throws SQLException
 	{
-		this.closeResultSet();
-
 		if (statement != null)
 		{
 			if (kit != null)
@@ -224,6 +252,8 @@ public class Sequel implements Iterable<ResultSet>
 			}
 			statement = null;
 		}
+
+		this.closeResultSet();
 
 		kit = null;
 
@@ -1981,7 +2011,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public ResultSetIterator iterator()
 	{
-		return new ResultSetIterator(this.getResultSet()).closing(closing);
+		return new ResultSetIterator(this.getResultSet()).closing(closing).sequel(this);
 	}
 
 	public Sequel nextResult()
