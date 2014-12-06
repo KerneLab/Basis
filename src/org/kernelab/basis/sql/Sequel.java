@@ -144,7 +144,15 @@ public class Sequel implements Iterable<ResultSet>
 				nextResult(current);
 			}
 
-			return hasResult();
+			if (hasResult())
+			{
+				return true;
+			}
+			else
+			{
+				release();
+				return false;
+			}
 		}
 
 		public Iterator<Sequel> iterator()
@@ -155,6 +163,14 @@ public class Sequel implements Iterable<ResultSet>
 		public Sequel next()
 		{
 			return Sequel.this;
+		}
+
+		protected void release()
+		{
+			if (Sequel.this.closing)
+			{
+				Sequel.this.close();
+			}
 		}
 
 		public void remove()
@@ -192,6 +208,8 @@ public class Sequel implements Iterable<ResultSet>
 
 	private SQLKit				kit;
 
+	private boolean				closing		= true;
+
 	private Statement			statement;
 
 	private ResultSet			resultSet;
@@ -210,22 +228,23 @@ public class Sequel implements Iterable<ResultSet>
 		this.setKit(kit).setStatement(statement).hasResultSetObject(hasResultSet).refreshUpdateCount();
 	}
 
-	public Sequel close() throws SQLException
+	public Sequel close()
 	{
-		if (statement != null)
+		try
 		{
-			if (kit != null)
-			{
-				kit.closeStatement(statement);
-			}
-			else
-			{
-				statement.close();
-			}
-			statement = null;
+			this.closeStatement();
+		}
+		catch (SQLException e)
+		{
 		}
 
-		this.closeResultSet();
+		try
+		{
+			this.closeResultSet();
+		}
+		catch (SQLException e)
+		{
+		}
 
 		kit = null;
 
@@ -238,9 +257,39 @@ public class Sequel implements Iterable<ResultSet>
 	{
 		if (this.isResultSet())
 		{
-			this.getResultSet().close();
-			this.setResultSet(null);
+			try
+			{
+				this.getResultSet().close();
+			}
+			finally
+			{
+				this.setResultSet(null);
+			}
 		}
+		return this;
+	}
+
+	public Sequel closeStatement() throws SQLException
+	{
+		if (statement != null)
+		{
+			try
+			{
+				if (kit != null)
+				{
+					kit.closeStatement(statement);
+				}
+				else
+				{
+					statement.close();
+				}
+			}
+			finally
+			{
+				statement = null;
+			}
+		}
+
 		return this;
 	}
 
@@ -1956,6 +2005,11 @@ public class Sequel implements Iterable<ResultSet>
 		return statement == null;
 	}
 
+	public boolean isClosing()
+	{
+		return closing;
+	}
+
 	public boolean isResultSet()
 	{
 		return this.getResultSet() != null;
@@ -2053,6 +2107,12 @@ public class Sequel implements Iterable<ResultSet>
 		return this;
 	}
 
+	public Sequel setClosing(boolean closing)
+	{
+		this.closing = closing;
+		return this;
+	}
+
 	private Sequel setKit(SQLKit kit)
 	{
 		this.kit = kit;
@@ -2062,6 +2122,7 @@ public class Sequel implements Iterable<ResultSet>
 	private Sequel setResultSet(ResultSet resultSet)
 	{
 		this.resultSet = resultSet;
+		this.metaMap = null;
 		return this;
 	}
 
