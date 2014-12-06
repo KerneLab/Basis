@@ -31,8 +31,6 @@ public class Sequel implements Iterable<ResultSet>
 
 		private boolean		closing;
 
-		private Sequel		sequel;
-
 		public ResultSetIterator(ResultSet rs)
 		{
 			this.rs = rs;
@@ -91,20 +89,9 @@ public class Sequel implements Iterable<ResultSet>
 
 		protected void release()
 		{
-			if (closing)
+			if (rs != null)
 			{
-				if (sequel != null)
-				{
-					try
-					{
-						sequel.close();
-					}
-					catch (SQLException e)
-					{
-					}
-				}
-
-				if (rs != null)
+				if (closing)
 				{
 					try
 					{
@@ -121,25 +108,12 @@ public class Sequel implements Iterable<ResultSet>
 					{
 					}
 				}
+				rs = null;
 			}
-
-			rs = null;
-			sequel = null;
 		}
 
 		public void remove()
 		{
-		}
-
-		public Sequel sequel()
-		{
-			return sequel;
-		}
-
-		public ResultSetIterator sequel(Sequel sequel)
-		{
-			this.sequel = sequel;
-			return this;
 		}
 	}
 
@@ -217,8 +191,6 @@ public class Sequel implements Iterable<ResultSet>
 	}
 
 	private SQLKit				kit;
-
-	private boolean				closing		= true;
 
 	private Statement			statement;
 
@@ -1984,11 +1956,6 @@ public class Sequel implements Iterable<ResultSet>
 		return statement == null;
 	}
 
-	public boolean isClosing()
-	{
-		return closing;
-	}
-
 	public boolean isResultSet()
 	{
 		return this.getResultSet() != null;
@@ -2011,7 +1978,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public ResultSetIterator iterator()
 	{
-		return new ResultSetIterator(this.getResultSet()).closing(closing).sequel(this);
+		return new ResultSetIterator(this.getResultSet());
 	}
 
 	public Sequel nextResult()
@@ -2083,12 +2050,6 @@ public class Sequel implements Iterable<ResultSet>
 		{
 			this.updateCount = N_A;
 		}
-		return this;
-	}
-
-	public Sequel setClosing(boolean closing)
-	{
-		this.closing = closing;
 		return this;
 	}
 
