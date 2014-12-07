@@ -62,7 +62,7 @@ public class DemoSequel
 
 			// 如果不希望自动关闭，则可以将closing置为false
 			for (ResultSet rs : kit.execute("select * from jdl_test_record where id=?", 3) //
-					.iterator().closing(false) // 取消自动关闭功能
+					.iterator(false) // 取消自动关闭功能
 			)
 			{
 				Tools.debug(SQLKit.jsonOfResultRow(rs, SQLKit.mapNameOfMetaData(rs)));
@@ -73,7 +73,7 @@ public class DemoSequel
 			// 由此可以对多个ResultSet进行遍历
 			for (Sequel seq : kit.execute("select * from jdl_test_record where id=?", 1).iterate())
 			{
-				for (ResultSet rs : seq.iterator().closing(false)
+				for (ResultSet rs : seq.iterator(false)
 				// 这里应该取消自动关闭功能，否则，当遍历到下一个ResultSet时，Statement已经被关闭
 				)
 				{
