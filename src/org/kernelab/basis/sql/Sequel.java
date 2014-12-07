@@ -2051,10 +2051,10 @@ public class Sequel implements Iterable<ResultSet>
 	{
 		return new SequelIterator(current);
 	}
-	
+
 	public ResultSetIterator iterator()
 	{
-		return iterator(true);
+		return iterator(this.closing);
 	}
 
 	public ResultSetIterator iterator(boolean closing)
