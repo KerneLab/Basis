@@ -167,6 +167,12 @@ public class SQLKit
 		return statement;
 	}
 
+	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, JSAN params)
+			throws SQLException
+	{
+		return bindParameters(offset, statement, (Iterable<?>) params);
+	}
+
 	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, Object... params)
 			throws SQLException
 	{
@@ -205,6 +211,11 @@ public class SQLKit
 	public static PreparedStatement bindParameters(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
 		return bindParameters(0, statement, params);
+	}
+
+	public static PreparedStatement bindParameters(PreparedStatement statement, JSAN params) throws SQLException
+	{
+		return bindParameters(statement, (Iterable<?>) params);
 	}
 
 	public static PreparedStatement bindParameters(PreparedStatement statement, Object... params) throws SQLException
@@ -879,21 +890,21 @@ public class SQLKit
 		return filler.toString();
 	}
 
-	private ConnectionManager						manager;
+	private ConnectionManager			manager;
 
-	private Connection								connection;
+	private Connection					connection;
 
-	private Statement								statement;
+	private Statement					statement;
 
-	private Map<String, Statement>					statements;
+	private Map<Statement, String>		statements;
 
-	private Map<PreparedStatement, List<String>>	parameters;
+	private Map<String, List<String>>	parameters;
 
-	private int										resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
+	private int							resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
 
-	private int										resultSetConcurrency	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][1];
+	private int							resultSetConcurrency	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][1];
 
-	private int										resultSetHoldability	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][2];
+	private int							resultSetHoldability	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][2];
 
 	public SQLKit(ConnectionManager manager) throws SQLException
 	{
@@ -909,8 +920,8 @@ public class SQLKit
 		}
 		this.setConnection(connection);
 		this.setManager(manager);
-		this.setStatements(new HashMap<String, Statement>());
-		this.setParameters(new HashMap<PreparedStatement, List<String>>());
+		this.setStatements(new HashMap<Statement, String>());
+		this.setParameters(new HashMap<String, List<String>>());
 	}
 
 	public void addBatch(Iterable<?> params) throws SQLException
@@ -939,17 +950,20 @@ public class SQLKit
 		statement.addBatch();
 	}
 
+	public void addBatch(PreparedStatement statement, JSAN params) throws SQLException
+	{
+		addBatch(statement, (Iterable<?>) params);
+	}
+
 	public void addBatch(PreparedStatement statement, JSON params) throws SQLException
 	{
-		List<String> keys = parameters.get(statement);
-		bindParameters(statement, fillParameters(keys, params));
+		bindParameters(statement, fillParameters(getParameter(statement), params));
 		statement.addBatch();
 	}
 
 	public void addBatch(PreparedStatement statement, Map<String, ?> params) throws SQLException
 	{
-		List<String> keys = parameters.get(statement);
-		bindParameters(statement, fillParameters(keys, params));
+		bindParameters(statement, fillParameters(getParameter(statement), params));
 		statement.addBatch();
 	}
 
@@ -969,6 +983,11 @@ public class SQLKit
 		return bindParameters(offset, (PreparedStatement) statement, params);
 	}
 
+	public PreparedStatement bindParameters(int offset, JSAN params) throws SQLException
+	{
+		return bindParameters(offset, (Iterable<?>) params);
+	}
+
 	public PreparedStatement bindParameters(int offset, Object... params) throws SQLException
 	{
 		return bindParameters(offset, (PreparedStatement) statement, params);
@@ -977,6 +996,11 @@ public class SQLKit
 	public PreparedStatement bindParameters(Iterable<?> params) throws SQLException
 	{
 		return bindParameters(0, params);
+	}
+
+	public PreparedStatement bindParameters(JSAN params) throws SQLException
+	{
+		return bindParameters((Iterable<?>) params);
 	}
 
 	public PreparedStatement bindParameters(Object... params) throws SQLException
@@ -1012,7 +1036,7 @@ public class SQLKit
 		}
 		if (statements != null)
 		{
-			for (Statement s : statements.values())
+			for (Statement s : statements.keySet())
 			{
 				try
 				{
@@ -1072,21 +1096,7 @@ public class SQLKit
 	{
 		if (statement != null)
 		{
-			String sql = null;
-
-			for (Entry<String, Statement> entry : this.getStatements().entrySet())
-			{
-				if (Tools.equals(statement, entry.getValue()))
-				{
-					sql = entry.getKey();
-					break;
-				}
-			}
-
-			if (sql != null)
-			{
-				this.getStatements().remove(sql);
-			}
+			this.getStatements().remove(statement);
 
 			statement.close();
 		}
@@ -1138,21 +1148,16 @@ public class SQLKit
 	public Statement createStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException
 	{
-		statement = statements.get(sql);
-
-		if (statement == null)
+		try
 		{
-			try
-			{
-				statement = this.getConnection().createStatement(resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().createStatement();
-			}
-			statements.put(sql, statement);
+			statement = this.getConnection().createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().createStatement();
+		}
+
+		statements.put(statement, sql);
 
 		return statement;
 	}
@@ -1160,6 +1165,21 @@ public class SQLKit
 	public Sequel execute(CallableStatement statement, Iterable<?> params) throws SQLException
 	{
 		return new Sequel(this, statement, bindParameters(statement, params).execute());
+	}
+
+	public Sequel execute(CallableStatement statement, JSAN params) throws SQLException
+	{
+		return execute(statement, (Iterable<?>) params);
+	}
+
+	public Sequel execute(CallableStatement statement, JSON params) throws SQLException
+	{
+		return execute(statement, fillParameters(getParameter(statement), params));
+	}
+
+	public Sequel execute(CallableStatement statement, Map<String, ?> params) throws SQLException
+	{
+		return execute(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public Sequel execute(CallableStatement statement, Object... params) throws SQLException
@@ -1170,6 +1190,21 @@ public class SQLKit
 	public Sequel execute(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
 		return new Sequel(this, statement, bindParameters(statement, params).execute());
+	}
+
+	public Sequel execute(PreparedStatement statement, JSAN params) throws SQLException
+	{
+		return execute(statement, (Iterable<?>) params);
+	}
+
+	public Sequel execute(PreparedStatement statement, JSON params) throws SQLException
+	{
+		return execute(statement, fillParameters(getParameter(statement), params));
+	}
+
+	public Sequel execute(PreparedStatement statement, Map<String, ?> params) throws SQLException
+	{
+		return execute(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public Sequel execute(PreparedStatement statement, Object... params) throws SQLException
@@ -1192,18 +1227,19 @@ public class SQLKit
 		return execute(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
+	public Sequel execute(String sql, JSAN params) throws SQLException
+	{
+		return execute(sql, (Iterable<?>) params);
+	}
+
 	public Sequel execute(String sql, JSON params) throws SQLException
 	{
-		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
-		List<String> keys = parameters.get(ps);
-		return execute(ps, fillParameters(keys, params));
+		return execute(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
 	public Sequel execute(String sql, Map<String, ?> params) throws SQLException
 	{
-		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
-		List<String> keys = parameters.get(ps);
-		return execute(ps, fillParameters(keys, params));
+		return execute(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
 	public Sequel execute(String sql, Object... params) throws SQLException
@@ -1221,6 +1257,7 @@ public class SQLKit
 		return statement.executeBatch();
 	}
 
+	@Override
 	protected void finalize() throws Throwable
 	{
 		this.close();
@@ -1237,7 +1274,17 @@ public class SQLKit
 		return manager;
 	}
 
-	protected Map<PreparedStatement, List<String>> getParameters()
+	protected List<String> getParameter(Statement statement)
+	{
+		return getParameter(statements.get(statement));
+	}
+
+	protected List<String> getParameter(String sql)
+	{
+		return parameters.get(sql);
+	}
+
+	protected Map<String, List<String>> getParameters()
 	{
 		return parameters;
 	}
@@ -1270,7 +1317,7 @@ public class SQLKit
 		return statement;
 	}
 
-	public Map<String, Statement> getStatements()
+	public Map<Statement, String> getStatements()
 	{
 		return statements;
 	}
@@ -1367,24 +1414,19 @@ public class SQLKit
 	public CallableStatement prepareCall(String call, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		CallableStatement cs = (CallableStatement) statements.get(call);
-
-		if (cs == null)
+		try
 		{
-			try
-			{
-				cs = this.getConnection().prepareCall(call, resultSetType, resultSetConcurrency, resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				cs = this.getConnection().prepareCall(call);
-			}
-			statements.put(call, cs);
+			statement = this.getConnection().prepareCall(call, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareCall(call);
 		}
 
-		statement = cs;
+		statements.put(statement, call);
 
-		return cs;
+		return (CallableStatement) statement;
 	}
 
 	public CallableStatement prepareCall(String call, Iterable<String> params) throws SQLException
@@ -1408,26 +1450,23 @@ public class SQLKit
 	{
 		String c = replaceParameters(call, params);
 
-		CallableStatement ps = (CallableStatement) statements.get(c);
-
-		if (ps == null)
+		try
 		{
-			try
-			{
-				ps = this.getConnection().prepareCall(c, resultSetType, resultSetConcurrency, resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				ps = this.getConnection().prepareCall(c);
-			}
-			statements.put(c, ps);
-			TreeMap<Integer, String> index = indexOfParameters(call, params);
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			statement = this.getConnection().prepareCall(c, resultSetType, resultSetConcurrency, resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareCall(c);
 		}
 
-		statement = ps;
+		statements.put(statement, c);
 
-		return ps;
+		if (!parameters.containsKey(c))
+		{
+			parameters.put(c, new LinkedList<String>(indexOfParameters(call, params).values()));
+		}
+
+		return (CallableStatement) statement;
 	}
 
 	public CallableStatement prepareCall(String call, JSON params) throws SQLException
@@ -1451,26 +1490,23 @@ public class SQLKit
 	{
 		String c = replaceParameters(call, params);
 
-		CallableStatement ps = (CallableStatement) statements.get(c);
-
-		if (ps == null)
+		try
 		{
-			try
-			{
-				ps = this.getConnection().prepareCall(c, resultSetType, resultSetConcurrency, resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				ps = this.getConnection().prepareCall(c);
-			}
-			statements.put(c, ps);
-			TreeMap<Integer, String> index = indexOfParameters(call, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			statement = this.getConnection().prepareCall(c, resultSetType, resultSetConcurrency, resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareCall(c);
 		}
 
-		statement = ps;
+		statements.put(statement, c);
 
-		return ps;
+		if (!parameters.containsKey(c))
+		{
+			parameters.put(c, new LinkedList<String>(indexOfParameters(call, params.keySet()).values()));
+		}
+
+		return (CallableStatement) statement;
 	}
 
 	public CallableStatement prepareCall(String call, Map<String, ?> params) throws SQLException
@@ -1494,26 +1530,23 @@ public class SQLKit
 	{
 		String c = replaceParameters(call, params);
 
-		CallableStatement ps = (CallableStatement) statements.get(c);
-
-		if (ps == null)
+		try
 		{
-			try
-			{
-				ps = this.getConnection().prepareCall(c, resultSetType, resultSetConcurrency, resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				ps = this.getConnection().prepareCall(c);
-			}
-			statements.put(c, ps);
-			TreeMap<Integer, String> index = indexOfParameters(call, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			statement = this.getConnection().prepareCall(c, resultSetType, resultSetConcurrency, resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareCall(c);
 		}
 
-		statement = ps;
+		statements.put(statement, c);
 
-		return ps;
+		if (!parameters.containsKey(c))
+		{
+			parameters.put(c, new LinkedList<String>(indexOfParameters(call, params.keySet()).values()));
+		}
+
+		return (CallableStatement) statement;
 	}
 
 	/**
@@ -1532,18 +1565,12 @@ public class SQLKit
 
 	public PreparedStatement prepareStatement(String sql, boolean autoGeneratedKeys) throws SQLException
 	{
-		PreparedStatement ps = (PreparedStatement) statements.get(sql);
+		statement = this.getConnection().prepareStatement(sql,
+				autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
 
-		if (ps == null)
-		{
-			ps = this.getConnection().prepareStatement(sql,
-					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-			statements.put(sql, ps);
-		}
+		statements.put(statement, sql);
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, int resultSetType) throws SQLException
@@ -1560,40 +1587,28 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		PreparedStatement ps = (PreparedStatement) statements.get(sql);
-
-		if (ps == null)
+		try
 		{
-			try
-			{
-				ps = this.getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				ps = this.getConnection().prepareStatement(sql);
-			}
-			statements.put(sql, ps);
+			statement = this.getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareStatement(sql);
 		}
 
-		statement = ps;
+		statements.put(statement, sql);
 
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
 	{
-		PreparedStatement ps = (PreparedStatement) statements.get(sql);
+		statement = this.getConnection().prepareStatement(sql, columnIndexes);
 
-		if (ps == null)
-		{
-			ps = this.getConnection().prepareStatement(sql, columnIndexes);
-			statements.put(sql, ps);
-		}
+		statements.put(statement, sql);
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params) throws SQLException
@@ -1606,20 +1621,17 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s,
+				autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s,
-					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params);
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, int resultSetType)
@@ -1639,27 +1651,24 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
-
-		if (ps == null)
+		try
 		{
-			try
-			{
-				ps = this.getConnection()
-						.prepareStatement(s, resultSetType, resultSetConcurrency, resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				ps = this.getConnection().prepareStatement(s);
-			}
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params);
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			statement = this.getConnection().prepareStatement(s, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareStatement(s);
 		}
 
-		statement = ps;
+		statements.put(statement, s);
 
-		return ps;
+		if (!parameters.containsKey(s))
+		{
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params).values()));
+		}
+
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, int[] columnIndexes)
@@ -1667,19 +1676,16 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s, columnIndexes);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s, columnIndexes);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params);
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, String[] columnNames)
@@ -1687,19 +1693,16 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s, columnNames);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s, columnNames);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params);
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, JSON params) throws SQLException
@@ -1711,20 +1714,17 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s,
+				autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s,
-					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, JSON params, int resultSetType) throws SQLException
@@ -1743,68 +1743,56 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
-
-		if (ps == null)
+		try
 		{
-			try
-			{
-				ps = this.getConnection()
-						.prepareStatement(s, resultSetType, resultSetConcurrency, resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				ps = this.getConnection().prepareStatement(s);
-			}
-
-			statements.put(s, ps);
-
-			TreeMap<Integer, String> index = indexOfParameters(sql, params.keySet());
-
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			statement = this.getConnection().prepareStatement(s, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareStatement(s);
 		}
 
-		statement = ps;
+		statements.put(statement, s);
 
-		return ps;
+		if (!parameters.containsKey(s))
+		{
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+		}
+
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, JSON params, int[] columnIndexes) throws SQLException
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s, columnIndexes);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s, columnIndexes);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, JSON params, String[] columnNames) throws SQLException
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s, columnNames);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s, columnNames);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params) throws SQLException
@@ -1817,20 +1805,17 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s,
+				autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s,
-					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, int resultSetType) throws SQLException
@@ -1849,27 +1834,24 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
-
-		if (ps == null)
+		try
 		{
-			try
-			{
-				ps = this.getConnection()
-						.prepareStatement(s, resultSetType, resultSetConcurrency, resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				ps = this.getConnection().prepareStatement(s);
-			}
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			statement = this.getConnection().prepareStatement(s, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareStatement(s);
 		}
 
-		statement = ps;
+		statements.put(statement, s);
 
-		return ps;
+		if (!parameters.containsKey(s))
+		{
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+		}
+
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, int[] columnIndexes)
@@ -1877,19 +1859,16 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s, columnIndexes);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s, columnIndexes);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, String[] columnNames)
@@ -1897,39 +1876,45 @@ public class SQLKit
 	{
 		String s = replaceParameters(sql, params);
 
-		PreparedStatement ps = (PreparedStatement) statements.get(s);
+		statement = this.getConnection().prepareStatement(s, columnNames);
 
-		if (ps == null)
+		statements.put(statement, s);
+
+		if (!parameters.containsKey(s))
 		{
-			ps = this.getConnection().prepareStatement(s, columnNames);
-			statements.put(s, ps);
-			TreeMap<Integer, String> index = indexOfParameters(sql, params.keySet());
-			parameters.put(ps, new LinkedList<String>(index.values()));
+			parameters.put(s, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
 		}
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
 	{
-		PreparedStatement ps = (PreparedStatement) statements.get(sql);
+		statement = this.getConnection().prepareStatement(sql, columnNames);
 
-		if (ps == null)
-		{
-			ps = this.getConnection().prepareStatement(sql, columnNames);
-			statements.put(sql, ps);
-		}
+		statements.put(statement, sql);
 
-		statement = ps;
-
-		return ps;
+		return (PreparedStatement) statement;
 	}
 
 	public ResultSet query(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
 		return bindParameters(statement, params).executeQuery();
+	}
+
+	public ResultSet query(PreparedStatement statement, JSAN params) throws SQLException
+	{
+		return query(statement, (Iterable<?>) params);
+	}
+
+	public ResultSet query(PreparedStatement statement, JSON params) throws SQLException
+	{
+		return query(statement, fillParameters(getParameter(statement), params));
+	}
+
+	public ResultSet query(PreparedStatement statement, Map<String, ?> params) throws SQLException
+	{
+		return query(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public ResultSet query(PreparedStatement statement, Object... params) throws SQLException
@@ -1952,18 +1937,19 @@ public class SQLKit
 		return query(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
+	public ResultSet query(String sql, JSAN params) throws SQLException
+	{
+		return query(sql, (Iterable<?>) params);
+	}
+
 	public ResultSet query(String sql, JSON params) throws SQLException
 	{
-		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
-		List<String> keys = parameters.get(ps);
-		return query(ps, fillParameters(keys, params));
+		return query(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
 	public ResultSet query(String sql, Map<String, ?> params) throws SQLException
 	{
-		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
-		List<String> keys = parameters.get(ps);
-		return query(ps, fillParameters(keys, params));
+		return query(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
 	public ResultSet query(String sql, Object... params) throws SQLException
@@ -2053,7 +2039,7 @@ public class SQLKit
 		this.manager = source;
 	}
 
-	private void setParameters(Map<PreparedStatement, List<String>> parameters)
+	private void setParameters(Map<String, List<String>> parameters)
 	{
 		this.parameters = parameters;
 	}
@@ -2063,7 +2049,7 @@ public class SQLKit
 		this.statement = statement;
 	}
 
-	public void setStatements(Map<String, Statement> statements)
+	public void setStatements(Map<Statement, String> statements)
 	{
 		this.statements = statements;
 	}
@@ -2071,6 +2057,21 @@ public class SQLKit
 	public int update(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
 		return bindParameters(statement, params).executeUpdate();
+	}
+
+	public int update(PreparedStatement statement, JSAN params) throws SQLException
+	{
+		return update(statement, (Iterable<?>) params);
+	}
+
+	public int update(PreparedStatement statement, JSON params) throws SQLException
+	{
+		return update(statement, fillParameters(getParameter(statement), params));
+	}
+
+	public int update(PreparedStatement statement, Map<String, ?> params) throws SQLException
+	{
+		return update(statement, fillParameters(getParameter(statement), params));
 	}
 
 	/**
@@ -2106,18 +2107,19 @@ public class SQLKit
 		return update(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
+	public int update(String sql, JSAN params) throws SQLException
+	{
+		return update(sql, (Iterable<?>) params);
+	}
+
 	public int update(String sql, JSON params) throws SQLException
 	{
-		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
-		List<String> keys = parameters.get(ps);
-		return update(ps, fillParameters(keys, params));
+		return update(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
 	public int update(String sql, Map<String, ?> params) throws SQLException
 	{
-		PreparedStatement ps = prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
-		List<String> keys = parameters.get(ps);
-		return update(ps, fillParameters(keys, params));
+		return update(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
 	public int update(String sql, Object... params) throws SQLException
