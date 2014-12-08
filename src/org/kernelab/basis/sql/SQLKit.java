@@ -503,8 +503,7 @@ public class SQLKit
 			{
 				while (rs.next())
 				{
-					jsan.add(jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transforms(jsan),
-							map));
+					jsan.add(jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transforms(jsan), map));
 				}
 			}
 			catch (InstantiationException e)
@@ -1025,6 +1024,10 @@ public class SQLKit
 			}
 			statements.clear();
 		}
+		if (parameters != null)
+		{
+			parameters.clear();
+		}
 		return this;
 	}
 
@@ -1045,12 +1048,17 @@ public class SQLKit
 	{
 		clean();
 		statements = null;
-		try
+		parameters = null;
+		if (manager != null)
 		{
-			this.getManager().recycleConnection(connection);
-		}
-		catch (SQLException e)
-		{
+			try
+			{
+				manager.recycleConnection(connection);
+			}
+			catch (SQLException e)
+			{
+			}
+			manager = null;
 		}
 		connection = null;
 	}
