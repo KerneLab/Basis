@@ -1817,31 +1817,41 @@ public class Tools
 	 */
 	public static String encode(String text, String algorithm)
 	{
-		StringBuilder code = new StringBuilder();
-
-		try
+		if (text != null && algorithm != null)
 		{
-			MessageDigest md = MessageDigest.getInstance(algorithm);
-			byte[] digest = md.digest(text.getBytes());
+			String result = null;
 
-			String tmp = null;
-			for (int i = 0; i < digest.length; i++)
+			try
 			{
-				tmp = Integer.toHexString(digest[i] & 0xFF);
-				if (tmp.length() == 1)
+				MessageDigest md = MessageDigest.getInstance(algorithm);
+
+				StringBuilder code = new StringBuilder();
+
+				byte[] digest = md.digest(text.getBytes());
+
+				String tmp = null;
+				for (int i = 0; i < digest.length; i++)
 				{
-					code.append("0");
+					tmp = Integer.toHexString(digest[i] & 0xFF);
+					if (tmp.length() == 1)
+					{
+						code.append("0");
+					}
+					code.append(tmp);
 				}
-				code.append(tmp);
+
+				result = code.toString();
+			}
+			catch (NoSuchAlgorithmException e)
+			{
 			}
 
+			return result;
 		}
-		catch (NoSuchAlgorithmException e)
+		else
 		{
-			e.printStackTrace();
+			return null;
 		}
-
-		return code.toString();
 	}
 
 	/**
@@ -3465,17 +3475,20 @@ public class Tools
 
 		boolean first = true;
 
-		for (CharSequence seq : sequences)
+		if (sequences != null)
 		{
-			if (first)
+			for (CharSequence seq : sequences)
 			{
-				first = false;
+				if (first)
+				{
+					first = false;
+				}
+				else if (delimiter != null)
+				{
+					buffer.append(delimiter);
+				}
+				buffer.append(seq);
 			}
-			else
-			{
-				buffer.append(delimiter);
-			}
-			buffer.append(seq);
 		}
 
 		return buffer;
@@ -3502,17 +3515,20 @@ public class Tools
 
 		boolean first = true;
 
-		for (CharSequence seq : sequences)
+		if (sequences != null)
 		{
-			if (first)
+			for (CharSequence seq : sequences)
 			{
-				first = false;
+				if (first)
+				{
+					first = false;
+				}
+				else if (delimiter != null)
+				{
+					buffer.append(delimiter);
+				}
+				buffer.append(seq);
 			}
-			else
-			{
-				buffer.append(delimiter);
-			}
-			buffer.append(seq);
 		}
 
 		return buffer;
@@ -3534,9 +3550,12 @@ public class Tools
 			buffer = new StringBuilder();
 		}
 
-		for (CharSequence s : iter)
+		if (iter != null)
 		{
-			buffer.append(s);
+			for (CharSequence s : iter)
+			{
+				buffer.append(s);
+			}
 		}
 
 		return buffer;
@@ -3564,22 +3583,25 @@ public class Tools
 
 		boolean first = true;
 		int index = 0;
-		int length = delimiter.length;
+		int length = delimiter == null ? 0 : delimiter.length;
 
-		for (CharSequence s : iter)
+		if (iter != null)
 		{
-			if (first)
+			for (CharSequence s : iter)
 			{
-				first = false;
-			}
-			else
-			{
-				buffer.append(delimiter[index]);
-			}
-			buffer.append(s);
-			if (length == ++index)
-			{
-				index = 0;
+				if (first)
+				{
+					first = false;
+				}
+				else if (delimiter != null && delimiter[index] != null)
+				{
+					buffer.append(delimiter[index]);
+				}
+				buffer.append(s);
+				if (length > 0 && length == ++index)
+				{
+					index = 0;
+				}
 			}
 		}
 
@@ -3661,17 +3683,20 @@ public class Tools
 
 		boolean first = true;
 
-		for (String string : strings)
+		if (strings != null)
 		{
-			if (first)
+			for (String string : strings)
 			{
-				first = false;
+				if (first)
+				{
+					first = false;
+				}
+				else if (delimiter != null)
+				{
+					buffer.append(delimiter);
+				}
+				buffer.append(string);
 			}
-			else
-			{
-				buffer.append(delimiter);
-			}
-			buffer.append(string);
 		}
 
 		return buffer;
@@ -3697,17 +3722,20 @@ public class Tools
 
 		boolean first = true;
 
-		for (String string : strings)
+		if (strings != null)
 		{
-			if (first)
+			for (String string : strings)
 			{
-				first = false;
+				if (first)
+				{
+					first = false;
+				}
+				else if (delimiter != null)
+				{
+					buffer.append(delimiter);
+				}
+				buffer.append(string);
 			}
-			else
-			{
-				buffer.append(delimiter);
-			}
-			buffer.append(string);
 		}
 
 		return buffer;
@@ -3729,9 +3757,12 @@ public class Tools
 			buffer = new StringBuilder();
 		}
 
-		for (String s : iter)
+		if (iter != null)
 		{
-			buffer.append(s);
+			for (String s : iter)
+			{
+				buffer.append(s);
+			}
 		}
 
 		return buffer;
@@ -3758,22 +3789,25 @@ public class Tools
 
 		boolean first = true;
 		int index = 0;
-		int length = delimiter.length;
+		int length = delimiter == null ? 0 : delimiter.length;
 
-		for (CharSequence s : iter)
+		if (iter != null)
 		{
-			if (first)
+			for (CharSequence s : iter)
 			{
-				first = false;
-			}
-			else
-			{
-				buffer.append(delimiter[index]);
-			}
-			buffer.append(s);
-			if (length == ++index)
-			{
-				index = 0;
+				if (first)
+				{
+					first = false;
+				}
+				else if (delimiter != null && delimiter[index] != null)
+				{
+					buffer.append(delimiter[index]);
+				}
+				buffer.append(s);
+				if (length > 0 && length == ++index)
+				{
+					index = 0;
+				}
 			}
 		}
 
@@ -6648,33 +6682,40 @@ public class Tools
 	 */
 	public static String[] splitCharSequence(CharSequence sequence, char split, int limit)
 	{
-		List<String> splitString = new LinkedList<String>();
-
-		int length = sequence.length();
-
-		int last = 0;
-		int index = seekIndex(sequence, split, last);
-
-		while (index > -1)
+		if (sequence != null)
 		{
-			if (limit > 0 && splitString.size() == limit - 1)
+			List<String> splitString = new LinkedList<String>();
+
+			int length = sequence.length();
+
+			int last = 0;
+			int index = seekIndex(sequence, split, last);
+
+			while (index > -1)
 			{
-				break;
+				if (limit > 0 && splitString.size() == limit - 1)
+				{
+					break;
+				}
+
+				splitString.add(sequence.subSequence(last, index).toString());
+
+				last = index + 1;
+				index = seekIndex(sequence, split, last);
 			}
 
-			splitString.add(sequence.subSequence(last, index).toString());
+			splitString.add(sequence.subSequence(last, length).toString());
 
-			last = index + 1;
-			index = seekIndex(sequence, split, last);
+			String[] result = new String[splitString.size()];
+
+			splitString.toArray(result);
+
+			return result;
 		}
-
-		splitString.add(sequence.subSequence(last, length).toString());
-
-		String[] result = new String[splitString.size()];
-
-		splitString.toArray(result);
-
-		return result;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -6738,45 +6779,48 @@ public class Tools
 	{
 		String[] result = null;
 
-		LinkedList<String> splitString = new LinkedList<String>();
-
-		int length = sequence.length();
-		int space = split.length();
-
-		if (split.equals(""))
+		if (sequence != null)
 		{
-			result = new String[length];
+			LinkedList<String> splitString = new LinkedList<String>();
 
-			for (int i = 0; i < length; i++)
+			split = split == null ? "" : split;
+
+			int length = sequence.length();
+			int space = split.length();
+
+			if (split.equals(""))
 			{
-				result[i] = String.valueOf(sequence.charAt(i));
-			}
+				result = new String[length];
 
-		}
-		else
-		{
-
-			int last = 0;
-			int index = seekIndex(sequence, split);
-
-			while (index > -1)
-			{
-				if (limit > 0 && splitString.size() == limit - 1)
+				for (int i = 0; i < length; i++)
 				{
-					break;
+					result[i] = String.valueOf(sequence.charAt(i));
+				}
+			}
+			else
+			{
+				int last = 0;
+				int index = seekIndex(sequence, split);
+
+				while (index > -1)
+				{
+					if (limit > 0 && splitString.size() == limit - 1)
+					{
+						break;
+					}
+
+					splitString.add(sequence.subSequence(last, index).toString());
+
+					last = index + space;
+					index = seekIndex(sequence, split, last);
 				}
 
-				splitString.add(sequence.subSequence(last, index).toString());
+				splitString.add(sequence.subSequence(last, length).toString());
 
-				last = index + space;
-				index = seekIndex(sequence, split, last);
+				result = new String[splitString.size()];
+
+				splitString.toArray(result);
 			}
-
-			splitString.add(sequence.subSequence(last, length).toString());
-
-			result = new String[splitString.size()];
-
-			splitString.toArray(result);
 		}
 
 		return result;
@@ -6799,39 +6843,42 @@ public class Tools
 	 */
 	public static String[] splitCharSequence(CharSequence sequence, int eachLength)
 	{
-		int stringLength = sequence.length();
-
 		String[] split = null;
 
-		if (stringLength == 0 || eachLength < 0)
+		if (sequence != null)
 		{
-			split = new String[] {};
-		}
-		else if (eachLength == stringLength || eachLength == 0)
-		{
-			split = new String[] { sequence.toString() };
-		}
-		else
-		{
-			split = new String[(stringLength - 1) / eachLength + 1];
+			int stringLength = sequence.length();
 
-			int begin = 0;
-
-			int end = eachLength;
-
-			for (int i = 0; i < split.length; i++)
+			if (stringLength == 0 || eachLength < 0)
 			{
+				split = new String[] {};
+			}
+			else if (eachLength == stringLength || eachLength == 0)
+			{
+				split = new String[] { sequence.toString() };
+			}
+			else
+			{
+				split = new String[(stringLength - 1) / eachLength + 1];
 
-				if (end > stringLength)
+				int begin = 0;
+
+				int end = eachLength;
+
+				for (int i = 0; i < split.length; i++)
 				{
-					end = stringLength;
+
+					if (end > stringLength)
+					{
+						end = stringLength;
+					}
+
+					split[i] = sequence.subSequence(begin, end).toString();
+
+					begin = end;
+
+					end += eachLength;
 				}
-
-				split[i] = sequence.subSequence(begin, end).toString();
-
-				begin = end;
-
-				end += eachLength;
 			}
 		}
 
