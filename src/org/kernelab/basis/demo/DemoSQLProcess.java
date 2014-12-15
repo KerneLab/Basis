@@ -24,7 +24,8 @@ public class DemoSQLProcess
 			{
 				String sql = "SELECT * FROM `table` WHERE `id`<10";
 				ResultSet rs = kit.query(sql);
-				while (rs.next()) {
+				while (rs.next())
+				{
 					// 在这里遍历每一条记录
 				}
 
@@ -47,7 +48,8 @@ public class DemoSQLProcess
 				kit.setAutoCommit(false);
 				kit.clearBatch();
 				kit.prepareStatement(sql);
-				for (int i = 0; i < 10; i++) {
+				for (int i = 0; i < 10; i++)
+				{
 					kit.addBatch(SQLKit.NULL, String.valueOf(i));
 				}
 				kit.executeBatch();
@@ -59,7 +61,14 @@ public class DemoSQLProcess
 		processor.setDataBase(database);
 
 		// 同步执行
-		processor.process();
+		try
+		{
+			processor.process();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 
 		// 异步执行
 		new Thread(processor).start(); // 直到执行完成前processor.isProcessing()始终是true

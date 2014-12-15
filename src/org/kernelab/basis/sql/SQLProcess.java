@@ -2,6 +2,7 @@ package org.kernelab.basis.sql;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.Callable;
 
 import org.kernelab.basis.AbstractAccomplishable;
 import org.kernelab.basis.Tools;
@@ -15,7 +16,7 @@ import org.kernelab.basis.sql.DataBase.MySQL;
  * @author Dilly King
  * 
  */
-public abstract class SQLProcess extends AbstractAccomplishable<SQLProcess> implements Runnable
+public abstract class SQLProcess extends AbstractAccomplishable<SQLProcess> implements Runnable, Callable<SQLProcess>
 {
 	/**
 	 * @param args
@@ -38,7 +39,14 @@ public abstract class SQLProcess extends AbstractAccomplishable<SQLProcess> impl
 		};
 
 		processor.setDataBase(db);
-		processor.process();
+		try
+		{
+			processor.process();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	private DataBase	dataBase;
@@ -46,6 +54,19 @@ public abstract class SQLProcess extends AbstractAccomplishable<SQLProcess> impl
 	private SQLKit		kit;
 
 	private boolean		processing;
+
+	public SQLProcess call() throws Exception
+	{
+		this.resetAccomplishStatus();
+		this.process();
+		this.accomplished();
+		return this;
+	}
+
+	protected SQLProcess getAccomplishableSubject()
+	{
+		return this;
+	}
 
 	public DataBase getDataBase()
 	{
@@ -57,32 +78,26 @@ public abstract class SQLProcess extends AbstractAccomplishable<SQLProcess> impl
 		return kit;
 	}
 
-	protected SQLProcess getAccomplishableSubject()
-	{
-		return this;
-	}
-
 	public boolean isProcessing()
 	{
 		return processing;
 	}
 
-	public void process()
+	public void process() throws SQLException
 	{
 		kit = dataBase.getSQLKit();
-		try
+		if (kit != null)
 		{
-			this.processing = true;
-			this.process(kit);
-			this.processing = false;
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			kit.close();
+			try
+			{
+				this.processing = true;
+				this.process(kit);
+				this.processing = false;
+			}
+			finally
+			{
+				kit.close();
+			}
 		}
 	}
 
@@ -90,9 +105,14 @@ public abstract class SQLProcess extends AbstractAccomplishable<SQLProcess> impl
 
 	public void run()
 	{
-		this.resetAccomplishStatus();
-		this.process();
-		this.accomplished();
+		try
+		{
+			this.call();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	public SQLProcess setDataBase(DataBase dataBase)

@@ -13,8 +13,9 @@ public class DemoSequel
 {
 	/**
 	 * @param args
+	 * @throws SQLException
 	 */
-	public static void main(String[] args)
+	public static void main(String[] args) throws SQLException
 	{
 		DataBase db = new OracleClient("orcl", "test", "test");
 

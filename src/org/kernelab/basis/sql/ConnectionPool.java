@@ -62,34 +62,20 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 		return provider;
 	}
 
-	public SQLKit getSQLKit()
+	public SQLKit getSQLKit() throws SQLException
 	{
 		return getSQLKit(0);
 	}
 
-	public SQLKit getSQLKit(long timeout)
+	public SQLKit getSQLKit(long timeout) throws SQLException
 	{
-		try
-		{
-			return new SQLKit(this, timeout);
-		}
-		catch (SQLException e)
-		{
-			return null;
-		}
+		return new SQLKit(this, timeout);
 	}
 
 	@Override
-	protected Connection newElement(long timeout)
+	protected Connection newElement(long timeout) throws SQLException
 	{
-		try
-		{
-			return provider.provideConnection(timeout);
-		}
-		catch (Exception e)
-		{
-			return null;
-		}
+		return provider.provideConnection(timeout);
 	}
 
 	public Connection provideConnection() throws SQLException
@@ -99,20 +85,27 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public Connection provideConnection(long timeout) throws SQLException
 	{
-		Connection conn = this.provide(timeout);
-
-		if (conn != null)
+		try
 		{
-			try
-			{
-				conn.setHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT);
-			}
-			catch (SQLException e)
-			{
-			}
-		}
+			Connection conn = this.provide(timeout);
 
-		return conn;
+			if (conn != null)
+			{
+				try
+				{
+					conn.setHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT);
+				}
+				catch (SQLException e)
+				{
+				}
+			}
+
+			return conn;
+		}
+		catch (Exception e)
+		{
+			throw new SQLException(e.getLocalizedMessage());
+		}
 	}
 
 	public void recycleConnection(Connection conn) throws SQLException

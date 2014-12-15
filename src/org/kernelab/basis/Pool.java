@@ -16,7 +16,7 @@ public interface Pool<E>
 	 * 
 	 * @param element
 	 */
-	public void discard(E element);
+	public void discard(E element) throws Exception;
 
 	/**
 	 * To provide an element in the pool and remove it away which means this
@@ -33,7 +33,7 @@ public interface Pool<E>
 	 * 
 	 * @return element
 	 */
-	public E provide(long timeout);
+	public E provide(long timeout) throws Exception;
 
 	/**
 	 * To recycle an element back into the pool so that this pool could provide
@@ -43,5 +43,5 @@ public interface Pool<E>
 	 * 
 	 * @param element
 	 */
-	public void recycle(E element);
+	public void recycle(E element) throws Exception;
 }

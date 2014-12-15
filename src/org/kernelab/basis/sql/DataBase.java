@@ -852,17 +852,45 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 		public static int		DEFAULT_PORT_NUMBER	= 1521;
 
-		public static String getDefaultOracleSID()
+		public static String getDefaultOracleTNS()
 		{
-			String sid = null;
+			String tns = null;
+
 			try
 			{
-				sid = System.getenv("ORACLE_SID");
+				tns = System.getenv("TWO_TASK");
 			}
 			catch (Exception e)
 			{
 			}
-			return sid;
+
+			if (tns != null)
+			{
+				return tns;
+			}
+
+			try
+			{
+				tns = System.getenv("LOCAL");
+			}
+			catch (Exception e)
+			{
+			}
+
+			if (tns != null)
+			{
+				return tns;
+			}
+
+			try
+			{
+				tns = System.getenv("ORACLE_SID");
+			}
+			catch (Exception e)
+			{
+			}
+
+			return tns;
 		}
 
 		public static String getDefaultTNSFilePath()
@@ -1001,7 +1029,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		{
 			if (tns == null)
 			{
-				tns = getDefaultOracleSID();
+				tns = getDefaultOracleTNS();
 			}
 
 			if (tns != null)
@@ -1363,16 +1391,9 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return serverName;
 	}
 
-	public SQLKit getSQLKit()
+	public SQLKit getSQLKit() throws SQLException
 	{
-		try
-		{
-			return new SQLKit(this);
-		}
-		catch (SQLException e)
-		{
-			throw new InvalidDataBaseConnectionException(e.getMessage(), e.getCause());
-		}
+		return new SQLKit(this);
 	}
 
 	/**
@@ -1397,18 +1418,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public Connection provideConnection(long timeout) throws SQLException
 	{
-		Connection c = null;
-
 		try
 		{
-			c = this.newConnection();
+			return this.newConnection();
 		}
 		catch (ClassNotFoundException e)
 		{
-			e.printStackTrace();
+			throw new SQLException(e.getLocalizedMessage());
 		}
-
-		return c;
 	}
 
 	public void recycleConnection(Connection c) throws SQLException

@@ -29,7 +29,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	protected AbstractPool(List<E> pool, int limit, int init)
 	{
-		this.setClosed(false).setElements(pool).setTrace(0).setLimit(limit).setInit(0);
+		this.setClosed(false).setElements(pool).setTrace(0).setLimit(limit).setInit(init);
 	}
 
 	/**
@@ -102,9 +102,9 @@ public abstract class AbstractPool<E> implements Pool<E>
 	 * @param timeout
 	 * @return The new element.
 	 */
-	protected abstract E newElement(long timeout);
+	protected abstract E newElement(long timeout) throws Exception;
 
-	public E provide(long timeout)
+	public E provide(long timeout) throws Exception
 	{
 		E element = null;
 
@@ -183,9 +183,16 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 		if (this.init > 0 && trace < this.init)
 		{
-			for (int i = trace; i < this.init; i++)
+			try
 			{
-				supplyElement(0);
+				for (int i = trace; i < this.init; i++)
+				{
+					supplyElement(500);
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
 			}
 		}
 
@@ -205,7 +212,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return Tools.cast(this);
 	}
 
-	protected void supplyElement(long timeout)
+	protected void supplyElement(long timeout) throws Exception
 	{
 		E element = newElement(timeout);
 		if (element != null)
