@@ -130,7 +130,7 @@ public class SQLKit
 	 * ConnectionManager. If none Connection could be provided, SQLException
 	 * would be thrown with this message.
 	 */
-	public static final String		ERR_CONN_DB					= "Could not connect database.";
+	public static final String		ERR_NO_DB_CONN				= "No available database connection.";
 
 	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, Iterable<?> params)
 			throws SQLException
@@ -916,7 +916,7 @@ public class SQLKit
 		Connection connection = manager.provideConnection(timeout);
 		if (connection == null)
 		{
-			throw new SQLException(ERR_CONN_DB);
+			throw new SQLException(ERR_NO_DB_CONN);
 		}
 		this.setConnection(connection);
 		this.setManager(manager);
