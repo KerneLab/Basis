@@ -1457,6 +1457,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return this;
 		}
 
+		public JSAN asJSAN()
+		{
+			return this;
+		}
+
 		@SuppressWarnings("unchecked")
 		public <E> E attr(int index)
 		{
@@ -4193,33 +4198,32 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	 * 
 	 */
 	private static final long						serialVersionUID		= 6090747632739206720L;
+
 	public static final char						OBJECT_BEGIN_CHAR		= '{';
-
 	public static final String						OBJECT_BEGIN_MARK		= String.valueOf(OBJECT_BEGIN_CHAR);
+
 	public static final char						OBJECT_END_CHAR			= '}';
-
 	public static final String						OBJECT_END_MARK			= String.valueOf(OBJECT_END_CHAR);
+
 	public static final char						ARRAY_BEGIN_CHAR		= '[';
-
 	public static final String						ARRAY_BEGIN_MARK		= String.valueOf(ARRAY_BEGIN_CHAR);
+
 	public static final char						ARRAY_END_CHAR			= ']';
-
 	public static final String						ARRAY_END_MARK			= String.valueOf(ARRAY_END_CHAR);
+
 	public static final char						PAIR_CHAR				= ',';
-
 	public static final String						PAIR_MARK				= String.valueOf(PAIR_CHAR);
+
 	public static final char						ATTR_CHAR				= ':';
-
 	public static final String						ATTR_MARK				= String.valueOf(ATTR_CHAR);
+
 	public static final char						QUOTE_CHAR				= '"';
-
 	public static final String						QUOTE_MARK				= String.valueOf(QUOTE_CHAR);
-	public static final char						ESCAPE_CHAR				= '\\';
 
+	public static final char						ESCAPE_CHAR				= '\\';
 	public static final String						ESCAPE_MARK				= String.valueOf(ESCAPE_CHAR);
 
 	public static final char						COMMENT_CHAR			= '/';
-
 	public static final char						LINE_COMMENT_CHAR		= COMMENT_CHAR;
 
 	public static final char						BLOCK_COMMENT_CHAR		= '*';
@@ -6527,6 +6531,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public JSON()
 	{
 		object(new LinkedHashMap<String, Object>());
+	}
+
+	public Iterable<?> asIterable()
+	{
+		return (Iterable<?>) this;
+	}
+
+	public JSON asJSON()
+	{
+		return this;
+	}
+
+	public Map<String, ?> asMap()
+	{
+		return (Map<String, ?>) this;
 	}
 
 	@SuppressWarnings("unchecked")
