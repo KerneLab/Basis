@@ -8,11 +8,38 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ThreadExecutorPool<V> implements CompletionService<V>
 {
+	public static class GroupThreadFactory implements ThreadFactory
+	{
+		private ThreadGroup	group;
+
+		private String		prefix;
+
+		private int			count;
+
+		public GroupThreadFactory(ThreadGroup group)
+		{
+			this.group = group;
+			this.prefix = (group == null ? "null" : group.getName()) + "-";
+			this.count = 0;
+		}
+
+		public Thread newThread(Runnable r)
+		{
+			return new Thread(group, r, prefix + next());
+		}
+
+		private synchronized int next()
+		{
+			return count++;
+		}
+	}
+
 	private ExecutorService			executorService		= null;
 
 	private CompletionService<V>	completionService	= null;
@@ -41,8 +68,19 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public ThreadExecutorPool(int limit, int init)
 	{
-		this(new ThreadPoolExecutor(init, limit, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>()));
+		this(limit, init, Executors.defaultThreadFactory());
+	}
+
+	public ThreadExecutorPool(int limit, int init, ThreadFactory factory)
+	{
+		this(new ThreadPoolExecutor(init, limit, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
+				factory));
 		this.limit = limit;
+	}
+
+	public ThreadExecutorPool(int limit, int init, ThreadGroup group)
+	{
+		this(limit, init, new GroupThreadFactory(group));
 	}
 
 	private void addTask()
