@@ -25,20 +25,20 @@ public class DemoSequel
 		{
 			// kit.execute()返回Sequel对象
 			String sql = "select * from jdl_test_record where id=1";
-			Sequel s = kit.execute(sql);
+			Sequel seq = kit.execute(sql);
 			// Sequel可以识别多个不同的执行结果
-			switch (s.getResultType())
+			switch (seq.getResultType())
 			{
 				case Sequel.RESULT_COUNT:
 					// 执行结果为行数，通常为update、delete的结果
-					s.getUpdateCount();
+					seq.getUpdateCount();
 					break;
 
 				case Sequel.RESULT_SET:
 					// 执行结果为ResultSet，通常为查询的结果
-					while (s.getResultSet().next())
+					while (seq.getResultSet().next())
 					{
-						Tools.debug(SQLKit.jsonOfResultRow(s.getResultSet(), s.getMetaMap()));
+						Tools.debug(SQLKit.jsonOfResultRow(seq.getResultSet(), seq.getMetaMap()));
 					}
 					break;
 
@@ -51,37 +51,38 @@ public class DemoSequel
 					break;
 			}
 			// 建议在使用后关闭Sequel，虽然在kit关闭时也会清理相关资源
-			s.close();
+			seq.close();
 
 			// 由于Sequel实现了Iterable<ResultSet>
 			// 因此，这里可以使用for语法，而不用while(rs.next())
-			for (ResultSet rs : kit.execute("select * from jdl_test_record where id=?", 2))
+			for (ResultSet rs : seq = kit.execute("select * from jdl_test_record where id=?", 2))
 			{
-				Tools.debug(SQLKit.jsonOfResultRow(rs, SQLKit.mapNameOfMetaData(rs)));
+				Tools.debug(SQLKit.jsonOfResultRow(rs, seq.getMetaMap()));
 			}
 			// Sequel返回的ResultSetIterator默认会在循环完成后自动关闭ResultSet对应的Statement
 
 			// 如果不希望自动关闭，则可以将closing置为false
-			for (ResultSet rs : kit.execute("select * from jdl_test_record where id=?", 3) //
+			for (ResultSet rs : (seq = kit.execute("select * from jdl_test_record where id=?", 3)) //
 					.iterator(false) // 取消自动关闭功能
 			)
 			{
-				Tools.debug(SQLKit.jsonOfResultRow(rs, SQLKit.mapNameOfMetaData(rs)));
+				Tools.debug(SQLKit.jsonOfResultRow(rs, seq.getMetaMap()));
 			}
 			// 这么做的弊端是，使用者必须记得手动关闭Statement，以避免在一个连接中开启过多的Statement
+			kit.closeStatement();
 
 			// 在某些查询中，会返回多个ResultSet，相应地，Sequel通过iterate()方法返回Iterable<Sequel>对象
 			// 由此可以对多个ResultSet进行遍历
-			for (Sequel seq : kit.execute("select * from jdl_test_record where id=?", 1).iterate())
+			for (Sequel sq : kit.execute("select * from jdl_test_record where id=?", 1).iterate())
 			{
-				for (ResultSet rs : seq.iterator(false)
+				for (ResultSet rs : sq.iterator(false)
 				// 这里应该取消自动关闭功能，否则，当遍历到下一个ResultSet时，Statement已经被关闭
 				)
 				{
-					Tools.debug(SQLKit.jsonOfResultRow(rs, SQLKit.mapNameOfMetaData(rs)));
+					Tools.debug(SQLKit.jsonOfResultRow(rs, sq.getMetaMap()));
 				}
 				// 可以使用Sequel.closeResultSet()关闭当前的ResultSet
-				seq.closeResultSet();
+				sq.closeResultSet();
 			}
 		}
 		catch (SQLException e)
