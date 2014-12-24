@@ -386,7 +386,7 @@ public class Entrance
 		time -= CALENDAR.getTimeInMillis();
 		time /= 1000;
 
-		version += "." + Variable.numberFormatString(time, "00000");
+		version += "." + Variable.format(time, "00000");
 
 		return version;
 	}

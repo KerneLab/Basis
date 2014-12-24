@@ -18,9 +18,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	/**
      * 
      */
-	private static final long			serialVersionUID	= -4353893839356953344L;
-
-	public static final DecimalFormat	DECIMAL_FORMAT		= new DecimalFormat();
+	private static final long	serialVersionUID	= -4353893839356953344L;
 
 	/**
 	 * Try to convert the string to a Byte value, if could not convert then
@@ -245,7 +243,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 *            The java.lang.Number
 	 * @return The Byte value
 	 */
-	public static Byte byteValueOfNumber(java.lang.Number number)
+	public static Byte byteValue(java.lang.Number number)
 	{
 		Byte value = null;
 
@@ -263,7 +261,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 				}
 				catch (Exception e)
 				{
-					value = Variable.doubleValueOfNumber(number).byteValue();
+					value = Variable.doubleValue(number).byteValue();
 				}
 			}
 		}
@@ -278,7 +276,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 *            The java.lang.Number
 	 * @return The Double value
 	 */
-	public static Double doubleValueOfNumber(java.lang.Number number)
+	public static Double doubleValue(java.lang.Number number)
 	{
 		Double value = null;
 
@@ -304,7 +302,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 *            The java.lang.Number
 	 * @return The Float value
 	 */
-	public static Float floatValueOfNumber(java.lang.Number number)
+	public static Float floatValue(java.lang.Number number)
 	{
 		Float value = null;
 
@@ -322,12 +320,81 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 				}
 				catch (Exception e)
 				{
-					value = Variable.doubleValueOfNumber(number).floatValue();
+					value = Variable.doubleValue(number).floatValue();
 				}
 			}
 		}
 
 		return value;
+	}
+
+	/**
+	 * Get the format string of a BigDecimal number.
+	 * 
+	 * <pre>
+	 * Example:
+	 * 
+	 * number: new BigDecimal("1234.5")
+	 * format: &quot;#,##0.00&quot;
+	 * string: &quot;1,234.50&quot;
+	 * </pre>
+	 * 
+	 * @param number
+	 *            the BigDecimal number to be formatted.
+	 * @param pattern
+	 *            the number pattern.
+	 * @return the formatted String.
+	 */
+	public static String format(BigDecimal number, String pattern)
+	{
+		return number == null ? null : new DecimalFormat(pattern == null ? "" : pattern).format(number);
+	}
+
+	/**
+	 * Get the format string of a number.
+	 * 
+	 * <pre>
+	 * Example:
+	 * 
+	 * number: 1234.5
+	 * format: &quot;#,##0.00&quot;
+	 * string: &quot;1,234.50&quot;
+	 * </pre>
+	 * 
+	 * @param <N>
+	 *            the generic number type.
+	 * @param number
+	 *            the number to be formatted.
+	 * @param pattern
+	 *            the number pattern.
+	 * @return the formatted String.
+	 * @see java.text.DecimalFormat
+	 */
+	public static <N extends java.lang.Number> String format(N number, String pattern)
+	{
+		return number == null ? null : new DecimalFormat(pattern == null ? "" : pattern).format(number);
+	}
+
+	/**
+	 * Get the format string of a number represented by a String.
+	 * 
+	 * <pre>
+	 * Example:
+	 * 
+	 * number: "1234.5"
+	 * format: &quot;#,##0.00&quot;
+	 * string: &quot;1,234.50&quot;
+	 * </pre>
+	 * 
+	 * @param number
+	 *            the String number to be formatted.
+	 * @param pattern
+	 *            the number pattern.
+	 * @return the formatted String.
+	 */
+	public static String format(String number, String pattern)
+	{
+		return number == null ? null : new DecimalFormat(pattern == null ? "" : pattern).format(new BigDecimal(number));
 	}
 
 	/**
@@ -337,7 +404,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 *            The java.lang.Number
 	 * @return The Integer value
 	 */
-	public static Integer integerValueOfNumber(java.lang.Number number)
+	public static Integer integerValue(java.lang.Number number)
 	{
 		Integer value = null;
 
@@ -355,7 +422,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 				}
 				catch (Exception e)
 				{
-					value = Variable.doubleValueOfNumber(number).intValue();
+					value = Variable.doubleValue(number).intValue();
 				}
 			}
 		}
@@ -446,7 +513,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 *            The java.lang.Number
 	 * @return The Long value
 	 */
-	public static Long longValueOfNumber(java.lang.Number number)
+	public static Long longValue(java.lang.Number number)
 	{
 		Long value = null;
 
@@ -464,7 +531,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 				}
 				catch (Exception e)
 				{
-					value = Variable.doubleValueOfNumber(number).longValue();
+					value = Variable.doubleValue(number).longValue();
 				}
 			}
 		}
@@ -477,7 +544,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 */
 	public static void main(String[] args)
 	{
-		Tools.debug(Variable.numberFormatString("1234.5", "#,##0.00"));
+		Tools.debug(Variable.format("1234.5", "#,##0.00"));
 	}
 
 	/**
@@ -506,88 +573,13 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	}
 
 	/**
-	 * Get the format string of a BigDecimal number.
-	 * 
-	 * <pre>
-	 * Example:
-	 * 
-	 * number: new BigDecimal("1234.5")
-	 * format: &quot;#,##0.00&quot;
-	 * string: &quot;1,234.50&quot;
-	 * </pre>
-	 * 
-	 * @param number
-	 *            the BigDecimal number to be formatted.
-	 * @param format
-	 *            the number format.
-	 * @return the formatted String.
-	 */
-	public static String numberFormatString(BigDecimal number, String format)
-	{
-		Variable.DECIMAL_FORMAT.applyPattern(format);
-		String string = Variable.DECIMAL_FORMAT.format(number);
-		return string;
-	}
-
-	/**
-	 * Get the format string of a number.
-	 * 
-	 * <pre>
-	 * Example:
-	 * 
-	 * number: 1234.5
-	 * format: &quot;#,##0.00&quot;
-	 * string: &quot;1,234.50&quot;
-	 * </pre>
-	 * 
-	 * @param <N>
-	 *            the generic number type.
-	 * @param number
-	 *            the number to be formatted.
-	 * @param format
-	 *            the number format.
-	 * @return the formatted String.
-	 * @see java.text.DecimalFormat
-	 */
-	public static <N extends java.lang.Number> String numberFormatString(N number, String format)
-	{
-		Variable.DECIMAL_FORMAT.applyPattern(format);
-		String string = Variable.DECIMAL_FORMAT.format(number);
-		return string;
-	}
-
-	/**
-	 * Get the format string of a number represented by a String.
-	 * 
-	 * <pre>
-	 * Example:
-	 * 
-	 * number: "1234.5"
-	 * format: &quot;#,##0.00&quot;
-	 * string: &quot;1,234.50&quot;
-	 * </pre>
-	 * 
-	 * @param number
-	 *            the String number to be formatted.
-	 * @param format
-	 *            the number format.
-	 * @return the formatted String.
-	 */
-	public static String numberFormatString(String number, String format)
-	{
-		Variable.DECIMAL_FORMAT.applyPattern(format);
-		String string = Variable.DECIMAL_FORMAT.format(new BigDecimal(number));
-		return string;
-	}
-
-	/**
 	 * Get the Short value of a java.lang.Number
 	 * 
 	 * @param number
 	 *            The java.lang.Number
 	 * @return The Short value
 	 */
-	public static Short shortValueOfNumber(java.lang.Number number)
+	public static Short shortValue(java.lang.Number number)
 	{
 		Short value = null;
 
@@ -605,7 +597,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 				}
 				catch (Exception e)
 				{
-					value = Variable.doubleValueOfNumber(number).shortValue();
+					value = Variable.doubleValue(number).shortValue();
 				}
 			}
 		}
@@ -638,7 +630,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 
 	public double doubleValue()
 	{
-		return Variable.doubleValueOfNumber(value);
+		return Variable.doubleValue(value);
 	}
 
 	public float floatValue()
@@ -648,7 +640,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 
 	public String format(String format)
 	{
-		return Variable.numberFormatString(this.getValue(), format);
+		return Variable.format(this.getValue(), format);
 	}
 
 	/**
@@ -670,12 +662,12 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 
 	public int intValue()
 	{
-		return Variable.integerValueOfNumber(value);
+		return Variable.integerValue(value);
 	}
 
 	public long longValue()
 	{
-		return Variable.longValueOfNumber(value);
+		return Variable.longValue(value);
 	}
 
 	/**
@@ -701,5 +693,10 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	public String toString()
 	{
 		return value.toString();
+	}
+
+	public String toString(String format)
+	{
+		return format(this, format);
 	}
 }
