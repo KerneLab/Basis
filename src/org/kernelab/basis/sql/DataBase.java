@@ -1376,7 +1376,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return PropertiesOfMap(this.information);
 	}
 
-	protected String getPassWord()
+	public String getPassWord()
 	{
 		return passWord;
 	}
@@ -1403,7 +1403,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	 */
 	public abstract String getURL();
 
-	protected String getUserName()
+	public String getUserName()
 	{
 		return userName;
 	}
