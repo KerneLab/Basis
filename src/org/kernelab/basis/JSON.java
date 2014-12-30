@@ -21,6 +21,8 @@ import java.nio.charset.Charset;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.AbstractCollection;
+import java.util.AbstractSet;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,6 +67,76 @@ interface Hierarchical extends Copieable<Hierarchical>
  */
 public class JSON implements Map<String, Object>, Iterable<Object>, Serializable, Hierarchical
 {
+	protected abstract class AbstractIterator<E> implements Iterator<E>
+	{
+		protected int					index;
+		protected Iterator<String>[]	iters;
+		protected Iterator<String>		iter;
+
+		public AbstractIterator(Iterator<String>... iters)
+		{
+			this.iters = iters;
+			this.reset();
+		}
+
+		public boolean hasNext()
+		{
+			while (iter != null)
+			{
+				if (iter.hasNext())
+				{
+					return true;
+				}
+				else
+				{
+					if (nextIter() == null)
+					{
+						return false;
+					}
+				}
+			}
+			return false;
+		}
+
+		protected Iterator<String> nextIter()
+		{
+			iter = null;
+
+			if (iters != null)
+			{
+				while (iter == null)
+				{
+					index++;
+
+					if (index < iters.length)
+					{
+						iter = iters[index];
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			return iter;
+		}
+
+		public void remove()
+		{
+			if (iter != null)
+			{
+				iter.remove();
+			}
+		}
+
+		protected void reset()
+		{
+			this.index = -1;
+			nextIter();
+		}
+	}
+
 	private static class ArrayLengthReverseComparator<T> implements Comparator<T[]>, Serializable
 	{
 		/**
@@ -257,6 +329,121 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		protected void setReader(DataReader reader)
 		{
 			this.reader = reader;
+		}
+	}
+
+	protected class EntrySet extends AbstractSet<Map.Entry<String, Object>>
+	{
+		protected class Entry<K, V> implements Map.Entry<K, V>
+		{
+			private K	key;
+			private V	value;
+
+			protected Entry(K key, V value)
+			{
+				this.key = key;
+				this.value = value;
+			}
+
+			@Override
+			public boolean equals(Object o)
+			{
+				if (o instanceof Entry)
+				{
+					Entry<?, ?> e = (Entry<?, ?>) o;
+					return Tools.equals(this.key, e.key) && Tools.equals(this.value, e.value);
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			public K getKey()
+			{
+				return key;
+			}
+
+			public V getValue()
+			{
+				return value;
+			}
+
+			@Override
+			public int hashCode()
+			{
+				return (key == null ? 0 : key.hashCode()) ^ (value == null ? 0 : value.hashCode());
+			}
+
+			public V setValue(V value)
+			{
+				V old = this.value;
+				this.value = value;
+				return old;
+			}
+
+			@Override
+			public String toString()
+			{
+				return getKey() + "=" + getValue();
+			}
+		}
+
+		protected class EntryIterator extends AbstractIterator<Map.Entry<String, Object>>
+		{
+			public EntryIterator(Iterator<String>... iters)
+			{
+				super(iters);
+			}
+
+			public Map.Entry<String, Object> next()
+			{
+				String key = iter.next();
+				return new Entry<String, Object>(key, JSON.this.get(key));
+			}
+		}
+
+		protected Set<String>[]	keys;
+
+		public EntrySet(Set<String>... keys)
+		{
+			this.keys = keys;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public Iterator<Map.Entry<String, Object>> iterator()
+		{
+			Iterator<String>[] iters = null;
+
+			if (keys != null)
+			{
+				iters = (Iterator<String>[]) new Iterator<?>[keys.length];
+
+				for (int i = 0; i < keys.length; i++)
+				{
+					iters[i] = keys[i].iterator();
+				}
+			}
+
+			return new EntryIterator(iters);
+		}
+
+		@Override
+		public int size()
+		{
+			int size = 0;
+			if (keys != null)
+			{
+				for (Set<String> set : keys)
+				{
+					if (set != null)
+					{
+						size += set.size();
+					}
+				}
+			}
+			return size;
 		}
 	}
 
@@ -1681,15 +1868,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return this;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public Set<Map.Entry<String, Object>> entrySet()
 		{
-			Set<Map.Entry<String, Object>> set = new LinkedHashSet<Map.Entry<String, Object>>();
-
-			set.addAll(array().entrySet());
-			set.addAll(super.entrySet());
-
-			return set;
+			return new EntrySet(array().keySet(), object().keySet());
 		}
 
 		public boolean equalValues(JSAN jsan)
@@ -1778,16 +1961,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return key;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public Set<String> keySet()
 		{
-			Set<String> set = new LinkedHashSet<String>();
-
-			set.addAll(array().keySet());
-
-			set.addAll(super.keySet());
-
-			return set;
+			return new KeySet(array().keySet(), object().keySet());
 		}
 
 		public String lastKeyOf(Object value)
@@ -2944,25 +3122,93 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return val == null ? new Timestamp(defaultValue) : val;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public Collection<Object> values()
 		{
-			Collection<Object> values = new LinkedList<Object>();
+			return new ValuesCollection(array().keySet(), object().keySet());
+		}
+	}
 
-			values.addAll(array().values());
-			values.addAll(super.values());
+	protected class KeySet extends AbstractSet<String>
+	{
+		protected class KeyIterator extends AbstractIterator<String>
+		{
+			public KeyIterator(Iterator<String>... iters)
+			{
+				super(iters);
+			}
 
-			return values;
+			public String next()
+			{
+				return iter.next();
+			}
+		}
+
+		protected Set<String>[]	keys;
+
+		public KeySet(Set<String>... keys)
+		{
+			this.keys = keys;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public Iterator<String> iterator()
+		{
+			Iterator<String>[] iters = null;
+
+			if (keys != null)
+			{
+				iters = (Iterator<String>[]) new Iterator<?>[keys.length];
+
+				for (int i = 0; i < keys.length; i++)
+				{
+					iters[i] = keys[i].iterator();
+				}
+			}
+
+			return new KeyIterator(iters);
+		}
+
+		@Override
+		public int size()
+		{
+			int size = 0;
+			if (keys != null)
+			{
+				for (Set<String> set : keys)
+				{
+					if (set != null)
+					{
+						size += set.size();
+					}
+				}
+			}
+			return size;
 		}
 	}
 
 	public class Pair implements Entry<String, Object>
 	{
-		private String	key;
+		public final String	key;
 
 		public Pair(String key)
 		{
 			this.key = key;
+		}
+
+		@Override
+		public boolean equals(Object o)
+		{
+			if (o instanceof Pair)
+			{
+				return Tools.equals(key, ((Pair) o).key);
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		public String getKey()
@@ -2973,6 +3219,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public Object getValue()
 		{
 			return attr(key);
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return key == null ? 0 : key.hashCode();
 		}
 
 		public String key()
@@ -4191,6 +4443,65 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 
 			return reset(seq);
+		}
+	}
+
+	protected class ValuesCollection extends AbstractCollection<Object>
+	{
+		protected class ValuesIterator extends AbstractIterator<Object>
+		{
+			public ValuesIterator(Iterator<String>... iters)
+			{
+				super(iters);
+			}
+
+			public Object next()
+			{
+				return JSON.this.val(iter.next());
+			}
+		}
+
+		protected Set<String>[]	keys;
+
+		public ValuesCollection(Set<String>... keys)
+		{
+			this.keys = keys;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public Iterator<Object> iterator()
+		{
+			Iterator<String>[] iters = null;
+
+			if (keys != null)
+			{
+				iters = (Iterator<String>[]) new Iterator<?>[keys.length];
+
+				for (int i = 0; i < keys.length; i++)
+				{
+					iters[i] = keys[i].iterator();
+				}
+			}
+
+			return new ValuesIterator(iters);
+		}
+
+		@Override
+		public int size()
+		{
+			int size = 0;
+			if (keys != null)
+			{
+				for (Set<String> set : keys)
+				{
+					if (set != null)
+					{
+						size += set.size();
+					}
+				}
+			}
+			return size;
 		}
 	}
 
@@ -6868,9 +7179,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return new ValueIterator<T>(tran);
 	}
 
+	@SuppressWarnings("unchecked")
 	public Set<String> keySet()
 	{
-		return object().keySet();
+		return new KeySet(object().keySet());
 	}
 
 	protected Map<String, Object> object()
