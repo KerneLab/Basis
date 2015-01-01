@@ -11,6 +11,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ThreadExecutorPool<V> implements CompletionService<V>
 {
@@ -43,6 +45,8 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	private ExecutorService			executorService		= null;
 
 	private CompletionService<V>	completionService	= null;
+
+	protected final ReadWriteLock	lock				= new ReentrantReadWriteLock();
 
 	private Variable<Integer>		tasks				= new Variable<Integer>(0);
 
@@ -85,9 +89,14 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	private void addTask()
 	{
-		synchronized (tasks)
+		lock.writeLock().lock();
+		try
 		{
 			this.tasks.value++;
+		}
+		finally
+		{
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -98,12 +107,17 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	private void delTask()
 	{
-		synchronized (tasks)
+		lock.writeLock().lock();
+		try
 		{
 			if (this.tasks.value > 0)
 			{
 				this.tasks.value--;
 			}
+		}
+		finally
+		{
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -152,17 +166,27 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	public Integer getRemain()
 	{
-		synchronized (tasks)
+		lock.readLock().lock();
+		try
 		{
 			return tasks.value + fakes;
+		}
+		finally
+		{
+			lock.readLock().unlock();
 		}
 	}
 
 	public Integer getTasks()
 	{
-		synchronized (tasks)
+		lock.readLock().lock();
+		try
 		{
 			return tasks.value;
+		}
+		finally
+		{
+			lock.readLock().unlock();
 		}
 	}
 
@@ -176,7 +200,8 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	 */
 	public Future<V> grab()
 	{
-		synchronized (tasks)
+		lock.writeLock().lock();
+		try
 		{
 			if (tasks.value > 0)
 			{
@@ -187,6 +212,10 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 			{
 				return null;
 			}
+		}
+		finally
+		{
+			lock.writeLock().unlock();
 		}
 
 		try
@@ -199,9 +228,14 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		}
 		finally
 		{
-			synchronized (tasks)
+			lock.writeLock().lock();
+			try
 			{
 				fakes--;
+			}
+			finally
+			{
+				lock.writeLock().unlock();
 			}
 		}
 
