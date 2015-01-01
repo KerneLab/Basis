@@ -226,13 +226,18 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		map.clear();
 	}
 
-	@Override
-	public Set<java.util.Map.Entry<K, V>> entrySet()
+	protected void initPairSet()
 	{
 		if (pairSet == null)
 		{
 			pairSet = map.entrySet();
 		}
+	}
+
+	@Override
+	public Set<java.util.Map.Entry<K, V>> entrySet()
+	{
+		this.initPairSet();
 		return entrySet == null ? (entrySet = new EntrySet()) : entrySet;
 	}
 
@@ -350,6 +355,7 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 	@Override
 	public Collection<V> values()
 	{
+		this.initPairSet();
 		return values == null ? (values = new ValuesCollection()) : values;
 	}
 }
