@@ -169,14 +169,12 @@ Tools.find = function(contain, object) {
 };
 
 Tools.get = function(obj, key) {
-	var val = obj[key];
+	var val = null;
+	if(obj != null) {
+		val = obj[key];
+	}
 	if (val == null && arguments.length > 2) {
-		if ($.type(arguments[2]) == "function") {
-			val = arguments[2](key, obj);
-		} else {
-			val = arguments[2];
-		}
-		obj[key] = val;
+		val = arguments[2];
 	}
 	return val;
 };
