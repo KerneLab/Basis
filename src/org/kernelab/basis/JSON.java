@@ -5107,11 +5107,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return val;
 	}
 
-	public static boolean CharacterNeedToEscape(char c)
-	{
-		return ESCAPED_CHAR.containsKey(c);
-	}
-
 	public static int CheckNext(CharSequence source, int now, int next)
 	{
 		if (next < 0)
@@ -5339,6 +5334,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return end;
 	}
 
+	public static String EscapeChar(char c)
+	{
+		return "\\" + UNICODE_ESCAPING_CHAR + String.format("%04x", (int) c);
+	}
+
 	public static String EscapeString(String string)
 	{
 		StringBuilder buffer = new StringBuilder(string);
@@ -5348,10 +5348,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		for (int i = 0; i < buffer.length(); i++)
 		{
 			c = buffer.charAt(i);
-			if (CharacterNeedToEscape(c))
+			if (NeedToEscape(c))
 			{
 				buffer.deleteCharAt(i);
 				escape = ESCAPED_CHAR.get(c);
+				escape = escape != null ? escape : EscapeChar(c);
 				buffer.insert(i, escape);
 				i += escape.length() - 1;
 			}
@@ -5638,6 +5639,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		JSON j = Parse(s);
 
 		Tools.debug(j);
+	}
+
+	public static boolean NeedToEscape(char c)
+	{
+		return ESCAPED_CHAR.containsKey(c) || Character.isISOControl(c);
 	}
 
 	public static JSON Parse(CharSequence source)
