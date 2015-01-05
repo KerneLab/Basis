@@ -465,6 +465,23 @@ public class Sequel implements Iterable<ResultSet>
 		return json;
 	}
 
+	public JSAN getRows(JSAN rows, Class<? extends JSON> cls)
+	{
+		return getRows(rows, this.getMetaMap(), cls);
+	}
+
+	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls)
+	{
+		try
+		{
+			rows = SQLKit.jsanOfResultSet(this.getResultSet(), rows, map, cls);
+		}
+		catch (SQLException e)
+		{
+		}
+		return rows;
+	}
+
 	public Statement getStatement()
 	{
 		return statement;
