@@ -1,9 +1,9 @@
 /**
- * Rogar is a jQuery plugin to Display a progress bar.<br />
+ * Rogar is a jQuery plugin to display a progress bar.<br />
  * D3 framework is also needed.<br />
  * The default css styles:<br />
  * .rogar-box { border: 1px solid #6666dd; float: left; height: 20px; width:
- * 200px; overflow: hidden; position: relative; float: left; }
+ * 200px; overflow: hidden; position: relative;}
  * 
  * .rogar-bar { background-color: #9999ee; height: 20px; overflow: hidden;
  * position: relative; text-align: center; }
@@ -23,12 +23,11 @@
 
 		var opts = $.extend({}, $.fn.rogar.defaults, options);
 
-		var rate = opts["init.rate"];
-
 		var box = this;
 
-		box.children().remove();
-		box.html("");
+		var rate = self.data("rogar.ratio") != null ? self.data("rogar.ratio") : opts["init.rate"];
+
+		box.empty();
 
 		if (!box.is("div"))
 		{
@@ -66,8 +65,8 @@
 						}
 					});
 
-			d3.select(node).selectAll("." + opts["txt.dark.class"]).transition().duration(duration).tween(
-					"text", function()
+			d3.select(node).selectAll("." + opts["txt.dark.class"]).transition().duration(duration).tween("text",
+					function()
 					{
 						var i = d3.interpolate(rat, r);
 						return function(t)
@@ -76,8 +75,8 @@
 						};
 					});
 
-			d3.select(node).selectAll("." + opts["txt.light.class"]).transition().duration(duration).tween(
-					"text", function()
+			d3.select(node).selectAll("." + opts["txt.light.class"]).transition().duration(duration).tween("text",
+					function()
 					{
 						var i = d3.interpolate(rat, r);
 						return function(t)
@@ -85,6 +84,8 @@
 							this.textContent = opts["txt.formatter"](i(t));
 						};
 					});
+
+			self.data("rogar.ratio", r);
 
 			return self;
 		};
