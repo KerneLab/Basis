@@ -486,20 +486,13 @@ public class Entrance
 		{
 			String className = params.get(0);
 			Class<?> cls = Extensions.forName(className);
-			for (Method m : cls.getMethods())
+			Method m = cls.getMethod("main", new String[0].getClass());
+			String[] argv = new String[params.size() - 1];
+			for (int i = 0; i < argv.length; i++)
 			{
-				if ("main".equals(m.getName()) && m.getParameterTypes().length == 1
-						&& "java.lang.String[]".equals(m.getParameterTypes()[0].getCanonicalName()))
-				{
-					String[] argv = new String[params.size() - 1];
-					for (int i = 0; i < argv.length; i++)
-					{
-						argv[i] = params.get(i + 1);
-					}
-					m.invoke(null, new Object[] { argv });
-					break;
-				}
+				argv[i] = params.get(i + 1);
 			}
+			m.invoke(null, (Object) argv);
 		}
 		catch (Exception e)
 		{
