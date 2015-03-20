@@ -1434,7 +1434,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSAN addAll(int index, Collection<? extends Object> collection)
 		{
-			return splice(index, 0, collection);
+			splice(index, 0, collection);
+			return this;
 		}
 
 		public JSAN addAll(int index, double[] array)
@@ -1475,7 +1476,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSAN addAll(int index, JSAN jsan)
 		{
-			return splice(index, 0, jsan);
+			splice(index, 0, jsan);
+			return this;
 		}
 
 		public JSAN addAll(int index, long[] array)
@@ -1492,7 +1494,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSAN addAll(int index, Object... array)
 		{
-			return splice(index, 0, array);
+			splice(index, 0, array);
+			return this;
 		}
 
 		public JSAN addAll(int index, short[] array)
