@@ -105,6 +105,40 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 			}
 		}
 
+		if (tos != null)
+		{
+			synchronized (tos)
+			{
+				while (!tos.isClosed())
+				{
+					try
+					{
+						tos.wait();
+					}
+					catch (InterruptedException e)
+					{
+					}
+				}
+			}
+		}
+
+		if (tes != null)
+		{
+			synchronized (tes)
+			{
+				while (!tes.isClosed())
+				{
+					try
+					{
+						tes.wait();
+					}
+					catch (InterruptedException e)
+					{
+					}
+				}
+			}
+		}
+
 		if (process != null)
 		{
 			try
@@ -277,42 +311,16 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 				catch (Exception e)
 				{
 				}
-
-				if (tos != null)
+				finally
 				{
-					synchronized (tos)
-					{
-						while (!tos.isClosed())
-						{
-							try
-							{
-								tos.wait();
-							}
-							catch (InterruptedException e)
-							{
-							}
-						}
-					}
-					tos = null;
+					process = null;
 				}
 
-				if (tes != null)
-				{
-					synchronized (tes)
-					{
-						while (!tes.isClosed())
-						{
-							try
-							{
-								tes.wait();
-							}
-							catch (InterruptedException e)
-							{
-							}
-						}
-					}
-					tes = null;
-				}
+				tos = null;
+				tes = null;
+
+				outputStream = null;
+				errorStream = null;
 
 				pis = null;
 				pos = null;
