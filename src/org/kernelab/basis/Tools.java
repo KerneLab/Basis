@@ -601,11 +601,13 @@ public class Tools
 
 			if (!equals(source, target))
 			{
-				FileChannel src = new FileInputStream(source).getChannel();
+				FileInputStream fis = new FileInputStream(source);
+
+				FileChannel src = fis.getChannel();
 
 				copied = copy(src, target);
 
-				src.close();
+				fis.close();
 			}
 		}
 
@@ -630,11 +632,13 @@ public class Tools
 
 		if (source.isFile())
 		{
-			FileChannel src = new FileInputStream(source).getChannel();
+			FileInputStream fis = new FileInputStream(source);
+
+			FileChannel src = fis.getChannel();
 
 			copied = copy(src, target);
 
-			src.close();
+			fis.close();
 		}
 
 		return copied;
@@ -707,11 +711,13 @@ public class Tools
 
 		if (source.isOpen())
 		{
-			FileChannel tar = new FileOutputStream(target).getChannel();
+			FileOutputStream fos = new FileOutputStream(target);
+
+			FileChannel tar = fos.getChannel();
 
 			copied = copy(source, tar);
 
-			tar.close();
+			fos.close();
 		}
 
 		return copied;
