@@ -3038,7 +3038,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSAN valJSAN(int index)
 		{
-			return attrJSAN(index);
+			return CastToJSAN(this.attr(index));
 		}
 
 		public JSAN valJSAN(int index, boolean newIfNull)
@@ -3055,7 +3055,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSON valJSON(int index)
 		{
-			return attrJSON(index);
+			return CastToJSON(this.attr(index));
 		}
 
 		public JSON valJSON(int index, boolean newIfNull)
@@ -4813,18 +4813,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		BigDecimal val = null;
 
-		try
-		{
-			val = BigDecimal.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				val = new BigDecimal(CastToString(obj));
+				val = BigDecimal.class.cast(obj);
 			}
-			catch (NumberFormatException ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					val = new BigDecimal(CastToString(obj));
+				}
+				catch (NumberFormatException ex)
+				{
+				}
 			}
 		}
 
@@ -4835,16 +4838,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Boolean val = null;
 
-		try
+		if (obj != null)
 		{
-			val = Boolean.class.cast(obj);
-		}
-		catch (ClassCastException e)
-		{
-			String str = CastToString(obj);
-			if (TRUE_STRING.equals(str) || FALSE_STRING.equals(str))
+			try
 			{
-				val = Boolean.valueOf(str);
+				val = Boolean.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				String str = CastToString(obj);
+				if (TRUE_STRING.equals(str) || FALSE_STRING.equals(str))
+				{
+					val = Boolean.valueOf(str);
+				}
 			}
 		}
 
@@ -4855,18 +4861,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Byte val = null;
 
-		try
-		{
-			val = Byte.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				val = Byte.valueOf(CastToString(obj));
+				val = Byte.class.cast(obj);
 			}
-			catch (NumberFormatException ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					val = Byte.valueOf(CastToString(obj));
+				}
+				catch (NumberFormatException ex)
+				{
+				}
 			}
 		}
 
@@ -4877,12 +4886,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Calendar val = null;
 
-		Long lon = CastToLong(obj);
-
-		if (lon != null)
+		if (obj != null)
 		{
-			val = new GregorianCalendar();
-			val.setTimeInMillis(lon);
+			Long lon = CastToLong(obj);
+
+			if (lon != null)
+			{
+				val = new GregorianCalendar();
+				val.setTimeInMillis(lon);
+			}
 		}
 
 		return val;
@@ -4892,18 +4904,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Character val = null;
 
-		try
-		{
-			val = Character.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				val = CastToString(obj).charAt(0);
+				val = Character.class.cast(obj);
 			}
-			catch (StringIndexOutOfBoundsException ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					val = CastToString(obj).charAt(0);
+				}
+				catch (StringIndexOutOfBoundsException ex)
+				{
+				}
 			}
 		}
 
@@ -4914,11 +4929,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Date val = null;
 
-		Long lon = CastToLong(obj);
-
-		if (lon != null)
+		if (obj != null)
 		{
-			val = new Date(lon);
+			Long lon = CastToLong(obj);
+
+			if (lon != null)
+			{
+				val = new Date(lon);
+			}
 		}
 
 		return val;
@@ -4928,18 +4946,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Double val = null;
 
-		try
-		{
-			val = Double.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				val = Double.valueOf(CastToString(obj));
+				val = Double.class.cast(obj);
 			}
-			catch (NumberFormatException ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					val = Double.valueOf(CastToString(obj));
+				}
+				catch (NumberFormatException ex)
+				{
+				}
 			}
 		}
 
@@ -4950,18 +4971,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Float val = null;
 
-		try
-		{
-			val = Float.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				val = Float.valueOf(CastToString(obj));
+				val = Float.class.cast(obj);
 			}
-			catch (NumberFormatException ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					val = Float.valueOf(CastToString(obj));
+				}
+				catch (NumberFormatException ex)
+				{
+				}
 			}
 		}
 
@@ -4977,18 +5001,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Integer val = null;
 
-		try
-		{
-			val = Integer.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				val = Integer.valueOf(CastToString(obj));
+				val = Integer.class.cast(obj);
 			}
-			catch (NumberFormatException ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					val = Integer.valueOf(CastToString(obj));
+				}
+				catch (NumberFormatException ex)
+				{
+				}
 			}
 		}
 
@@ -4997,30 +5024,73 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static JSAN CastToJSAN(Object obj)
 	{
-		return CastTo(obj, JSAN.class);
+		JSAN val = null;
+
+		if (obj != null)
+		{
+			try
+			{
+				val = JSAN.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = (JSAN) JSAN.Parse(CastToString(obj));
+				}
+				catch (Exception ex)
+				{
+				}
+			}
+		}
+
+		return val;
 	}
 
 	public static JSON CastToJSON(Object obj)
 	{
-		return CastTo(obj, JSON.class);
+		JSON val = null;
+
+		if (obj != null)
+		{
+			try
+			{
+				val = JSON.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					val = JSON.Parse(CastToString(obj));
+				}
+				catch (Exception ex)
+				{
+				}
+			}
+		}
+
+		return val;
 	}
 
 	public static Long CastToLong(Object obj)
 	{
 		Long val = null;
 
-		try
-		{
-			val = Long.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				val = Long.valueOf(CastToString(obj));
+				val = Long.class.cast(obj);
 			}
-			catch (NumberFormatException ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					val = Long.valueOf(CastToString(obj));
+				}
+				catch (NumberFormatException ex)
+				{
+				}
 			}
 		}
 
@@ -5031,18 +5101,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Short val = null;
 
-		try
-		{
-			val = Short.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				val = Short.valueOf(CastToString(obj));
+				val = Short.class.cast(obj);
 			}
-			catch (NumberFormatException ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					val = Short.valueOf(CastToString(obj));
+				}
+				catch (NumberFormatException ex)
+				{
+				}
 			}
 		}
 
@@ -5053,29 +5126,32 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		String val = null;
 
-		try
-		{
-			val = String.class.cast(obj);
-		}
-		catch (ClassCastException e)
+		if (obj != null)
 		{
 			try
 			{
-				if (obj instanceof java.util.Date)
-				{
-					val = String.valueOf(((java.util.Date) obj).getTime());
-				}
-				else if (obj instanceof java.util.Calendar)
-				{
-					val = String.valueOf(((java.util.Calendar) obj).getTimeInMillis());
-				}
-				else
-				{
-					val = obj.toString();
-				}
+				val = String.class.cast(obj);
 			}
-			catch (Exception ex)
+			catch (ClassCastException e)
 			{
+				try
+				{
+					if (obj instanceof java.util.Date)
+					{
+						val = String.valueOf(((java.util.Date) obj).getTime());
+					}
+					else if (obj instanceof java.util.Calendar)
+					{
+						val = String.valueOf(((java.util.Calendar) obj).getTimeInMillis());
+					}
+					else
+					{
+						val = obj.toString();
+					}
+				}
+				catch (Exception ex)
+				{
+				}
 			}
 		}
 
@@ -5086,11 +5162,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Time val = null;
 
-		Long lon = CastToLong(obj);
-
-		if (lon != null)
+		if (obj != null)
 		{
-			val = new Time(lon);
+			Long lon = CastToLong(obj);
+
+			if (lon != null)
+			{
+				val = new Time(lon);
+			}
 		}
 
 		return val;
@@ -5100,11 +5179,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Timestamp val = null;
 
-		Long lon = CastToLong(obj);
-
-		if (lon != null)
+		if (obj != null)
 		{
-			val = new Timestamp(lon);
+			Long lon = CastToLong(obj);
+
+			if (lon != null)
+			{
+				val = new Timestamp(lon);
+			}
 		}
 
 		return val;
@@ -6048,11 +6130,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 		else if (JSON.class == cls)
 		{
-			val = CastToJSON(obj);
+			val = CastTo(obj, JSON.class);
 		}
 		else if (JSAN.class == cls)
 		{
-			val = CastToJSAN(obj);
+			val = CastTo(obj, JSAN.class);
 		}
 		else if (Function.class == cls)
 		{
@@ -8250,7 +8332,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public JSAN valJSAN(String key)
 	{
-		return attrJSAN(key);
+		return CastToJSAN(this.attr(key));
 	}
 
 	public JSAN valJSAN(String key, boolean newIfNull)
@@ -8267,7 +8349,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public JSON valJSON(String key)
 	{
-		return attrJSON(key);
+		return CastToJSON(this.attr(key));
 	}
 
 	public JSON valJSON(String key, boolean newIfNull)
