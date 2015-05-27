@@ -74,16 +74,14 @@
 			var rat = rate;
 			var duration = Math.abs(r - rat) * opts["duration.total"];
 			var node = self.get(0);
+
 			d3.select(node).selectAll("." + opts["bar.class"]).transition()
-					.duration(duration).tween("width", function() {
+					.duration(duration).styleTween("width", function() {
 						var i = d3.interpolate(rat, r);
 						return function(t) {
-							var temp = i(t);
-							rate = temp;
-							bar.css({
-								"width" : (temp * 100).toFixed(2) + "%",
-								"background-color" : findFillColor(temp)
-							});
+							var temp = (rate = i(t));
+							bar.css("background-color", findFillColor(temp));
+							return (temp * 100).toFixed(2) + "%";
 						}
 					});
 
