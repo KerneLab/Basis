@@ -3667,25 +3667,30 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				int length = -1;
 
-				while ((length = reader.read(chars)) != -1 //
-						|| (buffer.length() > 0 && curr < buffer.length()))
+				try
 				{
-					if (length > -1)
+					while ((length = reader.read(chars)) != -1 //
+							|| (buffer.length() > 0 && curr < buffer.length()))
 					{
-						buffer.append(chars, 0, length);
-					}
+						if (length > -1)
+						{
+							buffer.append(chars, 0, length);
+						}
 
-					parse(buffer);
+						parse(buffer);
 
-					if (result() != null)
-					{
-						break;
+						if (result() != null)
+						{
+							break;
+						}
 					}
 				}
-
-				if (closeAfterRead)
+				finally
 				{
-					reader.close();
+					if (closeAfterRead)
+					{
+						reader.close();
+					}
 				}
 			}
 
@@ -5793,7 +5798,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			Parser parser = new Parser();
 			try
 			{
-				json = parser.parse(reader, true).dispose().result();
+				json = parser.parse(reader, true).result();
 			}
 			catch (IOException e)
 			{
