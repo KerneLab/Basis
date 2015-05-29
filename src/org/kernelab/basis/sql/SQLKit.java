@@ -102,6 +102,8 @@ public class SQLKit
 	 */
 	public static final Object		NULL						= new byte[0];
 
+	public static final String		NULL_MARK					= "NULL";
+
 	/**
 	 * To declare that there is no parameter.<br />
 	 * This object would be ignored if it is not the first parameter.
@@ -838,10 +840,19 @@ public class SQLKit
 		for (Pair pair : params.pairs())
 		{
 			Object value = pair.getValue();
+
 			if (value instanceof Iterable)
 			{
-				filler.fillWith(pair.getKey(),
-						Tools.repeat(VALUE_HOLDER_CHAR, Tools.sizeOfIterable((Iterable<?>) value), ','));
+				Iterable<?> iter = (Iterable<?>) value;
+
+				if (iter.iterator().hasNext())
+				{
+					filler.fillWith(pair.getKey(), Tools.repeat(VALUE_HOLDER_CHAR, Tools.sizeOfIterable(iter), ','));
+				}
+				else
+				{
+					filler.fillWith(pair.getKey(), NULL_MARK);
+				}
 			}
 			else
 			{
@@ -871,15 +882,31 @@ public class SQLKit
 		for (Entry<String, ?> pair : params.entrySet())
 		{
 			Object value = pair.getValue();
+
 			if (value instanceof Iterable)
 			{
-				filler.fillWith(pair.getKey(),
-						Tools.repeat(VALUE_HOLDER_CHAR, Tools.sizeOfIterable((Iterable<?>) value), ','));
+				Iterable<?> iter = (Iterable<?>) value;
+
+				if (iter.iterator().hasNext())
+				{
+					filler.fillWith(pair.getKey(), Tools.repeat(VALUE_HOLDER_CHAR, Tools.sizeOfIterable(iter), ','));
+				}
+				else
+				{
+					filler.fillWith(pair.getKey(), NULL_MARK);
+				}
 			}
 			else if (value != null && value.getClass().isArray())
 			{
 				int length = Array.getLength(value);
-				filler.fillWith(pair.getKey(), Tools.repeat(VALUE_HOLDER_CHAR, length, ','));
+				if (length > 0)
+				{
+					filler.fillWith(pair.getKey(), Tools.repeat(VALUE_HOLDER_CHAR, length, ','));
+				}
+				else
+				{
+					filler.fillWith(pair.getKey(), NULL_MARK);
+				}
 			}
 			else
 			{
