@@ -53,7 +53,6 @@ public class Extensions
 			}
 			catch (IOException e)
 			{
-				e.printStackTrace();
 			}
 			return success;
 		}
@@ -63,7 +62,10 @@ public class Extensions
 			boolean success = true;
 			for (Object o : locations)
 			{
-				success &= load(o.toString());
+				if (o != null)
+				{
+					success &= load(o.toString());
+				}
 			}
 			return success;
 		}
@@ -155,7 +157,9 @@ public class Extensions
 
 	protected Extensions()
 	{
-		this(java.lang.ClassLoader.getSystemClassLoader());
+		this(Extensions.class.getClassLoader() == null //
+		? java.lang.ClassLoader.getSystemClassLoader() //
+				: Extensions.class.getClassLoader());
 	}
 
 	protected Extensions(java.lang.ClassLoader cl)
