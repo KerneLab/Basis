@@ -1,4 +1,4 @@
-package org.kernelab.basis.io;
+package org.kernelab.basis;
 
 import java.io.File;
 import java.io.IOException;
@@ -157,14 +157,12 @@ public class Extensions
 
 	protected Extensions()
 	{
-		this(Extensions.class.getClassLoader() == null //
-		? java.lang.ClassLoader.getSystemClassLoader() //
-				: Extensions.class.getClassLoader());
+		this(Extensions.class.getClassLoader());
 	}
 
-	protected Extensions(java.lang.ClassLoader cl)
+	protected Extensions(java.lang.ClassLoader parent)
 	{
-		this.setLoader(new ClassLoader(cl));
+		this.setLoader(new ClassLoader(parent == null ? java.lang.ClassLoader.getSystemClassLoader() : parent));
 	}
 
 	public ClassLoader getLoader()

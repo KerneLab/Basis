@@ -13,10 +13,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.kernelab.basis.Copieable;
+import org.kernelab.basis.Extensions;
 import org.kernelab.basis.Relation;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.io.DataReader;
-import org.kernelab.basis.io.Extensions;
 
 /**
  * The DataBase class is an abstract of database support.

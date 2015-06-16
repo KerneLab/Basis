@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON.Pair;
-import org.kernelab.basis.io.Extensions;
 
 /**
  * The Entrance of Basis or other project.
