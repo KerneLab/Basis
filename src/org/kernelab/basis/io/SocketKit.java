@@ -1,4 +1,4 @@
-package org.kernelab.basis.socket;
+package org.kernelab.basis.io;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -7,15 +7,6 @@ import java.net.Socket;
 
 public class SocketKit
 {
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args)
-	{
-
-	}
-
 	private Socket	socket;
 
 	public SocketKit()
@@ -38,12 +29,14 @@ public class SocketKit
 	{
 		T object = null;
 
-		ObjectInputStream objectReader = new ObjectInputStream(this.getSocket()
-				.getInputStream());
+		ObjectInputStream objectReader = new ObjectInputStream(this.getSocket().getInputStream());
 
-		try {
+		try
+		{
 			object = (T) objectReader.readObject();
-		} catch (ClassNotFoundException e) {
+		}
+		catch (ClassNotFoundException e)
+		{
 			e.printStackTrace();
 		}
 
@@ -52,9 +45,8 @@ public class SocketKit
 
 	public void sendObject(Object object) throws IOException
 	{
-		ObjectOutputStream objectSender = new ObjectOutputStream(this.getSocket()
-				.getOutputStream());
-		
+		ObjectOutputStream objectSender = new ObjectOutputStream(this.getSocket().getOutputStream());
+
 		objectSender.writeObject(object);
 	}
 
@@ -62,5 +54,4 @@ public class SocketKit
 	{
 		this.socket = socket;
 	}
-
 }
