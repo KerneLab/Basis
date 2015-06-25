@@ -3064,21 +3064,13 @@ public class Tools
 	 *            the InputStream from which to input.
 	 * 
 	 * @return the object input from the InputStream.
+	 * @throws IOException
+	 * @throws ClassNotFoundException
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T inputObject(InputStream input) throws IOException
+	public static <T> T inputObject(InputStream input) throws IOException, ClassNotFoundException
 	{
-		T object = null;
-
-		try
-		{
-			object = (T) new ObjectInputStream(input).readObject();
-		}
-		catch (Exception e)
-		{
-		}
-
-		return object;
+		return (T) new ObjectInputStream(input).readObject();
 	}
 
 	/**
@@ -3089,8 +3081,9 @@ public class Tools
 	 * 
 	 * @return the object input from the File.
 	 * @throws IOException
+	 * @throws ClassNotFoundException
 	 */
-	public static <T> T inputObjectFromFile(File file) throws IOException
+	public static <T> T inputObjectFromFile(File file) throws IOException, ClassNotFoundException
 	{
 		FileInputStream fis = null;
 
@@ -3201,7 +3194,6 @@ public class Tools
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
 				}
 			}
 		}
@@ -3305,7 +3297,6 @@ public class Tools
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
 				}
 			}
 		}
