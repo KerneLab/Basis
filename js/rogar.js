@@ -15,8 +15,10 @@
  * 
  * .rogar-txt-light { color: #ffffff; }
  */
-(function($) {
-	$.fn.rogar = function(options) {
+(function($)
+{
+	$.fn.rogar = function(options)
+	{
 		var self = this;
 
 		var opts = $.extend({}, $.fn.rogar.defaults, options);
@@ -28,7 +30,8 @@
 
 		box.empty();
 
-		if (!box.is("div")) {
+		if (!box.is("div"))
+		{
 			box = $("<div></div>");
 			this.append(box);
 		}
@@ -50,18 +53,24 @@
 
 		box.append(bar);
 
-		var findFillColor = function(rate) {
+		var findFillColor = function(rate)
+		{
 			rate *= 100;
 			var map = opts["bar.fill.colors"];
 			var found = null;
 			var value = null;
-			for ( var k in map) {
+			for ( var k in map)
+			{
 				var val = parseFloat(k);
-				if (found == null) {
+				if (found == null)
+				{
 					found = k;
 					value = val
-				} else {
-					if (val < rate && value < val) {
+				}
+				else
+				{
+					if (val < rate && value < val)
+					{
 						found = k;
 						value = val;
 					}
@@ -70,33 +79,46 @@
 			return found == null ? null : map[found];
 		};
 
-		this.to = function(r) {
+		this.to = function(r)
+		{
 			var rat = rate;
 			var duration = Math.abs(r - rat) * opts["duration.total"];
 			var node = self.get(0);
 
 			d3.select(node).selectAll("." + opts["bar.class"]).transition()
-					.duration(duration).styleTween("width", function() {
+					.duration(duration).styleTween("width", function()
+					{
 						var i = d3.interpolate(rat, r);
-						return function(t) {
+						return function(t)
+						{
 							var temp = (rate = i(t));
-							bar.css("background-color", findFillColor(temp));
 							return (temp * 100).toFixed(2) + "%";
+						}
+					}).styleTween("background-color", function()
+					{
+						var i = d3.interpolate(rat, r);
+						return function(t)
+						{
+							return findFillColor(i(t));
 						}
 					});
 
 			d3.select(node).selectAll("." + opts["txt.dark.class"])
-					.transition().duration(duration).tween("text", function() {
+					.transition().duration(duration).tween("text", function()
+					{
 						var i = d3.interpolate(rat, r);
-						return function(t) {
+						return function(t)
+						{
 							this.textContent = opts["txt.formatter"](i(t));
 						};
 					});
 
 			d3.select(node).selectAll("." + opts["txt.light.class"])
-					.transition().duration(duration).tween("text", function() {
+					.transition().duration(duration).tween("text", function()
+					{
 						var i = d3.interpolate(rat, r);
-						return function(t) {
+						return function(t)
+						{
 							this.textContent = opts["txt.formatter"](i(t));
 						};
 					});
@@ -110,20 +132,21 @@
 	};
 
 	$.fn.rogar.defaults = {
-		"init.rate" : 0,
-		"duration.total" : 2000,
-		"box.class" : "rogar-box",
-		"bar.class" : "rogar-bar",
-		"txt.dark.class" : "rogar-txt-dark",
-		"txt.light.class" : "rogar-txt-light",
-		"txt.formatter" : function(n) {
+		"init.rate": 0,
+		"duration.total": 2000,
+		"box.class": "rogar-box",
+		"bar.class": "rogar-bar",
+		"txt.dark.class": "rogar-txt-dark",
+		"txt.light.class": "rogar-txt-light",
+		"txt.formatter": function(n)
+		{
 			return (n * 100).toFixed(2) + "%";
 		},
-		"bar.fill.colors" : {
-			"0" : "#1A0FE3",
-			"30" : "#1ED51E",
-			"65" : "#F9A800",
-			"85" : "#EE2D2D"
+		"bar.fill.colors": {
+			"0": "#1A0FE3",
+			"30": "#1ED51E",
+			"65": "#F9A800",
+			"85": "#EE2D2D"
 		}
 	};
 
