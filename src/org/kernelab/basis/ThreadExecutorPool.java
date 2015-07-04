@@ -131,9 +131,18 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	 */
 	public float getBusy()
 	{
-		if (this.getLimit() != null)
+		Integer limit = this.getLimit();
+
+		if (limit != null)
 		{
-			return 1f * this.getRemain() / this.getLimit();
+			if (limit > 0)
+			{
+				return 1f * this.getRemain() / limit;
+			}
+			else
+			{
+				return 0f;
+			}
 		}
 		else
 		{
@@ -289,6 +298,28 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	public void setExecutorService(ExecutorService executorService)
 	{
 		this.executorService = executorService;
+
+		if (executorService instanceof ThreadPoolExecutor)
+		{
+			this.limit = ((ThreadPoolExecutor) executorService).getMaximumPoolSize();
+		}
+	}
+
+	public void setLimit(int limit)
+	{
+		if (limit >= 0)
+		{
+			if (executorService instanceof ThreadPoolExecutor)
+			{
+				ThreadPoolExecutor pool = (ThreadPoolExecutor) executorService;
+
+				pool.setCorePoolSize(limit);
+
+				pool.setMaximumPoolSize(limit);
+
+				this.limit = limit;
+			}
+		}
 	}
 
 	public void shutdown()
