@@ -4756,7 +4756,7 @@ public class Tools
 	 * 
 	 * @param strings
 	 *            the Strings.
-	 * @return true if and only if all of the objects are not null or white.
+	 * @return true if and only if all of the Strings are not null or white.
 	 */
 	public static boolean notNullOrWhite(String... strings)
 	{
