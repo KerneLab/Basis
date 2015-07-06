@@ -311,11 +311,10 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		{
 			if (executorService instanceof ThreadPoolExecutor)
 			{
-				ThreadPoolExecutor pool = (ThreadPoolExecutor) executorService;
+				ThreadPoolExecutor service = (ThreadPoolExecutor) executorService;
 
-				pool.setCorePoolSize(limit);
-
-				pool.setMaximumPoolSize(limit);
+				service.setCorePoolSize(limit);
+				service.setMaximumPoolSize(limit);
 
 				this.limit = limit;
 			}
