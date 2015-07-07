@@ -390,6 +390,18 @@ public class Entrance
 		return version;
 	}
 
+	public static String Value(List<String> param)
+	{
+		if (param == null || param.isEmpty())
+		{
+			return null;
+		}
+		else
+		{
+			return param.get(param.size() - 1);
+		}
+	}
+
 	private String[]					arguments;
 
 	private Map<String, List<String>>	parameters	= new LinkedHashMap<String, List<String>>();
@@ -588,8 +600,7 @@ public class Entrance
 
 	public String parameter(String key)
 	{
-		List<String> values = this.parameters(key);
-		return values == null || values.isEmpty() ? null : values.get(values.size() - 1);
+		return Value(this.parameters(key));
 	}
 
 	public String parameter(String key, String defaultValue)
