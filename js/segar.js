@@ -67,18 +67,13 @@
 				{
 					return d["color"] == null ? null : d["color"];
 				})//
-				.attr("title", function(d, i)
-				{
-					var r = opts["txt.formatter"](d["value"]);
-					if (d["id"] != null)
-					{
-						r = d["id"] + "(" + r + ")";
-					}
-					return r;
-				}) //
 				.text(function(d, i)
 				{
-					return opts["txt.formatter"](d["value"]);
+					return opts["txt.formatter"](d["value"], d, i);
+				}) //
+				.attr("title", function(d, i)
+				{
+					return opts["title.formatter"](d["value"], d, i);
 				}) //
 				.style("width", function(d, i)
 				{
@@ -111,15 +106,6 @@
 			{
 				return d["color"] == null ? null : d["color"];
 			}) //
-			.attr("title", function(d, i)
-			{
-				var r = opts["txt.formatter"](d["value"]);
-				if (d["id"] != null)
-				{
-					r = d["id"] + "(" + r + ")";
-				}
-				return r;
-			}) //
 			.transition().duration(duration) //
 			.tween("text", function(d, i)
 			{
@@ -128,7 +114,9 @@
 
 				return function(t)
 				{
-					this.textContent = opts["txt.formatter"](p(t));
+					var val = p(t);
+					this.textContent = opts["txt.formatter"](val, d, i);
+					$(this).attr("title", opts["title.formatter"](val, d, i));
 				};
 			}) //
 			.styleTween(
@@ -165,9 +153,14 @@
 		"duration.least": 500,
 		"box.class": "segar-box",
 		"bar.class": "segar-bar",
-		"txt.formatter": function(n)
+		"txt.formatter": function(v, d, i)
 		{
-			return (n * 100).toFixed(0) + "%";
+			return (v * 100).toFixed(0) + "%";
+		},
+		"title.formatter": function(v, d, i)
+		{
+			return (d["id"] != null ? (d["id"] + ":") : "")
+					+ (v * 100).toFixed(0) + "%";
 		}
 	};
 

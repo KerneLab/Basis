@@ -104,24 +104,36 @@
 					});
 
 			d3.select(node).selectAll("." + opts["txt.dark.class"])
-					.transition().duration(duration).tween("text", function()
-					{
-						var i = d3.interpolate(rat, r);
-						return function(t)
-						{
-							this.textContent = opts["txt.formatter"](i(t));
-						};
-					});
+					.transition().duration(duration).tween(
+							"text",
+							function()
+							{
+								var i = d3.interpolate(rat, r);
+								return function(t)
+								{
+									var val = i(t);
+									this.textContent = opts["txt.formatter"]
+											(val);
+									$(this).attr("title",
+											opts["title.formatter"](val));
+								};
+							});
 
 			d3.select(node).selectAll("." + opts["txt.light.class"])
-					.transition().duration(duration).tween("text", function()
-					{
-						var i = d3.interpolate(rat, r);
-						return function(t)
-						{
-							this.textContent = opts["txt.formatter"](i(t));
-						};
-					});
+					.transition().duration(duration).tween(
+							"text",
+							function()
+							{
+								var i = d3.interpolate(rat, r);
+								return function(t)
+								{
+									var val = i(t);
+									this.textContent = opts["txt.formatter"]
+											(val);
+									$(this).attr("title",
+											opts["title.formatter"](val));
+								};
+							});
 
 			self.data("rogar.ratio", r);
 
@@ -138,9 +150,13 @@
 		"bar.class": "rogar-bar",
 		"txt.dark.class": "rogar-txt-dark",
 		"txt.light.class": "rogar-txt-light",
-		"txt.formatter": function(n)
+		"txt.formatter": function(v)
 		{
-			return (n * 100).toFixed(2) + "%";
+			return (v * 100).toFixed(2) + "%";
+		},
+		"title.formatter": function(v)
+		{
+			return (v * 100).toFixed(2) + "%";
 		},
 		"bar.fill.colors": {
 			"0": "#1A0FE3",
