@@ -63,32 +63,38 @@ Tools.clean = function(obj)
 	}
 };
 
-Tools.clone = function(data)
+Tools.clone = function(source)
 {
-	var c = null;
+	var type = $.type(source);
 
-	if ($.type(data) == "object")
+	if (type != "array" && type != "object")
 	{
-		c = {};
-	}
-	else if ($.type(data) == "array")
-	{
-		c = [];
-	}
-	else
-	{
-		return data;
+		return source;
 	}
 
-	for ( var k in data)
+	var target = Tools.get(arguments, 1, null);
+
+	if (target == null)
 	{
-		if (data.hasOwnProperty(k))
+		if (type == "array")
 		{
-			c[k] = data[k];
+			target = [];
+		}
+		else
+		{
+			target = {};
 		}
 	}
 
-	return c;
+	for ( var k in source)
+	{
+		if (source.hasOwnProperty(k))
+		{
+			target[k] = source[k];
+		}
+	}
+
+	return target;
 };
 
 Tools.dualMatch = function(str, a, b, from)
@@ -312,11 +318,16 @@ Tools.orth = function(vector)
 
 Tools.reduce = function(contain, reducer, result)
 {
+	var temp = undefined;
 	for ( var i in contain)
 	{
 		if (contain.hasOwnProperty(i))
 		{
-			result = reducer(result, contain[i], i);
+			temp = reducer(result, contain[i], i);
+			if (typeof (temp) != "undefined")
+			{
+				result = temp;
+			}
 		}
 	}
 	return result;
