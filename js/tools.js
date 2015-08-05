@@ -1,55 +1,14 @@
 /**
- * Basic Tools Written with JavaScript. <br />
+ * Basic Tools Written in JavaScript.<br />
  * KerneLab.org
  */
 function Tools()
 {
-
 }
 
 Tools.add = function(vector1, vector2)
 {
 	return [ vector1[0] + vector2[0], vector1[1] + vector2[1] ];
-};
-
-Tools.cast = function(src, obj)
-{
-	var keys = [];
-	if (arguments.length == 2)
-	{
-		Tools.keys(src, keys);
-	}
-	else if (arguments.length > 2)
-	{
-		for (var i = 2; i < arguments.length; i++)
-		{
-			var k = arguments[i];
-			if ($.type(k) == "array")
-			{
-				for ( var j in k)
-				{
-					var key = k[j];
-					if (src.hasOwnProperty(key))
-					{
-						keys.push(key);
-					}
-				}
-			}
-			else
-			{
-				if (src.hasOwnProperty(k))
-				{
-					keys.push(k);
-				}
-			}
-		}
-	}
-	for ( var i in keys)
-	{
-		var key = keys[i];
-		obj[key] = src[key];
-	}
-	return obj;
 };
 
 Tools.clean = function(obj)
@@ -61,6 +20,7 @@ Tools.clean = function(obj)
 			delete obj[i];
 		}
 	}
+	return obj;
 };
 
 Tools.clone = function(source)
@@ -73,6 +33,7 @@ Tools.clone = function(source)
 	}
 
 	var target = Tools.get(arguments, 1, null);
+	var keys = Tools.get(arguments, 2, Tools.keys(source));
 
 	if (target == null)
 	{
@@ -86,11 +47,12 @@ Tools.clone = function(source)
 		}
 	}
 
-	for ( var k in source)
+	for ( var k in keys)
 	{
-		if (source.hasOwnProperty(k))
+		var key = keys[k];
+		if (source.hasOwnProperty(key))
 		{
-			target[k] = source[k];
+			target[key] = Tools.clone(source[key]);
 		}
 	}
 
@@ -249,7 +211,7 @@ Tools.find = function(contain, object)
 	});
 	for ( var i in contain)
 	{
-		if (contain.hasOwnProperty(i) && equal(object, contain[i]))
+		if (contain.hasOwnProperty(i) && equal(contain[i], object))
 		{
 			index = i;
 			break;
@@ -292,6 +254,29 @@ Tools.map = function(contain, mapper)
 		}
 	}
 	return result;
+};
+
+Tools.merge = function(into, from, equal)
+{
+	var value = Tools.get(arguments, 3);
+	for ( var i in from)
+	{
+		var src = from[i];
+		if (src != null)
+		{
+			var val = $.type(value) == "function" ? value(src) : src;
+			var tar = Tools.get(into, Tools.find(into, src, equal));
+			if (tar != null)
+			{
+				Tools.clone(val, tar);
+			}
+			else
+			{
+				into.push(val);
+			}
+		}
+	}
+	return into;
 };
 
 Tools.multiple = function(factor, vector)
