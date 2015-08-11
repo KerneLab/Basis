@@ -61,6 +61,25 @@ public class StreamTransfer implements Runnable
 		}
 	}
 
+	public StreamTransfer start()
+	{
+		return start(false);
+	}
+
+	public StreamTransfer start(boolean daemon)
+	{
+		Thread thread = new Thread(this);
+
+		if (thread.isDaemon() != daemon)
+		{
+			thread.setDaemon(daemon);
+		}
+
+		thread.start();
+
+		return this;
+	}
+
 	protected void transfer() throws Exception
 	{
 		int length = -1;

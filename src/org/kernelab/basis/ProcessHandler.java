@@ -17,8 +17,8 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	 */
 	public static void main(String[] args)
 	{
-		ProcessHandler ph = new ProcessHandler(args);
-		ph.run();
+		ProcessHandler ph = new ProcessHandler(args).useSystemOutputStreams();
+		new StreamTransfer(System.in, ph.start().getProcessOutputStream()).start(true);
 	}
 
 	private Process				process;
@@ -83,12 +83,13 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 			pes = process.getErrorStream();
 
 			tos = new StreamTransfer(pis, outputStream);
+			tos.start(true);
 
-			tes = new StreamTransfer(pes, errorStream);
-
-			new Thread(tos).start();
-
-			new Thread(tes).start();
+			if (!processBuilder.redirectErrorStream())
+			{
+				tes = new StreamTransfer(pes, errorStream);
+				tes.start(true);
+			}
 		}
 		catch (Exception e)
 		{
@@ -292,6 +293,35 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	}
 
 	/**
+	 * Start the Process Thread in normal mode and wait until it has been really
+	 * started.
+	 * 
+	 * @return
+	 */
+	public ProcessHandler start()
+	{
+		return start(false);
+	}
+
+	/**
+	 * Start the Process Thread and wait until it has been really started.
+	 * 
+	 * @param daemon
+	 *            start the thread in daemon mode or not.
+	 * @return
+	 */
+	public ProcessHandler start(boolean daemon)
+	{
+		Thread thread = new Thread(this);
+		if (thread.isDaemon() != daemon)
+		{
+			thread.setDaemon(daemon);
+		}
+		thread.start();
+		return this.waitForStarted();
+	}
+
+	/**
 	 * Terminate the Process.<br>
 	 * Attention, this operation would not trigger any AccomplishListener.
 	 */
@@ -322,8 +352,8 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 				outputStream = null;
 				errorStream = null;
 
-				pis = null;
 				pos = null;
+				pis = null;
 				pes = null;
 			}
 		}
@@ -331,6 +361,11 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		{
 			this.notifyAll();
 		}
+	}
+
+	public ProcessHandler useSystemOutputStreams()
+	{
+		return this.setOutputStream(System.out).setErrorStream(System.err);
 	}
 
 	/**
