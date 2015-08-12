@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.lang.reflect.Method;
-import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -165,13 +164,9 @@ public class Entrance
 
 		try
 		{
-			jarFile = new JarFile(new File(cls.getProtectionDomain().getCodeSource().getLocation().toURI()));
+			jarFile = new JarFile(Tools.getBelongingFile(cls));
 		}
-		catch (URISyntaxException e)
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			e.printStackTrace();
 		}

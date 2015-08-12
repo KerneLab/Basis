@@ -27,6 +27,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -2119,6 +2120,33 @@ public class Tools
 		}
 
 		return index;
+	}
+
+	/**
+	 * Get the File which the Class belongs to.
+	 * 
+	 * @param cls
+	 *            The given Class.
+	 * @return The belonging file.
+	 */
+	public static File getBelongingFile(Class<?> cls)
+	{
+		if (cls != null)
+		{
+			try
+			{
+				return new File(URLDecoder.decode(cls.getProtectionDomain().getCodeSource().getLocation().getPath(),
+						"UTF-8"));
+			}
+			catch (UnsupportedEncodingException e)
+			{
+				return null;
+			}
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/**

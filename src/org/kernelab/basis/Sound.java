@@ -8,7 +8,6 @@ import java.net.URL;
 
 public class Sound implements Runnable
 {
-
 	private URL			url;
 
 	private AudioClip	sound;
@@ -45,7 +44,8 @@ public class Sound implements Runnable
 
 	public void play()
 	{
-		if (this.sound == null) {
+		if (this.sound == null)
+		{
 			this.load();
 		}
 
@@ -64,9 +64,9 @@ public class Sound implements Runnable
 
 	public void stop()
 	{
-		if (this.sound != null) {
+		if (this.sound != null)
+		{
 			this.sound.stop();
 		}
 	}
-
 }
