@@ -21,39 +21,39 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		new StreamTransfer(System.in, ph.start().getProcessOutputStream()).start(true);
 	}
 
-	private Process				process;
+	private Process			process;
 
-	private ProcessBuilder		processBuilder;
+	private ProcessBuilder	processBuilder;
 
-	private Integer				result;
+	private Integer			result;
 
-	private volatile boolean	started;
+	private boolean			started;
 
-	private volatile boolean	running;
+	private boolean			running;
 
-	private Exception			exception;
+	private Exception		exception;
 
-	private volatile boolean	terminated;
+	private boolean			terminated;
 
 	/**
 	 * Streams of Process.
 	 */
-	private OutputStream		pos;
+	private OutputStream	pos;
 
-	private InputStream			pis;
+	private InputStream		pis;
 
-	private InputStream			pes;
+	private InputStream		pes;
 
 	/**
 	 * Streams of delegation.
 	 */
-	private OutputStream		outputStream;
+	private OutputStream	outputStream;
 
-	private OutputStream		errorStream;
+	private OutputStream	errorStream;
 
-	private StreamTransfer		tos;
+	private StreamTransfer	tos;
 
-	private StreamTransfer		tes;
+	private StreamTransfer	tes;
 
 	public ProcessHandler(String... cmd)
 	{

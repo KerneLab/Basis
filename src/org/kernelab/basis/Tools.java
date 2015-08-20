@@ -3425,6 +3425,36 @@ public class Tools
 	}
 
 	/**
+	 * To test whether the given sub class is a sub class of the super class.
+	 * 
+	 * @param sub
+	 *            A given sub class.
+	 * @param sup
+	 *            A given super class.
+	 * @return true if and only if the sub class is a sub class of the super
+	 *         class.
+	 */
+	public static boolean isSubClass(Class<?> sub, Class<?> sup)
+	{
+		if (sub != null && sup != null)
+		{
+			try
+			{
+				sub.asSubclass(sup);
+				return true;
+			}
+			catch (ClassCastException e)
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	/**
 	 * Joint each CharSequence to a String.
 	 * 
 	 * @param delimiter
@@ -5363,7 +5393,9 @@ public class Tools
 						break;
 					}
 					if (string.charAt(i + j) != remove.charAt(j))
+					{
 						contains = false;
+					}
 				}
 			}
 			result = string.substring(0, begin)
@@ -6892,7 +6924,6 @@ public class Tools
 
 				for (int i = 0; i < split.length; i++)
 				{
-
 					if (end > stringLength)
 					{
 						end = stringLength;
