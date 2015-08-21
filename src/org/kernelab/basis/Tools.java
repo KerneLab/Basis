@@ -2123,7 +2123,8 @@ public class Tools
 	}
 
 	/**
-	 * Get the File which the Class belongs to.
+	 * Get the File which the Class belongs to.<br />
+	 * Returns null if any exception occurred.
 	 * 
 	 * @param cls
 	 *            The given Class.
@@ -2138,7 +2139,7 @@ public class Tools
 				return new File(URLDecoder.decode(cls.getProtectionDomain().getCodeSource().getLocation().getPath(),
 						"UTF-8"));
 			}
-			catch (UnsupportedEncodingException e)
+			catch (Exception e)
 			{
 				return null;
 			}

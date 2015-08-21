@@ -168,7 +168,6 @@ public class Entrance
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 		}
 
 		return jarFile;
