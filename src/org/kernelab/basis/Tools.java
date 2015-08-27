@@ -2718,8 +2718,12 @@ public class Tools
 	 */
 	public static String getFolderPath(String folder, String sep)
 	{
-		if (folder != null && !folder.endsWith(sep))
+		if (Tools.notNullOrEmpty(folder, sep) && !folder.endsWith(sep))
 		{
+			if (folder.endsWith("/") || folder.endsWith("\\"))
+			{
+				folder = folder.substring(0, folder.length() - 1);
+			}
 			folder += sep;
 		}
 		return folder;
