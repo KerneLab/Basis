@@ -6947,6 +6947,31 @@ public class Tools
 	}
 
 	/**
+	 * Get a sub string according to the given start position and length.
+	 * 
+	 * @param sequence
+	 *            The CharSequence which contains the sub string.
+	 * @param start
+	 *            The start position to get the sub string.
+	 * @param length
+	 *            The length of the sub string.
+	 * @return The sub string.
+	 */
+	public static String substr(CharSequence sequence, int start, int length)
+	{
+		if (sequence != null)
+		{
+			int begin = Tools.limitNumber(start, 0, sequence.length());
+			int end = Tools.limitNumber(start + length, begin, sequence.length());
+			return sequence.subSequence(begin, end).toString();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	/**
 	 * To get the Subtraction of a-b.<br />
 	 * That is all element in Iterable a but not in b.
 	 * 
