@@ -6403,23 +6403,23 @@ public class Tools
 	 * To seek the first position of a certain char in a CharSequence from the
 	 * beginning of the CharSequence.
 	 * 
-	 * @param seq
+	 * @param text
 	 *            The CharSequence to be seek.
 	 * @param c
 	 *            The target char.
 	 * @return The first position of the char. Return -1 if could not be found.
 	 * @see Tools#seekLastIndex(CharSequence, char, int)
 	 */
-	public static int seekIndex(CharSequence seq, char c)
+	public static int seekIndex(CharSequence text, char c)
 	{
-		return seekIndex(seq, c, 0);
+		return seekIndex(text, c, 0);
 	}
 
 	/**
 	 * To seek the first position of a certain char in a CharSequence from a
 	 * given start offset.
 	 * 
-	 * @param seq
+	 * @param text
 	 *            The CharSequence to be seek.
 	 * @param c
 	 *            The target char.
@@ -6428,17 +6428,17 @@ public class Tools
 	 * @return The first position of the char from the offset. Return -1 if
 	 *         could not be found.
 	 */
-	public static int seekIndex(CharSequence seq, char c, int from)
+	public static int seekIndex(CharSequence text, char c, int from)
 	{
 		int index = -1;
 
-		int length = seq.length();
+		int length = text.length();
 
 		from = Math.max(0, from);
 
 		for (int i = from; i < length; i++)
 		{
-			if (seq.charAt(i) == c)
+			if (text.charAt(i) == c)
 			{
 				index = i;
 				break;
@@ -6452,7 +6452,7 @@ public class Tools
 	 * To seek the first position of a certain CharSequence in another
 	 * CharSequence from the beginning of the later one.
 	 * 
-	 * @param seq
+	 * @param text
 	 *            The CharSequence to be seek.
 	 * @param sub
 	 *            The sub CharSequence.
@@ -6460,16 +6460,16 @@ public class Tools
 	 *         found.
 	 * @see Tools#seekIndex(CharSequence, CharSequence, int)
 	 */
-	public static int seekIndex(CharSequence seq, CharSequence sub)
+	public static int seekIndex(CharSequence text, CharSequence sub)
 	{
-		return seekIndex(seq, sub, 0);
+		return seekIndex(text, sub, 0);
 	}
 
 	/**
 	 * To seek the first position of a certain CharSequence in another
 	 * CharSequence from a given start offset.
 	 * 
-	 * @param seq
+	 * @param text
 	 *            The CharSequence to be seek.
 	 * @param sub
 	 *            The sub CharSequence.
@@ -6478,14 +6478,14 @@ public class Tools
 	 * @return The first position of the CharSequence from the offset. Return -1
 	 *         if could not be found.
 	 */
-	public static int seekIndex(CharSequence seq, CharSequence sub, int from)
+	public static int seekIndex(CharSequence text, CharSequence sub, int from)
 	{
 		int index = -1;
 
-		if (sub.length() < seq.length())
+		if (sub.length() < text.length())
 		{
 			int small = sub.length();
-			int length = seq.length() - small + 1;
+			int length = text.length() - small + 1;
 
 			from = Math.max(0, from);
 
@@ -6497,7 +6497,7 @@ public class Tools
 
 				for (int j = 0; j < small && found; j++)
 				{
-					found = seq.charAt(i + j) == sub.charAt(j);
+					found = text.charAt(i + j) == sub.charAt(j);
 				}
 
 				if (found)
@@ -6515,23 +6515,23 @@ public class Tools
 	 * To seek the last position of a certain char in a CharSequence from the
 	 * end of the CharSequence.
 	 * 
-	 * @param seq
+	 * @param text
 	 *            The CharSequence to be seek.
 	 * @param c
 	 *            The target char.
 	 * @return The last position of the char. Return -1 if could not be found.
 	 * @see Tools#seekLastIndex(CharSequence, char, int)
 	 */
-	public static int seekLastIndex(CharSequence seq, char c)
+	public static int seekLastIndex(CharSequence text, char c)
 	{
-		return seekLastIndex(seq, c, seq.length());
+		return seekLastIndex(text, c, text.length());
 	}
 
 	/**
 	 * To seek the last position of a certain char in a CharSequence from a
 	 * given start offset.
 	 * 
-	 * @param seq
+	 * @param text
 	 *            The CharSequence to be seek.
 	 * @param c
 	 *            The target char.
@@ -6540,15 +6540,15 @@ public class Tools
 	 * @return The last position of the char from the offset. Return -1 if could
 	 *         not be found.
 	 */
-	public static int seekLastIndex(CharSequence seq, char c, int from)
+	public static int seekLastIndex(CharSequence text, char c, int from)
 	{
 		int index = -1;
 
-		from = Math.min(seq.length() - 1, from);
+		from = Math.min(text.length() - 1, from);
 
 		for (int i = from; i > -1; i--)
 		{
-			if (seq.charAt(i) == c)
+			if (text.charAt(i) == c)
 			{
 				index = i;
 				break;
@@ -6562,23 +6562,23 @@ public class Tools
 	 * To seek the last position of a certain CharSequence in another
 	 * CharSequence from the end of the later one.
 	 * 
-	 * @param seq
+	 * @param text
 	 *            The CharSequence to be seek.
 	 * @param sub
 	 *            The sub CharSequence.
 	 * @return The last position of the CharSequence. Return -1 if could not be
 	 *         found.
 	 */
-	public static int seekLastIndex(CharSequence seq, CharSequence sub)
+	public static int seekLastIndex(CharSequence text, CharSequence sub)
 	{
-		return seekLastIndex(seq, sub, seq.length());
+		return seekLastIndex(text, sub, text.length());
 	}
 
 	/**
 	 * To seek the last position of a certain CharSequence in another
 	 * CharSequence from a given start offset.
 	 * 
-	 * @param seq
+	 * @param text
 	 *            The CharSequence to be seek.
 	 * @param sub
 	 *            The sub CharSequence.
@@ -6587,14 +6587,14 @@ public class Tools
 	 * @return The last position of the CharSequence from the offset. Return -1
 	 *         if could not be found.
 	 */
-	public static int seekLastIndex(CharSequence seq, CharSequence sub, int from)
+	public static int seekLastIndex(CharSequence text, CharSequence sub, int from)
 	{
 		int index = -1;
 
-		if (sub.length() < seq.length())
+		if (sub.length() < text.length())
 		{
 			int small = sub.length();
-			int length = seq.length() - small;
+			int length = text.length() - small;
 
 			from = Math.min(length, from);
 
@@ -6606,7 +6606,7 @@ public class Tools
 
 				for (int j = 0; j < small && found; j++)
 				{
-					found = seq.charAt(i + j) == sub.charAt(j);
+					found = text.charAt(i + j) == sub.charAt(j);
 				}
 
 				if (found)
@@ -6701,7 +6701,7 @@ public class Tools
 	 * &quot;:&quot; with split ':' returns {&quot;&quot;, &quot;&quot;}
 	 * </pre>
 	 * 
-	 * @param sequence
+	 * @param text
 	 *            The CharSequence that will be split.
 	 * @param split
 	 *            The Split signal such as '/' that is contained in
@@ -6709,9 +6709,9 @@ public class Tools
 	 * @return A String array contains these split string.
 	 * @see Tools#splitCharSequence(CharSequence, char, int)
 	 */
-	public static String[] splitCharSequence(CharSequence sequence, char split)
+	public static String[] splitCharSequence(CharSequence text, char split)
 	{
-		return splitCharSequence(sequence, split, -0);
+		return splitCharSequence(text, split, -0);
 	}
 
 	/**
@@ -6732,7 +6732,7 @@ public class Tools
 	 * &quot;:&quot; with split ':' returns {&quot;&quot;, &quot;&quot;}
 	 * </pre>
 	 * 
-	 * @param sequence
+	 * @param text
 	 *            The CharSequence that will be split.
 	 * @param split
 	 *            The Split signal such as '/' that is contained in
@@ -6742,16 +6742,16 @@ public class Tools
 	 *            number.
 	 * @return A String array contains these split string.
 	 */
-	public static String[] splitCharSequence(CharSequence sequence, char split, int limit)
+	public static String[] splitCharSequence(CharSequence text, char split, int limit)
 	{
-		if (sequence != null)
+		if (text != null)
 		{
 			List<String> splitString = new LinkedList<String>();
 
-			int length = sequence.length();
+			int length = text.length();
 
 			int last = 0;
-			int index = seekIndex(sequence, split, last);
+			int index = seekIndex(text, split, last);
 
 			while (index > -1)
 			{
@@ -6760,19 +6760,15 @@ public class Tools
 					break;
 				}
 
-				splitString.add(sequence.subSequence(last, index).toString());
+				splitString.add(text.subSequence(last, index).toString());
 
 				last = index + 1;
-				index = seekIndex(sequence, split, last);
+				index = seekIndex(text, split, last);
 			}
 
-			splitString.add(sequence.subSequence(last, length).toString());
+			splitString.add(text.subSequence(last, length).toString());
 
-			String[] result = new String[splitString.size()];
-
-			splitString.toArray(result);
-
-			return result;
+			return splitString.toArray(new String[splitString.size()]);
 		}
 		else
 		{
@@ -6795,7 +6791,7 @@ public class Tools
 	 * &quot;String&quot; with split &quot;&quot; returns {&quot;S&quot;, &quot;t&quot;, &quot;r&quot;, &quot;i&quot;, &quot;n&quot;, &quot;g&quot;}
 	 * </pre>
 	 * 
-	 * @param sequence
+	 * @param text
 	 *            The CharSequence that will be split.
 	 * @param split
 	 *            The Split signal such as "@=" that is contained in
@@ -6803,9 +6799,9 @@ public class Tools
 	 * @return A String array contains these split string.
 	 * @see Tools#splitCharSequence(CharSequence, String, int)
 	 */
-	public static String[] splitCharSequence(CharSequence sequence, CharSequence split)
+	public static String[] splitCharSequence(CharSequence text, CharSequence split)
 	{
-		return splitCharSequence(sequence, split, -0);
+		return splitCharSequence(text, split, -0);
 	}
 
 	/**
@@ -6828,7 +6824,7 @@ public class Tools
 	 * &quot;String&quot; with split &quot;&quot; returns {&quot;S&quot;, &quot;t&quot;, &quot;r&quot;, &quot;i&quot;, &quot;n&quot;, &quot;g&quot;}
 	 * </pre>
 	 * 
-	 * @param sequence
+	 * @param text
 	 *            The CharSequence that will be split.
 	 * @param splitThe
 	 *            Split signal such as "@=" that is contained in CharSequence.
@@ -6837,17 +6833,17 @@ public class Tools
 	 *            number.
 	 * @return A String array contains these split string.
 	 */
-	public static String[] splitCharSequence(CharSequence sequence, CharSequence split, int limit)
+	public static String[] splitCharSequence(CharSequence text, CharSequence split, int limit)
 	{
-		String[] result = null;
-
-		if (sequence != null)
+		if (text != null)
 		{
+			String[] result = null;
+
 			LinkedList<String> splitString = new LinkedList<String>();
 
 			split = split == null ? "" : split;
 
-			int length = sequence.length();
+			int length = text.length();
 			int space = split.length();
 
 			if (split.equals(""))
@@ -6856,13 +6852,13 @@ public class Tools
 
 				for (int i = 0; i < length; i++)
 				{
-					result[i] = String.valueOf(sequence.charAt(i));
+					result[i] = String.valueOf(text.charAt(i));
 				}
 			}
 			else
 			{
 				int last = 0;
-				int index = seekIndex(sequence, split);
+				int index = seekIndex(text, split);
 
 				while (index > -1)
 				{
@@ -6871,21 +6867,23 @@ public class Tools
 						break;
 					}
 
-					splitString.add(sequence.subSequence(last, index).toString());
+					splitString.add(text.subSequence(last, index).toString());
 
 					last = index + space;
-					index = seekIndex(sequence, split, last);
+					index = seekIndex(text, split, last);
 				}
 
-				splitString.add(sequence.subSequence(last, length).toString());
+				splitString.add(text.subSequence(last, length).toString());
 
-				result = new String[splitString.size()];
-
-				splitString.toArray(result);
+				result = splitString.toArray(new String[splitString.size()]);
 			}
-		}
 
-		return result;
+			return result;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -6893,57 +6891,130 @@ public class Tools
 	 * to a given length.
 	 * 
 	 * <pre>
-	 * &quot;Let you know&quot; with each split length of 4 returns {&quot;Let &quot;,&quot;you &quot;,&quot;know&quot;}
-	 * &quot;&quot; with any split length, always returns { } NOT { &quot;&quot; }
+	 * &quot;Let you know&quot; with each split length of 4 returns [&quot;Let &quot;,&quot;you &quot;,&quot;know&quot;]
+	 * &quot;&quot; with any split length, always returns [ ] NOT [ &quot;&quot; ]
 	 * </pre>
 	 * 
-	 * @param sequence
+	 * @param text
 	 *            The CharSequence to be split.
 	 * @param eachLength
 	 *            A positive integer for each length of split String.
 	 * @return A String array contains these split string.
 	 */
-	public static String[] splitCharSequence(CharSequence sequence, int eachLength)
+	public static String[] splitCharSequence(CharSequence text, int eachLength)
 	{
-		String[] split = null;
+		return splitCharSequence(text, eachLength, 0);
+	}
 
-		if (sequence != null)
+	/**
+	 * Split a CharSequence into several small Strings whose length is according
+	 * to a given length. The size of result array would be at least the
+	 * minPieces. Empty strings would be filled in the result array if the
+	 * result array did not reach the minimum pieces.
+	 * 
+	 * <style>table, th, td {border: 1px solid #333333;}</style>
+	 * <table>
+	 * <tr>
+	 * <th>Text</th>
+	 * <th>EachLength</th>
+	 * <th>MinPieces</th>
+	 * <th>Result</th>
+	 * </tr>
+	 * <tr>
+	 * <td>&quot;Let you know&quot;</td>
+	 * <td>4</td>
+	 * <td>4</td>
+	 * <td>[&quot;Let &quot;,&quot;you &quot;,&quot;know&quot;,&quot;&quot;]</td>
+	 * </tr>
+	 * <tr>
+	 * <td>&quot;a&quot;</td>
+	 * <td>0 or less</td>
+	 * <td>0</td>
+	 * <td>[ ]</td>
+	 * </tr>
+	 * <tr>
+	 * <td>&quot;a&quot;</td>
+	 * <td>1 or more</td>
+	 * <td>0</td>
+	 * <td>[ &quot;a&quot; ]</td>
+	 * </tr>
+	 * <tr>
+	 * <td>&quot;&quot;</td>
+	 * <td>any</td>
+	 * <td>1</td>
+	 * <td>[ &quot;&quot; ]</td>
+	 * </tr>
+	 * <tr>
+	 * <td>&quot;&quot;</td>
+	 * <td>any</td>
+	 * <td>0</td>
+	 * <td>[ ]</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @param text
+	 *            The CharSequence to be split.
+	 * @param eachLength
+	 *            A positive integer for each length of split String.
+	 * @param minPieces
+	 *            The minimum size the result array should be.
+	 * @return A String array contains these split string.
+	 */
+	public static String[] splitCharSequence(CharSequence text, int eachLength, int minPieces)
+	{
+		if (text != null)
 		{
-			int stringLength = sequence.length();
+			List<String> list = new LinkedList<String>();
 
-			if (stringLength == 0 || eachLength < 0)
+			int stringLength = text.length();
+
+			if (eachLength <= 0 || (stringLength == 0 && minPieces <= 0))
 			{
-				split = new String[] {};
 			}
-			else if (eachLength == stringLength || eachLength == 0)
+			else if (eachLength >= stringLength || eachLength == 0)
 			{
-				split = new String[] { sequence.toString() };
+				list.add(text.toString());
 			}
 			else
 			{
-				split = new String[(stringLength - 1) / eachLength + 1];
-
-				int begin = 0;
-
-				int end = eachLength;
-
-				for (int i = 0; i < split.length; i++)
+				for (int begin = 0; begin < stringLength; begin += eachLength)
 				{
-					if (end > stringLength)
-					{
-						end = stringLength;
-					}
-
-					split[i] = sequence.subSequence(begin, end).toString();
-
-					begin = end;
-
-					end += eachLength;
+					list.add(substr(text, begin, eachLength));
 				}
 			}
-		}
 
-		return split;
+			for (int i = list.size(); i < minPieces; i++)
+			{
+				list.add("");
+			}
+
+			return list.toArray(new String[list.size()]);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Get a sub string according to the given start position.
+	 * 
+	 * @param sequence
+	 *            The CharSequence which contains the sub string.
+	 * @param start
+	 *            The start position to get the sub string.
+	 * @return The sub string.
+	 */
+	public static String substr(CharSequence sequence, int start)
+	{
+		if (sequence != null)
+		{
+			return sequence.subSequence(Tools.limitNumber(start, 0, sequence.length()), sequence.length()).toString();
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
