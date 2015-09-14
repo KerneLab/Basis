@@ -4606,21 +4606,6 @@ public class Tools
 	}
 
 	/**
-	 * Get the Matcher object according to the given regex, default flags and
-	 * reset with a given text.
-	 * 
-	 * @param regex
-	 *            The regular expression.
-	 * @param text
-	 *            The text to be matched.
-	 * @return The Matcher object.
-	 */
-	public static Matcher matcher(String regex, CharSequence text)
-	{
-		return matcher(regex, 0, text);
-	}
-
-	/**
 	 * Get the Matcher object according to the given regex and flags which is
 	 * reset with an empty text.
 	 * 
@@ -4654,6 +4639,84 @@ public class Tools
 	public static Matcher matcher(String regex, int flags, CharSequence text)
 	{
 		return Pattern.compile(regex, flags).matcher(text);
+	}
+
+	/**
+	 * Get the Matcher object according to the given regex and flags which is
+	 * reset with an empty text.
+	 * 
+	 * @param regex
+	 *            The regular expression.
+	 * @param flags
+	 *            Match flags, including m,u,s,i,c.
+	 * @return The Matcher object.
+	 */
+	public static Matcher matcher(String regex, String flags)
+	{
+		return matcher(regex, matchFlags(flags), "");
+	}
+
+	/**
+	 * Get the Matcher object according to the given regex and flags and reset
+	 * with a given text.
+	 * 
+	 * @param regex
+	 *            The regular expression.
+	 * @param flags
+	 *            Match flags, including m,u,s,i,c.
+	 * @param text
+	 *            The text to be matched.
+	 * @return The Matcher object.
+	 */
+	public static Matcher matcher(String regex, String flags, CharSequence text)
+	{
+		return Pattern.compile(regex, matchFlags(flags)).matcher(text);
+	}
+
+	/**
+	 * Return the values of match flags.
+	 * 
+	 * <pre>
+	 * m	multiline
+	 * u	Unicode-aware case
+	 * s	single-line
+	 * i	case-insensitive
+	 * c	canonical equivalence
+	 * </pre>
+	 * 
+	 * @param flags
+	 *            Match flags.
+	 * @return The flags value.
+	 */
+	public static int matchFlags(String flags)
+	{
+		int flag = 0;
+
+		if (flags != null)
+		{
+			if (flags.indexOf('m') != -1)
+			{
+				flag |= Pattern.MULTILINE;
+			}
+			if (flags.indexOf('u') != -1)
+			{
+				flag |= Pattern.UNICODE_CASE;
+			}
+			if (flags.indexOf('s') != -1)
+			{
+				flag |= Pattern.DOTALL;
+			}
+			if (flags.indexOf('i') != -1)
+			{
+				flag |= Pattern.CASE_INSENSITIVE;
+			}
+			if (flags.indexOf('c') != -1)
+			{
+				flag |= Pattern.CANON_EQ;
+			}
+		}
+
+		return flag;
 	}
 
 	/**
