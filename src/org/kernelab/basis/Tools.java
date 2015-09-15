@@ -80,7 +80,7 @@ public class Tools
 
 	private static final Set<PrintStream>	Outs					= new LinkedHashSet<PrintStream>();
 
-	public static final int					BUFFER_BYTES			= 1024;
+	public static final int					BUFFER_SIZE				= 1024;
 
 	protected static final Calendar			CALENDAR				= new GregorianCalendar();
 
@@ -826,7 +826,7 @@ public class Tools
 
 		if (buffer == null || buffer.length == 0)
 		{
-			buffer = new byte[BUFFER_BYTES];
+			buffer = new byte[BUFFER_SIZE];
 		}
 
 		int length = -1;
@@ -875,7 +875,7 @@ public class Tools
 
 		if (buffer == null || buffer.length == 0)
 		{
-			buffer = new byte[BUFFER_BYTES];
+			buffer = new byte[BUFFER_SIZE];
 		}
 
 		ByteBuffer wrap = ByteBuffer.wrap(buffer);
@@ -930,7 +930,7 @@ public class Tools
 
 		if (buffer == null || buffer.length == 0)
 		{
-			buffer = new byte[BUFFER_BYTES];
+			buffer = new byte[BUFFER_SIZE];
 		}
 
 		ByteBuffer wrap = ByteBuffer.wrap(buffer);
@@ -985,7 +985,7 @@ public class Tools
 
 		if (buffer == null || buffer.capacity() == 0)
 		{
-			buffer = ByteBuffer.allocate(BUFFER_BYTES);
+			buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		}
 		else
 		{
@@ -1040,7 +1040,7 @@ public class Tools
 
 		if (buffers == null || buffers.length == 0)
 		{
-			buffers = new ByteBuffer[] { ByteBuffer.allocate(BUFFER_BYTES) };
+			buffers = new ByteBuffer[] { ByteBuffer.allocate(BUFFER_SIZE) };
 		}
 		else
 		{
@@ -1958,7 +1958,7 @@ public class Tools
 		{
 			Enumeration<? extends ZipEntry> entries = zip.entries();
 
-			byte[] buffer = new byte[BUFFER_BYTES];
+			byte[] buffer = new byte[BUFFER_SIZE];
 
 			while (entries.hasMoreElements())
 			{
@@ -3207,7 +3207,7 @@ public class Tools
 
 		try
 		{
-			char[] buffer = new char[BUFFER_BYTES];
+			char[] buffer = new char[BUFFER_SIZE];
 			int length = -1;
 			while ((length = reader.read(buffer)) != -1)
 			{

@@ -15,7 +15,7 @@ public class ChannelOutputStream extends OutputStream
 
 	public ChannelOutputStream(WritableByteChannel channel)
 	{
-		this(channel, ByteBuffer.allocate(Tools.BUFFER_BYTES));
+		this(channel, ByteBuffer.allocate(Tools.BUFFER_SIZE));
 	}
 
 	public ChannelOutputStream(WritableByteChannel channel, ByteBuffer buffer)

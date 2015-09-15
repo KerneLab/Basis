@@ -110,7 +110,7 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		{
 			synchronized (tos)
 			{
-				while (!tos.isClosed())
+				while (!tos.isReleased())
 				{
 					try
 					{
@@ -127,7 +127,7 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		{
 			synchronized (tes)
 			{
-				while (!tes.isClosed())
+				while (!tes.isReleased())
 				{
 					try
 					{

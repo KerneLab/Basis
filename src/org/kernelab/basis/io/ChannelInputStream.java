@@ -15,7 +15,7 @@ public class ChannelInputStream extends InputStream
 
 	public ChannelInputStream(ReadableByteChannel channel)
 	{
-		this(channel, ByteBuffer.allocate(Tools.BUFFER_BYTES));
+		this(channel, ByteBuffer.allocate(Tools.BUFFER_SIZE));
 	}
 
 	public ChannelInputStream(ReadableByteChannel channel, ByteBuffer buffer)

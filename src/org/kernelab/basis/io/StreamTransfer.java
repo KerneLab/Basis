@@ -25,17 +25,17 @@ public class StreamTransfer implements Runnable
 		this.buffer = buffer;
 	}
 
-	protected synchronized void close()
+	public boolean isReleased()
+	{
+		return inputStream == null;
+	}
+
+	protected synchronized void release()
 	{
 		buffer = null;
 		inputStream = null;
 		outputStream = null;
 		this.notifyAll();
-	}
-
-	public boolean isClosed()
-	{
-		return inputStream == null;
 	}
 
 	public void run()
@@ -46,7 +46,7 @@ public class StreamTransfer implements Runnable
 			{
 				if (buffer == null || buffer.length == 0)
 				{
-					buffer = new byte[Tools.BUFFER_BYTES];
+					buffer = new byte[Tools.BUFFER_SIZE];
 				}
 
 				transfer();
@@ -57,7 +57,7 @@ public class StreamTransfer implements Runnable
 		}
 		finally
 		{
-			close();
+			release();
 		}
 	}
 
