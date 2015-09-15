@@ -57,6 +57,16 @@ public class CharsTransfer implements Runnable
 		}
 		finally
 		{
+			if (writer != null)
+			{
+				try
+				{
+					writer.flush();
+				}
+				catch (Exception e)
+				{
+				}
+			}
 			release();
 		}
 	}
@@ -89,7 +99,6 @@ public class CharsTransfer implements Runnable
 			if (writer != null)
 			{
 				writer.write(buffer, 0, length);
-				writer.flush();
 			}
 		}
 	}

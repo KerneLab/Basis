@@ -57,6 +57,16 @@ public class StreamTransfer implements Runnable
 		}
 		finally
 		{
+			if (outputStream != null)
+			{
+				try
+				{
+					outputStream.flush();
+				}
+				catch (Exception e)
+				{
+				}
+			}
 			release();
 		}
 	}
@@ -89,7 +99,6 @@ public class StreamTransfer implements Runnable
 			if (outputStream != null)
 			{
 				outputStream.write(buffer, 0, length);
-				outputStream.flush();
 			}
 		}
 	}
