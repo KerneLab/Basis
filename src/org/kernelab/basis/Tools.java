@@ -4653,7 +4653,7 @@ public class Tools
 	 */
 	public static Matcher matcher(String regex, String flags)
 	{
-		return matcher(regex, matchFlags(flags), "");
+		return matcher(regex, flags, "");
 	}
 
 	/**
@@ -4694,25 +4694,30 @@ public class Tools
 
 		if (flags != null)
 		{
-			if (flags.indexOf('m') != -1)
+			char c = 0;
+
+			for (int i = 0; i < flags.length(); i++)
 			{
-				flag |= Pattern.MULTILINE;
-			}
-			if (flags.indexOf('u') != -1)
-			{
-				flag |= Pattern.UNICODE_CASE;
-			}
-			if (flags.indexOf('s') != -1)
-			{
-				flag |= Pattern.DOTALL;
-			}
-			if (flags.indexOf('i') != -1)
-			{
-				flag |= Pattern.CASE_INSENSITIVE;
-			}
-			if (flags.indexOf('c') != -1)
-			{
-				flag |= Pattern.CANON_EQ;
+				c = flags.charAt(i);
+
+				switch (c)
+				{
+					case 'm':
+						flag |= Pattern.MULTILINE;
+						break;
+					case 'u':
+						flag |= Pattern.UNICODE_CASE;
+						break;
+					case 's':
+						flag |= Pattern.DOTALL;
+						break;
+					case 'i':
+						flag |= Pattern.CASE_INSENSITIVE;
+						break;
+					case 'c':
+						flag |= Pattern.CANON_EQ;
+						break;
+				}
 			}
 		}
 
