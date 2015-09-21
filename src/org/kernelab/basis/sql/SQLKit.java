@@ -24,7 +24,6 @@ import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
 import org.kernelab.basis.TextFiller;
 import org.kernelab.basis.Tools;
-import org.kernelab.basis.sql.DataBase.MySQL;
 
 /**
  * It is known that one Connection produces a series of Statement and one
@@ -435,7 +434,6 @@ public class SQLKit
 		{
 			index.clear();
 		}
-
 		for (String param : params)
 		{
 			Matcher m = Pattern.compile(
@@ -446,8 +444,58 @@ public class SQLKit
 				index.put(m.start(), param);
 			}
 		}
-
 		return index;
+	}
+
+	/**
+	 * To convert the current single row in ResultSet to a JSAN object according
+	 * to a given list which must not be null.
+	 * 
+	 * @param rs
+	 *            the ResultSet.
+	 * @param jsan
+	 *            the JSAN object to hold the data. If null then an empty JSAN
+	 *            object would be created instead.
+	 * @param list
+	 *            the List<Integer> which indicates the indexes of columns to be
+	 *            read from the row data.
+	 * @return the JSAN object.
+	 * @throws SQLException
+	 */
+	public static JSAN jsanOfResultRow(ResultSet rs, JSAN jsan, List<Integer> list) throws SQLException
+	{
+		if (rs != null && list != null)
+		{
+			if (jsan == null)
+			{
+				jsan = new JSAN();
+			}
+			for (Integer column : list)
+			{
+				if (column != null)
+				{
+					jsan.add(rs.getObject(column));
+				}
+			}
+		}
+		return jsan;
+	}
+
+	/**
+	 * To convert the current single row in ResultSet to a JSAN object according
+	 * to a given list which must not be null.
+	 * 
+	 * @param rs
+	 *            the ResultSet.
+	 * @param list
+	 *            the List<Integer> which indicates the indexes of columns to be
+	 *            read from the row data.
+	 * @return the JSAN object.
+	 * @throws SQLException
+	 */
+	public static JSAN jsanOfResultRow(ResultSet rs, List<Integer> list) throws SQLException
+	{
+		return jsanOfResultRow(rs, null, list);
 	}
 
 	/**
@@ -465,6 +513,40 @@ public class SQLKit
 	public static JSAN jsanOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
 	{
 		return (JSAN) jsonOfResultRow(rs, new JSAN(), map);
+	}
+
+	/**
+	 * To read each row in a ResultSet into a JSAN object.
+	 * 
+	 * @param rs
+	 *            the ResultSet.
+	 * @param jsan
+	 *            the JSAN object to hold the ResultSet. If null then an empty
+	 *            JSAN would be created instead.
+	 * @param list
+	 *            the List<Integer> which indicates the indexes of columns to be
+	 *            read from the row data.
+	 * @return the JSAN object.
+	 * @throws SQLException
+	 */
+	public static JSAN jsanOfResultSet(ResultSet rs, JSAN jsan, List<Integer> list) throws SQLException
+	{
+		if (rs != null)
+		{
+			if (jsan == null)
+			{
+				jsan = new JSAN();
+			}
+			if (list == null)
+			{
+				list = listIndexOfMetaData(rs);
+			}
+			while (rs.next())
+			{
+				jsan.add(jsanOfResultRow(rs, new JSAN().reflects(jsan).projects(jsan).transforms(jsan), list));
+			}
+		}
+		return jsan;
 	}
 
 	/**
@@ -493,25 +575,10 @@ public class SQLKit
 			{
 				jsan = new JSAN();
 			}
-
 			if (map == null)
 			{
-				map = new LinkedHashMap<String, Object>();
-
-				ResultSetMetaData meta = rs.getMetaData();
-
-				int columns = meta.getColumnCount();
-
-				String name;
-
-				for (int column = 1; column <= columns; column++)
-				{
-					name = meta.getColumnLabel(column);
-
-					map.put(name, name);
-				}
+				map = mapNameOfMetaData(rs);
 			}
-
 			try
 			{
 				while (rs.next())
@@ -528,7 +595,6 @@ public class SQLKit
 				e.printStackTrace();
 			}
 		}
-
 		return jsan;
 	}
 
@@ -555,7 +621,6 @@ public class SQLKit
 			{
 				json = new JSON();
 			}
-
 			for (Entry<String, Object> entry : map.entrySet())
 			{
 				String key = entry.getKey();
@@ -573,7 +638,6 @@ public class SQLKit
 				}
 			}
 		}
-
 		return json;
 	}
 
@@ -591,7 +655,53 @@ public class SQLKit
 	 */
 	public static JSON jsonOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
 	{
-		return jsonOfResultRow(rs, new JSON(), map);
+		return jsonOfResultRow(rs, null, map);
+	}
+
+	/**
+	 * List the column indexes.
+	 * 
+	 * @param rs
+	 *            The ResultSet.
+	 * @return The List of the column indexes.
+	 */
+	public static List<Integer> listIndexOfMetaData(ResultSet rs)
+	{
+		try
+		{
+			return listIndexOfMetaData(rs.getMetaData());
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * List the column indexes.
+	 * 
+	 * @param meta
+	 *            The ResultSetMetaData.
+	 * @return The List of the column indexes.
+	 * @throws SQLException
+	 */
+	public static List<Integer> listIndexOfMetaData(ResultSetMetaData meta) throws SQLException
+	{
+		List<Integer> list = null;
+
+		if (meta != null)
+		{
+			int columns = meta.getColumnCount();
+
+			list = new LinkedList<Integer>();
+
+			for (int i = 1; i <= columns; i++)
+			{
+				list.add(i);
+			}
+		}
+
+		return list;
 	}
 
 	/**
@@ -603,17 +713,14 @@ public class SQLKit
 	 */
 	public static List<String> listNameOfMetaData(ResultSet rs)
 	{
-		List<String> list = null;
-
 		try
 		{
-			list = listNameOfMetaData(rs.getMetaData());
+			return listNameOfMetaData(rs.getMetaData());
 		}
 		catch (Exception e)
 		{
+			return null;
 		}
-
-		return list;
 	}
 
 	/**
@@ -627,19 +734,22 @@ public class SQLKit
 	{
 		List<String> list = null;
 
-		try
+		if (meta != null)
 		{
-			int columns = meta.getColumnCount();
-
-			list = new LinkedList<String>();
-
-			for (int i = 0; i < columns; i++)
+			try
 			{
-				list.add(meta.getColumnLabel(i + 1));
+				int columns = meta.getColumnCount();
+
+				list = new LinkedList<String>();
+
+				for (int i = 1; i <= columns; i++)
+				{
+					list.add(meta.getColumnLabel(i));
+				}
 			}
-		}
-		catch (SQLException e)
-		{
+			catch (SQLException e)
+			{
+			}
 		}
 
 		return list;
@@ -650,52 +760,7 @@ public class SQLKit
 	 */
 	public static void main(String[] args)
 	{
-		DataBase db = new MySQL("test", "root", "root");
 
-		SQLKit kit = null;
-		try
-		{
-			kit = db.getSQLKit();
-
-			String sql = "INSERT INTO `test` VALUES (?id?,?name?,?value?)";
-
-			JSON data = new JSON();
-			data.attr("name", "King");
-			data.attr("value", 1.2);
-			data.attr("id", SQLKit.NULL);
-
-			kit.setAutoCommit(false);
-
-			kit.prepareStatement(sql, data);
-
-			for (int i = 0; i < 10; i++)
-			{
-				data.attr("name", "King");
-				data.attr("value", i);
-				kit.addBatch(data);
-			}
-
-			kit.commitBatch();
-
-			sql = "SELECT * FROM `test` WHERE id>?id?";
-
-			data.attr("id", 9);
-
-			ResultSet rs = kit.query(sql, data);
-
-			while (rs.next())
-			{
-				Tools.debug(rs.getString(1) + "\t" + rs.getString(2) + "\t" + rs.getString(3));
-			}
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			kit.close();
-		}
 	}
 
 	/**
@@ -707,17 +772,14 @@ public class SQLKit
 	 */
 	public static Map<String, Object> mapIndexOfMetaData(ResultSet rs)
 	{
-		Map<String, Object> map = null;
-
 		try
 		{
-			map = mapIndexOfMetaData(rs.getMetaData());
+			return mapIndexOfMetaData(rs.getMetaData());
 		}
 		catch (Exception e)
 		{
+			return null;
 		}
-
-		return map;
 	}
 
 	/**
@@ -731,19 +793,22 @@ public class SQLKit
 	{
 		Map<String, Object> map = null;
 
-		try
+		if (meta != null)
 		{
-			int columns = meta.getColumnCount();
-
-			map = new LinkedHashMap<String, Object>();
-
-			for (int i = 0; i < columns; i++)
+			try
 			{
-				map.put(String.valueOf(i), meta.getColumnLabel(i + 1));
+				int columns = meta.getColumnCount();
+
+				map = new LinkedHashMap<String, Object>();
+
+				for (int i = 1; i <= columns; i++)
+				{
+					map.put(String.valueOf(i), meta.getColumnLabel(i));
+				}
 			}
-		}
-		catch (SQLException e)
-		{
+			catch (SQLException e)
+			{
+			}
 		}
 
 		return map;
@@ -758,17 +823,14 @@ public class SQLKit
 	 */
 	public static Map<String, Object> mapNameOfMetaData(ResultSet rs)
 	{
-		Map<String, Object> map = null;
-
 		try
 		{
-			map = mapNameOfMetaData(rs.getMetaData());
+			return mapNameOfMetaData(rs.getMetaData());
 		}
 		catch (Exception e)
 		{
+			return null;
 		}
-
-		return map;
 	}
 
 	/**
@@ -782,19 +844,22 @@ public class SQLKit
 	{
 		Map<String, Object> map = null;
 
-		try
+		if (meta != null)
 		{
-			int columns = meta.getColumnCount();
-
-			map = new LinkedHashMap<String, Object>();
-
-			for (int i = 0; i < columns; i++)
+			try
 			{
-				map.put(meta.getColumnLabel(i + 1), meta.getColumnLabel(i + 1));
+				int columns = meta.getColumnCount();
+
+				map = new LinkedHashMap<String, Object>();
+
+				for (int i = 1; i <= columns; i++)
+				{
+					map.put(meta.getColumnLabel(i), meta.getColumnLabel(i));
+				}
 			}
-		}
-		catch (SQLException e)
-		{
+			catch (SQLException e)
+			{
+			}
 		}
 
 		return map;
