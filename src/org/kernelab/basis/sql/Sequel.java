@@ -327,23 +327,39 @@ public class Sequel implements Iterable<ResultSet>
 
 	public ResultSetMetaData getMetaData()
 	{
-		ResultSetMetaData metaData = null;
-
 		if (this.isResultSet())
 		{
 			try
 			{
-				metaData = this.getResultSet().getMetaData();
+				return this.getResultSet().getMetaData();
+			}
+			catch (SQLException e)
+			{
+				return null;
+			}
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	public Map<String, Object> getMetaMapIndex()
+	{
+		if (metaMap == null)
+		{
+			try
+			{
+				metaMap = SQLKit.mapIndexOfMetaData(this.getResultSet().getMetaData());
 			}
 			catch (SQLException e)
 			{
 			}
 		}
-
-		return metaData;
+		return metaMap;
 	}
 
-	public Map<String, Object> getMetaMap()
+	public Map<String, Object> getMetaMapName()
 	{
 		if (metaMap == null)
 		{
@@ -432,7 +448,7 @@ public class Sequel implements Iterable<ResultSet>
 			{
 				if (map == null)
 				{
-					map = this.getMetaMap();
+					map = this.getMetaMapIndex();
 				}
 				jsan = SQLKit.jsanOfResultRow(this.getResultSet(), map);
 			}
@@ -459,7 +475,7 @@ public class Sequel implements Iterable<ResultSet>
 			{
 				if (map == null)
 				{
-					map = this.getMetaMap();
+					map = this.getMetaMapName();
 				}
 				json = SQLKit.jsonOfResultRow(this.getResultSet(), map);
 			}
@@ -473,7 +489,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public JSAN getRows(JSAN rows, Class<? extends JSON> cls)
 	{
-		return getRows(rows, this.getMetaMap(), cls);
+		return getRows(rows, null, cls);
 	}
 
 	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls)

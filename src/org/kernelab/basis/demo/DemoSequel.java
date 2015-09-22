@@ -38,7 +38,7 @@ public class DemoSequel
 					// 执行结果为ResultSet，通常为查询的结果
 					while (seq.getResultSet().next())
 					{
-						Tools.debug(SQLKit.jsonOfResultRow(seq.getResultSet(), seq.getMetaMap()));
+						Tools.debug(SQLKit.jsonOfResultRow(seq.getResultSet(), seq.getMetaMapName()));
 					}
 					break;
 
@@ -57,7 +57,7 @@ public class DemoSequel
 			// 因此，这里可以使用for语法，而不用while(rs.next())
 			for (ResultSet rs : seq = kit.execute("select * from jdl_test_record where id=?", 2))
 			{
-				Tools.debug(SQLKit.jsonOfResultRow(rs, seq.getMetaMap()));
+				Tools.debug(SQLKit.jsonOfResultRow(rs, seq.getMetaMapName()));
 			}
 			// Sequel返回的ResultSetIterator默认会在循环完成后自动关闭ResultSet对应的Statement
 
@@ -66,7 +66,7 @@ public class DemoSequel
 					.iterator(false) // 取消自动关闭功能
 			)
 			{
-				Tools.debug(SQLKit.jsonOfResultRow(rs, seq.getMetaMap()));
+				Tools.debug(SQLKit.jsonOfResultRow(rs, seq.getMetaMapName()));
 			}
 			// 这么做的弊端是，使用者必须记得手动关闭Statement，以避免在一个连接中开启过多的Statement
 			kit.closeStatement();
@@ -79,7 +79,7 @@ public class DemoSequel
 				// 这里应该取消自动关闭功能，否则，当遍历到下一个ResultSet时，Statement已经被关闭
 				)
 				{
-					Tools.debug(SQLKit.jsonOfResultRow(rs, sq.getMetaMap()));
+					Tools.debug(SQLKit.jsonOfResultRow(rs, sq.getMetaMapName()));
 				}
 				// 可以使用Sequel.closeResultSet()关闭当前的ResultSet
 				sq.closeResultSet();

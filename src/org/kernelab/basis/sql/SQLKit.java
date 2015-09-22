@@ -480,7 +480,7 @@ public class SQLKit
 	 *            name would be mapped.
 	 * @param cls
 	 *            the Class which indicates what data type that each row would
-	 *            be converted to. If null then JSAN would be used.
+	 *            be converted to. If null then JSAN would be used as default.
 	 * @return the JSAN object.
 	 * @throws SQLException
 	 */
