@@ -449,57 +449,6 @@ public class SQLKit
 
 	/**
 	 * To convert the current single row in ResultSet to a JSAN object according
-	 * to a given list which must not be null.
-	 * 
-	 * @param rs
-	 *            the ResultSet.
-	 * @param jsan
-	 *            the JSAN object to hold the data. If null then an empty JSAN
-	 *            object would be created instead.
-	 * @param list
-	 *            the List<Integer> which indicates the indexes of columns to be
-	 *            read from the row data.
-	 * @return the JSAN object.
-	 * @throws SQLException
-	 */
-	public static JSAN jsanOfResultRow(ResultSet rs, JSAN jsan, List<Integer> list) throws SQLException
-	{
-		if (rs != null && list != null)
-		{
-			if (jsan == null)
-			{
-				jsan = new JSAN();
-			}
-			for (Integer column : list)
-			{
-				if (column != null)
-				{
-					jsan.add(rs.getObject(column));
-				}
-			}
-		}
-		return jsan;
-	}
-
-	/**
-	 * To convert the current single row in ResultSet to a JSAN object according
-	 * to a given list which must not be null.
-	 * 
-	 * @param rs
-	 *            the ResultSet.
-	 * @param list
-	 *            the List<Integer> which indicates the indexes of columns to be
-	 *            read from the row data.
-	 * @return the JSAN object.
-	 * @throws SQLException
-	 */
-	public static JSAN jsanOfResultRow(ResultSet rs, List<Integer> list) throws SQLException
-	{
-		return jsanOfResultRow(rs, null, list);
-	}
-
-	/**
-	 * To convert the current single row in ResultSet to a JSAN object according
 	 * to a given map which must not be null.
 	 * 
 	 * @param rs
@@ -523,46 +472,15 @@ public class SQLKit
 	 * @param jsan
 	 *            the JSAN object to hold the ResultSet. If null then an empty
 	 *            JSAN would be created instead.
-	 * @param list
-	 *            the List<Integer> which indicates the indexes of columns to be
-	 *            read from the row data.
-	 * @return the JSAN object.
-	 * @throws SQLException
-	 */
-	public static JSAN jsanOfResultSet(ResultSet rs, JSAN jsan, List<Integer> list) throws SQLException
-	{
-		if (rs != null)
-		{
-			if (jsan == null)
-			{
-				jsan = new JSAN();
-			}
-			if (list == null)
-			{
-				list = listIndexOfMetaData(rs);
-			}
-			while (rs.next())
-			{
-				jsan.add(jsanOfResultRow(rs, new JSAN().reflects(jsan).projects(jsan).transforms(jsan), list));
-			}
-		}
-		return jsan;
-	}
-
-	/**
-	 * To read each row in a ResultSet into a JSAN object.
-	 * 
-	 * @param rs
-	 *            the ResultSet.
-	 * @param jsan
-	 *            the JSAN object to hold the ResultSet. If null then an empty
-	 *            JSAN would be created instead.
 	 * @param map
 	 *            the Map<String,Object> which describe the relationship of each
-	 *            column between the ResultSet and JSON object.
+	 *            column between the ResultSet and JSON object. If null then the
+	 *            full map would be read from the meta data, the columns' index
+	 *            would be mapped in case that the cls is JSAN, otherwise the
+	 *            name would be mapped.
 	 * @param cls
 	 *            the Class which indicates what data type that each row would
-	 *            be converted to.
+	 *            be converted to. If null then JSAN would be used.
 	 * @return the JSAN object.
 	 * @throws SQLException
 	 */
@@ -575,9 +493,20 @@ public class SQLKit
 			{
 				jsan = new JSAN();
 			}
+			if (cls == null)
+			{
+				cls = JSAN.class;
+			}
 			if (map == null)
 			{
-				map = mapNameOfMetaData(rs);
+				if (cls == JSAN.class || Tools.isSubClass(cls, JSAN.class))
+				{
+					map = mapIndexOfMetaData(rs.getMetaData());
+				}
+				else
+				{
+					map = mapNameOfMetaData(rs.getMetaData());
+				}
 			}
 			try
 			{
@@ -659,71 +588,6 @@ public class SQLKit
 	}
 
 	/**
-	 * List the column indexes.
-	 * 
-	 * @param rs
-	 *            The ResultSet.
-	 * @return The List of the column indexes.
-	 */
-	public static List<Integer> listIndexOfMetaData(ResultSet rs)
-	{
-		try
-		{
-			return listIndexOfMetaData(rs.getMetaData());
-		}
-		catch (Exception e)
-		{
-			return null;
-		}
-	}
-
-	/**
-	 * List the column indexes.
-	 * 
-	 * @param meta
-	 *            The ResultSetMetaData.
-	 * @return The List of the column indexes.
-	 * @throws SQLException
-	 */
-	public static List<Integer> listIndexOfMetaData(ResultSetMetaData meta) throws SQLException
-	{
-		List<Integer> list = null;
-
-		if (meta != null)
-		{
-			int columns = meta.getColumnCount();
-
-			list = new LinkedList<Integer>();
-
-			for (int i = 1; i <= columns; i++)
-			{
-				list.add(i);
-			}
-		}
-
-		return list;
-	}
-
-	/**
-	 * List the column names.
-	 * 
-	 * @param rs
-	 *            The ResultSet.
-	 * @return The List of the column names.
-	 */
-	public static List<String> listNameOfMetaData(ResultSet rs)
-	{
-		try
-		{
-			return listNameOfMetaData(rs.getMetaData());
-		}
-		catch (Exception e)
-		{
-			return null;
-		}
-	}
-
-	/**
 	 * List the column names.
 	 * 
 	 * @param meta
@@ -732,19 +596,48 @@ public class SQLKit
 	 */
 	public static List<String> listNameOfMetaData(ResultSetMetaData meta)
 	{
+		return listNameOfMetaData(meta, null);
+	}
+
+	/**
+	 * List the column names.
+	 * 
+	 * @param meta
+	 *            The ResultSetMetaData.
+	 * @param index
+	 *            the List<Integer> which indicates the indexes of columns' name
+	 *            to be read. If null then all of the columns's name would be
+	 *            listed.
+	 * @return The List of the column names.
+	 */
+	public static List<String> listNameOfMetaData(ResultSetMetaData meta, List<Integer> index)
+	{
 		List<String> list = null;
 
 		if (meta != null)
 		{
 			try
 			{
-				int columns = meta.getColumnCount();
-
 				list = new LinkedList<String>();
 
-				for (int i = 1; i <= columns; i++)
+				if (index != null)
 				{
-					list.add(meta.getColumnLabel(i));
+					for (Integer c : index)
+					{
+						if (c != null)
+						{
+							list.add(meta.getColumnLabel(c));
+						}
+					}
+				}
+				else
+				{
+					int columns = meta.getColumnCount();
+
+					for (int c = 1; c <= columns; c++)
+					{
+						list.add(meta.getColumnLabel(c));
+					}
 				}
 			}
 			catch (SQLException e)
@@ -764,50 +657,60 @@ public class SQLKit
 	}
 
 	/**
-	 * Map the column names using the column indexes begin with ZERO.
+	 * Map the columns' name using the column indexes begin with ZERO.
 	 * 
-	 * @param rs
-	 *            The ResultSet.
+	 * @param meta
+	 *            The ResultSetMetaData.
 	 * @return The map of column index against the column name.
+	 * @throws SQLException
 	 */
-	public static Map<String, Object> mapIndexOfMetaData(ResultSet rs)
+	public static Map<String, Object> mapIndexOfMetaData(ResultSetMetaData meta) throws SQLException
 	{
-		try
-		{
-			return mapIndexOfMetaData(rs.getMetaData());
-		}
-		catch (Exception e)
-		{
-			return null;
-		}
+		return mapIndexOfMetaData(meta, null);
 	}
 
 	/**
-	 * Map the column names using the column indexes begin with ZERO.
+	 * Map the columns' name using the column indexes according to the given
+	 * columns' index. The key in result map starts with ZERO.
 	 * 
-	 * @param rs
-	 *            The ResultSet.
+	 * @param meta
+	 *            The ResultSetMetaData.
+	 * @param index
+	 *            the List<Integer> which indicates the indexes of columns to be
+	 *            mapped. If null then all of the columns would be mapped.
 	 * @return The map of column index against the column name.
+	 * @throws SQLException
 	 */
-	public static Map<String, Object> mapIndexOfMetaData(ResultSetMetaData meta)
+	public static Map<String, Object> mapIndexOfMetaData(ResultSetMetaData meta, List<Integer> index)
+			throws SQLException
 	{
 		Map<String, Object> map = null;
 
 		if (meta != null)
 		{
-			try
+			map = new LinkedHashMap<String, Object>();
+
+			if (index != null)
+			{
+				int i = 0;
+
+				for (Integer c : index)
+				{
+					if (c != null)
+					{
+						map.put(String.valueOf(i), c);
+						i++;
+					}
+				}
+			}
+			else
 			{
 				int columns = meta.getColumnCount();
 
-				map = new LinkedHashMap<String, Object>();
-
-				for (int i = 1; i <= columns; i++)
+				for (int c = 1; c <= columns; c++)
 				{
-					map.put(String.valueOf(i), meta.getColumnLabel(i));
+					map.put(String.valueOf(c - 1), c);
 				}
-			}
-			catch (SQLException e)
-			{
 			}
 		}
 
@@ -815,50 +718,57 @@ public class SQLKit
 	}
 
 	/**
-	 * Map the column names using the column names.
+	 * Map the columns' name using the column names.
 	 * 
-	 * @param rs
-	 *            The ResultSet.
+	 * @param meta
+	 *            The ResultSetMetaData.
 	 * @return The map of column name against the column name.
+	 * @throws SQLException
 	 */
-	public static Map<String, Object> mapNameOfMetaData(ResultSet rs)
+	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta) throws SQLException
 	{
-		try
-		{
-			return mapNameOfMetaData(rs.getMetaData());
-		}
-		catch (Exception e)
-		{
-			return null;
-		}
+		return mapNameOfMetaData(meta, null);
 	}
 
 	/**
-	 * Map the column names using the column names.
+	 * Map the columns' name using the column names according to the given
+	 * columns' index.
 	 * 
-	 * @param rs
+	 * @param meta
 	 *            The ResultSetMetaData.
+	 * @param index
+	 *            the List<Integer> which indicates the indexes of columns to be
+	 *            mapped. If null then all of the columns would be mapped.
 	 * @return The map of column name against the column name.
+	 * @throws SQLException
 	 */
-	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta)
+	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta, List<Integer> index)
+			throws SQLException
 	{
 		Map<String, Object> map = null;
 
 		if (meta != null)
 		{
-			try
+			map = new LinkedHashMap<String, Object>();
+
+			if (index != null)
+			{
+				for (Integer c : index)
+				{
+					if (c != null)
+					{
+						map.put(meta.getColumnLabel(c), c);
+					}
+				}
+			}
+			else
 			{
 				int columns = meta.getColumnCount();
 
-				map = new LinkedHashMap<String, Object>();
-
-				for (int i = 1; i <= columns; i++)
+				for (int c = 1; c <= columns; c++)
 				{
-					map.put(meta.getColumnLabel(i), meta.getColumnLabel(i));
+					map.put(meta.getColumnLabel(c), c);
 				}
-			}
-			catch (SQLException e)
-			{
 			}
 		}
 

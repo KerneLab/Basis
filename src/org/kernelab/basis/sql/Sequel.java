@@ -347,7 +347,13 @@ public class Sequel implements Iterable<ResultSet>
 	{
 		if (metaMap == null)
 		{
-			metaMap = SQLKit.mapNameOfMetaData(this.getResultSet());
+			try
+			{
+				metaMap = SQLKit.mapNameOfMetaData(this.getResultSet().getMetaData());
+			}
+			catch (SQLException e)
+			{
+			}
 		}
 		return metaMap;
 	}
