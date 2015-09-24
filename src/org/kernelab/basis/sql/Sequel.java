@@ -230,15 +230,17 @@ public class Sequel implements Iterable<ResultSet>
 
 	private SQLKit				kit;
 
-	private boolean				closing		= true;
+	private boolean				closing			= true;
 
 	private Statement			statement;
 
 	private ResultSet			resultSet;
 
-	private int					updateCount	= N_A;
+	private int					updateCount		= N_A;
 
-	private Map<String, Object>	metaMap		= null;
+	private Map<String, Object>	metaMapIndex	= null;
+
+	private Map<String, Object>	metaMapName		= null;
 
 	public Sequel(ResultSet rs)
 	{
@@ -270,7 +272,8 @@ public class Sequel implements Iterable<ResultSet>
 
 		kit = null;
 
-		metaMap = null;
+		metaMapIndex = null;
+		metaMapName = null;
 
 		return this;
 	}
@@ -346,32 +349,32 @@ public class Sequel implements Iterable<ResultSet>
 
 	public Map<String, Object> getMetaMapIndex()
 	{
-		if (metaMap == null)
+		if (metaMapIndex == null)
 		{
 			try
 			{
-				metaMap = SQLKit.mapIndexOfMetaData(this.getResultSet().getMetaData());
+				metaMapIndex = SQLKit.mapIndexOfMetaData(this.getResultSet().getMetaData());
 			}
 			catch (SQLException e)
 			{
 			}
 		}
-		return metaMap;
+		return metaMapIndex;
 	}
 
 	public Map<String, Object> getMetaMapName()
 	{
-		if (metaMap == null)
+		if (metaMapName == null)
 		{
 			try
 			{
-				metaMap = SQLKit.mapNameOfMetaData(this.getResultSet().getMetaData());
+				metaMapName = SQLKit.mapNameOfMetaData(this.getResultSet().getMetaData());
 			}
 			catch (SQLException e)
 			{
 			}
 		}
-		return metaMap;
+		return metaMapName;
 	}
 
 	public JSAN getNextRowAsJSAN()
@@ -2188,7 +2191,8 @@ public class Sequel implements Iterable<ResultSet>
 	private Sequel setResultSet(ResultSet resultSet)
 	{
 		this.resultSet = resultSet;
-		this.metaMap = null;
+		this.metaMapIndex = null;
+		this.metaMapName = null;
 		return this;
 	}
 

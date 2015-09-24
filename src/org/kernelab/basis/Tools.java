@@ -3960,11 +3960,14 @@ public class Tools
 	 * @return The List which contains all elements of collection and of the
 	 *         same sequence.
 	 */
-	public static <T> List<T> listOfArray(List<T> list, T[] array)
+	public static <T> List<T> listOfArray(List<T> list, T... array)
 	{
-		for (T t : array)
+		if (list != null && array != null)
 		{
-			list.add(t);
+			for (T t : array)
+			{
+				list.add(t);
+			}
 		}
 		return list;
 	}
@@ -3978,16 +3981,19 @@ public class Tools
 	 *            The type of elements contained in the Collection.
 	 * @param list
 	 *            The object List which add element to.
-	 * @param collection
+	 * @param coll
 	 *            The source Collection which contains elements.
 	 * @return The List which contains all elements of collection and of the
 	 *         same sequence.
 	 */
-	public static <T> List<T> listOfCollection(List<T> list, Collection<T> collection)
+	public static <T> List<T> listOfCollection(List<T> list, Collection<T> coll)
 	{
-		for (T t : collection)
+		if (list != null && coll != null)
 		{
-			list.add(t);
+			for (T t : coll)
+			{
+				list.add(t);
+			}
 		}
 		return list;
 	}
@@ -6700,24 +6706,52 @@ public class Tools
 	}
 
 	/**
-	 * Convert Collection<T> to Set<T> (HashSet<T>).
+	 * Add elements from Array to Set.<br />
+	 * Attention that this method would not clear the elements that contained in
+	 * the List before called.
+	 * 
+	 * @param <T>
+	 *            The type of elements contained in the Array.
+	 * @param set
+	 *            The object Set which add element to.
+	 * @param array
+	 *            The source Array which contains elements.
+	 * @return The Set which contains all elements of collection and of the same
+	 *         sequence.
+	 */
+	public static <T> Set<T> setOfArray(Set<T> set, T... array)
+	{
+		if (set != null && array != null)
+		{
+			for (T t : array)
+			{
+				set.add(t);
+			}
+		}
+		return set;
+	}
+
+	/**
+	 * Convert Collection<T> to Set<T>.
 	 * 
 	 * @param <T>
 	 *            The type of elements contained in the Collection.
-	 * @param collection
+	 * @param set
+	 *            The object Set which add element to.
+	 * @param coll
 	 *            The Collection to be converted.
 	 * @return The Set which contains all elements of collection and of the same
 	 *         sequence. But in the result Set, there is NO DUPLICATE element.
 	 */
-	public static <T> Set<T> setOfCollection(Collection<T> collection)
+	public static <T> Set<T> setOfCollection(Set<T> set, Collection<T> coll)
 	{
-		Set<T> set = new LinkedHashSet<T>();
-
-		for (T t : collection)
+		if (set != null && coll != null)
 		{
-			set.add(t);
+			for (T t : coll)
+			{
+				set.add(t);
+			}
 		}
-
 		return set;
 	}
 
