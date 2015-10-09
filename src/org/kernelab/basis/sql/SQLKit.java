@@ -229,10 +229,10 @@ public class SQLKit
 	 * parameters.
 	 * 
 	 * @param keys
-	 *            the parameters' name.
+	 *            The parameters' name.
 	 * @param params
-	 *            the parameters in form of key/value organized by JSON.
-	 * @return the parameters value list.
+	 *            The parameters in form of key/value organized by JSON.
+	 * @return The parameters value list.
 	 * @see SQLKit#fillParameters(Iterable, Map, List)
 	 */
 	public static List<Object> fillParameters(Iterable<String> keys, JSON params)
@@ -245,15 +245,15 @@ public class SQLKit
 	 * parameters.
 	 * 
 	 * @param keys
-	 *            the parameters' name.
+	 *            The parameters' name.
 	 * @param params
-	 *            the parameters in form of key/value organized by JSON.
+	 *            The parameters in form of key/value organized by JSON.
 	 * @param list
-	 *            the List&lt;Object&gt; object which holds the result list. If
+	 *            The List&lt;Object&gt; object which holds the result list. If
 	 *            null then a new LinkedList&lt;Object&gt; would be created
 	 *            instead.
 	 * 
-	 * @return the parameters value list.
+	 * @return The parameters value list.
 	 */
 	public static List<Object> fillParameters(Iterable<String> keys, JSON params, List<Object> list)
 	{
@@ -291,11 +291,11 @@ public class SQLKit
 	 * parameters.
 	 * 
 	 * @param keys
-	 *            the parameters' name.
+	 *            The parameters' name.
 	 * @param params
-	 *            the parameters in form of key/value organized by
+	 *            The parameters in form of key/value organized by
 	 *            Map&lt;String,Object&gt;.
-	 * @return the parameters value list.
+	 * @return The parameters value list.
 	 * @see SQLKit#fillParameters(Iterable, Map, List)
 	 */
 	public static List<Object> fillParameters(Iterable<String> keys, Map<String, ?> params)
@@ -308,16 +308,16 @@ public class SQLKit
 	 * parameters.
 	 * 
 	 * @param keys
-	 *            the parameters' name.
+	 *            The parameters' name.
 	 * @param params
-	 *            the parameters in form of key/value organized by
+	 *            The parameters in form of key/value organized by
 	 *            Map&lt;String,Object&gt;.
 	 * @param list
-	 *            the List&lt;Object&gt; object which holds the result list. If
+	 *            The List&lt;Object&gt; object which holds the result list. If
 	 *            null then a new LinkedList&lt;Object&gt; would be created
 	 *            instead.
 	 * 
-	 * @return the parameters value list.
+	 * @return The parameters value list.
 	 */
 	public static List<Object> fillParameters(Iterable<String> keys, Map<String, ?> params, List<Object> list)
 	{
@@ -362,8 +362,8 @@ public class SQLKit
 	 * Get the result number of a ResultSet.
 	 * 
 	 * @param rs
-	 *            the ResultSet.
-	 * @return the number of result in the ResultSet
+	 *            The ResultSet.
+	 * @return The number of result in the ResultSet
 	 */
 	public static int getResultNumber(ResultSet rs)
 	{
@@ -399,10 +399,10 @@ public class SQLKit
 	 * To index each parameter's position in the SQL.
 	 * 
 	 * @param sql
-	 *            the SQL String.
+	 *            The SQL String.
 	 * @param params
-	 *            the parameters name Collection.
-	 * @return the index of each parameter.
+	 *            The parameters name Collection.
+	 * @return The index of each parameter.
 	 * @see SQLKit#indexOfParameters(String, Iterable, TreeMap)
 	 */
 	public static TreeMap<Integer, String> indexOfParameters(String sql, Iterable<String> params)
@@ -414,14 +414,14 @@ public class SQLKit
 	 * To index each parameter's position in the SQL.
 	 * 
 	 * @param sql
-	 *            the SQL String.
+	 *            The SQL String.
 	 * @param params
-	 *            the parameters name Collection.
+	 *            The parameters name Collection.
 	 * @param index
-	 *            the TreeMap&lt;Integer,String&gt; object which holds the
+	 *            The TreeMap&lt;Integer,String&gt; object which holds the
 	 *            index. If null, then a new TreeMap&lt;Integer,String&gt; would
 	 *            be created instead.
-	 * @return the index of each parameter.
+	 * @return The index of each parameter.
 	 */
 	public static TreeMap<Integer, String> indexOfParameters(String sql, Iterable<String> params,
 			TreeMap<Integer, String> index)
@@ -452,11 +452,11 @@ public class SQLKit
 	 * to a given map which must not be null.
 	 * 
 	 * @param rs
-	 *            the ResultSet.
+	 *            The ResultSet.
 	 * @param map
-	 *            the Map<String,Object> which describe the relationship of each
+	 *            The Map<String,Object> which describe the relationship of each
 	 *            column between the ResultSet and JSON object.
-	 * @return the JSAN object.
+	 * @return The JSAN object.
 	 * @throws SQLException
 	 */
 	public static JSAN jsanOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
@@ -468,20 +468,20 @@ public class SQLKit
 	 * To read each row in a ResultSet into a JSAN object.
 	 * 
 	 * @param rs
-	 *            the ResultSet.
+	 *            The ResultSet.
 	 * @param jsan
-	 *            the JSAN object to hold the ResultSet. If null then an empty
+	 *            The JSAN object to hold the ResultSet. If null then an empty
 	 *            JSAN would be created instead.
 	 * @param map
-	 *            the Map<String,Object> which describe the relationship of each
+	 *            The Map<String,Object> which describe the relationship of each
 	 *            column between the ResultSet and JSON object. If null then the
 	 *            full map would be read from the meta data, the columns' index
 	 *            would be mapped in case that the cls is JSAN, otherwise the
 	 *            name would be mapped.
 	 * @param cls
-	 *            the Class which indicates what data type that each row would
+	 *            The Class which indicates what data type that each row would
 	 *            be converted to. If null then JSAN would be used as default.
-	 * @return the JSAN object.
+	 * @return The JSAN object.
 	 * @throws SQLException
 	 */
 	public static JSAN jsanOfResultSet(ResultSet rs, JSAN jsan, Map<String, Object> map, Class<? extends JSON> cls)
@@ -532,14 +532,14 @@ public class SQLKit
 	 * to a given map which must not be null.
 	 * 
 	 * @param rs
-	 *            the ResultSet.
+	 *            The ResultSet.
 	 * @param json
-	 *            the JSON object to hold the data. If null then an empty JSON
+	 *            The JSON object to hold the data. If null then an empty JSON
 	 *            object would be created instead.
 	 * @param map
-	 *            the Map<String,Object> which describe the relationship of each
+	 *            The Map<String,Object> which describe the relationship of each
 	 *            column between the ResultSet and JSON object.
-	 * @return the JSON object.
+	 * @return The JSON object.
 	 * @throws SQLException
 	 */
 	public static JSON jsonOfResultRow(ResultSet rs, JSON json, Map<String, Object> map) throws SQLException
@@ -575,11 +575,11 @@ public class SQLKit
 	 * to a given map which must not be null.
 	 * 
 	 * @param rs
-	 *            the ResultSet.
+	 *            The ResultSet.
 	 * @param map
-	 *            the Map<String,Object> which describe the relationship of each
+	 *            The Map<String,Object> which describe the relationship of each
 	 *            column between the ResultSet and JSON object.
-	 * @return the JSON object.
+	 * @return The JSON object.
 	 * @throws SQLException
 	 */
 	public static JSON jsonOfResultRow(ResultSet rs, Map<String, Object> map) throws SQLException
@@ -605,7 +605,7 @@ public class SQLKit
 	 * @param meta
 	 *            The ResultSetMetaData.
 	 * @param index
-	 *            the List<Integer> which indicates the indexes of columns' name
+	 *            The List<Integer> which indicates the indexes of columns' name
 	 *            to be read. If null then all of the columns's name would be
 	 *            listed.
 	 * @return The List of the column names.
@@ -653,7 +653,149 @@ public class SQLKit
 	 */
 	public static void main(String[] args)
 	{
+	}
 
+	/**
+	 * Make insert SQL text according to a give table name and column names.
+	 * 
+	 * @param table
+	 *            The table name.
+	 * @param columns
+	 *            The column names.
+	 * @return The insert SQL text.
+	 */
+	public static String makeInsertSQL(String table, Iterable<String> columns)
+	{
+		if (table != null && columns != null)
+		{
+			StringBuilder keys = new StringBuilder();
+			StringBuilder vals = new StringBuilder();
+
+			boolean first = true;
+			for (String column : columns)
+			{
+				if (first)
+				{
+					first = false;
+				}
+				else
+				{
+					keys.append(',');
+					vals.append(',');
+				}
+				keys.append(column);
+				vals.append(VALUE_HOLDER_CHAR);
+				vals.append(column);
+				vals.append(VALUE_HOLDER_CHAR);
+			}
+
+			StringBuilder buffer = new StringBuilder(keys.length() + vals.length() + 25);
+
+			buffer.append("INSERT INTO ");
+			buffer.append(table);
+			buffer.append(" (");
+			buffer.append(keys);
+			buffer.append(") VALUES (");
+			buffer.append(vals);
+			buffer.append(')');
+
+			return buffer.toString();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Map data according to the given mapping. The keys in the mapping will be
+	 * the keys in the result data. The values in the mapping should be the keys
+	 * in the source data.
+	 * 
+	 * @param data
+	 *            The source data.
+	 * @param map
+	 *            The mapping. The source data will be the result if the mapping
+	 *            is null.
+	 * @param result
+	 *            The result data. A new JSON will be created if null.
+	 * @return The result data.
+	 */
+	public static JSON mapData(JSON data, Map<String, String> map, JSON result)
+	{
+		if (data != null)
+		{
+			if (map != null)
+			{
+				if (result == null)
+				{
+					result = new JSON();
+				}
+
+				for (Entry<String, String> m : map.entrySet())
+				{
+					result.attr(m.getKey(), data.val(m.getValue()));
+				}
+			}
+			else
+			{
+				if (result != null)
+				{
+					result.attrAll(data);
+				}
+				else
+				{
+					result = data;
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Map data according to the given mapping. The keys in the mapping will be
+	 * the keys in the result data. The values in the mapping should be the keys
+	 * in the source data.
+	 * 
+	 * @param data
+	 *            The source data.
+	 * @param map
+	 *            The mapping. The source data will be the result if the mapping
+	 *            is null.
+	 * @param result
+	 *            The result data. A new LinkedHashMap will be created if null.
+	 * @return The result data.
+	 */
+	public static Map<String, Object> mapData(Map<String, Object> data, Map<String, String> map,
+			Map<String, Object> result)
+	{
+		if (data != null)
+		{
+			if (map != null)
+			{
+				if (result == null)
+				{
+					result = new LinkedHashMap<String, Object>();
+				}
+
+				for (Entry<String, String> m : map.entrySet())
+				{
+					result.put(m.getKey(), data.get(m.getValue()));
+				}
+			}
+			else
+			{
+				if (result != null)
+				{
+					result.putAll(data);
+				}
+				else
+				{
+					result = data;
+				}
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -676,7 +818,7 @@ public class SQLKit
 	 * @param meta
 	 *            The ResultSetMetaData.
 	 * @param index
-	 *            the List<Integer> which indicates the indexes of columns to be
+	 *            The List<Integer> which indicates the indexes of columns to be
 	 *            mapped. If null then all of the columns would be mapped.
 	 * @return The map of column index against the column name.
 	 * @throws SQLException
@@ -737,7 +879,7 @@ public class SQLKit
 	 * @param meta
 	 *            The ResultSetMetaData.
 	 * @param index
-	 *            the List<Integer> which indicates the indexes of columns to be
+	 *            The List<Integer> which indicates the indexes of columns to be
 	 *            mapped. If null then all of the columns would be mapped.
 	 * @return The map of column name against the column name.
 	 * @throws SQLException
@@ -780,10 +922,10 @@ public class SQLKit
 	 * prepared.
 	 * 
 	 * @param sql
-	 *            the SQL String.
+	 *            The SQL String.
 	 * @param params
-	 *            the names of parameters.
-	 * @return the SQL String which could be prepared.
+	 *            The names of parameters.
+	 * @return The SQL String which could be prepared.
 	 */
 	public static String replaceParameters(String sql, Iterable<String> params)
 	{
@@ -803,10 +945,10 @@ public class SQLKit
 	 * value is an Iterable object.
 	 * 
 	 * @param sql
-	 *            the SQL String.
+	 *            The SQL String.
 	 * @param params
-	 *            the parameters in form of key/value organized by JSON.
-	 * @return the SQL String which could be prepared.
+	 *            The parameters in form of key/value organized by JSON.
+	 * @return The SQL String which could be prepared.
 	 */
 	public static String replaceParameters(String sql, JSON params)
 	{
@@ -844,11 +986,11 @@ public class SQLKit
 	 * value is an Iterable or Array object.
 	 * 
 	 * @param sql
-	 *            the SQL String.
+	 *            The SQL String.
 	 * @param params
-	 *            the parameters in form of key/value organized by
+	 *            The parameters in form of key/value organized by
 	 *            Map<String,Object>.
-	 * @return the SQL String which could be prepared.
+	 * @return The SQL String which could be prepared.
 	 */
 	public static String replaceParameters(String sql, Map<String, ?> params)
 	{
@@ -1342,6 +1484,28 @@ public class SQLKit
 		}
 
 		return c;
+	}
+
+	public int insert(String table, JSON data) throws SQLException
+	{
+		return insert(table, data, null);
+	}
+
+	public int insert(String table, JSON data, Map<String, String> map) throws SQLException
+	{
+		data = mapData(data, map, null);
+		return update(makeInsertSQL(table, data.keySet()), data);
+	}
+
+	public int insert(String table, Map<String, Object> data) throws SQLException
+	{
+		return insert(table, data, null);
+	}
+
+	public int insert(String table, Map<String, Object> data, Map<String, String> map) throws SQLException
+	{
+		data = mapData(data, map, null);
+		return update(makeInsertSQL(table, data.keySet()), data);
 	}
 
 	public Boolean isAutoCommit()

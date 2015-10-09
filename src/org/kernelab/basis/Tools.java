@@ -1873,18 +1873,18 @@ public class Tools
 	 */
 	public static boolean equals(Object a, Object b)
 	{
-		boolean is = false;
-
 		if (a == b)
 		{
-			is = true;
+			return true;
 		}
 		else if (a != null && b != null)
 		{
-			is = a.equals(b);
+			return a.equals(b);
 		}
-
-		return is;
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -1901,18 +1901,18 @@ public class Tools
 	 */
 	public static <T> boolean equals(T a, T b, Comparator<T> c)
 	{
-		boolean is = false;
-
 		if (a == b)
 		{
-			is = true;
+			return true;
 		}
 		else if (a != null && b != null)
 		{
-			is = c.compare(a, b) == 0;
+			return c.compare(a, b) == 0;
 		}
-
-		return is;
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -2043,7 +2043,9 @@ public class Tools
 		{
 			result = new LinkedList<E>();
 		}
+
 		int index = 0;
+
 		try
 		{
 			for (E element : iterable)
@@ -2057,6 +2059,7 @@ public class Tools
 		catch (Terminator t)
 		{
 		}
+
 		return result;
 	}
 
