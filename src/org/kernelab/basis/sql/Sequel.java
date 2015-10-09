@@ -104,7 +104,7 @@ public class Sequel implements Iterable<ResultSet>
 		{
 			if (rs != null)
 			{
-				if (closing)
+				if (closing())
 				{
 					try
 					{
@@ -130,7 +130,6 @@ public class Sequel implements Iterable<ResultSet>
 				}
 				rs = null;
 			}
-
 			kit = null;
 		}
 
@@ -168,10 +167,12 @@ public class Sequel implements Iterable<ResultSet>
 
 			if (hasResult())
 			{
+				Sequel.this.setIterating(true);
 				return true;
 			}
 			else
 			{
+				Sequel.this.setIterating(false);
 				release();
 				return false;
 			}
@@ -189,7 +190,7 @@ public class Sequel implements Iterable<ResultSet>
 
 		protected void release()
 		{
-			if (Sequel.this.closing)
+			if (Sequel.this.isClosing())
 			{
 				Sequel.this.close();
 			}
@@ -197,7 +198,6 @@ public class Sequel implements Iterable<ResultSet>
 
 		public void remove()
 		{
-
 		}
 	}
 
@@ -231,6 +231,8 @@ public class Sequel implements Iterable<ResultSet>
 	private SQLKit				kit;
 
 	private boolean				closing			= true;
+
+	private boolean				iterating		= false;
 
 	private Statement			statement;
 
@@ -314,7 +316,6 @@ public class Sequel implements Iterable<ResultSet>
 				statement = null;
 			}
 		}
-
 		return this;
 	}
 
@@ -2074,6 +2075,11 @@ public class Sequel implements Iterable<ResultSet>
 		return closing;
 	}
 
+	protected boolean isIterating()
+	{
+		return iterating;
+	}
+
 	public boolean isResultSet()
 	{
 		return this.getResultSet() != null;
@@ -2096,12 +2102,14 @@ public class Sequel implements Iterable<ResultSet>
 
 	public ResultSetIterator iterator()
 	{
-		return iterator(this.closing);
+		return iterator(this.isClosing());
 	}
 
 	public ResultSetIterator iterator(boolean closing)
 	{
-		return new ResultSetIterator(this.getResultSet()).closing(closing).kit(kit);
+		return new ResultSetIterator(this.getResultSet()) //
+				.closing(closing && !this.isIterating()) //
+				.kit(this.getKit());
 	}
 
 	public Sequel nextResult()
@@ -2179,6 +2187,12 @@ public class Sequel implements Iterable<ResultSet>
 	public Sequel setClosing(boolean closing)
 	{
 		this.closing = closing;
+		return this;
+	}
+
+	protected Sequel setIterating(boolean iterating)
+	{
+		this.iterating = iterating;
 		return this;
 	}
 

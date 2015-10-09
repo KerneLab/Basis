@@ -68,22 +68,22 @@ public class DemoSequel
 			{
 				Tools.debug(SQLKit.jsonOfResultRow(rs, seq.getMetaMapName()));
 			}
-			// 这么做的弊端是，使用者必须记得手动关闭Statement，以避免在一个连接中开启过多的Statement
+			// 这么做的弊端是，使用者必须记得手动关闭Statement，才能避免在一个连接中开启过多的Statement
 			kit.closeStatement();
 
 			// 在某些查询中，会返回多个ResultSet，相应地，Sequel通过iterate()方法返回Iterable<Sequel>对象
 			// 由此可以对多个ResultSet进行遍历
 			for (Sequel sq : kit.execute("select * from jdl_test_record where id=?", 1).iterate())
-			{
-				for (ResultSet rs : sq.iterator(false)
-				// 这里应该取消自动关闭功能，否则，当遍历到下一个ResultSet时，Statement已经被关闭
-				)
+			{ // 对Sequel迭代将隐含地取消了自动关闭功能，否则，当遍历到下一个ResultSet时，Statement已经被关闭
+				for (ResultSet rs : sq)
 				{
 					Tools.debug(SQLKit.jsonOfResultRow(rs, sq.getMetaMapName()));
 				}
 				// 可以使用Sequel.closeResultSet()关闭当前的ResultSet
 				sq.closeResultSet();
 			}
+			// 无论如何，在所有ResultSet被遍历完毕之后，Sequel对象默认会被自动关闭；
+			// 除非在进入循环时Sequel对象不是自动关闭的
 		}
 		catch (SQLException e)
 		{
