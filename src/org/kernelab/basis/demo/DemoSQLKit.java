@@ -8,18 +8,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.kernelab.basis.sql.DataBase;
-import org.kernelab.basis.sql.DataBase.Oracle;
+import org.kernelab.basis.sql.DataBase.MySQL;
 import org.kernelab.basis.sql.SQLKit;
 
 /**
  * SQLKit类是对Connection、Statement等的封装。<br />
  * 
  * 测试表格信息如下<br />
- * CREATE TABLE `table` ( <br />
- * `id` int(10) unsigned NOT NULL auto_increment, <br />
- * `text` text NOT NULL, <br/>
- * PRIMARY KEY (`id`) <br />
- * ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ * CREATE TABLE demo ( <br />
+ * id INT(10) NOT NULL, <br />
+ * text TEXT NOT NULL<br/>
+ * );
  * 
  * @author Dilly King
  * 
@@ -36,8 +35,9 @@ public class DemoSQLKit
 		String userName = "root";
 		String passWord = "root";
 		String catalog = "test";
+
 		// 数据库名称为test
-		DataBase database = new Oracle(serverName, catalog, userName, passWord);
+		DataBase database = new MySQL(serverName, catalog, userName, passWord);
 
 		// 准备工作
 		SQLKit kit = null;
@@ -49,25 +49,25 @@ public class DemoSQLKit
 			kit = database.getSQLKit(); // 获取kit
 
 			// 执行查询
-			sql = "SELECT * FROM `table` WHERE `id`<10";
+			sql = "SELECT * FROM demo WHERE id<10";
 			rs = kit.query(sql);
 			while (rs.next())
 			{
 				// 在这里遍历每一条记录
 			}
 
-			sql = "SELECT * FROM `table` WHERE `id`<?";
+			sql = "SELECT * FROM demo WHERE id<?";
 			rs = kit.query(sql, 10); // 这里的10就是把10这个值填充到上面语句中的?位置
 
 			// 执行修改
-			sql = "UPDATE `table` SET `text`=? WHERE `id`=?";
+			sql = "UPDATE demo SET text=? WHERE id=?";
 			kit.update(sql, "hey!", 10);
 			// 相当于把"hey!"填充到第一个?的位置，10填充到第二个问号的位置
 
 			// 用List<Object>作为参数列表
-			sql = "INSERT INTO `table` (`id`,`text`) VALUES (?,?)";
+			sql = "INSERT INTO demo (id,text) VALUES (?,?)";
 			List<Object> param = new ArrayList<Object>();
-			param.add(SQLKit.NULL); // 用SQLKit.NULL来表示SQL语句中的null
+			param.add(1);
 			param.add("你好");
 			kit.update(sql, param);
 
@@ -77,13 +77,13 @@ public class DemoSQLKit
 			kit.prepareStatement(sql);
 			for (int i = 0; i < 10; i++)
 			{
-				kit.addBatch(SQLKit.NULL, String.valueOf(i));
+				kit.addBatch(i, String.valueOf(i));
 			}
 			kit.executeBatch();
 			kit.commit(); // 提交批量操作
 
 			// 在SQL语句中嵌入参数名
-			sql = "SELECT * FROM `table` WHERE `id`>?i? AND `text`<?tx?";
+			sql = "SELECT * FROM demo WHERE id>?i? AND text<?tx?";
 
 			// 在Map<String,Object>对象中指定参数
 			Map<String, Object> data = new HashMap<String, Object>();
