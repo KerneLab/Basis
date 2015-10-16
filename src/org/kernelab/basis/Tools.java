@@ -4657,7 +4657,7 @@ public class Tools
 	 * @param regex
 	 *            The regular expression.
 	 * @param flags
-	 *            Match flags, including m,u,s,i,c.
+	 *            Match flags, including l,o,d,m,u,s,i,x.
 	 * @return The Matcher object.
 	 */
 	public static Matcher matcher(String regex, String flags)
@@ -4672,7 +4672,7 @@ public class Tools
 	 * @param regex
 	 *            The regular expression.
 	 * @param flags
-	 *            Match flags, including m,u,s,i,c.
+	 *            Match flags, including l,o,d,m,u,s,i,x.
 	 * @param text
 	 *            The text to be matched.
 	 * @return The Matcher object.
@@ -4686,11 +4686,14 @@ public class Tools
 	 * Return the values of match flags.
 	 * 
 	 * <pre>
-	 * m	multiline
-	 * u	Unicode-aware case
-	 * s	single-line
+	 * l	literal pattern parsing
+	 * o	canonical equivalence
+	 * d	unix lines mode
+	 * m	multiline mode
+	 * u	unicode-aware case
+	 * s	single-line mode
 	 * i	case-insensitive
-	 * c	canonical equivalence
+	 * x	comments permitted pattern
 	 * </pre>
 	 * 
 	 * @param flags
@@ -4711,6 +4714,15 @@ public class Tools
 
 				switch (c)
 				{
+					case 'l':
+						flag |= Pattern.LITERAL;
+						break;
+					case 'o':
+						flag |= Pattern.CANON_EQ;
+						break;
+					case 'd':
+						flag |= Pattern.UNIX_LINES;
+						break;
 					case 'm':
 						flag |= Pattern.MULTILINE;
 						break;
@@ -4723,8 +4735,8 @@ public class Tools
 					case 'i':
 						flag |= Pattern.CASE_INSENSITIVE;
 						break;
-					case 'c':
-						flag |= Pattern.CANON_EQ;
+					case 'x':
+						flag |= Pattern.COMMENTS;
 						break;
 				}
 			}
