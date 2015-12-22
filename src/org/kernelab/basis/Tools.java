@@ -3395,6 +3395,68 @@ public class Tools
 	}
 
 	/**
+	 * To determine whether all of the objects are null.
+	 * 
+	 * @param objects
+	 *            the objects.
+	 * @return true if and only if all of the objects are null.
+	 */
+	public static boolean isNull(Object... objects)
+	{
+		for (Object o : objects)
+		{
+			if (o != null)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * To determine whether all of the Strings are null or empty which means
+	 * zero-length.
+	 * 
+	 * @param strings
+	 *            the Strings.
+	 * @return true if and only if all of the Strings are null or empty.
+	 */
+	public static boolean isNullOrEmpty(String... strings)
+	{
+		for (String s : strings)
+		{
+			if (s != null && s.length() > 0)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * To determine whether all of the Strings are null or white which means the
+	 * length after trim is zero.
+	 * 
+	 * @param strings
+	 *            the Strings.
+	 * @return true if and only if all of the Strings are null or white.
+	 */
+	public static boolean isNullOrWhite(String... strings)
+	{
+		for (String s : strings)
+		{
+			if (s != null && s.trim().length() > 0)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * To test the port on localhost is occupied or not.
 	 * 
 	 * @param port
