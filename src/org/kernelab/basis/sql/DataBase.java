@@ -5,16 +5,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.kernelab.basis.Copieable;
 import org.kernelab.basis.Extensions;
-import org.kernelab.basis.Relation;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.io.DataReader;
 
@@ -599,160 +596,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		public Oracle setConnectBySID(boolean connectBySID)
 		{
 			this.connectBySID = connectBySID;
-			return this;
-		}
-	}
-
-	public static class OracleClassic extends DataBase
-	{
-		public static String					DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
-
-		public static int						DEFAULT_PORT_NUMBER	= 1521;
-
-		private String							serverMode			= null;
-
-		private Set<Relation<String, Integer>>	address				= new LinkedHashSet<Relation<String, Integer>>();
-
-		private boolean							connectBySID		= false;
-
-		public OracleClassic()
-		{
-			super();
-		}
-
-		public OracleClassic(String serverName, int portNumber, String catalog, Map<String, Object> information)
-		{
-			super(serverName, portNumber, catalog, information);
-			this.addAddress(serverName, portNumber);
-		}
-
-		public OracleClassic(String serverName, int portNumber, String catalog, String userName, String passWord)
-		{
-			super(serverName, portNumber, catalog, userName, passWord);
-			this.addAddress(serverName, portNumber);
-		}
-
-		public OracleClassic(String userName, String passWord)
-		{
-			this("", userName, passWord);
-		}
-
-		public OracleClassic(String catalog, String userName, String passWord)
-		{
-			this("localhost", catalog, userName, passWord);
-		}
-
-		public OracleClassic(String serverName, String catalog, String userName, String passWord)
-		{
-			this(serverName, DEFAULT_PORT_NUMBER, catalog, userName, passWord);
-		}
-
-		public OracleClassic addAddress(String serverName, int portNumber)
-		{
-			address.add(new Relation<String, Integer>(serverName, portNumber));
-			return this;
-		}
-
-		public OracleClassic connectByServiceName()
-		{
-			this.connectBySID = false;
-			return this;
-		}
-
-		public OracleClassic connectBySID()
-		{
-			this.connectBySID = true;
-			return this;
-		}
-
-		public Set<Relation<String, Integer>> getAddress()
-		{
-			return address;
-		}
-
-		protected String getAddressList()
-		{
-			StringBuilder list = new StringBuilder();
-
-			for (Relation<String, Integer> pair : address)
-			{
-				list.append("(ADDRESS=(PROTOCOL=TCP)(HOST=");
-				list.append(pair.getKey());
-				list.append(")(PORT=");
-				list.append(pair.getValue().toString());
-				list.append("))");
-			}
-
-			return list.toString();
-		}
-
-		protected String getBalanceOption()
-		{
-			return address.size() > 1 ? "(LOAD_BALANCE=YES)(FAILOVER=ON)" : "";
-		}
-
-		protected String getConnectData()
-		{
-			if (this.isConnectByServiceName())
-			{
-				return "SERVICE_NAME=" + catalog;
-			}
-			else
-			{
-				return "SID=" + catalog;
-			}
-		}
-
-		@Override
-		public String getDriverName()
-		{
-			return DRIVER_CLASS_NAME;
-		}
-
-		protected String getServerMode()
-		{
-			String mode = "";
-
-			if (serverMode != null)
-			{
-				mode = "(SERVER=" + serverMode.toUpperCase() + ")";
-			}
-
-			return mode;
-		}
-
-		@Override
-		public String getURL()
-		{
-			return "jdbc:oracle:thin:@(DESCRIPTION=" + this.getBalanceOption() + "(ADDRESS_LIST="
-					+ this.getAddressList() + ")(CONNECT_DATA=(" + getConnectData() + ")" + this.getServerMode() + "))";
-		}
-
-		public boolean isConnectByServiceName()
-		{
-			return !connectBySID;
-		}
-
-		public boolean isConnectBySID()
-		{
-			return connectBySID;
-		}
-
-		public OracleClassic removeAddress(String serverName, int portNumber)
-		{
-			address.remove(new Relation<String, Integer>(serverName, portNumber));
-			return this;
-		}
-
-		public OracleClassic setConnectBySID(boolean connectBySID)
-		{
-			this.connectBySID = connectBySID;
-			return this;
-		}
-
-		public OracleClassic setServerMode(String serverMode)
-		{
-			this.serverMode = serverMode;
 			return this;
 		}
 	}
