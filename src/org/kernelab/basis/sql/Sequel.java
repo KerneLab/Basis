@@ -496,11 +496,21 @@ public class Sequel implements Iterable<ResultSet>
 		return getRows(rows, null, cls);
 	}
 
+	public JSAN getRows(JSAN rows, Class<? extends JSON> cls, int limit)
+	{
+		return getRows(rows, null, cls, limit);
+	}
+
 	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls)
+	{
+		return getRows(rows, map, cls, -1);
+	}
+
+	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls, int limit)
 	{
 		try
 		{
-			rows = SQLKit.jsanOfResultSet(this.getResultSet(), rows, map, cls);
+			rows = SQLKit.jsanOfResultSet(this.getResultSet(), rows, map, cls, limit);
 		}
 		catch (SQLException e)
 		{
@@ -2060,6 +2070,23 @@ public class Sequel implements Iterable<ResultSet>
 		return this;
 	}
 
+	/**
+	 * Locate the cursor to the head of the result set. Or does nothing if there
+	 * is no result set presents.
+	 * 
+	 * @return Sequel itself.
+	 * @throws SQLException
+	 *             If the result set is {@code FORWARD_ONLY}.
+	 */
+	public Sequel head() throws SQLException
+	{
+		if (this.isResultSet())
+		{
+			this.getResultSet().beforeFirst();
+		}
+		return this;
+	}
+
 	public boolean isCallResult()
 	{
 		return this.getStatement() instanceof CallableStatement;
@@ -2110,6 +2137,34 @@ public class Sequel implements Iterable<ResultSet>
 		return new ResultSetIterator(this.getResultSet()) //
 				.closing(closing && !this.isIterating()) //
 				.kit(this.getKit());
+	}
+
+	/**
+	 * Locate the cursor to a given position. Or does nothing if there is no
+	 * result set presents.
+	 * 
+	 * @param row
+	 *            The cursor position. {@code 0} is equal to calling
+	 *            {@link Sequel#head()} method. This parameter could be negative
+	 *            number which is counted from the last row.
+	 * @return Sequel itself.
+	 * @throws SQLException
+	 *             If the result set is {@code FORWARD_ONLY}.
+	 */
+	public Sequel locate(int row) throws SQLException
+	{
+		if (this.isResultSet())
+		{
+			if (row == 0)
+			{
+				this.getResultSet().beforeFirst();
+			}
+			else
+			{
+				this.getResultSet().absolute(row);
+			}
+		}
+		return this;
 	}
 
 	public Sequel nextResult()
@@ -2171,6 +2226,18 @@ public class Sequel implements Iterable<ResultSet>
 		return ok;
 	}
 
+	public boolean prevRow()
+	{
+		try
+		{
+			return this.getResultSet().previous();
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+
 	private Sequel refreshUpdateCount()
 	{
 		try
@@ -2213,6 +2280,56 @@ public class Sequel implements Iterable<ResultSet>
 	private Sequel setStatement(Statement statement)
 	{
 		this.statement = statement;
+		return this;
+	}
+
+	/**
+	 * Move the cursor a given rows from the current position. Or does nothing
+	 * if there is no result set presents.
+	 * 
+	 * @param rows
+	 *            The step rows, could be negative number which means backward
+	 *            step.
+	 * @return Sequel itself.
+	 * @throws SQLException
+	 *             If the result set is {@code FORWARD_ONLY}.
+	 */
+	public Sequel step(int rows) throws SQLException
+	{
+		if (this.isResultSet())
+		{
+			ResultSet rs = this.getResultSet();
+
+			if (rs.isBeforeFirst())
+			{
+				rs.first();
+				rows--;
+			}
+			else if (rs.isAfterLast())
+			{
+				rs.last();
+				rows++;
+			}
+
+			this.getResultSet().relative(rows);
+		}
+		return this;
+	}
+
+	/**
+	 * Locate the cursor to the tail of the result set. Or does nothing if there
+	 * is no result set presents.
+	 * 
+	 * @return Sequel itself.
+	 * @throws SQLException
+	 *             If the result set is {@code FORWARD_ONLY}.
+	 */
+	public Sequel tail() throws SQLException
+	{
+		if (this.isResultSet())
+		{
+			this.getResultSet().afterLast();
+		}
 		return this;
 	}
 }
