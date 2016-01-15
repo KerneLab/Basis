@@ -465,7 +465,7 @@ public class SQLKit
 	}
 
 	/**
-	 * To read each row in a ResultSet into a JSAN object.
+	 * To read rows in a ResultSet into a JSAN object.
 	 * 
 	 * @param rs
 	 *            The ResultSet.
@@ -486,6 +486,35 @@ public class SQLKit
 	 */
 	public static JSAN jsanOfResultSet(ResultSet rs, JSAN jsan, Map<String, Object> map, Class<? extends JSON> cls)
 			throws SQLException
+	{
+		return jsanOfResultSet(rs, jsan, map, cls, -1);
+	}
+
+	/**
+	 * To read rows in a ResultSet into a JSAN object.
+	 * 
+	 * @param rs
+	 *            The ResultSet.
+	 * @param jsan
+	 *            The JSAN object to hold the ResultSet. If null then an empty
+	 *            JSAN would be created instead.
+	 * @param map
+	 *            The Map<String,Object> which describe the relationship of each
+	 *            column between the ResultSet and JSON object. If null then the
+	 *            full map would be read from the meta data, the columns' index
+	 *            would be mapped in case that the cls is JSAN, otherwise the
+	 *            name would be mapped.
+	 * @param cls
+	 *            The Class which indicates what data type that each row would
+	 *            be converted to. If null then JSAN would be used as default.
+	 * @param limit
+	 *            The max rows would be returned. This parameter will be ignored
+	 *            if {@code limit < 0} which means all rows will be returned.
+	 * @return The JSAN object.
+	 * @throws SQLException
+	 */
+	public static JSAN jsanOfResultSet(ResultSet rs, JSAN jsan, Map<String, Object> map, Class<? extends JSON> cls,
+			int limit) throws SQLException
 	{
 		if (rs != null)
 		{
@@ -510,9 +539,11 @@ public class SQLKit
 			}
 			try
 			{
-				while (rs.next())
+				int count = 0;
+				while ((limit < 0 || count < limit) && rs.next())
 				{
 					jsan.add(jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transforms(jsan), map));
+					count++;
 				}
 			}
 			catch (InstantiationException e)
