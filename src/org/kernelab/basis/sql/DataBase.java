@@ -742,38 +742,63 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 			try
 			{
-				String home = System.getenv("ORACLE_HOME");
+				String env = System.getenv("TNS_ADMIN");
 
-				if (home != null)
+				if (env != null)
 				{
-					File network = new File(home, "network");
+					File dir = new File(env);
 
-					if (!network.isDirectory())
+					if (dir.isDirectory())
 					{
-						network = new File(home, "NETWORK");
-					}
+						File tns = new File(dir, "tnsnames.ora");
 
-					if (network.isDirectory())
-					{
-						File admin = new File(network, "admin");
-
-						if (!admin.isDirectory())
+						if (!tns.isFile())
 						{
-							admin = new File(network, "ADMIN");
+							tns = new File(dir, "TNSNAMES.ORA");
 						}
 
-						if (admin.isDirectory())
+						if (tns.isFile())
 						{
-							File tns = new File(admin, "tnsnames.ora");
+							path = tns.getCanonicalPath();
+						}
+					}
+				}
 
-							if (!tns.isFile())
+				if (path == null)
+				{
+					env = System.getenv("ORACLE_HOME");
+
+					if (env != null)
+					{
+						File network = new File(env, "network");
+
+						if (!network.isDirectory())
+						{
+							network = new File(env, "NETWORK");
+						}
+
+						if (network.isDirectory())
+						{
+							File admin = new File(network, "admin");
+
+							if (!admin.isDirectory())
 							{
-								tns = new File(admin, "TNSNAMES.ORA");
+								admin = new File(network, "ADMIN");
 							}
 
-							if (tns.isFile())
+							if (admin.isDirectory())
 							{
-								path = tns.getCanonicalPath();
+								File tns = new File(admin, "tnsnames.ora");
+
+								if (!tns.isFile())
+								{
+									tns = new File(admin, "TNSNAMES.ORA");
+								}
+
+								if (tns.isFile())
+								{
+									path = tns.getCanonicalPath();
+								}
 							}
 						}
 					}
