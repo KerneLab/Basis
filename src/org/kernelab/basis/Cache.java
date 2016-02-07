@@ -7,9 +7,9 @@ import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
@@ -107,24 +107,97 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		@Override
 		public Iterator<java.util.Map.Entry<K, V>> iterator()
 		{
-			return new EntryIterator(pairSet.iterator());
+			return new EntryIterator(pairSet().iterator());
 		}
 
 		@Override
 		public int size()
 		{
-			return pairSet.size();
+			return pairSet().size();
 		}
 	}
 
-	protected static class SoftPair<V> extends SoftReference<V>
+	protected class Inspector implements Runnable
+	{
+		@SuppressWarnings("unchecked")
+		protected void clean()
+		{
+			if (0 <= keep() && keep() < map().size())
+			{
+				int delta = map().size() - keep();
+
+				TreeSet<SoftPair<V>> expire = new TreeSet<SoftPair<V>>(map().values());
+
+				int count = 0;
+
+				for (SoftPair<V> pair : expire)
+				{
+					hold().remove(pair);
+
+					count++;
+
+					if (count >= delta)
+					{
+						break;
+					}
+				}
+
+				expire.clear();
+			}
+
+			SoftPair<V> pair = null;
+
+			while ((pair = (SoftPair<V>) queue().poll()) != null)
+			{
+				map().remove(pair.key);
+			}
+		}
+
+		public void run()
+		{
+			while (true)
+			{
+				try
+				{
+					Thread.sleep(delay());
+				}
+				catch (InterruptedException e)
+				{
+				}
+				this.clean();
+			}
+		}
+	}
+
+	protected static class SoftPair<V> extends SoftReference<V> implements Comparable<SoftPair<V>>
 	{
 		protected final Object	key;
+
+		protected long			last;
 
 		public SoftPair(Object key, V value, ReferenceQueue<V> queue)
 		{
 			super(value, queue);
 			this.key = key;
+			this.refresh();
+		}
+
+		public int compareTo(SoftPair<V> o)
+		{
+			long c = this.last - o.last;
+
+			if (c == 0)
+			{
+				c = this.hashCode() - o.hashCode();
+			}
+
+			return c == 0 ? 0 : (c < 0 ? -1 : 1);
+		}
+
+		public SoftPair<V> refresh()
+		{
+			this.last = System.currentTimeMillis();
+			return this;
 		}
 	}
 
@@ -146,19 +219,19 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		@Override
 		public Iterator<V> iterator()
 		{
-			return new ValueIterator(pairSet.iterator());
+			return new ValueIterator(pairSet().iterator());
 		}
 
 		@Override
 		public int size()
 		{
-			return pairSet.size();
+			return pairSet().size();
 		}
 	}
 
-	public static final int		DEFAULT_KEEP_VALUES		= 10;
+	public static final int		DEFAULT_KEEP_VALUES		= 256;
 
-	public static final int		DEFAULT_INIT_CAPACITY	= 16;
+	public static final int		DEFAULT_INSPECT_DELAY	= 600000;
 
 	public static final float	DEFAULT_LOAD_FACTOR		= 0.75f;
 
@@ -169,31 +242,27 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 	 */
 	public static void main(String[] args)
 	{
-		Map<String, Integer> c = new Cache<String, Integer>();
-
-		for (int i = 0; i < 100; i++)
-		{
-			c.put(String.valueOf(i), i);
-		}
-		Tools.debug(c);
-
-		Tools.debug("===========");
-		Tools.debug(c.get("1"));
 	}
 
-	private Map<K, SoftPair<V>>				map;
+	private ConcurrentHashMap<K, SoftPair<V>>	map;
 
-	private int								keep;
+	private int									keep;
 
-	private LinkedList<V>					hold;
+	private int									delay;
 
-	private ReferenceQueue<V>				queue;
+	private ConcurrentHashMap<SoftPair<V>, V>	hold;
 
-	private Set<Map.Entry<K, SoftPair<V>>>	pairSet;
+	private ReferenceQueue<V>					queue;
 
-	private Set<Map.Entry<K, V>>			entrySet;
+	private Set<Map.Entry<K, SoftPair<V>>>		pairSet;
 
-	private Collection<V>					values;
+	private Set<Map.Entry<K, V>>				entrySet;
+
+	private Collection<V>						values;
+
+	private Inspector							inspector;
+
+	private Thread								thread;
 
 	public Cache()
 	{
@@ -202,42 +271,59 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 
 	public Cache(int keep)
 	{
-		this(keep, DEFAULT_INIT_CAPACITY, DEFAULT_LOAD_FACTOR);
+		this(keep, DEFAULT_INSPECT_DELAY);
 	}
 
-	public Cache(int keep, int initialCapacity, float loadFactor)
+	public Cache(int keep, int delay)
 	{
-		this(keep, initialCapacity, loadFactor, DEFAULT_CONC_LEVEL);
+		this(keep, delay, keep, DEFAULT_LOAD_FACTOR);
 	}
 
-	public Cache(int keep, int initialCapacity, float loadFactor, int concurrencyLevel)
+	public Cache(int keep, int delay, int initialCapacity, float loadFactor)
 	{
-		this.setMap(new ConcurrentHashMap<K, SoftPair<V>>(initialCapacity, loadFactor, concurrencyLevel));
-		this.setKeep(keep);
-		this.setHold(new LinkedList<V>());
-		this.setQueue(new ReferenceQueue<V>());
+		this(keep, delay, initialCapacity, loadFactor, DEFAULT_CONC_LEVEL);
+	}
+
+	public Cache(int keep, int delay, int initialCapacity, float loadFactor, int concurrencyLevel)
+	{
+		this.keep(keep);
+		this.delay(delay);
+		this.map(new ConcurrentHashMap<K, SoftPair<V>>(initialCapacity, loadFactor, concurrencyLevel));
+		this.hold(new ConcurrentHashMap<SoftPair<V>, V>(keep, loadFactor, concurrencyLevel));
+		this.queue(new ReferenceQueue<V>());
+		this.inspector(new Inspector());
+		this.thread(new Thread(this.inspector()));
+		this.thread().setDaemon(true);
+		this.thread().start();
+	}
+
+	public Cache<K, V> clean()
+	{
+		clear();
+		return this;
 	}
 
 	@Override
 	public void clear()
 	{
-		hold.clear();
-		refresh();
-		map.clear();
+		hold().clear();
+		map().clear();
 	}
 
-	protected void initPairSet()
+	protected int delay()
 	{
-		if (pairSet == null)
-		{
-			pairSet = map.entrySet();
-		}
+		return delay;
+	}
+
+	private Cache<K, V> delay(int inspect)
+	{
+		this.delay = inspect;
+		return this;
 	}
 
 	@Override
 	public Set<java.util.Map.Entry<K, V>> entrySet()
 	{
-		this.initPairSet();
 		return entrySet == null ? (entrySet = new EntrySet()) : entrySet;
 	}
 
@@ -246,48 +332,57 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 	{
 		V value = null;
 
-		SoftPair<V> softVal = map.get(key);
+		SoftPair<V> pair = map().get(key);
 
-		if (softVal != null)
+		if (pair != null)
 		{
-			value = softVal.get();
+			value = pair.get();
 
-			if (value == null)
+			if (value != null)
 			{
-				map.remove(key);
-			}
-			else
-			{
-				hold(value);
+				hold(pair);
 			}
 		}
 
 		return value;
 	}
 
-	protected LinkedList<V> getHold()
+	protected ConcurrentHashMap<SoftPair<V>, V> hold()
 	{
 		return hold;
 	}
 
-	public int getKeep()
+	private Cache<K, V> hold(ConcurrentHashMap<SoftPair<V>, V> hold)
+	{
+		this.hold = hold;
+		return this;
+	}
+
+	protected void hold(SoftPair<V> pair)
+	{
+		hold().put(pair.refresh(), pair.get());
+	}
+
+	protected Inspector inspector()
+	{
+		return inspector;
+	}
+
+	private Cache<K, V> inspector(Inspector inspector)
+	{
+		this.inspector = inspector;
+		return this;
+	}
+
+	public int keep()
 	{
 		return keep;
 	}
 
-	protected ReferenceQueue<V> getQueue()
+	public Cache<K, V> keep(int keep)
 	{
-		return queue;
-	}
-
-	public void hold(V value)
-	{
-		hold.addFirst(value);
-
-		while (hold.size() > keep && !hold.isEmpty())
-		{
-			hold.removeLast();
-		}
+		this.keep = keep;
+		return this;
 	}
 
 	@Override
@@ -296,55 +391,61 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		return map.keySet();
 	}
 
+	protected Map<K, SoftPair<V>> map()
+	{
+		return map;
+	}
+
+	private Cache<K, V> map(ConcurrentHashMap<K, SoftPair<V>> map)
+	{
+		this.map = map;
+		this.pairSet = map.entrySet();
+		return this;
+	}
+
+	protected Set<Map.Entry<K, SoftPair<V>>> pairSet()
+	{
+		return pairSet;
+	}
+
 	@Override
 	public V put(K key, V value)
 	{
-		refresh();
-		return valueOf(map.put(key, new SoftPair<V>(key, value, queue)));
+		return valueOf(map().put(key, new SoftPair<V>(key, value, queue())));
 	}
 
-	@SuppressWarnings("unchecked")
-	public void refresh()
+	protected ReferenceQueue<V> queue()
 	{
-		SoftPair<V> pair = null;
-
-		while ((pair = (SoftPair<V>) queue.poll()) != null)
-		{
-			map.remove(pair.key);
-		}
+		return queue;
 	}
 
-	public V remove(Object key)
-	{
-		refresh();
-		return valueOf(map.remove(key));
-	}
-
-	private void setHold(LinkedList<V> hold)
-	{
-		this.hold = hold;
-	}
-
-	public void setKeep(int keep)
-	{
-		this.keep = keep;
-	}
-
-	private void setMap(Map<K, SoftPair<V>> map)
-	{
-		this.map = map;
-	}
-
-	private void setQueue(ReferenceQueue<V> queue)
+	private Cache<K, V> queue(ReferenceQueue<V> queue)
 	{
 		this.queue = queue;
+		return this;
+	}
+
+	@Override
+	public V remove(Object key)
+	{
+		return valueOf(map().remove(key));
 	}
 
 	@Override
 	public int size()
 	{
-		refresh();
-		return map.size();
+		return map().size();
+	}
+
+	protected Thread thread()
+	{
+		return thread;
+	}
+
+	private Cache<K, V> thread(Thread thread)
+	{
+		this.thread = thread;
+		return this;
 	}
 
 	protected V valueOf(SoftPair<V> pair)
@@ -355,7 +456,6 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 	@Override
 	public Collection<V> values()
 	{
-		this.initPairSet();
 		return values == null ? (values = new ValuesCollection()) : values;
 	}
 }
