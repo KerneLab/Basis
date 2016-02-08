@@ -119,14 +119,16 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 
 	protected class Inspector implements Runnable
 	{
+		private long	last;
+
 		@SuppressWarnings("unchecked")
 		protected void clean()
 		{
-			if (0 <= keep() && keep() < map().size())
+			if (0 <= keep() && keep() < hold().size())
 			{
-				int delta = map().size() - keep();
+				int delta = hold().size() - keep();
 
-				TreeSet<SoftPair<V>> expire = new TreeSet<SoftPair<V>>(map().values());
+				TreeSet<SoftPair<V>> expire = new TreeSet<SoftPair<V>>(hold().keySet());
 
 				int count = 0;
 
@@ -153,18 +155,34 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 			}
 		}
 
+		protected long last()
+		{
+			return last;
+		}
+
+		protected void last(long last)
+		{
+			this.last = last;
+		}
+
 		public void run()
 		{
+			last(System.currentTimeMillis());
+
 			while (true)
 			{
 				try
 				{
-					Thread.sleep(delay());
+					Thread.sleep(interval());
 				}
 				catch (InterruptedException e)
 				{
 				}
-				this.clean();
+				if (System.currentTimeMillis() - last() >= delay())
+				{
+					this.clean();
+					last(System.currentTimeMillis());
+				}
 			}
 		}
 	}
@@ -229,13 +247,15 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		}
 	}
 
-	public static final int		DEFAULT_KEEP_VALUES		= 256;
+	public static final int		DEFAULT_KEEP_VALUES			= 256;
 
-	public static final int		DEFAULT_INSPECT_DELAY	= 600000;
+	public static final int		DEFAULT_INSPECT_INTERVAL	= 600000;
 
-	public static final float	DEFAULT_LOAD_FACTOR		= 0.75f;
+	public static final int		DEFAULT_INSPECT_DEALY		= 60000;
 
-	public static final int		DEFAULT_CONC_LEVEL		= 16;
+	public static final float	DEFAULT_LOAD_FACTOR			= 0.75f;
+
+	public static final int		DEFAULT_CONC_LEVEL			= 16;
 
 	/**
 	 * @param args
@@ -247,6 +267,8 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 	private ConcurrentHashMap<K, SoftPair<V>>	map;
 
 	private int									keep;
+
+	private int									interval;
 
 	private int									delay;
 
@@ -271,22 +293,28 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 
 	public Cache(int keep)
 	{
-		this(keep, DEFAULT_INSPECT_DELAY);
+		this(keep, DEFAULT_INSPECT_INTERVAL);
 	}
 
-	public Cache(int keep, int delay)
+	public Cache(int keep, int interval)
 	{
-		this(keep, delay, keep, DEFAULT_LOAD_FACTOR);
+		this(keep, interval, DEFAULT_INSPECT_DEALY);
 	}
 
-	public Cache(int keep, int delay, int initialCapacity, float loadFactor)
+	public Cache(int keep, int interval, int delay)
 	{
-		this(keep, delay, initialCapacity, loadFactor, DEFAULT_CONC_LEVEL);
+		this(keep, interval, delay, keep, DEFAULT_LOAD_FACTOR);
 	}
 
-	public Cache(int keep, int delay, int initialCapacity, float loadFactor, int concurrencyLevel)
+	public Cache(int keep, int interval, int delay, int initialCapacity, float loadFactor)
+	{
+		this(keep, interval, delay, initialCapacity, loadFactor, DEFAULT_CONC_LEVEL);
+	}
+
+	public Cache(int keep, int interval, int delay, int initialCapacity, float loadFactor, int concurrencyLevel)
 	{
 		this.keep(keep);
+		this.interval(interval);
 		this.delay(delay);
 		this.map(new ConcurrentHashMap<K, SoftPair<V>>(initialCapacity, loadFactor, concurrencyLevel));
 		this.hold(new ConcurrentHashMap<SoftPair<V>, V>(keep, loadFactor, concurrencyLevel));
@@ -315,9 +343,9 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		return delay;
 	}
 
-	private Cache<K, V> delay(int inspect)
+	protected Cache<K, V> delay(int delay)
 	{
-		this.delay = inspect;
+		this.delay = Math.min(delay, interval());
 		return this;
 	}
 
@@ -341,6 +369,7 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 			if (value != null)
 			{
 				hold(pair);
+				inspect();
 			}
 		}
 
@@ -363,6 +392,14 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		hold().put(pair.refresh(), pair.get());
 	}
 
+	protected void inspect()
+	{
+		if (0 <= keep() && keep() < hold().size())
+		{
+			thread().interrupt();
+		}
+	}
+
 	protected Inspector inspector()
 	{
 		return inspector;
@@ -371,6 +408,17 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 	private Cache<K, V> inspector(Inspector inspector)
 	{
 		this.inspector = inspector;
+		return this;
+	}
+
+	protected int interval()
+	{
+		return interval;
+	}
+
+	private Cache<K, V> interval(int inspect)
+	{
+		this.interval = inspect;
 		return this;
 	}
 
