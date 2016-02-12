@@ -124,9 +124,9 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		@SuppressWarnings("unchecked")
 		protected void clean()
 		{
-			if (0 <= keep() && keep() < hold().size())
+			if (0 <= keep() && keep() < holds())
 			{
-				int delta = hold().size() - keep();
+				int delta = holds() - keep();
 
 				TreeSet<SoftPair<V>> expire = new TreeSet<SoftPair<V>>(hold().keySet());
 
@@ -338,12 +338,12 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		map().clear();
 	}
 
-	protected int delay()
+	public int delay()
 	{
 		return delay;
 	}
 
-	protected Cache<K, V> delay(int delay)
+	public Cache<K, V> delay(int delay)
 	{
 		this.delay = Math.min(delay, interval());
 		return this;
@@ -392,6 +392,11 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		hold().put(pair.refresh(), pair.get());
 	}
 
+	public int holds()
+	{
+		return hold().size();
+	}
+
 	protected void inspect()
 	{
 		if (0 <= keep() && keep() < hold().size())
@@ -411,14 +416,14 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		return this;
 	}
 
-	protected int interval()
+	public int interval()
 	{
 		return interval;
 	}
 
-	private Cache<K, V> interval(int inspect)
+	public Cache<K, V> interval(int interval)
 	{
-		this.interval = inspect;
+		this.interval = interval;
 		return this;
 	}
 
