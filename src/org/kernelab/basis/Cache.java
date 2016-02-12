@@ -464,7 +464,10 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 	@Override
 	public V put(K key, V value)
 	{
-		return valueOf(map().put(key, new SoftPair<V>(key, value, queue())));
+		SoftPair<V> pair = new SoftPair<V>(key, value, queue());
+		hold(pair);
+		inspect();
+		return valueOf(map().put(key, pair));
 	}
 
 	protected ReferenceQueue<V> queue()
