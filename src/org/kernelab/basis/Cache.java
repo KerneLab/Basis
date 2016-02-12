@@ -124,7 +124,7 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		@SuppressWarnings("unchecked")
 		protected void clean()
 		{
-			if (0 <= keep() && keep() < holds())
+			if (keep() < holds())
 			{
 				int delta = holds() - keep();
 
@@ -434,7 +434,7 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 
 	public Cache<K, V> keep(int keep)
 	{
-		this.keep = keep;
+		this.keep = Math.max(keep, 0);
 		return this;
 	}
 
