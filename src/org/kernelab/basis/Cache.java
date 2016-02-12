@@ -397,9 +397,9 @@ public class Cache<K, V> extends AbstractMap<K, V> implements Map<K, V>
 		return hold().size();
 	}
 
-	protected void inspect()
+	public void inspect()
 	{
-		if (0 <= keep() && keep() < hold().size())
+		if (keep() < holds())
 		{
 			thread().interrupt();
 		}
