@@ -742,7 +742,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 			try
 			{
-				String env = System.getenv("TNS_ADMIN");
+				String env = System.getProperty("TNS_ADMIN", System.getenv("TNS_ADMIN"));
 
 				if (env != null)
 				{
@@ -824,13 +824,20 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 		public static Map<String, String> listTNS(File file, String name)
 		{
-			try
+			if (file != null)
 			{
-				return ((TNSNamesReader) new TNSNamesReader().setName(name).setDataFile(file).read()).getMap();
+				try
+				{
+					return ((TNSNamesReader) new TNSNamesReader().setName(name).setDataFile(file).read()).getMap();
+				}
+				catch (Exception e)
+				{
+					return null;
+				}
 			}
-			catch (Exception e)
+			else
 			{
-				return new LinkedHashMap<String, String>();
+				return null;
 			}
 		}
 
@@ -839,7 +846,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			return listTNS(new File(getDefaultTNSFilePath()), name);
 		}
 
-		private File	file;
+		private String	tns;
 
 		public OracleClient()
 		{
@@ -880,13 +887,36 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		@Override
 		public String getURL()
 		{
-			Map<String, String> map = listTNS(file, this.getCatalog());
-
-			String tns = map.get(this.getCatalog());
+			String tns = this.tns;
 
 			if (tns == null)
 			{
-				tns = this.getCatalog();
+				String filePath = this.getServerName();
+				if (filePath == null)
+				{
+					filePath = getDefaultTNSFilePath();
+				}
+
+				File file = null;
+				if (filePath != null)
+				{
+					file = new File(filePath);
+				}
+
+				Map<String, String> map = listTNS(file, this.getCatalog());
+				if (map != null)
+				{
+					tns = map.get(this.getCatalog());
+				}
+
+				if (tns == null)
+				{
+					tns = this.getCatalog();
+				}
+				else
+				{
+					this.tns = tns;
+				}
 			}
 
 			return "jdbc:oracle:thin:@" + tns;
@@ -906,24 +936,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			}
 			else
 			{
-				throw new RuntimeException("TNS identifier must not be null");
-			}
-
-			return this;
-		}
-
-		@Override
-		public OracleClient setServerName(String filePath)
-		{
-			if (filePath == null)
-			{
-				filePath = getDefaultTNSFilePath();
-			}
-
-			if (filePath != null)
-			{
-				super.setServerName(filePath);
-				this.file = new File(filePath);
+				throw new IllegalArgumentException("TNS identifier must not be null");
 			}
 
 			return this;
