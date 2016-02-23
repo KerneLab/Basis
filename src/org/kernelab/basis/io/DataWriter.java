@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 
 import org.kernelab.basis.AbstractAccomplishable;
 import org.kernelab.basis.Tools;
@@ -120,7 +121,25 @@ public class DataWriter extends AbstractAccomplishable<DataWriter> implements Ru
 
 	public String getCharsetName()
 	{
-		return charset.name();
+		return getCharset() == null ? null : getCharset().name();
+	}
+
+	protected Charset getDefaultCharset(Charset charset)
+	{
+		return charset != null //
+		? charset //
+				: (this.getCharset() != null //
+				? this.getCharset() //
+						: DEFAULT_CHARSET);
+	}
+
+	protected Charset getDefaultCharset(String charsetName) throws UnsupportedCharsetException
+	{
+		return charsetName != null //
+		? Charset.forName(charsetName) //
+				: (this.getCharset() != null //
+				? this.getCharset() //
+						: DEFAULT_CHARSET);
 	}
 
 	public String getLineSeparator()
@@ -210,7 +229,7 @@ public class DataWriter extends AbstractAccomplishable<DataWriter> implements Ru
 	{
 		if (this.isWriting() && !this.isAppend() && !this.isBommed() && !this.isWritten())
 		{
-			byte[] bom = ByteOrderMarkScanner.getBOM(charset);
+			byte[] bom = ByteOrderMarkScanner.getBOM(getCharset());
 
 			if (bom != null)
 			{
@@ -307,7 +326,7 @@ public class DataWriter extends AbstractAccomplishable<DataWriter> implements Ru
 
 	public <E extends DataWriter> E setChannel(WritableByteChannel os)
 	{
-		return this.setOutputStream(new ChannelOutputStream(os), charset);
+		return this.setOutputStream(new ChannelOutputStream(os), this.getCharset());
 	}
 
 	public <E extends DataWriter> E setChannel(WritableByteChannel os, Charset charset)
@@ -347,12 +366,12 @@ public class DataWriter extends AbstractAccomplishable<DataWriter> implements Ru
 	 */
 	public <E extends DataWriter> E setDataFile(File file) throws FileNotFoundException
 	{
-		return this.setDataFile(file, append);
+		return this.setDataFile(file, this.isAppend());
 	}
 
 	public <E extends DataWriter> E setDataFile(File file, boolean append) throws FileNotFoundException
 	{
-		return this.setDataFile(file, append, charset);
+		return this.setDataFile(file, append, this.getCharset());
 	}
 
 	public <E extends DataWriter> E setDataFile(File file, boolean append, Charset charset)
@@ -369,12 +388,12 @@ public class DataWriter extends AbstractAccomplishable<DataWriter> implements Ru
 
 	public <E extends DataWriter> E setDataFile(File file, Charset charset) throws FileNotFoundException
 	{
-		return this.setDataFile(file, append, charset);
+		return this.setDataFile(file, this.isAppend(), charset);
 	}
 
 	public <E extends DataWriter> E setDataFile(File file, String charsetName) throws FileNotFoundException
 	{
-		return this.setDataFile(file, append, charsetName);
+		return this.setDataFile(file, this.isAppend(), charsetName);
 	}
 
 	public <E extends DataWriter> DataWriter setLineSeparator(String lineSeparator)
@@ -385,18 +404,19 @@ public class DataWriter extends AbstractAccomplishable<DataWriter> implements Ru
 
 	public <E extends DataWriter> E setOutputStream(OutputStream os)
 	{
-		return this.setOutputStream(os, charset);
+		return this.setOutputStream(os, this.getCharset());
 	}
 
 	public <E extends DataWriter> E setOutputStream(OutputStream os, Charset charset)
 	{
 		this.outputStream = os;
+		charset = this.getDefaultCharset(charset);
 		return this.setCharset(charset).setWriter(new OutputStreamWriter(os, charset));
 	}
 
 	public <E extends DataWriter> E setOutputStream(OutputStream os, String charsetName)
 	{
-		return this.setOutputStream(os, Charset.forName(charsetName));
+		return this.setOutputStream(os, this.getDefaultCharset(charsetName));
 	}
 
 	/**
@@ -409,7 +429,7 @@ public class DataWriter extends AbstractAccomplishable<DataWriter> implements Ru
 	 */
 	public <E extends DataWriter> E setWriter(Writer writer)
 	{
-		return this.setWriter(writer, autoFlush);
+		return this.setWriter(writer, this.isAutoFlush());
 	}
 
 	/**

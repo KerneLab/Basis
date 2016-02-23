@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.concurrent.Callable;
 
 import org.kernelab.basis.AbstractAccomplishable;
@@ -67,7 +68,25 @@ public abstract class DataReader extends AbstractAccomplishable<DataReader> impl
 
 	public String getCharsetName()
 	{
-		return charset.name();
+		return getCharset() == null ? null : getCharset().name();
+	}
+
+	protected Charset getDefaultCharset(Charset charset)
+	{
+		return charset != null //
+		? charset //
+				: (this.getCharset() != null //
+				? this.getCharset() //
+						: DEFAULT_CHARSET);
+	}
+
+	protected Charset getDefaultCharset(String charsetName) throws UnsupportedCharsetException
+	{
+		return charsetName != null //
+		? Charset.forName(charsetName) //
+				: (this.getCharset() != null //
+				? this.getCharset() //
+						: DEFAULT_CHARSET);
 	}
 
 	public int getLines()
@@ -217,7 +236,7 @@ public abstract class DataReader extends AbstractAccomplishable<DataReader> impl
 
 	public <E extends DataReader> E setChannel(ReadableByteChannel channel) throws IOException
 	{
-		return this.setInputStream(new ChannelInputStream(channel), charset);
+		return this.setInputStream(new ChannelInputStream(channel), this.getCharset());
 	}
 
 	public <E extends DataReader> E setChannel(ReadableByteChannel channel, Charset charset) throws IOException
@@ -243,7 +262,7 @@ public abstract class DataReader extends AbstractAccomplishable<DataReader> impl
 
 	public <E extends DataReader> E setDataFile(File file) throws IOException
 	{
-		return this.setDataFile(file, charset);
+		return this.setDataFile(file, this.getCharset());
 	}
 
 	public <E extends DataReader> E setDataFile(File file, Charset charset) throws IOException
@@ -258,18 +277,18 @@ public abstract class DataReader extends AbstractAccomplishable<DataReader> impl
 
 	public <E extends DataReader> E setInputStream(InputStream is) throws IOException
 	{
-		return this.setInputStream(is, charset);
+		return this.setInputStream(is, this.getCharset());
 	}
 
 	public <E extends DataReader> E setInputStream(InputStream is, Charset charset) throws IOException
 	{
-		ByteOrderMarkScanner scanner = new ByteOrderMarkScanner().scan(is, charset);
+		ByteOrderMarkScanner scanner = new ByteOrderMarkScanner().scan(is, this.getDefaultCharset(charset));
 		return this.setBommed(scanner.isBommed()).setCharset(scanner.getCharset()).setReader(scanner.getReader());
 	}
 
 	public <E extends DataReader> E setInputStream(InputStream is, String charsetName) throws IOException
 	{
-		return this.setInputStream(is, Charset.forName(charsetName));
+		return this.setInputStream(is, this.getDefaultCharset(charsetName));
 	}
 
 	/**
