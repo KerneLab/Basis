@@ -231,6 +231,11 @@ Tools.get = function(obj, key)
 	{
 		val = arguments[2];
 	}
+	if (val == null && arguments.length > 3
+			&& $.type(arguments[3]) == "function")
+	{
+		val = arguments[3](obj, key);
+	}
 	return val;
 };
 
@@ -291,14 +296,12 @@ Tools.negative = function(vector)
 
 Tools.nullEmpty = function(string)
 {
-	var def = arguments.length > 1 ? def = arguments[1] : "";
-	return string == null ? def : string;
+	return string != null ? string : (arguments.length > 1 ? arguments[1] : "");
 };
 
 Tools.orth = function(vector)
 {
-	var orth = [ vector[1], -vector[0] ];
-	return orth;
+	return [ vector[1], -vector[0] ];
 };
 
 Tools.reduce = function(contain, reducer, result)
