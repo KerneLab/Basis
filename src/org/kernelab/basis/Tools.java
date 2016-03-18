@@ -2650,9 +2650,8 @@ public class Tools
 	}
 
 	/**
-	 * To get the canonical file path according to the given path. If the path
-	 * is not absolute then the parent path would be taken to construct the full
-	 * path.
+	 * To get the full path according to the given path. If the path is not
+	 * absolute then the parent path would be taken to construct the full path.
 	 * 
 	 * @param path
 	 *            The path.
@@ -2671,13 +2670,7 @@ public class Tools
 				file = new File(parent, path);
 			}
 
-			try
-			{
-				path = file.getCanonicalPath();
-			}
-			catch (IOException e)
-			{
-			}
+			path = getFullPath(file);
 		}
 
 		return path;
