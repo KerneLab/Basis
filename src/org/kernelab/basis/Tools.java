@@ -24,6 +24,8 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -98,6 +100,137 @@ public class Tools
 	}
 
 	/**
+	 * Get the value of given field in an object.<br />
+	 * The "getter" method and the method with the same name to the field would
+	 * be tried one by one. Finally, directly get from the field would also be
+	 * tried.
+	 * 
+	 * @param object
+	 *            The Object.
+	 * @param field
+	 *            The field.
+	 * @return The field value.
+	 * @throws NoSuchFieldException
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T access(T object, Field field)
+	{
+		if (object != null && field != null)
+		{
+			Class<?> cls = object.getClass();
+
+			String name = field.getName();
+
+			String methodName = Tools.capitalize(name);
+
+			Method method = null;
+
+			try
+			{
+				method = cls.getMethod("get" + methodName);
+			}
+			catch (NoSuchMethodException e)
+			{
+				try
+				{
+					method = cls.getMethod("is" + methodName);
+				}
+				catch (NoSuchMethodException ex)
+				{
+					try
+					{
+						method = cls.getMethod(name);
+					}
+					catch (NoSuchMethodException err)
+					{
+						try
+						{
+							return (T) field.get(object);
+						}
+						catch (Exception erro)
+						{
+						}
+					}
+				}
+			}
+
+			if (method != null)
+			{
+				try
+				{
+					return (T) method.invoke(object);
+				}
+				catch (Exception e)
+				{
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Set the value to given field in an object.<br />
+	 * The "setter" method and the method with the same name to the field would
+	 * be tried one by one. Finally, directly set to the field would also be
+	 * tried.
+	 * 
+	 * @param object
+	 *            The object.
+	 * @param field
+	 *            The field.
+	 * @param value
+	 *            The value to be set.
+	 */
+	public static <T> void access(T object, Field field, Object value)
+	{
+		if (object != null && field != null)
+		{
+			Class<?> cls = object.getClass();
+
+			String name = field.getName();
+
+			String methodName = Tools.capitalize(name);
+
+			Method method = null;
+
+			try
+			{
+				method = cls.getMethod("set" + methodName, field.getType());
+			}
+			catch (NoSuchMethodException e)
+			{
+				try
+				{
+					method = cls.getMethod(name, field.getType());
+				}
+				catch (NoSuchMethodException ex)
+				{
+					try
+					{
+						field.set(object, value);
+						return;
+					}
+					catch (Exception err)
+					{
+					}
+				}
+			}
+
+			if (method != null)
+			{
+				try
+				{
+					method.invoke(object, value);
+				}
+				catch (Exception e)
+				{
+				}
+			}
+		}
+	}
+
+	/**
 	 * Add all elements in an Iterable object into a given Collection.
 	 * 
 	 * @param <T>
@@ -166,6 +299,34 @@ public class Tools
 		if (cls.isInstance(obj))
 		{
 			return cls.cast(obj);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Return a new String with the first character in source CharSequence
+	 * become upper case.
+	 * 
+	 * @param cs
+	 *            The source CharSequence.
+	 * @return The capitalized String.
+	 */
+	public static String capitalize(CharSequence cs)
+	{
+		if (cs != null)
+		{
+			if (cs.length() == 0)
+			{
+				return "";
+			}
+			else
+			{
+				return cs.subSequence(0, 1).toString().toUpperCase()
+						+ (cs.length() == 1 ? "" : cs.subSequence(1, cs.length()));
+			}
 		}
 		else
 		{
