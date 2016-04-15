@@ -14,8 +14,6 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.sql.Date;
@@ -1184,7 +1182,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						try
 						{
-							jsan.attr(i, Access(object, field.toString()));
+							jsan.attr(i, Access(object, field.toString(), null));
 						}
 						catch (Exception e)
 						{
@@ -4594,107 +4592,80 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		ESCAPED_CHAR.put('\t', "\\t");
 	}
 
-	public static Object Access(Object object, String fieldName) throws Exception
+	@SuppressWarnings("unchecked")
+	public static <T> T Access(T object, String name, Field field)
 	{
-		Object value = null;
-
-		if (object != null && fieldName != null)
+		if (object != null)
 		{
-			if (JSON.IsJSON(object))
+			if (name == null && field != null)
 			{
-				value = ((JSON) object).attr(fieldName);
+				name = field.getName();
 			}
-			else if (object instanceof Map)
+
+			if (name != null)
 			{
-				value = ((Map<?, ?>) object).get(fieldName);
+				if (JSON.IsJSON(object))
+				{
+					return ((JSON) object).attr(name);
+				}
+				else if (object instanceof Map)
+				{
+					return (T) ((Map<?, ?>) object).get(name);
+				}
 			}
-			else
+
+			if (field == null && name != null)
 			{
-				Class<?> cls = object.getClass();
+				field = FieldOf(object.getClass(), name);
+			}
 
-				String methodName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-
-				Method method = null;
-
+			if (field != null)
+			{
 				try
 				{
-					method = cls.getMethod("get" + methodName);
+					return Tools.access(object, field);
 				}
-				catch (NoSuchMethodException e)
+				catch (Exception e)
 				{
-					try
-					{
-						method = cls.getMethod("is" + methodName);
-					}
-					catch (NoSuchMethodException ex)
-					{
-						try
-						{
-							method = cls.getMethod(fieldName);
-						}
-						catch (NoSuchMethodException err)
-						{
-							value = cls.getField(fieldName).get(object);
-						}
-					}
-				}
-
-				if (method != null && method.getParameterTypes().length == 0)
-				{
-					value = method.invoke(object);
 				}
 			}
 		}
 
-		return value;
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void Access(Object object, String fieldName, Object value) throws Exception
+	public static <T> void Access(T object, String name, Field field, Object value)
 	{
-		if (object != null && fieldName != null)
+		if (object != null)
 		{
-			if (JSON.IsJSON(object))
+			if (name == null && field != null)
 			{
-				((JSON) object).attr(fieldName, value);
+				name = field.getName();
 			}
-			else if (object instanceof Map)
-			{
-				((Map<String, Object>) object).put(fieldName, value);
-			}
-			else
-			{
-				Class<?> cls = object.getClass();
 
-				Field field = FieldOf(cls, fieldName);
-
-				if (field != null)
+			if (name != null)
+			{
+				if (JSON.IsJSON(object))
 				{
-					String methodName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-
-					Method method = null;
-
-					try
-					{
-						method = cls.getMethod("set" + methodName, field.getType());
-					}
-					catch (NoSuchMethodException e)
-					{
-						try
-						{
-							method = cls.getMethod(fieldName, field.getType());
-						}
-						catch (NoSuchMethodException ex)
-						{
-							field.set(object, value);
-						}
-					}
-
-					if (method != null && method.getParameterTypes().length == 1)
-					{
-						method.invoke(object, value);
-					}
+					((JSON) object).attr(name, value);
+					return;
 				}
+				else if (object instanceof Map)
+				{
+					((Map<String, Object>) object).put(name, value);
+					return;
+				}
+			}
+
+			if (field == null && name != null)
+			{
+				field = FieldOf(object.getClass(), name);
+			}
+
+			if (field != null)
+			{
+				Tools.access(object, field, value);
 			}
 		}
 	}
@@ -5474,29 +5445,29 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return field;
 	}
 
-	public static <T> Collection<Field> FieldsOf(Class<T> cls, Collection<Field> fields)
+	public static <T> Map<String, Field> FieldsOf(Class<T> cls, Map<String, Field> fields)
 	{
 		if (cls != null)
 		{
 			if (fields == null)
 			{
-				fields = new LinkedHashSet<Field>();
+				fields = new LinkedHashMap<String, Field>();
 			}
 
 			fields = FieldsOf(cls.getSuperclass(), fields);
 
 			for (Field field : cls.getDeclaredFields())
 			{
-				fields.add(field);
+				fields.put(field.getName(), field);
 			}
 		}
 
 		return fields;
 	}
 
-	public static <T> Collection<Field> FieldsOf(T object)
+	public static <T> Map<String, Field> FieldsOf(T object)
 	{
-		Collection<Field> fields = null;
+		Map<String, Field> fields = null;
 
 		if (object != null)
 		{
@@ -5920,16 +5891,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					object = (T) con.newInstance(param);
 					break;
 				}
-				catch (IllegalArgumentException e)
-				{
-				}
-				catch (InstantiationException e)
-				{
-				}
-				catch (IllegalAccessException e)
-				{
-				}
-				catch (InvocationTargetException e)
+				catch (Exception e)
 				{
 				}
 			}
@@ -5942,7 +5904,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Map<Field, Object> project = null;
 
-		Collection<Field> fields = null;
+		Map<String, Field> fields = null;
 
 		if (!(object instanceof Map) && !(object instanceof Iterable) && !IsArray(object))
 		{
@@ -5953,9 +5915,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			project = new LinkedHashMap<Field, Object>();
 
-			for (Field field : fields)
+			for (Entry<String, Field> entry : fields.entrySet())
 			{
-				project.put(field, field.getName());
+				project.put(entry.getValue(), entry.getKey());
 			}
 		}
 
@@ -6032,11 +5994,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 							if (json.has(key))
 							{
-								Object value = Access(object, name);
+								Object value = Access(object, name, field);
 
 								value = ProjectTo(json.attr(key), field.getType(), value, json.projects());
 
-								Access(object, name, value);
+								Access(object, name, field, value);
 							}
 						}
 						catch (Exception e)
@@ -6498,7 +6460,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						if (pair.getKey() != null)
 						{
-							json.attr(pair.getKey(), Access(object, pair.getValue().toString()));
+							json.attr(pair.getKey(), Access(object, pair.getValue().toString(), null));
 						}
 					}
 					catch (Exception e)
@@ -8100,11 +8062,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Transform<?> transform = null;
 
-		if (entry != null && transforms() != null && !transforms().isEmpty())
+		if (transforms() != null && !transforms().isEmpty())
 		{
-			transform = transforms().get(entry);
+			if (entry != null)
+			{
+				transform = transforms().get(entry);
+			}
 
-			if (transform == null)
+			if (transform == null && value != null)
 			{
 				for (Entry<Object, Transform<?>> e : transforms().entrySet())
 				{
