@@ -25,6 +25,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -110,10 +111,13 @@ public class Tools
 	 * @param field
 	 *            The field.
 	 * @return The field value.
-	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T access(T object, Field field)
+	public static <T> T access(T object, Field field) throws IllegalArgumentException, IllegalAccessException,
+			InvocationTargetException
 	{
 		if (object != null && field != null)
 		{
@@ -143,26 +147,14 @@ public class Tools
 					}
 					catch (NoSuchMethodException err)
 					{
-						try
-						{
-							return (T) field.get(object);
-						}
-						catch (Exception erro)
-						{
-						}
+						return (T) field.get(object);
 					}
 				}
 			}
 
 			if (method != null)
 			{
-				try
-				{
-					return (T) method.invoke(object);
-				}
-				catch (Exception e)
-				{
-				}
+				return (T) method.invoke(object);
 			}
 		}
 
@@ -181,8 +173,12 @@ public class Tools
 	 *            The field.
 	 * @param value
 	 *            The value to be set.
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
 	 */
-	public static <T> void access(T object, Field field, Object value)
+	public static <T> void access(T object, Field field, Object value) throws IllegalArgumentException,
+			IllegalAccessException, InvocationTargetException
 	{
 		if (object != null && field != null)
 		{
@@ -206,26 +202,14 @@ public class Tools
 				}
 				catch (NoSuchMethodException ex)
 				{
-					try
-					{
-						field.set(object, value);
-						return;
-					}
-					catch (Exception err)
-					{
-					}
+					field.set(object, value);
+					return;
 				}
 			}
 
 			if (method != null)
 			{
-				try
-				{
-					method.invoke(object, value);
-				}
-				catch (Exception e)
-				{
-				}
+				method.invoke(object, value);
 			}
 		}
 	}

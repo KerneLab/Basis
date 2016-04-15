@@ -1183,11 +1183,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						try
 						{
 							jsan.attr(i, Access(object, field.toString(), null));
+							i++;
 						}
 						catch (Exception e)
 						{
 						}
-						i++;
 					}
 				}
 				else
@@ -4593,7 +4593,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T Access(T object, String name, Field field)
+	public static <T> T Access(T object, String name, Field field) throws Exception
 	{
 		if (object != null)
 		{
@@ -4621,13 +4621,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			if (field != null)
 			{
-				try
-				{
-					return Tools.access(object, field);
-				}
-				catch (Exception e)
-				{
-				}
+				return Tools.access(object, field);
 			}
 		}
 
@@ -4635,7 +4629,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> void Access(T object, String name, Field field, Object value)
+	public static <T> void Access(T object, String name, Field field, Object value) throws Exception
 	{
 		if (object != null)
 		{
