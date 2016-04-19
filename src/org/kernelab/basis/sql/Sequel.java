@@ -22,10 +22,11 @@ import java.util.Map;
 
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
+import org.kernelab.basis.Mapper;
 
 public class Sequel implements Iterable<ResultSet>
 {
-	public static class ResultSetIterator implements Iterable<ResultSet>, Iterator<ResultSet>
+	public static abstract class AbstractIterator<T> implements Iterable<T>, Iterator<T>
 	{
 		private ResultSet	rs;
 
@@ -33,7 +34,7 @@ public class Sequel implements Iterable<ResultSet>
 
 		private boolean		closing;
 
-		public ResultSetIterator(ResultSet rs)
+		public AbstractIterator(ResultSet rs)
 		{
 			this.rs = rs;
 			this.closing = true;
@@ -44,11 +45,13 @@ public class Sequel implements Iterable<ResultSet>
 			return closing;
 		}
 
-		public ResultSetIterator closing(boolean closing)
+		public AbstractIterator<T> closing(boolean closing)
 		{
 			this.closing = closing;
 			return this;
 		}
+
+		protected abstract void done();
 
 		public boolean hasNext()
 		{
@@ -62,6 +65,7 @@ public class Sequel implements Iterable<ResultSet>
 					}
 					else
 					{
+						done();
 						release();
 						return false;
 					}
@@ -79,7 +83,7 @@ public class Sequel implements Iterable<ResultSet>
 			}
 		}
 
-		public Iterator<ResultSet> iterator()
+		public Iterator<T> iterator()
 		{
 			return this;
 		}
@@ -89,16 +93,13 @@ public class Sequel implements Iterable<ResultSet>
 			return kit;
 		}
 
-		public ResultSetIterator kit(SQLKit kit)
+		public AbstractIterator<T> kit(SQLKit kit)
 		{
 			this.kit = kit;
 			return this;
 		}
 
-		public ResultSet next()
-		{
-			return rs;
-		}
+		public abstract T next();
 
 		protected void release()
 		{
@@ -135,6 +136,95 @@ public class Sequel implements Iterable<ResultSet>
 
 		public void remove()
 		{
+		}
+
+		protected ResultSet resultSet()
+		{
+			return this.rs;
+		}
+	}
+
+	public static class ObjectIterator<T> extends AbstractIterator<T>
+	{
+		private Mapper<ResultSet, T>	mapper;
+
+		public ObjectIterator(ResultSet rs)
+		{
+			super(rs);
+		}
+
+		@Override
+		public ObjectIterator<T> closing(boolean closing)
+		{
+			super.closing(closing);
+			return this;
+		}
+
+		@Override
+		protected void done()
+		{
+		}
+
+		@Override
+		public ObjectIterator<T> kit(SQLKit kit)
+		{
+			super.kit(kit);
+			return this;
+		}
+
+		public Mapper<ResultSet, T> mapper()
+		{
+			return mapper;
+		}
+
+		public ObjectIterator<T> mapper(Mapper<ResultSet, T> mapper)
+		{
+			this.mapper = mapper;
+			return this;
+		}
+
+		public T next()
+		{
+			if (mapper() != null)
+			{
+				return mapper().map(this.resultSet());
+			}
+			else
+			{
+				return null;
+			}
+		}
+	}
+
+	public static class ResultSetIterator extends AbstractIterator<ResultSet>
+	{
+		public ResultSetIterator(ResultSet rs)
+		{
+			super(rs);
+		}
+
+		@Override
+		public ResultSetIterator closing(boolean closing)
+		{
+			super.closing(closing);
+			return this;
+		}
+
+		@Override
+		protected void done()
+		{
+		}
+
+		@Override
+		public ResultSetIterator kit(SQLKit kit)
+		{
+			super.kit(kit);
+			return this;
+		}
+
+		public ResultSet next()
+		{
+			return resultSet();
 		}
 	}
 
@@ -2102,7 +2192,7 @@ public class Sequel implements Iterable<ResultSet>
 		return closing;
 	}
 
-	protected boolean isIterating()
+	public boolean isIterating()
 	{
 		return iterating;
 	}
@@ -2135,6 +2225,19 @@ public class Sequel implements Iterable<ResultSet>
 	public ResultSetIterator iterator(boolean closing)
 	{
 		return new ResultSetIterator(this.getResultSet()) //
+				.closing(closing && !this.isIterating()) //
+				.kit(this.getKit());
+	}
+
+	public <T> ObjectIterator<T> iterator(Mapper<ResultSet, T> mapper)
+	{
+		return iterator(mapper, this.isClosing());
+	}
+
+	public <T> ObjectIterator<T> iterator(Mapper<ResultSet, T> mapper, boolean closing)
+	{
+		return new ObjectIterator<T>(this.getResultSet()) //
+				.mapper(mapper) //
 				.closing(closing && !this.isIterating()) //
 				.kit(this.getKit());
 	}
