@@ -2795,8 +2795,36 @@ public class Tools
 	}
 
 	/**
-	 * To get the full path according to the given path. If the path is not
-	 * absolute then the parent path would be taken to construct the full path.
+	 * Try to get the canonical path of a File.<br />
+	 * Its absolute path would be returned if any Exception occurred.
+	 * 
+	 * @param file
+	 *            The file.
+	 * @return The path.
+	 */
+	public static String getFilePath(File file)
+	{
+		if (file != null)
+		{
+			try
+			{
+				return file.getCanonicalPath();
+			}
+			catch (Exception e)
+			{
+				return file.getAbsolutePath();
+			}
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * To get the file path according to the given path.<br />
+	 * If the path is not absolute then the parent path would be taken to
+	 * construct the file path.
 	 * 
 	 * @param path
 	 *            The path.
@@ -2815,7 +2843,7 @@ public class Tools
 				file = new File(parent, path);
 			}
 
-			path = getFullPath(file);
+			path = getFilePath(file);
 		}
 
 		return path;
@@ -2871,8 +2899,10 @@ public class Tools
 	}
 
 	/**
-	 * Try to get the canonical path of a File. If any Exception occurred, then
-	 * its absolute path would be returned.
+	 * Try to get the canonical path of a File.<br />
+	 * Its absolute path would be returned if any Exception occurred.<br />
+	 * Additionally, the result path will be ended up with a separator if the
+	 * File object is a directory.
 	 * 
 	 * @param file
 	 *            The file.
@@ -2880,21 +2910,23 @@ public class Tools
 	 */
 	public static String getFullPath(File file)
 	{
-		String path = null;
+		String path = getFilePath(file);
 
-		if (file != null)
+		if (path != null)
 		{
-			try
+			if (file.isDirectory())
 			{
-				path = file.getCanonicalPath();
+				return getFolderPath(path);
 			}
-			catch (Exception e)
+			else
 			{
-				path = file.getAbsolutePath();
+				return path;
 			}
 		}
-
-		return path;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
