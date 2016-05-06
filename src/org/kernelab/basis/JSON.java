@@ -1302,7 +1302,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				if (target == null)
 				{
-					target = new JSAN().reflects(source).transforms(source);
+					target = new JSAN().templates(source);
 				}
 
 				sorter.addAll(source.values());
@@ -1794,7 +1794,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public JSAN clone()
 		{
-			return new JSAN().reflects(this).transforms(this).clone(this);
+			return new JSAN().templates(this).clone(this);
 		}
 
 		public boolean containsAll(Iterable<? extends Object> iterable)
@@ -2484,7 +2484,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			if (jsan == null)
 			{
-				jsan = new JSAN().reflects(this).transforms(this);
+				jsan = new JSAN().templates(this);
 			}
 			else
 			{
@@ -2552,7 +2552,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSAN splice(int index, int cover, Collection<?> collection)
 		{
-			JSAN result = new JSAN().reflects(this).transforms(this);
+			JSAN result = new JSAN().templates(this);
 
 			int trace = length();
 			index = bound(index);
@@ -2631,7 +2631,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSAN splice(int index, int cover, JSAN jsan)
 		{
-			JSAN result = new JSAN().reflects(this).transforms(this);
+			JSAN result = new JSAN().templates(this);
 
 			int trace = length();
 			index = bound(index);
@@ -2710,7 +2710,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSAN splice(int index, int cover, Object... objects)
 		{
-			JSAN result = new JSAN().reflects(this).transforms(this);
+			JSAN result = new JSAN().templates(this);
 
 			int trace = length();
 			index = bound(index);
@@ -2783,6 +2783,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 
 			return result;
+		}
+
+		@Override
+		public JSAN templates(JSON json)
+		{
+			return (JSAN) super.templates(json);
 		}
 
 		public Object[] toArray()
@@ -6393,7 +6399,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			else if (object instanceof Iterable)
 			{
-				JSAN temp = JSAN.Reflect(new JSAN().reflects(json).transforms(json), object);
+				JSAN temp = JSAN.Reflect(new JSAN().templates(json), object);
 
 				if (reflect == null)
 				{
@@ -6420,7 +6426,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			else if (IsArray(object))
 			{
-				JSAN temp = JSAN.Reflect(new JSAN().reflects(json).transforms(json), object);
+				JSAN temp = JSAN.Reflect(new JSAN().templates(json), object);
 
 				if (reflect == null)
 				{
@@ -7024,7 +7030,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	@Override
 	public JSON clone()
 	{
-		return new JSON().reflects(this).transforms(this).clone(this);
+		return new JSON().templates(this).clone(this);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -8022,7 +8028,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		if (json == null)
 		{
-			json = new JSON().reflects(this).transforms(this);
+			json = new JSON().templates(this);
 		}
 
 		for (String key : this.keySet())
@@ -8033,9 +8039,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return json;
 	}
 
+	public JSON templates(JSON json)
+	{
+		return this.transforms(json).reflects(json).projects(json);
+	}
+
 	public JSAN toJSAN()
 	{
-		JSAN jsan = new JSAN().reflects(this).transforms(this);
+		JSAN jsan = new JSAN().templates(this);
 		jsan.addAll(this.values());
 		return jsan;
 	}
