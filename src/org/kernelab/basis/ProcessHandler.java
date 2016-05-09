@@ -153,6 +153,8 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 		this.terminate();
 
+		this.destroy();
+
 		this.accomplished();
 
 		if (exception != null)
@@ -161,6 +163,21 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		}
 
 		return this;
+	}
+
+	protected void destroy()
+	{
+		process = null;
+
+		tos = null;
+		tes = null;
+
+		outputStream = null;
+		errorStream = null;
+
+		pos = null;
+		pis = null;
+		pes = null;
 	}
 
 	@Override
@@ -252,7 +269,6 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 		}
 	}
 
@@ -341,20 +357,6 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 				catch (Exception e)
 				{
 				}
-				finally
-				{
-					process = null;
-				}
-
-				tos = null;
-				tes = null;
-
-				outputStream = null;
-				errorStream = null;
-
-				pos = null;
-				pis = null;
-				pes = null;
 			}
 		}
 		finally
