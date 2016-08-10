@@ -115,15 +115,72 @@ public class Tools
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T> T access(T object, Field field) throws IllegalArgumentException, IllegalAccessException,
-			InvocationTargetException
+	public static <T> T access(T object, Field field)
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
 	{
 		if (object != null && field != null)
 		{
+			return access(object, field.getName(), field);
+		}
+		return null;
+	}
+
+	/**
+	 * Set the value to given field in an object.<br />
+	 * The "setter" method and the method with the same name to the field would
+	 * be tried one by one. Finally, directly set to the field would also be
+	 * tried.
+	 * 
+	 * @param object
+	 *            The object.
+	 * @param field
+	 *            The field.
+	 * @param value
+	 *            The value to be set.
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	public static <T> void access(T object, Field field, Object value)
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
+	{
+		if (object != null && field != null)
+		{
+			access(object, field.getName(), field, value);
+		}
+	}
+
+	/**
+	 * Get the value of given field name in an object.<br />
+	 * The "getter" method and the method with the same name to the field would
+	 * be tried one by one. Finally, directly get from the field would also be
+	 * tried if no method found.
+	 * 
+	 * @param object
+	 *            The object.
+	 * @param name
+	 *            The field name. If null, the field parameter would be used to
+	 *            get the name.
+	 * @param field
+	 *            The field. If null, the field would be searched according to
+	 *            the field name.
+	 * @return The field value.
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T access(T object, String name, Field field)
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
+	{
+		if (object != null && (name != null || field != null))
+		{
 			Class<?> cls = object.getClass();
 
-			String name = field.getName();
+			if (name == null)
+			{
+				name = field.getName();
+			}
 
 			String methodName = Tools.capitalize(name);
 
@@ -147,7 +204,14 @@ public class Tools
 					}
 					catch (NoSuchMethodException err)
 					{
-						return (T) field.get(object);
+						if (field == null)
+						{
+							field = Tools.fieldOf(cls, name);
+						}
+						if (field != null)
+						{
+							return (T) field.get(object);
+						}
 					}
 				}
 			}
@@ -157,59 +221,102 @@ public class Tools
 				return (T) method.invoke(object);
 			}
 		}
-
 		return null;
 	}
 
 	/**
-	 * Set the value to given field in an object.<br />
+	 * Set the value to given field name in an object.<br />
 	 * The "setter" method and the method with the same name to the field would
-	 * be tried one by one. Finally, directly set to the field would also be
-	 * tried.
+	 * be tried one by one. The value's class type would be help to find the
+	 * method if not null, then the field type would be considered. Finally,
+	 * directly set to the field would also be tried if no method found.
 	 * 
 	 * @param object
 	 *            The object.
+	 * @param name
+	 *            The field name. If null, the field parameter would be used to
+	 *            get the name.
 	 * @param field
-	 *            The field.
+	 *            The field. If null, the field would be searched according to
+	 *            the field name.
 	 * @param value
 	 *            The value to be set.
-	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	public static <T> void access(T object, Field field, Object value) throws IllegalArgumentException,
-			IllegalAccessException, InvocationTargetException
+	public static <T> void access(T object, String name, Field field, Object value)
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
 	{
-		if (object != null && field != null)
+		if (object != null && (name != null || field != null))
 		{
 			Class<?> cls = object.getClass();
 
-			String name = field.getName();
+			if (name == null)
+			{
+				name = field.getName();
+			}
 
-			String methodName = Tools.capitalize(name);
+			if (field == null)
+			{
+				field = fieldOf(cls, name);
+			}
+
+			String methodName = "set" + Tools.capitalize(name);
 
 			Method method = null;
 
-			try
+			if (value != null)
 			{
-				method = cls.getMethod("set" + methodName, field.getType());
+				try
+				{
+					method = cls.getMethod(methodName, value.getClass());
+				}
+				catch (NoSuchMethodException e)
+				{
+				}
 			}
-			catch (NoSuchMethodException e)
+
+			if (method == null && field != null)
+			{
+				try
+				{
+					method = cls.getMethod(methodName, field.getType());
+				}
+				catch (NoSuchMethodException e)
+				{
+				}
+			}
+
+			if (method == null && value != null)
+			{
+				try
+				{
+					method = cls.getMethod(name, value.getClass());
+				}
+				catch (NoSuchMethodException e)
+				{
+				}
+			}
+
+			if (method == null && field != null)
 			{
 				try
 				{
 					method = cls.getMethod(name, field.getType());
 				}
-				catch (NoSuchMethodException ex)
+				catch (NoSuchMethodException e)
 				{
-					field.set(object, value);
-					return;
 				}
 			}
 
 			if (method != null)
 			{
 				method.invoke(object, value);
+			}
+			else if (field != null)
+			{
+				field.set(object, value);
 			}
 		}
 	}
@@ -551,8 +658,9 @@ public class Tools
 	 * @param contain
 	 *            The shorter String to be decided whether it is contained in
 	 *            the former String.
-	 * @return <code>TRUE</code> if contains, otherwise <code>FALSE</code>. <br />
-	 * <br />
+	 * @return <code>TRUE</code> if contains, otherwise <code>FALSE</code>.
+	 *         <br />
+	 *         <br />
 	 *         <b>Attention To The Followings</b>:<br />
 	 *         When the contain equals "", the function will return
 	 *         <code>TRUE</code> if and only if string equals "".<br />
@@ -936,7 +1044,8 @@ public class Tools
 	}
 
 	/**
-	 * Copy the content from source InputStream to the target OutputStream.<br />
+	 * Copy the content from source InputStream to the target OutputStream.
+	 * <br />
 	 * This method will NOT close neither the source nor the target.
 	 * 
 	 * @param source
@@ -2128,6 +2237,29 @@ public class Tools
 		}
 	}
 
+	public static Field fieldOf(Class<?> cls, String name)
+	{
+		Field field = null;
+
+		if (cls != null)
+		{
+			try
+			{
+				field = cls.getDeclaredField(name);
+			}
+			catch (Exception e)
+			{
+			}
+
+			if (field == null)
+			{
+				field = fieldOf(cls.getSuperclass(), name);
+			}
+		}
+
+		return field;
+	}
+
 	/**
 	 * To filter some element from a certain Iterable object into another
 	 * Collection.
@@ -2284,8 +2416,8 @@ public class Tools
 		{
 			try
 			{
-				return new File(URLDecoder.decode(cls.getProtectionDomain().getCodeSource().getLocation().getPath(),
-						"UTF-8"));
+				return new File(
+						URLDecoder.decode(cls.getProtectionDomain().getCodeSource().getLocation().getPath(), "UTF-8"));
 			}
 			catch (Exception e)
 			{
@@ -7126,7 +7258,8 @@ public class Tools
 	}
 
 	/**
-	 * Split a CharSequence which is divided by split as many times as possible.<br />
+	 * Split a CharSequence which is divided by split as many times as possible.
+	 * <br />
 	 * If the CharSequence does not contain the split then return a String of
 	 * the CharSequence.
 	 * 
@@ -7273,7 +7406,8 @@ public class Tools
 	 * <td>&quot;Let you know&quot;</td>
 	 * <td>4</td>
 	 * <td>4</td>
-	 * <td>[&quot;Let &quot;,&quot;you &quot;,&quot;know&quot;,&quot;&quot;]</td>
+	 * <td>[&quot;Let &quot;,&quot;you &quot;,&quot;know&quot;,&quot;&quot;]
+	 * </td>
 	 * </tr>
 	 * <tr>
 	 * <td>&quot;a&quot;</td>

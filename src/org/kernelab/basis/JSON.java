@@ -140,7 +140,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		/**
 		 * 
 		 */
-		private static final long	serialVersionUID	= -6259816417783534899L;
+		private static final long serialVersionUID = -6259816417783534899L;
 
 		public int compare(T[] o1, T[] o2)
 		{
@@ -270,9 +270,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public static final String		VAR_END_MARK		= String.valueOf(VAR_END_CHAR);
 
-		public static final Pattern		VAR_ENTRY_PATTERN	= Pattern.compile(
-																	"^\\s*?(var\\s+)?\\s*?(\\w+)\\s*?=\\s*(.*);?\\s*$",
-																	Pattern.DOTALL);
+		public static final Pattern		VAR_ENTRY_PATTERN	= Pattern
+				.compile("^\\s*?(var\\s+)?\\s*?(\\w+)\\s*?=\\s*(.*);?\\s*$", Pattern.DOTALL);
 
 		public static final Pattern		VAR_EXIT_PATTERN	= Pattern.compile("^\\s*(.*?)\\s*;\\s*$", Pattern.DOTALL);
 
@@ -401,7 +400,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
-		protected Set<String>[]	keys;
+		protected Set<String>[] keys;
 
 		public EntrySet(Set<String>... keys)
 		{
@@ -598,8 +597,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public String toString(String name)
 		{
-			return DEFINE_PATTERN.matcher(expression()).replaceFirst(
-					"$1 " + (name == null ? name() : name.trim()) + "$3$4$5");
+			return DEFINE_PATTERN.matcher(expression())
+					.replaceFirst("$1 " + (name == null ? name() : name.trim()) + "$3$4$5");
 		}
 	}
 
@@ -616,7 +615,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			/**
 			 * 
 			 */
-			private static final long	serialVersionUID	= -3834859681987586236L;
+			private static final long serialVersionUID = -3834859681987586236L;
 
 			public int compare(String a, String b)
 			{
@@ -727,7 +726,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				return rank == null ? NONE_RANK : rank;
 			}
 
-			private int	order;
+			private int order;
 
 			public GeneralValueComparator()
 			{
@@ -2088,7 +2087,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		@Override
-		public JSAN projects(Class<?> cls, Map<Field, Object> project)
+		public JSAN projects(Class<?> cls, Map<String, Object> project)
 		{
 			super.projects(cls, project);
 			return this;
@@ -3152,7 +3151,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
-		protected Set<String>[]	keys;
+		protected Set<String>[] keys;
 
 		public KeySet(Set<String>... keys)
 		{
@@ -3198,7 +3197,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public class Pair implements Entry<String, Object>
 	{
-		public final String	key;
+		public final String key;
 
 		public Pair(String key)
 		{
@@ -3817,11 +3816,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 								break j;
 
 							case Function.DEFINE_FIRST_CHAR:
-								if (nail == curr
-										&& Function.DEFINE_MARK.equals( //
-												buffer.subSequence(curr,
-														Math.min(buffer.length(), curr + Function.DEFINE_MARK.length()) //
-												).toString()))
+								if (nail == curr && Function.DEFINE_MARK.equals( //
+										buffer.subSequence(curr,
+												Math.min(buffer.length(), curr + Function.DEFINE_MARK.length()) //
+										).toString()))
 								{
 									temp = (tail = DualMatchIndex(buffer, OBJECT_BEGIN_CHAR, OBJECT_END_CHAR, curr));
 									if (temp > NOT_FOUND)
@@ -4090,7 +4088,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						nail = i + 1;
 					}
-					i = CheckNext(quote, i, JSON.DualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, i)) - 1;
+					i = CheckNext(quote, i, JSON.DualMatchIndex(quote, NESTED_ATTRIBUTE_BEGIN, NESTED_ATTRIBUTE_END, i))
+							- 1;
 					continue i;
 				}
 
@@ -4252,7 +4251,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public SyntaxErrorException(String hint, Throwable cause, CharSequence source, int index)
 		{
 			super(cause instanceof SyntaxErrorException //
-			? cause.getMessage() //
+					? cause.getMessage() //
 					: FormatMessage(hint, LocateMessage(source, index, DEFAULT_VIEW), index), //
 					cause);
 		}
@@ -4473,7 +4472,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
-		protected Set<String>[]	keys;
+		protected Set<String>[] keys;
 
 		public ValuesCollection(Set<String>... keys)
 		{
@@ -4620,17 +4619,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 
-			if (field == null && name != null)
-			{
-				field = FieldOf(object.getClass(), name);
-			}
-
-			if (field != null)
-			{
-				return Tools.access(object, field);
-			}
+			return Tools.access(object, name, field);
 		}
-
 		return null;
 	}
 
@@ -4658,15 +4648,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 
-			if (field == null && name != null)
-			{
-				field = FieldOf(object.getClass(), name);
-			}
-
-			if (field != null)
-			{
-				Tools.access(object, field, value);
-			}
+			Tools.access(object, name, field, value);
 		}
 	}
 
@@ -5422,29 +5404,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return buffer.toString();
 	}
 
-	public static Field FieldOf(Class<?> cls, String name)
-	{
-		Field field = null;
-
-		if (cls != null)
-		{
-			try
-			{
-				field = cls.getDeclaredField(name);
-			}
-			catch (Exception e)
-			{
-			}
-
-			if (field == null)
-			{
-				field = FieldOf(cls.getSuperclass(), name);
-			}
-		}
-
-		return field;
-	}
-
 	public static <T> Map<String, Field> FieldsOf(Class<T> cls, Map<String, Field> fields)
 	{
 		if (cls != null)
@@ -5902,7 +5861,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static <T> T Project(T object, JSON json)
 	{
-		Map<Field, Object> project = null;
+		Map<String, Object> project = null;
 
 		Map<String, Field> fields = null;
 
@@ -5913,11 +5872,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		if (fields != null)
 		{
-			project = new LinkedHashMap<Field, Object>();
+			project = new LinkedHashMap<String, Object>();
 
-			for (Entry<String, Field> entry : fields.entrySet())
+			for (String key : fields.keySet())
 			{
-				project.put(entry.getValue(), entry.getKey());
+				project.put(key, key);
 			}
 		}
 
@@ -5935,7 +5894,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T Project(T object, JSON json, Map<Field, Object> project)
+	public static <T> T Project(T object, JSON json, Map<String, Object> project)
 	{
 		if (object != null)
 		{
@@ -5949,7 +5908,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else
 				{
-					for (Entry<Field, Object> entry : project.entrySet())
+					for (Entry<String, Object> entry : project.entrySet())
 					{
 						try
 						{
@@ -5957,7 +5916,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 							if (json.has(key))
 							{
-								obj.attr(entry.getKey().getName(), json.attr(key));
+								obj.attr(entry.getKey(), json.attr(key));
 							}
 						}
 						catch (Exception e)
@@ -5982,21 +5941,48 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (project != null)
 				{
-					for (Entry<Field, Object> entry : project.entrySet())
+					Class<?> cls = object.getClass();
+
+					for (Entry<String, Object> entry : project.entrySet())
 					{
 						try
 						{
-							Field field = entry.getKey();
-
-							String name = field.getName();
+							String name = entry.getKey();
 
 							String key = entry.getValue().toString();
 
 							if (json.has(key))
 							{
+								Field field = Tools.fieldOf(cls, name);
+
 								Object value = Access(object, name, field);
 
-								value = ProjectTo(json.attr(key), field.getType(), value, json.projects());
+								Class<?> type = null;
+
+								if (field != null)
+								{
+									type = field.getType();
+								}
+								else if (value != null)
+								{
+									type = value.getClass();
+								}
+
+								if (type != null || value != null)
+								{
+									try
+									{
+										value = ProjectTo(json.attr(key), type, value, json.projects());
+									}
+									catch (Exception e)
+									{
+										value = json.attr(key);
+									}
+								}
+								else
+								{
+									value = json.attr(key);
+								}
 
 								Access(object, name, field, value);
 							}
@@ -6027,7 +6013,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else if (project instanceof Map)
 				{
-					object = Project(object, json, (Map<Field, Object>) project);
+					object = Project(object, json, (Map<String, Object>) project);
 				}
 				else
 				{
@@ -6044,10 +6030,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static Object ProjectOf(Object object, Map<Class<?>, Object> projects)
 	{
-		Object project = null;
-
 		if (object != null && projects != null)
 		{
+			Object project = null;
+
 			for (Map.Entry<Class<?>, Object> entry : projects.entrySet())
 			{
 				Class<?> cls = entry.getKey();
@@ -6057,9 +6043,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					break;
 				}
 			}
-		}
 
-		return project;
+			return project;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -6067,7 +6057,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Object project = ProjectOf(cls, projects);
 
-		if (cls.isInstance(obj))
+		if (cls != null && cls.isInstance(obj))
 		{
 			val = obj;
 		}
@@ -6143,7 +6133,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			val = ((JSON.Projector<T>) project).project((T) val, (JSON) obj);
 		}
-		else if (IsSubClassOf(cls, Map.class))
+		else if (cls != null && IsSubClassOf(cls, Map.class))
 		{
 			// Target class is a Map.
 			try
@@ -6163,19 +6153,22 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else
 				{
-					for (Entry<Field, Object> entry : ((Map<Field, Object>) project).entrySet())
+					for (Entry<String, Object> entry : ((Map<String, Object>) project).entrySet())
 					{
-						try
+						if (entry.getKey() != null && entry.getValue() != null)
 						{
-							String key = entry.getValue().toString();
-
-							if (json.has(key))
+							try
 							{
-								map.put(entry.getKey().getName(), json.attr(key));
+								String key = entry.getValue().toString();
+
+								if (json.has(key))
+								{
+									map.put(entry.getKey(), json.attr(key));
+								}
 							}
-						}
-						catch (Exception e)
-						{
+							catch (Exception e)
+							{
+							}
 						}
 					}
 				}
@@ -6184,7 +6177,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 			}
 		}
-		else if (IsSubClassOf(cls, Collection.class))
+		else if (cls != null && IsSubClassOf(cls, Collection.class))
 		{
 			// Target class is a Collection.
 			try
@@ -6204,19 +6197,22 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else
 				{
-					for (Entry<Field, Object> entry : ((Map<Field, Object>) project).entrySet())
+					for (Object v : ((Map<String, Object>) project).values())
 					{
-						try
+						if (v != null)
 						{
-							String key = entry.getValue().toString();
-
-							if (json.has(key))
+							try
 							{
-								col.add(json.attr(key));
+								String key = v.toString();
+
+								if (json.has(key))
+								{
+									col.add(json.attr(key));
+								}
 							}
-						}
-						catch (Exception e)
-						{
+							catch (Exception e)
+							{
+							}
 						}
 					}
 				}
@@ -6225,7 +6221,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 			}
 		}
-		else if (cls.isArray())
+		else if (cls != null && cls.isArray())
 		{
 			val = CastToArray(obj, cls.getComponentType(), projects);
 		}
@@ -7393,18 +7389,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		if (cls != null && fields != null)
 		{
-			Map<Field, Object> project = new LinkedHashMap<Field, Object>();
+			Map<String, Object> project = new LinkedHashMap<String, Object>();
 
 			for (Object name : fields)
 			{
 				if (name != null)
 				{
-					Field field = FieldOf(cls, name.toString());
-
-					if (field != null)
-					{
-						project.put(field, name);
-					}
+					project.put(name.toString(), name);
 				}
 			}
 
@@ -7423,15 +7414,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		if (cls != null && project != null)
 		{
-			Map<Field, Object> map = new LinkedHashMap<Field, Object>();
+			Map<String, Object> map = new LinkedHashMap<String, Object>();
 
 			for (Pair pair : project.pairs())
 			{
-				Field field = FieldOf(cls, pair.getKey());
-
-				if (field != null && pair.getValue() != null)
+				if (pair.getKey() != null && pair.getValue() != null)
 				{
-					map.put(field, pair.getValue());
+					map.put(pair.getKey(), pair.getValue());
 				}
 			}
 
@@ -7440,7 +7429,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
-	public JSON projects(Class<?> cls, Map<Field, Object> project)
+	public JSON projects(Class<?> cls, Map<String, Object> project)
 	{
 		if (cls != null && project != null)
 		{
@@ -7454,18 +7443,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		if (cls != null && fields != null)
 		{
-			Map<Field, Object> project = new LinkedHashMap<Field, Object>();
+			Map<String, Object> project = new LinkedHashMap<String, Object>();
 
 			for (String name : fields)
 			{
 				if (name != null)
 				{
-					Field field = FieldOf(cls, name);
-
-					if (field != null)
-					{
-						project.put(field, name);
-					}
+					project.put(name, name);
 				}
 			}
 
