@@ -14,6 +14,7 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.sql.Date;
@@ -969,13 +970,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@SuppressWarnings("unchecked")
 		public static JSAN Reflect(JSAN jsan, Object object, JSAN reflect)
 		{
-			if (jsan == null)
-			{
-				jsan = new JSAN();
-			}
-
 			if (object != null)
 			{
+				if (jsan == null)
+				{
+					jsan = new JSAN().reflects(object.getClass(), reflect);
+				}
+
 				if (IsJSAN(object))
 				{
 					JSAN obj = (JSAN) object;
@@ -2265,6 +2266,20 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public JSAN reflect(Object object, String... fields)
 		{
 			JSAN.Reflect(this, object, fields);
+			return this;
+		}
+
+		@Override
+		public JSAN reflects(Class<?> cls, JSAN reflect)
+		{
+			super.reflects(cls, reflect);
+			return this;
+		}
+
+		@Override
+		public JSAN reflects(Class<?> cls, JSON reflect)
+		{
+			super.reflects(cls, reflect);
 			return this;
 		}
 
@@ -4597,8 +4612,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		ESCAPED_CHAR.put('\t', "\\t");
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> T Access(T object, String name, Field field) throws Exception
+	public static <T> Object Access(T object, String name, Field field) throws Exception
 	{
 		if (object != null)
 		{
@@ -4615,7 +4629,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else if (object instanceof Map)
 				{
-					return (T) ((Map<?, ?>) object).get(name);
+					return ((Map<?, ?>) object).get(name);
 				}
 			}
 
@@ -5961,9 +5975,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 							{
 								Field field = Tools.fieldOf(cls, name);
 
-								// For the value which could be a "container",
-								// like Map, Collection or a normal Object.
-								Object value = Access(object, name, field);
+								Object value = null;
+								try
+								{
+									/* For the value which could be a "container", 
+									 * like Map, Collection or a normal Object.*/
+									value = Access(object, name, field);
+								}
+								catch (Exception e)
+								{
+								}
 
 								Class<?> type = null;
 
@@ -5974,6 +5995,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 								else if (value != null)
 								{
 									type = value.getClass();
+								}
+								else
+								{ /* In case the value read by "getter" was null.*/
+									Method m = Tools.accessor(cls, name);
+									if (m != null)
+									{
+										type = m.getReturnType();
+									}
 								}
 
 								if (type != null || value != null)
@@ -6226,6 +6255,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			JSON json = (JSON) obj;
 			val = Project(val == null ? cls.newInstance() : val, json.projects(), json);
 		}
+		else
+		{
+			val = obj;
+		}
 
 		return val;
 	}
@@ -6321,13 +6354,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	@SuppressWarnings("unchecked")
 	public static JSON Reflect(JSON json, Object object, JSON reflect)
 	{
-		if (json == null)
-		{
-			json = new JSON();
-		}
-
 		if (object != null)
 		{
+			if (json == null)
+			{
+				json = new JSON().reflects(object.getClass(), reflect);
+			}
+
 			if (IsJSON(object))
 			{
 				JSON obj = (JSON) object;

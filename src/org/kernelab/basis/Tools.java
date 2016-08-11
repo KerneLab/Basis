@@ -114,9 +114,10 @@ public class Tools
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
+	 * @throws NoSuchFieldException
 	 */
-	public static <T> T access(T object, Field field)
-			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
+	public static <T, E> E access(T object, Field field)
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchFieldException
 	{
 		if (object != null && field != null)
 		{
@@ -140,9 +141,10 @@ public class Tools
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
+	 * @throws NoSuchFieldException
 	 */
 	public static <T> void access(T object, Field field, Object value)
-			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchFieldException
 	{
 		if (object != null && field != null)
 		{
@@ -168,10 +170,11 @@ public class Tools
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
+	 * @throws NoSuchFieldException
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T access(T object, String name, Field field)
-			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
+	public static <T, E> E access(T object, String name, Field field)
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchFieldException
 	{
 		if (object != null && (name != null || field != null))
 		{
@@ -182,43 +185,26 @@ public class Tools
 				name = field.getName();
 			}
 
-			String methodName = Tools.capitalize(name);
-
-			Method method = null;
-
-			try
-			{
-				method = cls.getMethod("get" + methodName);
-			}
-			catch (NoSuchMethodException e)
-			{
-				try
-				{
-					method = cls.getMethod("is" + methodName);
-				}
-				catch (NoSuchMethodException ex)
-				{
-					try
-					{
-						method = cls.getMethod(name);
-					}
-					catch (NoSuchMethodException err)
-					{
-						if (field == null)
-						{
-							field = Tools.fieldOf(cls, name);
-						}
-						if (field != null)
-						{
-							return (T) field.get(object);
-						}
-					}
-				}
-			}
+			Method method = accessor(cls, name);
 
 			if (method != null)
 			{
-				return (T) method.invoke(object);
+				return (E) method.invoke(object);
+			}
+			else
+			{
+				if (field == null)
+				{
+					field = Tools.fieldOf(cls, name);
+				}
+				if (field != null)
+				{
+					return (E) field.get(object);
+				}
+				else
+				{
+					throw new NoSuchFieldException(name);
+				}
 			}
 		}
 		return null;
@@ -244,9 +230,10 @@ public class Tools
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
+	 * @throws NoSuchFieldException
 	 */
 	public static <T> void access(T object, String name, Field field, Object value)
-			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
+			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchFieldException
 	{
 		if (object != null && (name != null || field != null))
 		{
@@ -262,53 +249,7 @@ public class Tools
 				field = fieldOf(cls, name);
 			}
 
-			String methodName = "set" + Tools.capitalize(name);
-
-			Method method = null;
-
-			if (value != null)
-			{
-				try
-				{
-					method = cls.getMethod(methodName, value.getClass());
-				}
-				catch (NoSuchMethodException e)
-				{
-				}
-			}
-
-			if (method == null && field != null)
-			{
-				try
-				{
-					method = cls.getMethod(methodName, field.getType());
-				}
-				catch (NoSuchMethodException e)
-				{
-				}
-			}
-
-			if (method == null && value != null)
-			{
-				try
-				{
-					method = cls.getMethod(name, value.getClass());
-				}
-				catch (NoSuchMethodException e)
-				{
-				}
-			}
-
-			if (method == null && field != null)
-			{
-				try
-				{
-					method = cls.getMethod(name, field.getType());
-				}
-				catch (NoSuchMethodException e)
-				{
-				}
-			}
+			Method method = accessor(cls, name, field, value == null ? null : value.getClass());
 
 			if (method != null)
 			{
@@ -318,7 +259,129 @@ public class Tools
 			{
 				field.set(object, value);
 			}
+			else
+			{
+				throw new NoSuchFieldException(name);
+			}
 		}
+	}
+
+	/**
+	 * Get the "getter" method of a field in an object according to the given
+	 * field name. The "getter" method and the method with the same name to the
+	 * field would be tried one by one.
+	 * 
+	 * @param cls
+	 *            The class.
+	 * @param name
+	 *            The field name.
+	 * @return The method found or null if not found.
+	 */
+	public static <T> Method accessor(Class<T> cls, String name)
+	{
+		if (cls != null && name != null)
+		{
+			String methodName = Tools.capitalize(name);
+
+			try
+			{
+				return cls.getMethod("get" + methodName);
+			}
+			catch (NoSuchMethodException e)
+			{
+				try
+				{
+					return cls.getMethod("is" + methodName);
+				}
+				catch (NoSuchMethodException ex)
+				{
+					try
+					{
+						return cls.getMethod(name);
+					}
+					catch (NoSuchMethodException err)
+					{
+						return null;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Get the "setter" method of a field in an object according to the given
+	 * field name. The "setter" method and the method with the same name to the
+	 * field would be tried one by one.
+	 * 
+	 * @param cls
+	 *            The class.
+	 * @param name
+	 *            The field name. If null, the field parameter's name would be
+	 *            used.
+	 * @param field
+	 *            The field. Will NOT BE FIND if null, Which means the caller
+	 *            should find the field.
+	 * @param type
+	 *            The parameter type.
+	 * @return The method found or null if not found.
+	 */
+	public static <T> Method accessor(Class<T> cls, String name, Field field, Class<?> type)
+	{
+		if (cls != null && (name != null || field != null) && (field != null || type != null))
+		{
+			if (name == null)
+			{
+				name = field.getName();
+			}
+
+			String methodName = "set" + Tools.capitalize(name);
+
+			if (type != null)
+			{
+				try
+				{
+					return cls.getMethod(methodName, type);
+				}
+				catch (NoSuchMethodException e)
+				{
+				}
+			}
+
+			if (field != null)
+			{
+				try
+				{
+					return cls.getMethod(methodName, field.getType());
+				}
+				catch (NoSuchMethodException e)
+				{
+				}
+			}
+
+			if (type != null)
+			{
+				try
+				{
+					return cls.getMethod(name, type);
+				}
+				catch (NoSuchMethodException e)
+				{
+				}
+			}
+
+			if (field != null)
+			{
+				try
+				{
+					return cls.getMethod(name, field.getType());
+				}
+				catch (NoSuchMethodException e)
+				{
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
