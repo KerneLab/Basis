@@ -5880,7 +5880,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
-		return Project(object, json, project);
+		try
+		{
+			return Project(object, json, project);
+		}
+		catch (Exception e)
+		{
+			return object;
+		}
 	}
 
 	public static <T> T Project(T object, JSON json, JSON.Projector<T> projector)
@@ -5889,12 +5896,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			object = projector.project(object, json);
 		}
-
 		return object;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T Project(T object, JSON json, Map<String, Object> project)
+	public static <T> T Project(T object, JSON json, Map<String, Object> project) throws Exception
 	{
 		if (object != null)
 		{
@@ -5955,6 +5961,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 							{
 								Field field = Tools.fieldOf(cls, name);
 
+								// For the value which could be a "container",
+								// like Map, Collection or a normal Object.
 								Object value = Access(object, name, field);
 
 								Class<?> type = null;
@@ -5994,7 +6002,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 		}
-
 		return object;
 	}
 
@@ -6024,7 +6031,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 			}
 		}
-
 		return object;
 	}
 
@@ -6054,6 +6060,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	@SuppressWarnings("unchecked")
 	public static <T> Object ProjectTo(Object obj, Class<T> cls, Object val, Map<Class<?>, Object> projects)
+			throws InstantiationException, IllegalAccessException
 	{
 		Object project = ProjectOf(cls, projects);
 
@@ -6133,109 +6140,91 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			val = ((JSON.Projector<T>) project).project((T) val, (JSON) obj);
 		}
-		else if (cls != null && IsSubClassOf(cls, Map.class))
+		else if (cls != null && IsSubClassOf(cls, Map.class) && JSON.IsJSON(obj))
 		{
 			// Target class is a Map.
-			try
+			Map<Object, Object> map = (Map<Object, Object>) (val == null ? cls.newInstance() : val);
+
+			map.clear();
+
+			JSON json = (JSON) obj;
+
+			if (project == null)
 			{
-				Map<Object, Object> map = (Map<Object, Object>) (val == null ? cls.newInstance() : val);
-
-				map.clear();
-
-				JSON json = (JSON) obj;
-
-				if (project == null)
+				for (Pair pair : json.pairs())
 				{
-					for (Pair pair : json.pairs())
-					{
-						map.put(pair.getKey(), pair.getValue());
-					}
+					map.put(pair.getKey(), pair.getValue());
 				}
-				else
+			}
+			else
+			{
+				for (Entry<String, Object> entry : ((Map<String, Object>) project).entrySet())
 				{
-					for (Entry<String, Object> entry : ((Map<String, Object>) project).entrySet())
+					if (entry.getKey() != null && entry.getValue() != null)
 					{
-						if (entry.getKey() != null && entry.getValue() != null)
+						try
 						{
-							try
-							{
-								String key = entry.getValue().toString();
+							String key = entry.getValue().toString();
 
-								if (json.has(key))
-								{
-									map.put(entry.getKey(), json.attr(key));
-								}
-							}
-							catch (Exception e)
+							if (json.has(key))
 							{
+								map.put(entry.getKey(), json.attr(key));
 							}
+						}
+						catch (Exception e)
+						{
 						}
 					}
 				}
-			}
-			catch (Exception e)
-			{
 			}
 		}
-		else if (cls != null && IsSubClassOf(cls, Collection.class))
+		else if (cls != null && IsSubClassOf(cls, Collection.class) && JSON.IsJSON(obj))
 		{
 			// Target class is a Collection.
-			try
+			Collection<Object> col = (Collection<Object>) (val == null ? cls.newInstance() : val);
+
+			col.clear();
+
+			JSON json = (JSON) obj;
+
+			if (project == null)
 			{
-				Collection<Object> col = (Collection<Object>) (val == null ? cls.newInstance() : val);
-
-				col.clear();
-
-				JSON json = (JSON) obj;
-
-				if (project == null)
+				for (Pair pair : json.pairs())
 				{
-					for (Pair pair : json.pairs())
-					{
-						col.add(pair.getValue());
-					}
+					col.add(pair.getValue());
 				}
-				else
+			}
+			else
+			{
+				for (Object v : ((Map<String, Object>) project).values())
 				{
-					for (Object v : ((Map<String, Object>) project).values())
+					if (v != null)
 					{
-						if (v != null)
+						try
 						{
-							try
-							{
-								String key = v.toString();
+							String key = v.toString();
 
-								if (json.has(key))
-								{
-									col.add(json.attr(key));
-								}
-							}
-							catch (Exception e)
+							if (json.has(key))
 							{
+								col.add(json.attr(key));
 							}
+						}
+						catch (Exception e)
+						{
 						}
 					}
 				}
-			}
-			catch (Exception e)
-			{
 			}
 		}
 		else if (cls != null && cls.isArray())
 		{
 			val = CastToArray(obj, cls.getComponentType(), projects);
 		}
-		else
+		else if (JSON.IsJSON(obj))
 		{
 			// Target class is a normal Object.
-			try
-			{
-				JSON json = (JSON) obj;
-				val = Project(val == null ? cls.newInstance() : val, json.projects(), json);
-			}
-			catch (Exception ex)
-			{
-			}
+			JSON json = (JSON) obj;
+			val = Project(val == null ? cls.newInstance() : val, json.projects(), json);
 		}
 
 		return val;
