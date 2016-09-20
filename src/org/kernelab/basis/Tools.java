@@ -1556,11 +1556,18 @@ public class Tools
 	 */
 	public static void debug(CharSequence s)
 	{
-		for (int i = 0; i < s.length(); i++)
+		if (s != null)
 		{
-			mark(s.charAt(i));
+			for (int i = 0; i < s.length(); i++)
+			{
+				mark(s.charAt(i));
+			}
+			debug("");
 		}
-		debug("");
+		else
+		{
+			debug("null");
+		}
 	}
 
 	/**

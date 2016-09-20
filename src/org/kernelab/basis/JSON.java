@@ -2818,17 +2818,18 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return array;
 		}
 
-		public Object[] toArray(Object[] array)
+		@SuppressWarnings("unchecked")
+		public <T> T[] toArray(T[] array)
 		{
 			if (array.length < size())
 			{
-				array = (Object[]) java.lang.reflect.Array.newInstance(Object.class, size());
+				array = (T[]) java.lang.reflect.Array.newInstance(array.getClass().getComponentType(), size());
 			}
 
 			int i = 0;
 			for (Object o : this)
 			{
-				array[i++] = o;
+				array[i++] = (T) o;
 			}
 
 			for (; i < array.length;)
