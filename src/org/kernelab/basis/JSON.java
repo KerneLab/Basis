@@ -3942,7 +3942,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
-	public static interface Projector<T>
+	public static interface Projector<T> extends Serializable
 	{
 		public T project(T obj, JSON json);
 	}
@@ -4223,7 +4223,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
-	public static interface Reflector<T>
+	public static interface Reflector<T> extends Serializable
 	{
 		public JSON reflect(JSON json, T obj);
 	}
@@ -4278,7 +4278,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
-	public static interface Transform<T>
+	public static interface Transform<T> extends Serializable
 	{
 		/**
 		 * To transform the value that would be stored in the given JSON object
