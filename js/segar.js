@@ -19,8 +19,7 @@
 
 		var box = this;
 
-		this.rates = self.data("segar.ratio") != null ? self
-				.data("segar.ratio") : opts["init.rates"];
+		this.rates = self.data("segar.ratio") != null ? self.data("segar.ratio") : opts["init.rates"];
 
 		this.trace = [];
 
@@ -28,7 +27,7 @@
 		{
 			var data = Tools.get(arguments, 0, self.rates);
 			var sum = 0;
-			for ( var i in data)
+			for (var i = 0; i < data.length; i++)
 			{
 				sum += data[i]["value"];
 			}
@@ -40,7 +39,7 @@
 		this.traceRates = function(rates)
 		{
 			self.trace = [];
-			for ( var i in rates)
+			for (var i = 0; i < rates.length; i++)
 			{
 				self.trace.push(rates[i]);
 			}
@@ -56,29 +55,28 @@
 
 		box.addClass(opts["box.class"]);
 
-		this.bars = d3.select(self.get(0))
-				.selectAll("div." + opts["bar.class"]) //
-				.data(self.rates, function(d, i)
-				{
-					return d["id"] == null ? i : d["id"];
-				}).enter().append("div") //
-				.classed(opts["bar.class"], true) //
-				.style("background-color", function(d, i)
-				{
-					return d["color"] == null ? null : d["color"];
-				})//
-				.text(function(d, i)
-				{
-					return opts["txt.formatter"](d["value"], d, i);
-				}) //
-				.attr("title", function(d, i)
-				{
-					return opts["title.formatter"](d["value"], d, i);
-				}) //
-				.style("width", function(d, i)
-				{
-					return (d["value"] * 100) + "%";
-				});
+		this.bars = d3.select(self.get(0)).selectAll("div." + opts["bar.class"]) //
+		.data(self.rates, function(d, i)
+		{
+			return d["id"] == null ? i : d["id"];
+		}).enter().append("div") //
+		.classed(opts["bar.class"], true) //
+		.style("background-color", function(d, i)
+		{
+			return d["color"] == null ? null : d["color"];
+		})//
+		.text(function(d, i)
+		{
+			return opts["txt.formatter"](d["value"], d, i);
+		}) //
+		.attr("title", function(d, i)
+		{
+			return opts["title.formatter"](d["value"], d, i);
+		}) //
+		.style("width", function(d, i)
+		{
+			return (d["value"] * 100) + "%";
+		});
 
 		this.to = function(rates)
 		{
@@ -94,8 +92,7 @@
 			var rat = rate;
 			var node = self.get(0);
 			rate = self.sum(rates);
-			var duration = Math.max(Math.abs(rate - rat)
-					* opts["duration.total"], opts["duration.least"]);
+			var duration = Math.max(Math.abs(rate - rat) * opts["duration.total"], opts["duration.least"]);
 
 			d3.select(self.get(0)).selectAll("div." + opts["bar.class"]) //
 			.data(rates, function(d, i)
@@ -119,19 +116,15 @@
 					$(this).attr("title", opts["title.formatter"](val, d, i));
 				};
 			}) //
-			.styleTween(
-					"width",
-					function(d, i, a)
-					{
-						var p = d3.interpolate(parseFloat(a.substr(0,
-								a.length - 2))
-								/ self.width(), d["value"]);
+			.styleTween("width", function(d, i, a)
+			{
+				var p = d3.interpolate(parseFloat(a.substr(0, a.length - 2)) / self.width(), d["value"]);
 
-						return function(t)
-						{
-							return (p(t) * 100).toFixed(2) + "%";
-						}
-					});
+				return function(t)
+				{
+					return (p(t) * 100).toFixed(2) + "%";
+				}
+			});
 
 			self.data("segar.ratio", rates);
 
@@ -159,8 +152,7 @@
 		},
 		"title.formatter": function(v, d, i)
 		{
-			return (d["id"] != null ? (d["id"] + ":") : "")
-					+ (v * 100).toFixed(0) + "%";
+			return (d["id"] != null ? (d["id"] + ":") : "") + (v * 100).toFixed(0) + "%";
 		}
 	};
 

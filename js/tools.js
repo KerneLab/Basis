@@ -47,7 +47,7 @@ Tools.clone = function(source)
 		}
 	}
 
-	for ( var k in keys)
+	for (var k = 0; k < keys.length; k++)
 	{
 		var key = keys[k];
 		if (source.hasOwnProperty(key))
@@ -73,7 +73,7 @@ Tools.dualMatch = function(str, a, b, from)
 		if ($.type(arguments[4]) == "array")
 		{
 			var quote = arguments[4];
-			for ( var k in quote)
+			for (var k = 0; k < quote.length; k++)
 			{
 				quotes[quote[k]] = k;
 			}
@@ -133,7 +133,7 @@ Tools.dualCount = function(str, a, b, from)
 		if ($.type(arguments[4]) == "array")
 		{
 			var quote = arguments[4];
-			for ( var k in quote)
+			for (var k = 0; k < quote.length; k++)
 			{
 				quotes[quote[k]] = k;
 			}
@@ -195,8 +195,11 @@ Tools.fillTemplate = function(template, data)
 	{
 		for ( var k in data)
 		{
-			template = template.replace(new RegExp(Tools.escapeRegex("?" + k
-					+ "?"), "g"), Tools.escapeText(Tools.nullEmpty(data[k])));
+			if (data.hasOwnProperty(k))
+			{
+				template = template.replace(new RegExp(Tools.escapeRegex("?" + k + "?"), "g"), Tools.escapeText(Tools
+						.nullEmpty(data[k])));
+			}
 		}
 	}
 	return template;
@@ -264,7 +267,7 @@ Tools.map = function(contain, mapper)
 Tools.merge = function(into, from, equal)
 {
 	var value = Tools.get(arguments, 3);
-	for ( var i in from)
+	for (var i = 0; i < from.length; i++)
 	{
 		var src = from[i];
 		if (src != null)
