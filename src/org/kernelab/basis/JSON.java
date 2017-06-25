@@ -1631,6 +1631,31 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
+		public <E extends Object, T extends Collection<E>> T addTo(T collection, Transform<E> transform)
+		{
+			if (transform == null)
+			{
+				return addTo(collection);
+			}
+			else
+			{
+				if (collection != null)
+				{
+					for (Object o : this)
+					{
+						try
+						{
+							collection.add(transform.transform(null, null, o));
+						}
+						catch (Exception e)
+						{
+						}
+					}
+				}
+				return collection;
+			}
+		}
+
 		protected Map<String, Object> array()
 		{
 			return array;
@@ -3522,7 +3547,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				w.flush();
 
-			} while (j != null);
+			}
+			while (j != null);
 
 			w.close();
 
@@ -4115,7 +4141,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					do
 					{
 						i = Tools.seekIndex(quote, NESTED_ATTRIBUTE_QUOTE, i + 1);
-					} while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
+					}
+					while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
 					break;
 				}
 
@@ -4281,13 +4308,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public static interface Transform<T> extends Serializable
 	{
 		/**
-		 * To transform the value that would be stored in the given JSON object
-		 * with the entry key.
+		 * To transform the value according to the given JSON object and the
+		 * entry key.
 		 * 
 		 * @param json
-		 *            The JSON object would store the value.
+		 *            The JSON which would store the value. Might be
+		 *            {@code null} if the value would not be stored in JSON.
 		 * @param entry
-		 *            The entry key that would be associated with the value.
+		 *            The entry key which would be associated with the value.
+		 *            Might be {@code null} if the value would not be stored in
+		 *            JSON.
 		 * @param value
 		 *            The given value to be transformed.
 		 * @return The transform result.
@@ -5979,8 +6009,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 								Object value = null;
 								try
 								{
-									/* For the value which could be a "container", 
-									 * like Map, Collection or a normal Object.*/
+									/*
+									 * For the value which could be a
+									 * "container", like Map, Collection or a
+									 * normal Object.
+									 */
 									value = Access(object, name, field);
 								}
 								catch (Exception e)
@@ -5998,7 +6031,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 									type = value.getClass();
 								}
 								else
-								{ /* In case the value read by "getter" was null.*/
+								{ /*
+									 * In case the value read by "getter" was
+									 * null.
+									 */
 									Method m = Tools.accessor(cls, name);
 									if (m != null)
 									{
