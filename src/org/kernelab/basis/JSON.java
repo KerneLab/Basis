@@ -1641,11 +1641,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (collection != null)
 				{
-					for (Object o : this)
+					for (Pair pair : this.pairs())
 					{
 						try
 						{
-							collection.add(transform.transform(null, null, o));
+							collection.add(transform.transform(this, pair.getKey(), pair.getValue()));
 						}
 						catch (Exception e)
 						{
@@ -4312,12 +4312,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		 * entry key.
 		 * 
 		 * @param json
-		 *            The JSON which would store the value. Might be
-		 *            {@code null} if the value would not be stored in JSON.
+		 *            The JSON which store the value.
 		 * @param entry
-		 *            The entry key which would be associated with the value.
-		 *            Might be {@code null} if the value would not be stored in
-		 *            JSON.
+		 *            The entry key which is associated with the value.
 		 * @param value
 		 *            The given value to be transformed.
 		 * @return The transform result.
@@ -7640,38 +7637,77 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public <E extends Object, T extends Map<String, E>> T putTo(T map, Class<E> cls)
 	{
-		if (map != null)
+		if (cls == null)
 		{
-			for (Pair pair : this.pairs())
+			return putTo(map);
+		}
+		else
+		{
+			if (map != null)
 			{
-				try
+				for (Pair pair : this.pairs())
 				{
-					map.put(pair.getKey(), cls.cast(pair.getValue()));
-				}
-				catch (ClassCastException e)
-				{
+					try
+					{
+						map.put(pair.getKey(), cls.cast(pair.getValue()));
+					}
+					catch (ClassCastException e)
+					{
+					}
 				}
 			}
+			return map;
 		}
-		return map;
 	}
 
 	public <E extends Object, T extends Map<String, E>> T putTo(T map, Mapper<Object, E> mapper)
 	{
-		if (map != null)
+		if (mapper == null)
 		{
-			for (Pair pair : this.pairs())
+			return putTo(map);
+		}
+		else
+		{
+			if (map != null)
 			{
-				try
+				for (Pair pair : this.pairs())
 				{
-					map.put(pair.getKey(), mapper.map(pair.getValue()));
-				}
-				catch (Exception e)
-				{
+					try
+					{
+						map.put(pair.getKey(), mapper.map(pair.getValue()));
+					}
+					catch (Exception e)
+					{
+					}
 				}
 			}
+			return map;
 		}
-		return map;
+	}
+
+	public <E extends Object, T extends Map<String, E>> T putTo(T map, Transform<E> transform)
+	{
+		if (transform == null)
+		{
+			return putTo(map);
+		}
+		else
+		{
+			if (map != null)
+			{
+				for (Pair pair : this.pairs())
+				{
+					try
+					{
+						map.put(pair.getKey(), transform.transform(this, pair.getKey(), pair.getValue()));
+					}
+					catch (Exception e)
+					{
+					}
+				}
+			}
+			return map;
+		}
 	}
 
 	public Quotation quote()
