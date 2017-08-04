@@ -234,12 +234,16 @@ Tools.get = function(obj, key)
 	{
 		val = arguments[2];
 	}
-	if (val == null && arguments.length > 3
-			&& $.type(arguments[3]) == "function")
+	if (val == null && arguments.length > 3 && $.type(arguments[3]) == "function")
 	{
 		val = arguments[3](obj, key);
 	}
 	return val;
+};
+
+Tools.has = function(object, key)
+{
+	return object != null && object.hasOwnProperty(key);
 };
 
 Tools.keys = function(object)
