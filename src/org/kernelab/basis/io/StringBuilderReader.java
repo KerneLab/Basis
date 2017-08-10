@@ -23,7 +23,12 @@ public class StringBuilderReader extends Reader
 
 	public StringBuilderReader(StringBuilder builder)
 	{
-		this.setClosed(false).setBuilder(builder);
+		this(builder, false);
+	}
+
+	public StringBuilderReader(StringBuilder builder, boolean closed)
+	{
+		this.setBuilder(builder).setClosed(closed);
 	}
 
 	@Override
