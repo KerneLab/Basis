@@ -138,7 +138,7 @@ public class StringBuilderReader extends Reader
 			return 0;
 		}
 
-		while (!this.isClosed() && builder.length() == 0)
+		while (!this.isClosed() && offset >= builder.length())
 		{
 			try
 			{
@@ -149,7 +149,7 @@ public class StringBuilderReader extends Reader
 			}
 		}
 
-		if (this.isClosed() && builder.length() == 0)
+		if (this.isClosed() && offset >= builder.length())
 		{
 			return -1;
 		}
