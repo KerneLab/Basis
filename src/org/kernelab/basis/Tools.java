@@ -2063,25 +2063,49 @@ public class Tools
 	 */
 	public static String[] dumpBytes(byte[] bytes, int radix)
 	{
+		return dumpBytes(bytes, radix, 0, bytes.length);
+	}
+
+	/**
+	 * Convert a part of bytes in the array into string within given radix
+	 * covers a given length from the given offset position.
+	 * 
+	 * @param bytes
+	 *            The bytes array.
+	 * @param radix
+	 *            The radix within which the bytes will be converted to.
+	 * @param offset
+	 *            The offset position from where start to convert.
+	 * @param length
+	 *            The length of the bytes to be converted.
+	 * @return The result array.
+	 */
+	public static String[] dumpBytes(byte[] bytes, int radix, int offset, int length)
+	{
 		String[] dump = null;
 
 		if (bytes != null)
 		{
-			dump = new String[bytes.length];
+			dump = new String[length];
 
-			int len = Integer.toString(0xFF, radix).length();
+			int unit = Integer.toString(0xFF, radix).length();
 
-			int i = 0;
+			byte b = 0;
 
-			for (byte b : bytes)
+			String code = null;
+
+			for (int i = 0; i < length; i++)
 			{
-				dump[i] = Integer.toString(b & 0xFF, radix).toUpperCase();
+				b = bytes[i + offset];
 
-				if (dump[i].length() < len)
+				code = Integer.toString(b & 0xFF, radix).toUpperCase();
+
+				if (code.length() < unit)
 				{
-					dump[i] = Tools.repeat('0', len - dump[i].length()) + dump[i];
+					code = Tools.repeat('0', unit - code.length()) + code;
 				}
-				i++;
+
+				dump[i] = code;
 			}
 		}
 
@@ -2089,40 +2113,61 @@ public class Tools
 	}
 
 	/**
+	 * To get the bytes array according to a part of the dump within the given
+	 * radix covers a given length from the given offset position.
+	 * 
+	 * @param radix
+	 *            The radix within which the dump will be converted to.
+	 * @param offset
+	 *            The offset position from where start to convert.
+	 * @param length
+	 *            The length of the dump to be converted.
+	 * @param dump
+	 *            The dump in which each element represents a byte.
+	 * @return The bytes array.
+	 */
+	public static byte[] dumpBytes(int radix, int offset, int length, String... dump)
+	{
+		if (dump != null)
+		{
+			byte[] bytes = new byte[length];
+
+			String d = null;
+
+			for (int i = 0; i < length; i++)
+			{
+				d = dump[i + offset];
+
+				bytes[i] = d != null ? (byte) Integer.parseInt(d, radix) : 0;
+			}
+
+			return bytes;
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	/**
 	 * To get the bytes array according to the dump within the given radix.
 	 * 
 	 * @param radix
-	 *            The radix.
+	 *            The radix within which the dump will be converted to.
 	 * @param dump
 	 *            The dump in which each element represents a byte.
 	 * @return The bytes array.
 	 */
 	public static byte[] dumpBytes(int radix, String... dump)
 	{
-		byte[] bytes = null;
-
 		if (dump != null)
 		{
-			bytes = new byte[dump.length];
-
-			int i = 0;
-
-			for (String d : dump)
-			{
-				byte b = 0;
-
-				if (d != null)
-				{
-					b = (byte) Integer.parseInt(d, radix);
-				}
-
-				bytes[i] = b;
-
-				i++;
-			}
+			return dumpBytes(radix, 0, dump.length, dump);
 		}
-
-		return bytes;
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
