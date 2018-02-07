@@ -1,6 +1,7 @@
 package org.kernelab.basis.sql;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,6 +10,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -22,6 +24,7 @@ import java.util.regex.Pattern;
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
+import org.kernelab.basis.Mapper;
 import org.kernelab.basis.TextFiller;
 import org.kernelab.basis.Tools;
 
@@ -81,6 +84,95 @@ import org.kernelab.basis.Tools;
  */
 public class SQLKit
 {
+	public static class ProjectMapper<E> implements Mapper<ResultSet, E>
+	{
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -6021148228942835875L;
+
+		private Class<E>			cls;
+
+		private Map<String, Object>	map;
+
+		private Map<String, Field>	fields;
+
+		public ProjectMapper(Class<E> cls, Map<String, Object> map)
+		{
+			this.cls = cls;
+			this.map = map;
+		}
+
+		public E map(ResultSet rs)
+		{
+			try
+			{
+				if (this.map == null)
+				{
+					this.map = mapNameOfMetaData(rs.getMetaData());
+				}
+
+				boolean finding = false;
+
+				if (this.fields == null)
+				{
+					this.fields = new LinkedHashMap<String, Field>();
+					finding = true;
+				}
+
+				E obj = this.cls.newInstance();
+
+				Field field = null;
+				String key = null;
+				Object col = null, val = null;
+
+				for (Entry<String, Object> entry : this.map.entrySet())
+				{
+					key = entry.getKey();
+					col = entry.getValue();
+
+					if (key != null && col != null)
+					{
+						if (finding)
+						{
+							field = Tools.fieldOf(this.cls, key);
+						}
+						else
+						{
+							field = this.fields.get(key);
+						}
+
+						if (field != null)
+						{
+							try
+							{
+								val = col instanceof Integer //
+										? rs.getObject((Integer) col) //
+										: rs.getObject(col.toString());
+								Tools.access(obj, field, JSON.ProjectTo(val, field.getType(), val, null));
+								if (finding)
+								{
+									this.fields.put(key, field);
+								}
+							}
+							catch (Exception e)
+							{
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+
+				return obj;
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				return null;
+			}
+		}
+	}
+
 	public static final char		VALUE_HOLDER_CHAR			= '?';
 
 	public static final String		VALUE_HOLDER_MARK			= "?";
@@ -436,8 +528,9 @@ public class SQLKit
 		}
 		for (String param : params)
 		{
-			Matcher m = Pattern.compile(
-					Pattern.quote(TextFiller.DEFAULT_BOUNDARY + param + TextFiller.DEFAULT_BOUNDARY)).matcher(sql);
+			Matcher m = Pattern
+					.compile(Pattern.quote(TextFiller.DEFAULT_BOUNDARY + param + TextFiller.DEFAULT_BOUNDARY))
+					.matcher(sql);
 
 			while (m.find())
 			{
@@ -542,7 +635,8 @@ public class SQLKit
 				int count = 0;
 				while ((limit < 0 || count < limit) && rs.next())
 				{
-					jsan.add(jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transforms(jsan), map));
+					jsan.add(
+							jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transforms(jsan), map));
 					count++;
 				}
 			}
@@ -915,8 +1009,7 @@ public class SQLKit
 	 * @return The map of column name against the column name.
 	 * @throws SQLException
 	 */
-	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta, List<Integer> index)
-			throws SQLException
+	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta, List<Integer> index) throws SQLException
 	{
 		Map<String, Object> map = null;
 
@@ -946,6 +1039,48 @@ public class SQLKit
 		}
 
 		return map;
+	}
+
+	public static <E> E mapResultRow(ResultSet rs, Class<E> cls, Map<String, Object> map)
+	{
+		return mapResultRow(rs, new ProjectMapper<E>(cls, map));
+	}
+
+	public static <E> E mapResultRow(ResultSet rs, Mapper<ResultSet, E> mapper)
+	{
+		if (rs != null && mapper != null)
+		{
+			return mapper.map(rs);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	public static <E> Collection<E> mapResultSet(ResultSet rs, Collection<E> rows, Class<E> cls,
+			Map<String, Object> map, int limit) throws SQLException
+	{
+		return mapResultSet(rs, rows, new ProjectMapper<E>(cls, map), limit);
+	}
+
+	public static <E> Collection<E> mapResultSet(ResultSet rs, Collection<E> rows, Mapper<ResultSet, E> mapper,
+			int limit) throws SQLException
+	{
+		if (rs != null)
+		{
+			if (rows == null)
+			{
+				rows = new LinkedList<E>();
+			}
+			int count = 0;
+			while ((limit < 0 || count < limit) && rs.next())
+			{
+				rows.add(mapper == null ? null : mapper.map(rs));
+				count++;
+			}
+		}
+		return rows;
 	}
 
 	/**
@@ -1424,12 +1559,14 @@ public class SQLKit
 
 	public Sequel execute(String sql, JSON params) throws SQLException
 	{
-		return execute(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+		return execute(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability),
+				params);
 	}
 
 	public Sequel execute(String sql, Map<String, ?> params) throws SQLException
 	{
-		return execute(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+		return execute(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability),
+				params);
 	}
 
 	public Sequel execute(String sql, Object... params) throws SQLException
@@ -1759,8 +1896,8 @@ public class SQLKit
 		return prepareCall(call, params, resultSetType, resultSetConcurrency);
 	}
 
-	public CallableStatement prepareCall(String call, Map<String, ?> params, int resultSetType, int resultSetConcurrency)
-			throws SQLException
+	public CallableStatement prepareCall(String call, Map<String, ?> params, int resultSetType,
+			int resultSetConcurrency) throws SQLException
 	{
 		return prepareCall(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}

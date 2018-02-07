@@ -29,7 +29,8 @@ public class DemoFilterMapperReducer
 
 		// 过滤算子
 		Tools.debug("Filter:");
-		Collection<Double> filtered = Tools.filter(list, new Filter<Double>() {
+		Collection<Double> filtered = Tools.filter(list, new Filter<Double>()
+		{
 
 			public boolean filter(Double e)
 			{
@@ -43,7 +44,12 @@ public class DemoFilterMapperReducer
 
 		// 映射算子
 		Tools.debug("Map:");
-		Collection<Double> mapped = Tools.map(list, new Mapper<Double, Double>() {
+		Collection<Double> mapped = Tools.map(list, new Mapper<Double, Double>()
+		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 8612178379704653348L;
 
 			public Double map(Double value)
 			{
@@ -56,7 +62,8 @@ public class DemoFilterMapperReducer
 
 		// 化简算子
 		Tools.debug("Reduce:");
-		Double sum = Tools.reduce(list, new Reducer<Double, Double>() {
+		Double sum = Tools.reduce(list, new Reducer<Double, Double>()
+		{
 
 			public Double reduce(Double r, Double e)
 			{
@@ -69,7 +76,8 @@ public class DemoFilterMapperReducer
 
 		// 带循环索引的化简算子
 		Tools.debug("Indexed Reduce:");
-		Double part = Tools.reduce(list, new IndexedReducer<Double, Double>() {
+		Double part = Tools.reduce(list, new IndexedReducer<Double, Double>()
+		{
 
 			public Double reduce(Double result, Double element, int index)
 			{

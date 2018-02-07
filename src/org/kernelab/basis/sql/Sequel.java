@@ -17,6 +17,7 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -146,7 +147,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public static class ObjectIterator<T> extends AbstractIterator<T>
 	{
-		private Mapper<ResultSet, T>	mapper;
+		private Mapper<ResultSet, T> mapper;
 
 		public ObjectIterator(ResultSet rs)
 		{
@@ -527,6 +528,30 @@ public class Sequel implements Iterable<ResultSet>
 		return type;
 	}
 
+	public <E> E getRow(Class<E> cls)
+	{
+		return getRow(cls, null);
+	}
+
+	public <E> E getRow(Class<E> cls, Map<String, Object> map)
+	{
+		try
+		{
+			if (this.preparedResultSet())
+			{
+				if (map == null)
+				{
+					map = this.getMetaMapName();
+				}
+				return SQLKit.mapResultRow(this.getResultSet(), cls, map);
+			}
+		}
+		catch (Exception e)
+		{
+		}
+		return null;
+	}
+
 	public JSAN getRowAsJSAN()
 	{
 		return getRowAsJSAN(null);
@@ -579,6 +604,50 @@ public class Sequel implements Iterable<ResultSet>
 		}
 
 		return json;
+	}
+
+	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls)
+	{
+		return getRows(rows, cls, -1);
+	}
+
+	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, int limit)
+	{
+		return getRows(rows, cls, null, limit);
+	}
+
+	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map)
+	{
+		return getRows(rows, cls, map, -1);
+	}
+
+	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map, int limit)
+	{
+		try
+		{
+			rows = SQLKit.mapResultSet(this.getResultSet(), rows, cls, map, limit);
+		}
+		catch (SQLException e)
+		{
+		}
+		return rows;
+	}
+
+	public <E> Collection<E> getRows(Collection<E> rows, Mapper<ResultSet, E> mapper)
+	{
+		return getRows(rows, mapper, -1);
+	}
+
+	public <E> Collection<E> getRows(Collection<E> rows, Mapper<ResultSet, E> mapper, int limit)
+	{
+		try
+		{
+			rows = SQLKit.mapResultSet(this.getResultSet(), rows, mapper, limit);
+		}
+		catch (SQLException e)
+		{
+		}
+		return rows;
 	}
 
 	public JSAN getRows(JSAN rows, Class<? extends JSON> cls)
