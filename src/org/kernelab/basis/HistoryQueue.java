@@ -59,6 +59,20 @@ public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>
 		}
 	}
 
+	@Override
+	public void clear()
+	{
+		this.lock.writeLock().lock();
+		try
+		{
+			this.truncate(this.size(false));
+		}
+		finally
+		{
+			this.lock.writeLock().unlock();
+		}
+	}
+
 	public int getHistory()
 	{
 		this.lock.readLock().lock();
