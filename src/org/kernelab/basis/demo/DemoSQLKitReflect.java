@@ -76,12 +76,12 @@ public class DemoSQLKitReflect
 
 			Sequel seq = kit.execute("select id \"id\", grp \"grp\", rnk \"rnk\", sal \"sal\" from jdl_test_part");
 
-			Map<String, Object> cols = new HashMap<String, Object>();
-
-			cols.put("id", "ID");
-			cols.put("grp", "GRP");
-			cols.put("rnk", "RNK");
-			cols.put("sal", "SAL");
+			// Map<String, Object> cols = new HashMap<String, Object>();
+			//
+			// cols.put("id", "ID");
+			// cols.put("grp", "GRP");
+			// cols.put("rnk", "RNK");
+			// cols.put("sal", "SAL");
 
 			for (@SuppressWarnings("unused")
 			ResultSet rs : seq)
