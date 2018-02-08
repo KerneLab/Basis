@@ -1,7 +1,6 @@
 package org.kernelab.basis.sql;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,6 +20,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.kernelab.basis.Accessor;
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
@@ -89,13 +89,13 @@ public class SQLKit
 		/**
 		 * 
 		 */
-		private static final long	serialVersionUID	= -6021148228942835875L;
+		private static final long		serialVersionUID	= -6021148228942835875L;
 
-		private Class<E>			cls;
+		private Class<E>				cls;
 
-		private Map<String, Object>	map;
+		private Map<String, Object>		map;
 
-		private Map<String, Field>	fields;
+		private Map<String, Accessor>	acs;
 
 		public ProjectMapper(Class<E> cls, Map<String, Object> map)
 		{
@@ -114,15 +114,15 @@ public class SQLKit
 
 				boolean finding = false;
 
-				if (this.fields == null)
+				if (this.acs == null)
 				{
-					this.fields = new LinkedHashMap<String, Field>();
+					this.acs = new LinkedHashMap<String, Accessor>();
 					finding = true;
 				}
 
 				E obj = this.cls.newInstance();
 
-				Field field = null;
+				Accessor acs = null;
 				String key = null;
 				Object col = null, val = null;
 
@@ -135,24 +135,26 @@ public class SQLKit
 					{
 						if (finding)
 						{
-							field = Tools.fieldOf(this.cls, key);
+							acs = Accessor.Of(Tools.fieldOf(this.cls, key));
 						}
 						else
 						{
-							field = this.fields.get(key);
+							acs = this.acs.get(key);
 						}
 
-						if (field != null)
+						if (acs != null)
 						{
 							try
 							{
 								val = col instanceof Integer //
 										? rs.getObject((Integer) col) //
 										: rs.getObject(col.toString());
-								Tools.access(obj, field, JSON.ProjectTo(val, field.getType(), val, null));
+
+								acs.set(obj, JSON.ProjectTo(val, acs.getField().getType(), val, null));
+
 								if (finding)
 								{
-									this.fields.put(key, field);
+									this.acs.put(key, acs);
 								}
 							}
 							catch (Exception e)
@@ -1154,8 +1156,8 @@ public class SQLKit
 	 * @param sql
 	 *            The SQL String.
 	 * @param params
-	 *            The parameters in form of key/value organized by
-	 *            Map<String,Object>.
+	 *            The parameters in form of key/value organized by Map
+	 *            <String,Object>.
 	 * @return The SQL String which could be prepared.
 	 */
 	public static String replaceParameters(String sql, Map<String, ?> params)

@@ -317,6 +317,45 @@ public class Tools
 	 * @param cls
 	 *            The class.
 	 * @param name
+	 *            The field name.
+	 * @param type
+	 *            The parameter type.
+	 * @return The method found or null if not found.
+	 */
+	public static <T> Method accessor(Class<T> cls, String name, Class<?> type)
+	{
+		if (cls != null && name != null && type != null)
+		{
+			String methodName = "set" + Tools.capitalize(name);
+
+			try
+			{
+				return cls.getMethod(methodName, type);
+			}
+			catch (NoSuchMethodException e)
+			{
+			}
+
+			try
+			{
+				return cls.getMethod(name, type);
+			}
+			catch (NoSuchMethodException e)
+			{
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get the "setter" method of a field in an object according to the given
+	 * field name. The "setter" method and the method with the same name to the
+	 * field would be tried one by one.
+	 * 
+	 * @param cls
+	 *            The class.
+	 * @param name
 	 *            The field name. If null, the field parameter's name would be
 	 *            used.
 	 * @param field
@@ -2356,7 +2395,7 @@ public class Tools
 	{
 		Field field = null;
 
-		if (cls != null)
+		if (cls != null && name != null)
 		{
 			try
 			{
