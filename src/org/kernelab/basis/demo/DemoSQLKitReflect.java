@@ -11,6 +11,7 @@ import org.kernelab.basis.sql.DataBase.OracleClient;
 import org.kernelab.basis.sql.SQLKit;
 import org.kernelab.basis.sql.Sequel;
 
+@SuppressWarnings("unused")
 public class DemoSQLKitReflect
 {
 	public static class DemoPojo
@@ -76,17 +77,25 @@ public class DemoSQLKitReflect
 
 			Sequel seq = kit.execute("select id \"id\", grp \"grp\", rnk \"rnk\", sal \"sal\" from jdl_test_part");
 
-			// Map<String, Object> cols = new HashMap<String, Object>();
-			//
-			// cols.put("id", "ID");
-			// cols.put("grp", "GRP");
-			// cols.put("rnk", "RNK");
-			// cols.put("sal", "SAL");
-
-			for (@SuppressWarnings("unused")
-			ResultSet rs : seq)
+			for (ResultSet rs : seq)
 			{
 				Tools.debug(seq.getRow(DemoPojo.class));
+			}
+
+			Tools.debug("==============================");
+
+			seq = kit.execute("select id, grp, rnk, sal from jdl_test_part order by id desc");
+
+			Map<String, Object> cols = new HashMap<String, Object>();
+
+			cols.put("id", "ID");
+			cols.put("grp", "GRP");
+			cols.put("rnk", "RNK");
+			cols.put("sal", "SAL");
+
+			for (ResultSet rs : seq)
+			{
+				Tools.debug(seq.getRow(DemoPojo.class, cols));
 			}
 
 		}
