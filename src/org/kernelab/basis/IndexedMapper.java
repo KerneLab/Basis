@@ -1,5 +1,7 @@
 package org.kernelab.basis;
 
+import java.io.Serializable;
+
 /**
  * The Mapper interface is to achieve the mapping operation.
  * 
@@ -11,7 +13,7 @@ package org.kernelab.basis;
  * @param <V>
  *            The generic type of the mapping result.
  */
-public interface IndexedMapper<K, V>
+public interface IndexedMapper<K, V> extends Serializable
 {
 	/**
 	 * To map a value into another value.

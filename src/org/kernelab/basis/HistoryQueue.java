@@ -1,5 +1,6 @@
 package org.kernelab.basis;
 
+import java.io.Serializable;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,7 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>
 {
-	public static interface ReserveRule<E>
+	public static interface ReserveRule<E> extends Serializable
 	{
 		public boolean reserve(E el);
 	}

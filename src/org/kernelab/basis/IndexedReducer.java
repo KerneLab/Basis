@@ -1,5 +1,7 @@
 package org.kernelab.basis;
 
+import java.io.Serializable;
+
 /**
  * The Reducer interface is applied to the operation of reducing an Iterable
  * object.
@@ -12,7 +14,7 @@ package org.kernelab.basis;
  * @param <R>
  *            The generic type of the reduce result.
  */
-public interface IndexedReducer<E, R>
+public interface IndexedReducer<E, R> extends Serializable
 {
 	/**
 	 * To reduce the element in a certain Iterable object into the reduction

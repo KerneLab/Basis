@@ -1,9 +1,12 @@
 package org.kernelab.basis;
 
-public interface IndexedFilter<E>
+import java.io.Serializable;
+
+public interface IndexedFilter<E> extends Serializable
 {
 	/**
-	 * Filter some element from a container such as Collection, List and so on.<br />
+	 * Filter some element from a container such as Collection, List and so
+	 * on.<br />
 	 * If returns false, generally means preserve the element.
 	 * 
 	 * @param element

@@ -31,6 +31,10 @@ public class DemoFilterMapperReducer
 		Tools.debug("Filter:");
 		Collection<Double> filtered = Tools.filter(list, new Filter<Double>()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 3236273279267107075L;
 
 			public boolean filter(Double e)
 			{
@@ -64,6 +68,10 @@ public class DemoFilterMapperReducer
 		Tools.debug("Reduce:");
 		Double sum = Tools.reduce(list, new Reducer<Double, Double>()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -6814612998658805517L;
 
 			public Double reduce(Double r, Double e)
 			{
@@ -78,6 +86,10 @@ public class DemoFilterMapperReducer
 		Tools.debug("Indexed Reduce:");
 		Double part = Tools.reduce(list, new IndexedReducer<Double, Double>()
 		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -3986364317396652873L;
 
 			public Double reduce(Double result, Double element, int index)
 			{
