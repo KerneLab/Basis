@@ -10,12 +10,17 @@ import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>
+public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>, Serializable
 {
 	public static interface ReserveRule<E> extends Serializable
 	{
 		public boolean reserve(E el);
 	}
+
+	/**
+	 * 
+	 */
+	private static final long		serialVersionUID	= -7352500245739585719L;
 
 	private Queue<E>				queue;
 
@@ -23,7 +28,7 @@ public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>
 
 	private ReserveRule<E>			reserve;
 
-	protected final ReadWriteLock	lock	= new ReentrantReadWriteLock();
+	protected final ReadWriteLock	lock				= new ReentrantReadWriteLock();
 
 	public HistoryQueue(int history)
 	{
