@@ -55,9 +55,22 @@ public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>, Seria
 		{
 			boolean added = this.getQueue().addAll(c);
 
-			this.truncateBatch();
+			this.truncateBatch(true);
 
 			return added;
+		}
+		finally
+		{
+			this.lock.writeLock().unlock();
+		}
+	}
+
+	public int clean(boolean reserved)
+	{
+		this.lock.writeLock().lock();
+		try
+		{
+			return this.truncate(reserved, -1, null).size();
 		}
 		finally
 		{
@@ -71,12 +84,45 @@ public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>, Seria
 		this.lock.writeLock().lock();
 		try
 		{
-			this.truncate(this.size(false));
+			this.getQueue().clear();
 		}
 		finally
 		{
 			this.lock.writeLock().unlock();
 		}
+	}
+
+	protected Collection<E> fetch(int limit, boolean removing, boolean reserved, Collection<E> result)
+	{
+		Iterator<E> iter = this.getQueue().iterator();
+
+		ReserveRule<E> reserve = reserved ? this.getReserve() : null;
+
+		if (result == null)
+		{
+			result = new LinkedList<E>();
+		}
+
+		E el;
+
+		int rest = limit;
+
+		while (iter.hasNext() && (rest > 0 || limit < 0))
+		{
+			el = iter.next();
+
+			if (reserve == null || !reserve.reserve(el))
+			{
+				if (removing)
+				{
+					iter.remove();
+				}
+				result.add(el);
+				rest--;
+			}
+		}
+
+		return result;
 	}
 
 	public int getHistory()
@@ -128,6 +174,19 @@ public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>, Seria
 		}
 	}
 
+	public Collection<E> look(int limit, boolean reserved, Collection<E> result)
+	{
+		this.lock.readLock().lock();
+		try
+		{
+			return this.fetch(limit, false, reserved, result);
+		}
+		finally
+		{
+			this.lock.readLock().unlock();
+		}
+	}
+
 	public boolean offer(E o)
 	{
 		this.lock.writeLock().lock();
@@ -135,7 +194,7 @@ public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>, Seria
 		{
 			boolean offered = this.getQueue().offer(o);
 
-			this.truncateOne();
+			this.truncateOne(true);
 
 			return offered;
 		}
@@ -202,7 +261,7 @@ public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>, Seria
 		{
 			this.history = history;
 
-			this.truncateBatch();
+			this.truncateBatch(true);
 		}
 		finally
 		{
@@ -246,53 +305,47 @@ public class HistoryQueue<E> extends AbstractQueue<E> implements Queue<E>, Seria
 		}
 	}
 
-	protected int truncate(int delta)
+	public Collection<E> take(int limit, boolean reserved, Collection<E> result)
 	{
-		Iterator<E> iter = this.getQueue().iterator();
-
-		ReserveRule<E> reserve = this.getReserve();
-
-		E el;
-
-		int rest = delta;
-
-		while (iter.hasNext() && rest > 0)
+		this.lock.writeLock().lock();
+		try
 		{
-			el = iter.next();
-
-			if (reserve == null || !reserve.reserve(el))
-			{
-				iter.remove();
-				rest--;
-			}
+			return this.truncate(reserved, limit, result);
 		}
-
-		return delta - rest;
+		finally
+		{
+			this.lock.writeLock().unlock();
+		}
 	}
 
-	protected int truncateBatch()
+	protected Collection<E> truncate(boolean reserved, int limit, Collection<E> result)
 	{
-		int delta = 0;
+		return this.fetch(limit, true, reserved, result);
+	}
 
-		if (this.getHistory(false) >= 0 && (delta = this.size(false) - this.getHistory(false)) > 0)
+	protected Collection<E> truncateBatch(boolean reserved)
+	{
+		int limit = 0;
+
+		if (this.getHistory(false) >= 0 && (limit = this.size(false) - this.getHistory(false)) > 0)
 		{
-			return this.truncate(delta);
+			return this.truncate(reserved, limit, null);
 		}
 		else
 		{
-			return -1;
+			return Collections.emptyList();
 		}
 	}
 
-	protected int truncateOne()
+	protected Collection<E> truncateOne(boolean reserved)
 	{
 		if (this.getHistory(false) >= 0 && this.size(false) - this.getHistory(false) > 0)
 		{
-			return this.truncate(1);
+			return this.truncate(reserved, 1, null);
 		}
 		else
 		{
-			return -1;
+			return Collections.emptyList();
 		}
 	}
 }
