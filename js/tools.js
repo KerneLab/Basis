@@ -255,6 +255,48 @@ Tools.keys = function(object)
 	}, Tools.get(arguments, 1, []));
 };
 
+Tools.lpad = function(str, len, pad)
+{
+	if (str != null && pad != null)
+	{
+		pad = pad.toString();
+
+		if (pad.length > 0)
+		{
+			str = str.toString();
+
+			var padding = len - str.length;
+
+			var index = 0;
+
+			var pads = "";
+
+			while (padding > 0)
+			{
+				if (index >= pad.length)
+				{
+					index = 0;
+				}
+
+				pads += pad.charAt(index);
+
+				index++;
+				padding--;
+			}
+
+			return pads + str;
+		}
+		else
+		{
+			return str;
+		}
+	}
+	else
+	{
+		return str;
+	}
+};
+
 Tools.map = function(contain, mapper)
 {
 	var result = Tools.get(arguments, 2, []);
@@ -326,6 +368,48 @@ Tools.reduce = function(contain, reducer, result)
 		}
 	}
 	return result;
+};
+
+Tools.rpad = function(str, len, pad)
+{
+	if (str != null && pad != null)
+	{
+		pad = pad.toString();
+
+		if (pad.length > 0)
+		{
+			str = str.toString();
+
+			var padding = len - str.length;
+
+			var index = 0;
+
+			var pads = "";
+
+			while (padding > 0)
+			{
+				if (index >= pad.length)
+				{
+					index = 0;
+				}
+
+				pads += pad.charAt(index);
+
+				index++;
+				padding--;
+			}
+
+			return str + pads;
+		}
+		else
+		{
+			return str;
+		}
+	}
+	else
+	{
+		return str;
+	}
 };
 
 Tools.size = function(obj)
