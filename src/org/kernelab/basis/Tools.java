@@ -1097,7 +1097,14 @@ public class Tools
 
 		if (source.isOpen() && target.isOpen())
 		{
-			source.transferTo(0, source.size(), target);
+			long remain = source.size(), start = 0, delta = -1;
+
+			while (remain > 0)
+			{
+				delta = source.transferTo(start, remain, target);
+				remain -= delta;
+				start += delta;
+			}
 
 			copied = true;
 		}
