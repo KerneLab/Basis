@@ -68,14 +68,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 {
 	protected abstract class AbstractIterator<E> implements Iterator<E>
 	{
-		protected int					index;
-		protected Iterator<String>[]	iters;
-		protected Iterator<String>		iter;
+		protected int			index;
+		protected Iterator<E>[]	iters;
+		protected Iterator<E>	iter;
 
-		public AbstractIterator(Iterator<String>... iters)
+		public AbstractIterator(Iterator<E>... iters)
 		{
 			this.iters = iters;
-			this.reset();
+			this.index = -1;
+			this.nextIter();
 		}
 
 		public boolean hasNext()
@@ -86,24 +87,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				{
 					return true;
 				}
-				else
+				else if (nextIter() == null)
 				{
-					if (nextIter() == null)
-					{
-						return false;
-					}
+					return false;
 				}
 			}
 			return false;
 		}
 
-		protected Iterator<String> nextIter()
+		protected Iterator<E> nextIter()
 		{
 			iter = null;
 
 			if (iters != null)
 			{
-				while (iter == null)
+				do
 				{
 					index++;
 
@@ -116,6 +114,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						break;
 					}
 				}
+				while (iter == null);
 			}
 
 			return iter;
@@ -127,12 +126,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				iter.remove();
 			}
-		}
-
-		protected void reset()
-		{
-			this.index = -1;
-			nextIter();
 		}
 	}
 
@@ -332,95 +325,42 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	protected class EntrySet extends AbstractSet<Map.Entry<String, Object>>
 	{
-		protected class Entry<K, V> implements Map.Entry<K, V>
-		{
-			private K	key;
-			private V	value;
-
-			protected Entry(K key, V value)
-			{
-				this.key = key;
-				this.value = value;
-			}
-
-			@Override
-			public boolean equals(Object o)
-			{
-				if (o instanceof Entry)
-				{
-					Entry<?, ?> e = (Entry<?, ?>) o;
-					return Tools.equals(this.key, e.key) && Tools.equals(this.value, e.value);
-				}
-				else
-				{
-					return false;
-				}
-			}
-
-			public K getKey()
-			{
-				return key;
-			}
-
-			public V getValue()
-			{
-				return value;
-			}
-
-			@Override
-			public int hashCode()
-			{
-				return (key == null ? 0 : key.hashCode()) ^ (value == null ? 0 : value.hashCode());
-			}
-
-			public V setValue(V value)
-			{
-				V old = this.value;
-				this.value = value;
-				return old;
-			}
-
-			@Override
-			public String toString()
-			{
-				return getKey() + "=" + getValue();
-			}
-		}
-
 		protected class EntryIterator extends AbstractIterator<Map.Entry<String, Object>>
 		{
-			public EntryIterator(Iterator<String>... iters)
+			public EntryIterator(Iterator<Map.Entry<String, Object>>... iters)
 			{
 				super(iters);
 			}
 
 			public Map.Entry<String, Object> next()
 			{
-				String key = iter.next();
-				return new Entry<String, Object>(key, JSON.this.get(key));
+				return iter.next();
 			}
 		}
 
-		protected Set<String>[] keys;
+		protected Set<Map.Entry<String, Object>>[] sets;
 
-		public EntrySet(Set<String>... keys)
+		public EntrySet(Set<Map.Entry<String, Object>>... sets)
 		{
-			this.keys = keys;
+			this.sets = sets;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
 		public Iterator<Map.Entry<String, Object>> iterator()
 		{
-			Iterator<String>[] iters = null;
+			Iterator<Map.Entry<String, Object>>[] iters = null;
 
-			if (keys != null)
+			if (sets != null)
 			{
-				iters = (Iterator<String>[]) new Iterator<?>[keys.length];
+				iters = (Iterator<Map.Entry<String, Object>>[]) new Iterator<?>[sets.length];
 
-				for (int i = 0; i < keys.length; i++)
+				for (int i = 0; i < sets.length; i++)
 				{
-					iters[i] = keys[i].iterator();
+					if (sets[i] != null)
+					{
+						iters[i] = sets[i].iterator();
+					}
 				}
 			}
 
@@ -431,9 +371,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public int size()
 		{
 			int size = 0;
-			if (keys != null)
+			if (sets != null)
 			{
-				for (Set<String> set : keys)
+				for (Set<Map.Entry<String, Object>> set : sets)
 				{
 					if (set != null)
 					{
@@ -1898,7 +1838,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public Set<Map.Entry<String, Object>> entrySet()
 		{
-			return new EntrySet(array().keySet(), object().keySet());
+			return new EntrySet(array().entrySet(), object().entrySet());
 		}
 
 		public boolean equalValues(JSAN jsan)
@@ -3173,7 +3113,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public Collection<Object> values()
 		{
-			return new ValuesCollection(array().keySet(), object().keySet());
+			return new ValuesCollection(array().values(), object().values());
 		}
 	}
 
@@ -3211,7 +3151,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				for (int i = 0; i < keys.length; i++)
 				{
-					iters[i] = keys[i].iterator();
+					if (keys[i] != null)
+					{
+						iters[i] = keys[i].iterator();
+					}
 				}
 			}
 
@@ -4504,37 +4447,40 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		protected class ValuesIterator extends AbstractIterator<Object>
 		{
-			public ValuesIterator(Iterator<String>... iters)
+			public ValuesIterator(Iterator<Object>... iters)
 			{
 				super(iters);
 			}
 
 			public Object next()
 			{
-				return JSON.this.val(iter.next());
+				return Quote(iter.next());
 			}
 		}
 
-		protected Set<String>[] keys;
+		protected Collection<Object>[] vals;
 
-		public ValuesCollection(Set<String>... keys)
+		public ValuesCollection(Collection<Object>... vals)
 		{
-			this.keys = keys;
+			this.vals = vals;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
 		public Iterator<Object> iterator()
 		{
-			Iterator<String>[] iters = null;
+			Iterator<Object>[] iters = null;
 
-			if (keys != null)
+			if (vals != null)
 			{
-				iters = (Iterator<String>[]) new Iterator<?>[keys.length];
+				iters = (Iterator<Object>[]) new Iterator<?>[vals.length];
 
-				for (int i = 0; i < keys.length; i++)
+				for (int i = 0; i < vals.length; i++)
 				{
-					iters[i] = keys[i].iterator();
+					if (vals[i] != null)
+					{
+						iters[i] = vals[i].iterator();
+					}
 				}
 			}
 
@@ -4545,13 +4491,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public int size()
 		{
 			int size = 0;
-			if (keys != null)
+			if (vals != null)
 			{
-				for (Set<String> set : keys)
+				for (Collection<Object> val : vals)
 				{
-					if (set != null)
+					if (val != null)
 					{
-						size += set.size();
+						size += val.size();
 					}
 				}
 			}
@@ -7148,9 +7094,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Set<Map.Entry<String, Object>> entrySet()
 	{
-		return object().entrySet();
+		return new EntrySet(object().entrySet());
 	}
 
 	@Override
@@ -8493,8 +8440,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return val == null ? new Timestamp(defaultValue) : val;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Collection<Object> values()
 	{
-		return object().values();
+		return new ValuesCollection(object().values());
 	}
 }

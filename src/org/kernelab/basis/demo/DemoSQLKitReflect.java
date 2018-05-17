@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.kernelab.basis.JSON;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.sql.DataBase;
 import org.kernelab.basis.sql.DataBase.OracleClient;
@@ -75,7 +76,9 @@ public class DemoSQLKitReflect
 		{
 			SQLKit kit = database.getSQLKit();
 
-			Sequel seq = kit.execute("select id \"id\", grp \"grp\", rnk \"rnk\", sal \"sal\" from jdl_test_part");
+			Sequel seq = kit.execute(
+					"select id \"id\", grp \"grp\", rnk \"rnk\", sal \"sal\" from jdl_test_part where id>?id?",
+					new JSON().attr("id", "3"));
 
 			for (ResultSet rs : seq)
 			{
@@ -84,7 +87,8 @@ public class DemoSQLKitReflect
 
 			Tools.debug("==============================");
 
-			seq = kit.execute("select id, grp, rnk, sal from jdl_test_part order by id desc");
+			seq = kit.execute("select id, grp, rnk, sal from jdl_test_part where id>?id? order by id desc",
+					new JSON().attr("id", "3"));
 
 			Map<String, Object> cols = new HashMap<String, Object>();
 
