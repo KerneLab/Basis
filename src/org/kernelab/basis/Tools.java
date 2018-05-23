@@ -1868,18 +1868,49 @@ public class Tools
 	}
 
 	/**
-	 * Delete files, folders in a given directory and delete the directory
+	 * Delete a file or directory denoted by the given path.<br />
+	 * If the path is a directory, its content will be deleted recursively.
+	 * 
+	 * @param path
+	 *            The given path to be deleted.
+	 * @return true if and only if the file or directory is successfully
+	 *         deleted; false otherwise.
+	 */
+	public static boolean delete(File path)
+	{
+		if (path.isFile())
+		{
+			return path.delete();
+		}
+		else if (path.isDirectory())
+		{
+			return Tools.deleteDirectory(path);
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	/**
+	 * Delete files, directories in a given directory and delete the directory
 	 * itself at last.
 	 * 
 	 * @param directory
 	 *            The given directory to be deleted.
+	 * @return true if and only if the directory is successfully deleted; false
+	 *         otherwise.
 	 */
-	public static void deleteDirectory(File directory)
+	public static boolean deleteDirectory(File directory)
 	{
 		if (directory.isDirectory())
 		{
-			clearDirectory(directory);
-			directory.delete();
+			Tools.clearDirectory(directory);
+			return directory.delete();
+		}
+		else
+		{
+			return false;
 		}
 	}
 
