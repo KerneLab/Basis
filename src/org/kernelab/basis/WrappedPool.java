@@ -29,12 +29,13 @@ public abstract class WrappedPool<E> extends AbstractPool<Element<E>>
 
 	public WrappedPool(int limit)
 	{
-		super(limit);
+		this(limit, 0);
 	}
 
 	public WrappedPool(int limit, int init)
 	{
 		super(limit, init);
+		this.setInit(init);
 	}
 
 	@Override

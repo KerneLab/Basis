@@ -10,8 +10,6 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 {
 	public static boolean isValid(Connection c)
 	{
-		boolean is = true;
-
 		try
 		{
 			boolean ac = c.getAutoCommit();
@@ -27,24 +25,16 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 			{
 				c.setAutoCommit(true);
 			}
+
+			return true;
 		}
-		catch (SQLException e)
+		catch (Exception e)
 		{
-			is = false;
+			return false;
 		}
-
-		return is;
 	}
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args)
-	{
-
-	}
-
-	private ConnectionProvider	provider;
+	private ConnectionProvider provider;
 
 	public ConnectionPool(ConnectionProvider provider, int limit)
 	{
@@ -55,6 +45,25 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	{
 		super(limit, init);
 		this.setProvider(provider);
+		this.setInit(init);
+	}
+
+	protected void discardConnection(Connection conn)
+	{
+		if (conn != null)
+		{
+			try
+			{
+				conn.close();
+			}
+			catch (Exception e)
+			{
+			}
+			finally
+			{
+				this.discard(conn);
+			}
+		}
 	}
 
 	public ConnectionProvider getProvider()
@@ -112,9 +121,9 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	{
 		if (conn != null)
 		{
-			if (conn.isClosed() || !isValid(conn))
+			if (!isValid(conn))
 			{
-				this.discard(conn);
+				this.discardConnection(conn);
 				return;
 			}
 
@@ -126,12 +135,12 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 				}
 				conn.setReadOnly(false);
 				conn.setTransactionIsolation(conn.getMetaData().getDefaultTransactionIsolation());
+				this.recycle(conn);
 			}
 			catch (SQLException e)
 			{
+				this.discardConnection(conn);
 			}
-
-			this.recycle(conn);
 		}
 	}
 

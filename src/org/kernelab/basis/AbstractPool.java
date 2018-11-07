@@ -13,7 +13,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	private int				limit;
 
-	private int				init;
+	private int				init				= -1;
 
 	private boolean			closed;
 
@@ -22,14 +22,27 @@ public abstract class AbstractPool<E> implements Pool<E>
 		this(limit, 0);
 	}
 
+	/**
+	 * Subclass must call setInit(int) method in its constructor.
+	 * 
+	 * @param limit
+	 * @param init
+	 */
 	public AbstractPool(int limit, int init)
 	{
 		this(new LinkedList<E>(), limit, init);
 	}
 
+	/**
+	 * Subclass must call setInit(int) method in its constructor.
+	 * 
+	 * @param pool
+	 * @param limit
+	 * @param init
+	 */
 	protected AbstractPool(Queue<E> pool, int limit, int init)
 	{
-		this.setClosed(false).setElements(pool).setTrace(0).setLimit(limit).setInit(init);
+		this.setClosed(false).setElements(pool).setTrace(0).setLimit(limit);
 	}
 
 	/**
@@ -181,25 +194,27 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return Tools.cast(this);
 	}
 
-	private AbstractPool<E> setInit(int init)
+	protected AbstractPool<E> setInit(int init)
 	{
-		this.init = Tools.limitNumber(init, 0, this.getLimit());
-
-		if (this.init > 0 && this.trace < this.init)
+		if (this.init < 0)
 		{
-			try
+			this.init = Tools.limitNumber(init, 0, this.getLimit());
+
+			if (this.init > 0 && this.trace < this.init)
 			{
-				for (int i = this.trace; i < this.init; i++)
+				try
 				{
-					supplyElement(500);
+					for (int i = this.trace; i < this.init; i++)
+					{
+						supplyElement(DEFAULT_INTERVAL);
+					}
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
 				}
 			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
 		}
-
 		return Tools.cast(this);
 	}
 

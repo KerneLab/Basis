@@ -2529,6 +2529,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return Sort(this, sorter, target);
 		}
 
+		@SuppressWarnings("unlikely-arg-type")
 		public JSAN splice(int index, int cover, Collection<?> collection)
 		{
 			JSAN result = new JSAN().templates(this);
@@ -2608,6 +2609,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return result;
 		}
 
+		@SuppressWarnings("unlikely-arg-type")
 		public JSAN splice(int index, int cover, JSAN jsan)
 		{
 			JSAN result = new JSAN().templates(this);
@@ -2687,6 +2689,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return result;
 		}
 
+		@SuppressWarnings("unlikely-arg-type")
 		public JSAN splice(int index, int cover, Object... objects)
 		{
 			JSAN result = new JSAN().templates(this);
