@@ -44,25 +44,22 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	public ConnectionPool(ConnectionProvider provider, int limit, int init)
 	{
 		super(limit, init);
-		this.setProvider(provider);
-		this.setInit(init);
+		this.setProvider(provider).setInit(init);
 	}
 
-	protected void discardConnection(Connection conn)
+	@Override
+	public void discard(Connection conn)
 	{
-		if (conn != null)
+		try
 		{
-			try
-			{
-				conn.close();
-			}
-			catch (Exception e)
-			{
-			}
-			finally
-			{
-				this.discard(conn);
-			}
+			conn.close();
+		}
+		catch (Exception e)
+		{
+		}
+		finally
+		{
+			super.discard(conn);
 		}
 	}
 
@@ -117,13 +114,13 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 		}
 	}
 
-	public void recycleConnection(Connection conn) throws SQLException
+	public void recycleConnection(Connection conn)
 	{
 		if (conn != null)
 		{
 			if (!isValid(conn))
 			{
-				this.discardConnection(conn);
+				this.discard(conn);
 				return;
 			}
 
@@ -139,9 +136,19 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 			}
 			catch (SQLException e)
 			{
-				this.discardConnection(conn);
+				this.discard(conn);
 			}
 		}
+	}
+
+	@Override
+	protected ConnectionPool setInit(int init)
+	{
+		if (this.getProvider() != null)
+		{
+			super.setInit(init);
+		}
+		return this;
 	}
 
 	protected ConnectionPool setProvider(ConnectionProvider factory)

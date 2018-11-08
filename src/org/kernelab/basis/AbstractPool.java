@@ -22,27 +22,14 @@ public abstract class AbstractPool<E> implements Pool<E>
 		this(limit, 0);
 	}
 
-	/**
-	 * Subclass must call setInit(int) method in its constructor.
-	 * 
-	 * @param limit
-	 * @param init
-	 */
 	public AbstractPool(int limit, int init)
 	{
 		this(new LinkedList<E>(), limit, init);
 	}
 
-	/**
-	 * Subclass must call setInit(int) method in its constructor.
-	 * 
-	 * @param pool
-	 * @param limit
-	 * @param init
-	 */
 	protected AbstractPool(Queue<E> pool, int limit, int init)
 	{
-		this.setClosed(false).setElements(pool).setTrace(0).setLimit(limit);
+		this.setClosed(false).setElements(pool).setTrace(0).setLimit(limit).setInit(init);
 	}
 
 	/**
@@ -194,6 +181,16 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return Tools.cast(this);
 	}
 
+	/**
+	 * To initialize the pool with a given initial size.<br />
+	 * It is recommended that this method be called in constructor. So that,
+	 * Subclass should override this method to ensure the dependent resources
+	 * were available first which is need to supply new elements. And then,
+	 * subclass should call this method after these resources were available.
+	 * 
+	 * @param init
+	 * @return
+	 */
 	protected AbstractPool<E> setInit(int init)
 	{
 		if (this.init < 0)
