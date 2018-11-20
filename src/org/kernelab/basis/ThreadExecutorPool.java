@@ -124,6 +124,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	/**
 	 * Fetch the busy degree of the pool load between 0.0 and 1.0<br />
 	 * The value beyond 1.0 is the ratio of tasks awaiting to be executed.<br />
+	 * If the limit is 0, then 1.0 will be returned.<br />
 	 * If the pool was not defined by limit, but also the executorService was
 	 * not a ThreadPoolExecutor, then this method returns -1.
 	 * 
@@ -131,17 +132,30 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	 */
 	public float getBusy()
 	{
-		Integer limit = this.getLimit();
+		lock.readLock().lock();
+		try
+		{
+			return this.getBusyUsafe();
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
+	}
+
+	protected float getBusyUsafe()
+	{
+		Integer limit = this.getLimitUnsafe();
 
 		if (limit != null)
 		{
 			if (limit > 0)
 			{
-				return 1f * this.getRemain() / limit;
+				return 1f * this.getRemainUnsafe() / limit;
 			}
 			else
 			{
-				return 0f;
+				return 1f;
 			}
 		}
 		else
@@ -153,7 +167,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 			}
 			else
 			{
-				return -1;
+				return -1f;
 			}
 		}
 	}
@@ -168,17 +182,69 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		return executorService;
 	}
 
+	/**
+	 * Get the idle count.<br />
+	 * A negative count means the number of tasks await.<br />
+	 * If the pool was not defined by limit then null will be returned.
+	 * 
+	 * @return
+	 */
+	public Integer getIdles()
+	{
+		lock.readLock().lock();
+		try
+		{
+			return this.getIdlesUnsafe();
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
+	}
+
+	protected Integer getIdlesUnsafe()
+	{
+		Integer limit = this.getLimitUnsafe();
+
+		if (limit != null)
+		{
+			return limit - this.getRemainUnsafe();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
 	public Integer getLimit()
+	{
+		lock.readLock().lock();
+		try
+		{
+			return this.getLimitUnsafe();
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
+	}
+
+	protected Integer getLimitUnsafe()
 	{
 		return limit;
 	}
 
+	/**
+	 * The total number of tasks in pool.
+	 * 
+	 * @return
+	 */
 	public Integer getRemain()
 	{
 		lock.readLock().lock();
 		try
 		{
-			return tasks.value + fakes;
+			return this.getRemainUnsafe();
 		}
 		finally
 		{
@@ -186,17 +252,32 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		}
 	}
 
+	protected Integer getRemainUnsafe()
+	{
+		return this.getTasksUnsafe() + fakes;
+	}
+
+	/**
+	 * The total number of tasks submitted to the underlying completion service.
+	 * 
+	 * @return
+	 */
 	public Integer getTasks()
 	{
 		lock.readLock().lock();
 		try
 		{
-			return tasks.value;
+			return this.getTasksUnsafe();
 		}
 		finally
 		{
 			lock.readLock().unlock();
 		}
+	}
+
+	protected Integer getTasksUnsafe()
+	{
+		return tasks.value;
 	}
 
 	/**
@@ -290,12 +371,12 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		return future;
 	}
 
-	public void setCompletionService(CompletionService<V> completionService)
+	protected void setCompletionService(CompletionService<V> completionService)
 	{
 		this.completionService = completionService;
 	}
 
-	public void setExecutorService(ExecutorService executorService)
+	protected void setExecutorService(ExecutorService executorService)
 	{
 		this.executorService = executorService;
 
@@ -311,12 +392,20 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		{
 			if (executorService instanceof ThreadPoolExecutor)
 			{
-				ThreadPoolExecutor service = (ThreadPoolExecutor) executorService;
+				lock.writeLock().lock();
+				try
+				{
+					ThreadPoolExecutor service = (ThreadPoolExecutor) executorService;
 
-				service.setCorePoolSize(limit);
-				service.setMaximumPoolSize(limit);
+					service.setCorePoolSize(limit);
+					service.setMaximumPoolSize(limit);
 
-				this.limit = limit;
+					this.limit = limit;
+				}
+				finally
+				{
+					lock.writeLock().unlock();
+				}
 			}
 		}
 	}
