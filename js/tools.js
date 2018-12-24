@@ -173,6 +173,27 @@ Tools.dualCount = function(str, a, b, from)
 	return count;
 };
 
+Tools.fillTemplate = function(template, data)
+{
+	if (data != null)
+	{
+		var boundLeft = Tools.get(arguments, 2, "?");
+		var boundRight = Tools.get(arguments, 3, boundLeft);
+
+		for ( var k in data)
+		{
+			if (data.hasOwnProperty(k))
+			{
+				template = template.replace( //
+				new RegExp(Tools.escapeRegex(boundLeft + k + boundRight), "g"), //
+				Tools.escapeText(Tools.nullEmpty(data[k])) //
+				);
+			}
+		}
+	}
+	return template;
+};
+
 Tools.escapeRegex = function(str)
 {
 	return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
@@ -193,12 +214,17 @@ Tools.fillTemplate = function(template, data)
 {
 	if (data != null)
 	{
+		var boundLeft = Tools.get(arguments, 2, "?");
+		var boundRight = Tools.get(arguments, 3, boundLeft);
+
 		for ( var k in data)
 		{
 			if (data.hasOwnProperty(k))
 			{
-				template = template.replace(new RegExp(Tools.escapeRegex("?" + k + "?"), "g"), Tools.escapeText(Tools
-						.nullEmpty(data[k])));
+				template = template.replace( // 
+				new RegExp(Tools.escapeRegex(boundLeft + k + boundRight), "g"), // 
+				Tools.escapeText(Tools.nullEmpty(data[k])) // 
+				);
 			}
 		}
 	}
@@ -433,7 +459,7 @@ Tools.trim = function(str)
 Tools.unit = function(vector)
 {
 	var length = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
-	return [ vector[0] / length, vector[1] / length ];
+	return new Array(vector[0] / length, vector[1] / length);
 };
 
 Tools.values = function(object)
