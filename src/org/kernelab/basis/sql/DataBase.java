@@ -130,7 +130,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class EmbeddeDerby extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "org.apache.derby.jdbc.EmbeddedDriver";
+		public static String DRIVER_CLASS_NAME = "org.apache.derby.jdbc.EmbeddedDriver";
 
 		public EmbeddeDerby()
 		{
@@ -343,8 +343,8 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		@Override
 		public String getURL()
 		{
-			return "jdbc:informix-sqli://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER)
-					+ "/" + catalog + ":INFORMIXSERVER=myserver";
+			return "jdbc:informix-sqli://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + "/"
+					+ catalog + ":INFORMIXSERVER=myserver";
 		}
 	}
 
@@ -353,7 +353,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		/**
 		 * 
 		 */
-		private static final long	serialVersionUID	= 186848770749944602L;
+		private static final long serialVersionUID = 186848770749944602L;
 
 		public InvalidDataBaseConnectionException(String message, Throwable cause)
 		{
@@ -467,7 +467,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class ODBC extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "sun.jdbc.odbc.JdbcOdbcDriver";
+		public static String DRIVER_CLASS_NAME = "sun.jdbc.odbc.JdbcOdbcDriver";
 
 		public ODBC()
 		{
@@ -614,20 +614,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 			private Map<String, String>	map		= new LinkedHashMap<String, String>();
 
-			private String				name	= null;
-
-			private String				value	= null;
-
 			private StringBuilder		buffer	= new StringBuilder();
 
 			public Map<String, String> getMap()
 			{
 				return map;
-			}
-
-			public String getValue()
-			{
-				return value;
 			}
 
 			@Override
@@ -651,14 +642,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 						if (matcher.matches())
 						{
-							String key = matcher.group(1).trim().toUpperCase();
-							String value = matcher.group(2).trim();
-							map.put(key, value);
-							if (Tools.equals(name, key))
-							{
-								this.value = value;
-								this.setReading(false);
-							}
+							map.put(matcher.group(1).trim().toUpperCase(), matcher.group(2).trim());
 						}
 
 						Tools.clearStringBuilder(buffer);
@@ -669,7 +653,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			@Override
 			protected void readPrepare()
 			{
-				value = null;
 				map.clear();
 				Tools.clearStringBuilder(buffer);
 			}
@@ -677,16 +660,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			public <T extends TNSNamesReader> T setMap(Map<String, String> map)
 			{
 				this.map = map;
-				return Tools.cast(this);
-			}
-
-			public <T extends TNSNamesReader> T setName(String name)
-			{
-				this.name = name;
-				if (this.name != null)
-				{
-					this.name = this.name.toUpperCase();
-				}
 				return Tools.cast(this);
 			}
 		}
@@ -819,16 +792,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 		public static Map<String, String> listTNS(File file)
 		{
-			return listTNS(file, null);
-		}
-
-		public static Map<String, String> listTNS(File file, String name)
-		{
 			if (file != null)
 			{
 				try
 				{
-					return ((TNSNamesReader) new TNSNamesReader().setName(name).setDataFile(file).read()).getMap();
+					return ((TNSNamesReader) new TNSNamesReader().setDataFile(file).read()).getMap();
 				}
 				catch (Exception e)
 				{
@@ -841,12 +809,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			}
 		}
 
-		public static Map<String, String> listTNS(String name)
-		{
-			return listTNS(new File(getDefaultTNSFilePath()), name);
-		}
-
-		private String	tns;
+		private String tns;
 
 		public OracleClient()
 		{
@@ -903,7 +866,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 					file = new File(filePath);
 				}
 
-				Map<String, String> map = listTNS(file, this.getCatalog());
+				Map<String, String> map = listTNS(file);
 				if (map != null)
 				{
 					tns = map.get(this.getCatalog());
@@ -1038,8 +1001,8 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		@Override
 		public String getURL()
 		{
-			return "jdbc:microsoft:sqlserver://" + serverName + ":"
-					+ DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER) + ";databaseName=" + catalog;
+			return "jdbc:microsoft:sqlserver://" + serverName + ":" + DefaultPortNumber(portNumber, DEFAULT_PORT_NUMBER)
+					+ ";databaseName=" + catalog;
 		}
 	}
 
@@ -1228,7 +1191,8 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	@Override
 	public DataBase clone()
 	{
-		return new DataBase(this) {
+		return new DataBase(this)
+		{
 
 			@Override
 			public String getDriverName()
