@@ -1269,7 +1269,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		}
 		catch (ClassNotFoundException e)
 		{
-			throw new SQLException(e.getLocalizedMessage());
+			throw new SQLException(e.getLocalizedMessage(), e);
 		}
 	}
 
