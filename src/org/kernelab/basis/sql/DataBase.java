@@ -96,7 +96,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		public Derby(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
-			this.getInformation().setProperty("create", "true");
+			this.getInformation().put("create", "true");
 		}
 
 		public Derby(String userName, String passWord)
@@ -145,7 +145,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		public EmbeddeDerby(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
-			this.getInformation().setProperty("create", "true");
+			this.getInformation().put("create", "true");
 		}
 
 		public EmbeddeDerby(String userName, String passWord)
@@ -173,6 +173,42 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		public String getURL()
 		{
 			return "jdbc:derby:" + catalog;
+		}
+	}
+
+	public static class GeneralDataBase extends DataBase
+	{
+		private String	driver;
+
+		private String	url;
+
+		public GeneralDataBase(String driver, String url, String userName, String passWord)
+		{
+			super(userName, passWord);
+			this.setDriverName(driver);
+			this.setURL(url);
+		}
+
+		@Override
+		public String getDriverName()
+		{
+			return driver;
+		}
+
+		@Override
+		public String getURL()
+		{
+			return url;
+		}
+
+		protected void setDriverName(String driver)
+		{
+			this.driver = driver;
+		}
+
+		protected void setURL(String url)
+		{
+			this.url = url;
 		}
 	}
 
@@ -430,10 +466,10 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		public MySQL(String serverName, int portNumber, String catalog, String userName, String passWord)
 		{
 			super(serverName, portNumber, catalog, userName, passWord);
-			this.getInformation().setProperty("useUnicode", "true");
-			this.getInformation().setProperty("characterEncoding", "utf-8");
-			this.getInformation().setProperty("zeroDateTimeBehavior", "convertToNull");
-			this.getInformation().setProperty("autoReconnect", "true");
+			this.getInformation().put("useUnicode", "true");
+			this.getInformation().put("characterEncoding", "utf-8");
+			this.getInformation().put("zeroDateTimeBehavior", "convertToNull");
+			this.getInformation().put("autoReconnect", "true");
 		}
 
 		public MySQL(String userName, String passWord)
@@ -1216,9 +1252,9 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public abstract String getDriverName();
 
-	public Properties getInformation()
+	public Map<String, Object> getInformation()
 	{
-		return PropertiesOfMap(this.information);
+		return this.information;
 	}
 
 	public String getPassWord()
@@ -1258,7 +1294,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		// No need for JDBC4.0 with Java6.0
 		Extensions.forName(this.getDriverName());
 
-		return DriverManager.getConnection(this.getURL(), this.getInformation());
+		return DriverManager.getConnection(this.getURL(), PropertiesOfMap(this.getInformation()));
 	}
 
 	public Connection provideConnection(long timeout) throws SQLException
