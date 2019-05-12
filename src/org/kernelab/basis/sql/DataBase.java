@@ -1229,7 +1229,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	{
 		return new DataBase(this)
 		{
-
 			@Override
 			public String getDriverName()
 			{
@@ -1241,7 +1240,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			{
 				return DataBase.this.getURL();
 			}
-
 		};
 	}
 
@@ -1291,8 +1289,10 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public Connection newConnection() throws ClassNotFoundException, SQLException
 	{
-		// No need for JDBC4.0 with Java6.0
-		Extensions.forName(this.getDriverName());
+		if (this.getDriverName() != null)
+		{ // No need for JDBC4.0 with Java6.0s
+			Extensions.forName(this.getDriverName());
+		}
 
 		return DriverManager.getConnection(this.getURL(), PropertiesOfMap(this.getInformation()));
 	}
