@@ -95,6 +95,8 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return closed;
 	}
 
+	protected abstract boolean isValid(E element);
+
 	/**
 	 * Create a new element which should not be null. Any null element return by
 	 * this method will be ignored which would not increase the trace.
@@ -110,41 +112,62 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 		synchronized (elements)
 		{
-			while (elements.isEmpty() && !closed)
+			do
 			{
-				if (trace < limit)
+				while (elements.isEmpty() && !isClosed())
 				{
-					supplyElement(timeout);
-				}
-				else
-				{
-					try
+					if (trace < limit)
 					{
-						if (timeout > 0)
+						supplyElement(timeout);
+					}
+					else
+					{
+						try
 						{
-							elements.wait(timeout);
+							if (timeout > 0)
+							{
+								elements.wait(timeout);
+							}
+							else if (timeout == 0)
+							{
+								elements.wait(DEFAULT_INTERVAL);
+							}
+							else
+							{
+								elements.wait(-timeout);
+							}
 						}
-						else if (timeout == 0)
+						catch (InterruptedException e)
 						{
-							elements.wait(DEFAULT_INTERVAL);
-						}
-						else
-						{
-							elements.wait(-timeout);
 						}
 					}
-					catch (InterruptedException e)
+
+					if (timeout > 0L)
 					{
+						break;
 					}
 				}
 
-				if (timeout > 0L)
+				element = elements.poll();
+
+				if (element != null)
+				{
+					if (!isValid(element))
+					{
+						discard(element);
+						element = null;
+						if (timeout > 0)
+						{
+							break;
+						}
+					}
+				}
+				else if (timeout > 0)
 				{
 					break;
 				}
 			}
-
-			element = elements.poll();
+			while (element == null && !isClosed());
 		}
 
 		return element;

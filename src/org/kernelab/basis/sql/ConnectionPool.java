@@ -8,32 +8,6 @@ import org.kernelab.basis.AbstractPool;
 
 public class ConnectionPool extends AbstractPool<Connection> implements ConnectionManager
 {
-	public static boolean isValid(Connection c)
-	{
-		try
-		{
-			boolean ac = c.getAutoCommit();
-
-			if (ac)
-			{
-				c.setAutoCommit(false);
-			}
-
-			c.rollback();
-
-			if (ac)
-			{
-				c.setAutoCommit(true);
-			}
-
-			return true;
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
-	}
-
 	private ConnectionProvider provider;
 
 	public ConnectionPool(ConnectionProvider provider, int limit)
@@ -76,6 +50,33 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	public SQLKit getSQLKit(long timeout) throws SQLException
 	{
 		return new SQLKit(this, timeout);
+	}
+
+	@Override
+	protected boolean isValid(Connection c)
+	{
+		try
+		{
+			boolean ac = c.getAutoCommit();
+
+			if (ac)
+			{
+				c.setAutoCommit(false);
+			}
+
+			c.rollback();
+
+			if (ac)
+			{
+				c.setAutoCommit(true);
+			}
+
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
 	}
 
 	@Override
@@ -126,12 +127,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 			try
 			{
-				if (!conn.getAutoCommit())
-				{
-					conn.setAutoCommit(true);
-				}
-				conn.setReadOnly(false);
-				conn.setTransactionIsolation(conn.getMetaData().getDefaultTransactionIsolation());
+				this.reset(conn);
 				this.recycle(conn);
 			}
 			catch (SQLException e)
@@ -139,6 +135,16 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 				this.discard(conn);
 			}
 		}
+	}
+
+	protected void reset(Connection conn) throws SQLException
+	{
+		if (!conn.getAutoCommit())
+		{
+			conn.setAutoCommit(true);
+		}
+		conn.setReadOnly(false);
+		conn.setTransactionIsolation(conn.getMetaData().getDefaultTransactionIsolation());
 	}
 
 	@Override
