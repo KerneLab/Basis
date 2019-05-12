@@ -3,6 +3,7 @@ package org.kernelab.basis;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -14,15 +15,48 @@ public class Extensions
 {
 	public static class ClassLoader extends URLClassLoader
 	{
+		private Method addToParent = null;
+
 		public ClassLoader(java.lang.ClassLoader parent)
 		{
 			super(new URL[0], parent);
+			this.initAddToParentMethod();
 		}
 
 		@Override
 		public void addURL(URL url)
 		{
 			super.addURL(url);
+			if (this.getAddToParent() != null)
+			{
+				try
+				{
+					this.getAddToParent().invoke(this.getParent(), url);
+				}
+				catch (Exception e)
+				{
+				}
+			}
+		}
+
+		protected Method getAddToParent()
+		{
+			return addToParent;
+		}
+
+		protected void initAddToParentMethod()
+		{
+			if (this.getParent() instanceof URLClassLoader)
+			{
+				try
+				{
+					this.setAddToParent(URLClassLoader.class.getDeclaredMethod("addURL", URL.class));
+					this.getAddToParent().setAccessible(true);
+				}
+				catch (Exception e)
+				{
+				}
+			}
 		}
 
 		public boolean load(File location)
@@ -99,9 +133,14 @@ public class Extensions
 			this.addURL(location);
 			return true;
 		}
+
+		protected void setAddToParent(Method addToParent)
+		{
+			this.addToParent = addToParent;
+		}
 	}
 
-	private static final Extensions	Singleton	= new Extensions();
+	private static final Extensions Singleton = new Extensions();
 
 	public static Class<?> forName(String className) throws ClassNotFoundException
 	{
@@ -153,7 +192,7 @@ public class Extensions
 		return instance().getLoader().load(location);
 	}
 
-	private ClassLoader	loader;
+	private ClassLoader loader;
 
 	protected Extensions()
 	{
