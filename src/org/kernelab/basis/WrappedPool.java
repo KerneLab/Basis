@@ -38,6 +38,14 @@ public abstract class WrappedPool<E> extends AbstractPool<Element<E>>
 	}
 
 	@Override
+	protected boolean isValid(Element<E> element)
+	{
+		return element != null && element.get() != null && isValidElement(element.get());
+	}
+
+	protected abstract boolean isValidElement(E element);
+
+	@Override
 	protected Element<E> newElement(long timeout)
 	{
 		return new Element<E>(this, newElementInstance(timeout));
