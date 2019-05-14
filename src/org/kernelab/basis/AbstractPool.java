@@ -95,10 +95,18 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return closed;
 	}
 
+	/**
+	 * Check the given element is valid or not. Any invalid element would be
+	 * discarded, not provided nor recycled.
+	 * 
+	 * @param element
+	 *            the given element to be checked.
+	 * @return true if and only if the given element is valid.
+	 */
 	protected abstract boolean isValid(E element);
 
 	/**
-	 * Create a new element which should not be null. Any null element return by
+	 * Create a new element which MUST NOT be null. Any null element return by
 	 * this method will be ignored which would not increase the trace.
 	 * 
 	 * @param timeout
@@ -150,24 +158,13 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 				element = elements.poll();
 
-				if (element != null)
+				if (element != null && !isValid(element))
 				{
-					if (!isValid(element))
-					{
-						discard(element);
-						element = null;
-						if (timeout > 0)
-						{
-							break;
-						}
-					}
-				}
-				else if (timeout > 0)
-				{
-					break;
+					discard(element);
+					element = null;
 				}
 			}
-			while (element == null && !isClosed());
+			while (element == null && timeout <= 0 && !isClosed());
 		}
 
 		return element;
@@ -179,10 +176,18 @@ public abstract class AbstractPool<E> implements Pool<E>
 		{
 			synchronized (elements)
 			{
-				if (trace <= limit)
+				if (trace <= limit && isValid(element))
 				{
-					elements.add(element);
-					elements.notifyAll();
+					try
+					{
+						resetElement(element);
+						elements.add(element);
+						elements.notifyAll();
+					}
+					catch (Exception e)
+					{
+						discard(element);
+					}
 				}
 				else
 				{
@@ -190,6 +195,18 @@ public abstract class AbstractPool<E> implements Pool<E>
 				}
 			}
 		}
+	}
+
+	/**
+	 * Reset the element before recycled. The default reset action does nothing.
+	 * Any subclass may override this method to define the reset action. If any
+	 * exception was thrown, the element would be discarded.
+	 * 
+	 * @param element
+	 * @throws Exception
+	 */
+	protected void resetElement(E element) throws Exception
+	{
 	}
 
 	private AbstractPool<E> setClosed(boolean closed)

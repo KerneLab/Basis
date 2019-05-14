@@ -117,27 +117,11 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 
 	public void recycleConnection(Connection conn)
 	{
-		if (conn != null)
-		{
-			if (!isValid(conn))
-			{
-				this.discard(conn);
-				return;
-			}
-
-			try
-			{
-				this.reset(conn);
-				this.recycle(conn);
-			}
-			catch (SQLException e)
-			{
-				this.discard(conn);
-			}
-		}
+		this.recycle(conn);
 	}
 
-	protected void reset(Connection conn) throws SQLException
+	@Override
+	protected void resetElement(Connection conn) throws SQLException
 	{
 		if (!conn.getAutoCommit())
 		{
