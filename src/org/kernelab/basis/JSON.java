@@ -1502,6 +1502,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return this;
 		}
 
+		public JSAN addLast(Object... values)
+		{
+			return addAll(length(), values);
+		}
+
 		@SuppressWarnings("unchecked")
 		public <E extends Object, T extends Collection<E>> T addTo(T collection)
 		{
@@ -6602,52 +6607,58 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			string = string.trim();
 
-			if (string.equals(NULL_STRING))
+			if (NULL_STRING.equals(string))
 			{
-				string = null;
+				return null;
 			}
 			else
 			{
-				string = string.replaceFirst("^" + QUOTE_CHAR + "([\\d\\D]*)" + QUOTE_CHAR + "$", "$1");
-
-				StringBuilder buffer = new StringBuilder(string.length());
-
-				char c;
-
-				for (int i = 0; i < string.length(); i++)
-				{
-					c = string.charAt(i);
-
-					if (c == ESCAPE_CHAR)
-					{
-						i++;
-
-						c = string.charAt(i);
-
-						if (c == UNICODE_ESCAPING_CHAR)
-						{
-							i++;
-
-							String unicode = string.substring(i, i + UNICODE_ESCAPED_LENGTH);
-
-							c = (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX);
-
-							i += UNICODE_ESCAPED_LENGTH - 1;
-						}
-						else if (ESCAPING_CHAR.containsKey(c))
-						{
-							c = ESCAPING_CHAR.get(c);
-						}
-					}
-
-					buffer.append(c);
-				}
-
-				string = buffer.toString();
+				return RestoreStringContent(
+						string.replaceFirst("^" + QUOTE_CHAR + "([\\d\\D]*)" + QUOTE_CHAR + "$", "$1"));
 			}
 		}
+		else
+		{
+			return null;
+		}
+	}
 
-		return string;
+	public static String RestoreStringContent(String string)
+	{
+		StringBuilder buffer = new StringBuilder(string.length());
+
+		char c;
+
+		for (int i = 0; i < string.length(); i++)
+		{
+			c = string.charAt(i);
+
+			if (c == ESCAPE_CHAR)
+			{
+				i++;
+
+				c = string.charAt(i);
+
+				if (c == UNICODE_ESCAPING_CHAR)
+				{
+					i++;
+
+					String unicode = string.substring(i, i + UNICODE_ESCAPED_LENGTH);
+
+					c = (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX);
+
+					i += UNICODE_ESCAPED_LENGTH - 1;
+				}
+				else if (ESCAPING_CHAR.containsKey(c))
+				{
+					c = ESCAPING_CHAR.get(c);
+				}
+			}
+
+			buffer.append(c);
+		}
+
+		return buffer.toString();
 	}
 
 	public static StringBuilder Serialize(JSON json, StringBuilder buffer, int indents)
