@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1153,6 +1154,31 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return portNumber == DEFAULT_PORT_NUMBER ? defaultNumber : portNumber;
 	}
 
+	public static boolean IsValid(final Connection conn, long timeout)
+	{
+		return Tools.waitFor(new Callable<Boolean>()
+		{
+			public Boolean call() throws Exception
+			{
+				boolean ac = conn.getAutoCommit();
+
+				if (ac)
+				{
+					conn.setAutoCommit(false);
+				}
+
+				conn.rollback();
+
+				if (ac)
+				{
+					conn.setAutoCommit(true);
+				}
+
+				return true;
+			}
+		}, false, timeout);
+	}
+
 	/**
 	 * @param args
 	 */
@@ -1287,6 +1313,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return userName;
 	}
 
+	public boolean isValid(Connection c)
+	{
+		return IsValid(c, 3000);
+	}
+
 	public Connection newConnection() throws ClassNotFoundException, SQLException
 	{
 		if (this.getDriverName() != null)
@@ -1305,7 +1336,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		}
 		catch (ClassNotFoundException e)
 		{
-			throw new SQLException(e.getLocalizedMessage(), e);
+			throw new SQLException(e.getLocalizedMessage());
 		}
 	}
 

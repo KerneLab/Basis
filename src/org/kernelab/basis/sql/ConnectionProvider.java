@@ -6,6 +6,15 @@ import java.sql.SQLException;
 public interface ConnectionProvider
 {
 	/**
+	 * Check the given Connection is valid or not.
+	 * 
+	 * @param element
+	 *            the given Connection to be checked.
+	 * @return true if and only if the given Connection is valid.
+	 */
+	public boolean isValid(Connection conn);
+
+	/**
 	 * To provide a valid Connection.
 	 * 
 	 * @param timeout

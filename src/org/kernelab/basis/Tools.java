@@ -58,6 +58,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -94,6 +103,16 @@ public class Tools
 	public static final String				SCRIPT_DATETIME_FORMAT	= "MM-dd-yyyy HH:mm:ss 'GMT'Z";
 
 	public static String					DEFAULT_DATETIME_FORMAT	= LOCAL_DATETIME_FORMAT;
+
+	private static final ExecutorService	CACHED_DAEMON_EXECUTOR	= Executors.newCachedThreadPool(new ThreadFactory()
+																	{
+																		public Thread newThread(Runnable r)
+																		{
+																			Thread thread = new Thread(r);
+																			thread.setDaemon(true);
+																			return thread;
+																		}
+																	});
 
 	static
 	{
@@ -7910,5 +7929,43 @@ public class Tools
 		}
 
 		return vector;
+	}
+
+	public static <E> E waitFor(Callable<E> task, E defaultVal, long timeout)
+	{
+		return waitFor(task, defaultVal, timeout, TimeUnit.MILLISECONDS);
+	}
+
+	public static <E> E waitFor(Callable<E> task, E defaultVal, long timeout, TimeUnit unit)
+	{
+		return waitFor(CACHED_DAEMON_EXECUTOR, task, defaultVal, timeout, unit);
+	}
+
+	public static <E> E waitFor(ExecutorService executor, Callable<E> task, E defaultVal, long timeout, TimeUnit unit)
+	{
+		Future<E> result = executor.submit(task);
+
+		try
+		{
+			return result.get(timeout, unit);
+		}
+		catch (CancellationException e)
+		{
+			return defaultVal;
+		}
+		catch (ExecutionException e)
+		{
+			return defaultVal;
+		}
+		catch (InterruptedException e)
+		{
+			result.cancel(true);
+			return defaultVal;
+		}
+		catch (TimeoutException e)
+		{
+			result.cancel(true);
+			return defaultVal;
+		}
 	}
 }

@@ -23,7 +23,8 @@ import javax.naming.NamingException;
  * <br>
  * <b>"/META-INF/context.xml"</b><br> 
  * {@code <Context docBase="%appPath%" path="/appName" reloadable="true">
- *   <ResourceLink name="jdbc/mysql" global="jdbc/mysql" type="javax.sql.DataSource" />
+ *   <ResourceLink name="jdbc/mysql" global="jdbc/mysql" type=
+"javax.sql.DataSource" />
  * </Context>}
  * <br>
  * <b>"/WEB-INF/web.xml"</b><br> 
@@ -94,6 +95,11 @@ public class DataSource implements ConnectionManager
 		}
 
 		return kit;
+	}
+
+	public boolean isValid(Connection conn)
+	{
+		return DataBase.IsValid(conn, 3000);
 	}
 
 	public Connection provideConnection(long timeout) throws SQLException

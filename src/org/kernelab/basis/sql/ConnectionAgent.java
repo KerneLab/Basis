@@ -32,6 +32,11 @@ public class ConnectionAgent implements ConnectionManager
 		return recyclose;
 	}
 
+	public boolean isValid(Connection conn)
+	{
+		return true;
+	}
+
 	public Connection provideConnection(long timeout) throws SQLException
 	{
 		return connection;

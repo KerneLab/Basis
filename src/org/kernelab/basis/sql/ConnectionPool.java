@@ -53,30 +53,9 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	}
 
 	@Override
-	protected boolean isValid(Connection c)
+	public boolean isValid(Connection conn)
 	{
-		try
-		{
-			boolean ac = c.getAutoCommit();
-
-			if (ac)
-			{
-				c.setAutoCommit(false);
-			}
-
-			c.rollback();
-
-			if (ac)
-			{
-				c.setAutoCommit(true);
-			}
-
-			return true;
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
+		return this.getProvider().isValid(conn);
 	}
 
 	@Override
@@ -111,7 +90,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 		}
 		catch (Exception e)
 		{
-			throw new SQLException(e.getLocalizedMessage(), e);
+			throw new SQLException(e.getLocalizedMessage());
 		}
 	}
 
