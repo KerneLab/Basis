@@ -7931,41 +7931,132 @@ public class Tools
 		return vector;
 	}
 
+	/**
+	 * Execute task with daemon thread and wait for the task to complete.
+	 * 
+	 * @param task
+	 *            the task to be executed.
+	 * @param defaultVal
+	 *            the default value to be returned if any exception occurred.
+	 * @return the task result.
+	 */
+	public static <E> E waitFor(Callable<E> task, E defaultVal)
+	{
+		return waitFor(CACHED_DAEMON_EXECUTOR, task, defaultVal);
+	}
+
+	/**
+	 * Execute task with daemon thread and wait at most the given time for the
+	 * task to complete.
+	 * 
+	 * @param task
+	 *            the task to be executed.
+	 * @param defaultVal
+	 *            the default value to be returned if any exception occurred.
+	 * @param timeout
+	 *            the maximum time in milliseconds to wait, any non-positive
+	 *            timeout means no wait.
+	 * @return the task result.
+	 */
 	public static <E> E waitFor(Callable<E> task, E defaultVal, long timeout)
 	{
 		return waitFor(task, defaultVal, timeout, TimeUnit.MILLISECONDS);
 	}
 
+	/**
+	 * Execute task with daemon thread and wait at most the given time for the
+	 * task to complete.
+	 * 
+	 * @param task
+	 *            the task to be executed.
+	 * @param defaultVal
+	 *            the default value to be returned if any exception occurred.
+	 * @param timeout
+	 *            the maximum time to wait, any non-positive timeout means no
+	 *            wait.
+	 * @param unit
+	 *            the time unit of the timeout argument.
+	 * @return the task result.
+	 */
 	public static <E> E waitFor(Callable<E> task, E defaultVal, long timeout, TimeUnit unit)
 	{
 		return waitFor(CACHED_DAEMON_EXECUTOR, task, defaultVal, timeout, unit);
 	}
 
-	public static <E> E waitFor(ExecutorService executor, Callable<E> task, E defaultVal, long timeout, TimeUnit unit)
+	/**
+	 * Execute task and wait for the task to complete.
+	 * 
+	 * @param executor
+	 *            the ExecutorService.
+	 * @param task
+	 *            the task to be executed.
+	 * @param defaultVal
+	 *            the default value to be returned if any exception occurred.
+	 * @return the task result.
+	 */
+	public static <E> E waitFor(ExecutorService executor, Callable<E> task, E defaultVal)
 	{
 		Future<E> result = executor.submit(task);
 
 		try
 		{
-			return result.get(timeout, unit);
+			return result.get();
 		}
 		catch (CancellationException e)
 		{
-			return defaultVal;
 		}
 		catch (ExecutionException e)
 		{
-			return defaultVal;
 		}
 		catch (InterruptedException e)
 		{
 			result.cancel(true);
-			return defaultVal;
 		}
-		catch (TimeoutException e)
+
+		return defaultVal;
+	}
+
+	/**
+	 * Execute task and wait at most the given time for the task to complete.
+	 * 
+	 * @param executor
+	 *            the ExecutorService.
+	 * @param task
+	 *            the task to be executed.
+	 * @param defaultVal
+	 *            the default value to be returned if any exception occurred.
+	 * @param timeout
+	 *            the maximum time to wait, any non-positive timeout means no
+	 *            wait.
+	 * @param unit
+	 *            the time unit of the timeout argument.
+	 * @return the task result.
+	 */
+	public static <E> E waitFor(ExecutorService executor, Callable<E> task, E defaultVal, long timeout, TimeUnit unit)
+	{
+		Future<E> result = executor.submit(task);
+
+		if (timeout > 0)
 		{
-			result.cancel(true);
-			return defaultVal;
+			try
+			{
+				return result.get(timeout, unit);
+			}
+			catch (CancellationException e)
+			{
+			}
+			catch (ExecutionException e)
+			{
+			}
+			catch (InterruptedException e)
+			{
+				result.cancel(true);
+			}
+			catch (TimeoutException e)
+			{
+				result.cancel(true);
+			}
 		}
+		return defaultVal;
 	}
 }

@@ -1324,7 +1324,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		{ // No need for JDBC4.0 with Java6.0s
 			Extensions.forName(this.getDriverName());
 		}
-
 		return DriverManager.getConnection(this.getURL(), PropertiesOfMap(this.getInformation()));
 	}
 

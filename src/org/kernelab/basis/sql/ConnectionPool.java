@@ -3,8 +3,10 @@ package org.kernelab.basis.sql;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.Callable;
 
 import org.kernelab.basis.AbstractPool;
+import org.kernelab.basis.Tools;
 
 public class ConnectionPool extends AbstractPool<Connection> implements ConnectionManager
 {
@@ -22,11 +24,22 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	}
 
 	@Override
-	public void discard(Connection conn)
+	public void discard(final Connection conn)
 	{
 		try
 		{
-			conn.close();
+			Tools.waitFor(new Callable<Object>()
+			{
+				public Object call() throws Exception
+				{
+					conn.close();
+					return null;
+				}
+			}, null, -1);
+			/*
+			 * Do not wait for the close action to complete. Since closing a
+			 * timeout connection may be blocked for a long time.
+			 */
 		}
 		catch (Exception e)
 		{
