@@ -150,7 +150,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 						}
 					}
 
-					if (timeout > 0L)
+					if (timeout > 0)
 					{
 						break;
 					}
@@ -158,13 +158,24 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 				element = elements.poll();
 
-				if (element != null && !isValid(element))
+				if (element == null && timeout > 0)
 				{
-					discard(element);
-					element = null;
+					break;
+				}
+				else if (element != null)
+				{
+					if (isValid(element))
+					{
+						break;
+					}
+					else
+					{
+						discard(element);
+						element = null;
+					}
 				}
 			}
-			while (element == null && timeout <= 0 && !isClosed());
+			while (!isClosed());
 		}
 
 		return element;
