@@ -99,7 +99,7 @@ public class DataSource implements ConnectionManager
 
 	public boolean isValid(Connection conn)
 	{
-		return DataBase.IsValid(conn, 3000);
+		return DataBase.IsValid(conn);
 	}
 
 	public Connection provideConnection(long timeout) throws SQLException

@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import org.kernelab.basis.Copieable;
 import org.kernelab.basis.Extensions;
 import org.kernelab.basis.Tools;
+import org.kernelab.basis.Variable;
 import org.kernelab.basis.io.DataReader;
 
 /**
@@ -1143,15 +1144,27 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		}
 	}
 
-	public static final int		DEFAULT_PORT_NUMBER	= Integer.MIN_VALUE;
+	/**
+	 * The maximum time in milliseconds to wait for validating a connection.
+	 */
+	public static final String	KEY_VALIDATE_TIMEOUT		= "jdbc.conn.validate.timeout";
 
-	public static final String	USER				= "user";
+	public static final long	DEFAULT_VALIDATE_TIMEOUT	= 1000;
 
-	public static final String	PASSWORD			= "password";
+	public static final int		DEFAULT_PORT_NUMBER			= Integer.MIN_VALUE;
+
+	public static final String	USER						= "user";
+
+	public static final String	PASSWORD					= "password";
 
 	public static final int DefaultPortNumber(int portNumber, int defaultNumber)
 	{
 		return portNumber == DEFAULT_PORT_NUMBER ? defaultNumber : portNumber;
+	}
+
+	public static boolean IsValid(Connection conn)
+	{
+		return IsValid(conn, Variable.asLong(System.getProperty(KEY_VALIDATE_TIMEOUT), DEFAULT_VALIDATE_TIMEOUT));
 	}
 
 	public static boolean IsValid(final Connection conn, long timeout)
@@ -1313,9 +1326,9 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return userName;
 	}
 
-	public boolean isValid(Connection c)
+	public boolean isValid(Connection conn)
 	{
-		return IsValid(c, 3000);
+		return IsValid(conn);
 	}
 
 	public Connection newConnection() throws ClassNotFoundException, SQLException
