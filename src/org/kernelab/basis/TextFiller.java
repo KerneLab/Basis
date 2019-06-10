@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public class TextFiller
 {
-	public static String	DEFAULT_BOUNDARY	= "?";
+	public static final String DEFAULT_BOUNDARY = "?";
 
 	public static final String LiteralizeReplacement(String replacement)
 	{
@@ -123,10 +123,10 @@ public class TextFiller
 	{
 		if (target != null && iterable != null)
 		{
-			Matcher matcher = Pattern.compile(
-					Pattern.quote(leftBoundary + target + rightBoundary) + "(.*?)"
-							+ Pattern.quote(leftBoundary + target + rightBoundary), Pattern.DOTALL).matcher(
-					this.result());
+			Matcher matcher = Pattern
+					.compile(Pattern.quote(leftBoundary + target + rightBoundary) + "(.*?)"
+							+ Pattern.quote(leftBoundary + target + rightBoundary), Pattern.DOTALL)
+					.matcher(this.result());
 
 			this.shiftResult();
 
@@ -179,8 +179,8 @@ public class TextFiller
 			}
 			else
 			{
-				Matcher matcher = Pattern.compile(Pattern.quote(leftBoundary + target + rightBoundary)).matcher(
-						this.result());
+				Matcher matcher = Pattern.compile(Pattern.quote(leftBoundary + target + rightBoundary))
+						.matcher(this.result());
 
 				this.shiftResult();
 

@@ -1,8 +1,11 @@
 package org.kernelab.basis.demo;
 
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
+import org.kernelab.basis.JSON;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.sql.DataBase;
 import org.kernelab.basis.sql.DataBase.OracleClient;
@@ -17,7 +20,7 @@ public class DemoSequel
 	 */
 	public static void main(String[] args) throws SQLException
 	{
-		DataBase db = new OracleClient("orcl", "test", "test");
+		DataBase db = new OracleClient("orcl", "TEST", "TEST");
 
 		SQLKit kit = db.getSQLKit();
 
@@ -73,7 +76,8 @@ public class DemoSequel
 
 			// 在某些查询中，会返回多个ResultSet，相应地，Sequel通过iterate()方法返回Iterable<Sequel>对象
 			// 由此可以对多个ResultSet进行遍历
-			for (Sequel sq : kit.execute("select * from jdl_test_record where id=?", 1).iterate())
+			for (Sequel sq : kit.setBoundary("#")
+					.execute("select * from jdl_test_record where id=#id#", new JSON().attr("id", 1)).iterate())
 			{ // 对Sequel迭代将隐含地取消了自动关闭功能，否则，当遍历到下一个ResultSet时，Statement已经被关闭
 				for (ResultSet rs : sq)
 				{
@@ -84,6 +88,12 @@ public class DemoSequel
 			}
 			// 无论如何，在所有ResultSet被遍历完毕之后，Sequel对象默认会被自动关闭；
 			// 除非在进入循环时Sequel对象不是自动关闭的
+
+			JSON data = new JSON().attr("out", SQLKit.NONE).attr("in", "hello");
+			CallableStatement cs = kit.prepareCall("{call P_JDL_TEST_OUT(#out#,#in#)}", data);
+			cs.registerOutParameter(1, Types.VARCHAR);
+			seq = kit.execute(cs, data);
+			Tools.debug(seq.getValueString(1));
 		}
 		catch (SQLException e)
 		{

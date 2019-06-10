@@ -370,7 +370,11 @@ public class SQLKit
 		{
 			Object v = params.attr(key);
 
-			if (v instanceof Iterable)
+			if (v == SQLKit.NULL || v == SQLKit.NONE || v == SQLKit.EMPTY)
+			{
+				list.add(v);
+			}
+			else if (v instanceof Iterable)
 			{
 				for (Object o : (Iterable<?>) v)
 				{
@@ -434,7 +438,11 @@ public class SQLKit
 		{
 			Object v = params.get(key);
 
-			if (v instanceof Iterable)
+			if (v == SQLKit.NULL || v == SQLKit.NONE || v == SQLKit.EMPTY)
+			{
+				list.add(v);
+			}
+			else if (v instanceof Iterable)
 			{
 				for (Object o : (Iterable<?>) v)
 				{
@@ -500,14 +508,16 @@ public class SQLKit
 	 * 
 	 * @param sql
 	 *            The SQL String.
+	 * @param boundary
+	 *            The boundary string of each parameter.
 	 * @param params
 	 *            The parameters name Collection.
 	 * @return The index of each parameter.
 	 * @see SQLKit#indexOfParameters(String, Iterable, TreeMap)
 	 */
-	public static TreeMap<Integer, String> indexOfParameters(String sql, Iterable<String> params)
+	public static TreeMap<Integer, String> indexOfParameters(String sql, String boundary, Iterable<String> params)
 	{
-		return indexOfParameters(sql, params, null);
+		return indexOfParameters(sql, boundary, params, null);
 	}
 
 	/**
@@ -515,6 +525,8 @@ public class SQLKit
 	 * 
 	 * @param sql
 	 *            The SQL String.
+	 * @param boundary
+	 *            The boundary string of each parameter.
 	 * @param params
 	 *            The parameters name Collection.
 	 * @param index
@@ -523,7 +535,7 @@ public class SQLKit
 	 *            be created instead.
 	 * @return The index of each parameter.
 	 */
-	public static TreeMap<Integer, String> indexOfParameters(String sql, Iterable<String> params,
+	public static TreeMap<Integer, String> indexOfParameters(String sql, String boundary, Iterable<String> params,
 			TreeMap<Integer, String> index)
 	{
 		if (index == null)
@@ -536,9 +548,7 @@ public class SQLKit
 		}
 		for (String param : params)
 		{
-			Matcher m = Pattern
-					.compile(Pattern.quote(TextFiller.DEFAULT_BOUNDARY + param + TextFiller.DEFAULT_BOUNDARY))
-					.matcher(sql);
+			Matcher m = Pattern.compile(Pattern.quote(boundary + param + boundary)).matcher(sql);
 
 			while (m.find())
 			{
@@ -1097,13 +1107,15 @@ public class SQLKit
 	 * 
 	 * @param sql
 	 *            The SQL String.
+	 * @param boundary
+	 *            The boundary string of each parameter.
 	 * @param params
 	 *            The names of parameters.
 	 * @return The SQL String which could be prepared.
 	 */
-	public static String replaceParameters(String sql, Iterable<String> params)
+	public static String replaceParameters(String sql, String boundary, Iterable<String> params)
 	{
-		TextFiller filler = new TextFiller(sql).reset();
+		TextFiller filler = new TextFiller(sql, boundary).reset();
 
 		for (String key : params)
 		{
@@ -1120,19 +1132,25 @@ public class SQLKit
 	 * 
 	 * @param sql
 	 *            The SQL String.
+	 * @param boundary
+	 *            The boundary string of each parameter.
 	 * @param params
 	 *            The parameters in form of key/value organized by JSON.
 	 * @return The SQL String which could be prepared.
 	 */
-	public static String replaceParameters(String sql, JSON params)
+	public static String replaceParameters(String sql, String boundary, JSON params)
 	{
-		TextFiller filler = new TextFiller(sql).reset();
+		TextFiller filler = new TextFiller(sql, boundary).reset();
 
 		for (Pair pair : params.pairs())
 		{
 			Object value = pair.getValue();
 
-			if (value instanceof Iterable)
+			if (value == SQLKit.NULL || value == SQLKit.NONE || value == SQLKit.EMPTY)
+			{
+				filler.fillWith(pair.getKey(), VALUE_HOLDER_MARK);
+			}
+			else if (value instanceof Iterable)
 			{
 				Iterable<?> iter = (Iterable<?>) value;
 
@@ -1161,20 +1179,26 @@ public class SQLKit
 	 * 
 	 * @param sql
 	 *            The SQL String.
+	 * @param boundary
+	 *            The boundary string of each parameter.
 	 * @param params
 	 *            The parameters in form of key/value organized by Map
 	 *            <String,Object>.
 	 * @return The SQL String which could be prepared.
 	 */
-	public static String replaceParameters(String sql, Map<String, ?> params)
+	public static String replaceParameters(String sql, String boundary, Map<String, ?> params)
 	{
-		TextFiller filler = new TextFiller(sql).reset();
+		TextFiller filler = new TextFiller(sql, boundary).reset();
 
 		for (Entry<String, ?> pair : params.entrySet())
 		{
 			Object value = pair.getValue();
 
-			if (value instanceof Iterable)
+			if (value == SQLKit.NULL || value == SQLKit.NONE || value == SQLKit.EMPTY)
+			{
+				filler.fillWith(pair.getKey(), VALUE_HOLDER_MARK);
+			}
+			else if (value instanceof Iterable)
 			{
 				Iterable<?> iter = (Iterable<?>) value;
 
@@ -1220,6 +1244,8 @@ public class SQLKit
 
 	private Map<String, List<String>>	parameters;
 
+	private String						boundary;
+
 	private int							resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
 
 	private int							resultSetConcurrency	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][1];
@@ -1240,6 +1266,7 @@ public class SQLKit
 		}
 		this.setConnection(connection);
 		this.setManager(manager);
+		this.setBoundary(TextFiller.DEFAULT_BOUNDARY);
 		this.setSentences(new HashMap<String, Statement>());
 		this.setStatements(new HashMap<Statement, String>());
 		this.setParameters(new HashMap<String, List<String>>());
@@ -1599,6 +1626,11 @@ public class SQLKit
 		super.finalize();
 	}
 
+	public String getBoundary()
+	{
+		return boundary;
+	}
+
 	public Connection getConnection()
 	{
 		return connection;
@@ -1817,7 +1849,7 @@ public class SQLKit
 	public CallableStatement prepareCall(String call, Iterable<String> params, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(call, params);
+		String q = replaceParameters(call, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -1839,7 +1871,7 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(call, params).values()));
+				parameters.put(q, new LinkedList<String>(indexOfParameters(call, getBoundary(), params).values()));
 			}
 		}
 
@@ -1865,7 +1897,7 @@ public class SQLKit
 	public CallableStatement prepareCall(String call, JSON params, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(call, params);
+		String q = replaceParameters(call, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -1887,7 +1919,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(call, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(call, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -1913,7 +1946,7 @@ public class SQLKit
 	public CallableStatement prepareCall(String call, Map<String, ?> params, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(call, params);
+		String q = replaceParameters(call, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -1935,7 +1968,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(call, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(call, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2033,7 +2067,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, boolean autoGeneratedKeys)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2048,7 +2082,7 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params).values()));
+				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values()));
 			}
 		}
 
@@ -2070,7 +2104,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2092,7 +2126,7 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params).values()));
+				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values()));
 			}
 		}
 
@@ -2102,7 +2136,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, int[] columnIndexes)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2116,7 +2150,7 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params).values()));
+				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values()));
 			}
 		}
 
@@ -2126,7 +2160,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, String[] columnNames)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2140,7 +2174,7 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params).values()));
+				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values()));
 			}
 		}
 
@@ -2154,7 +2188,7 @@ public class SQLKit
 
 	public PreparedStatement prepareStatement(String sql, JSON params, boolean autoGeneratedKeys) throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2169,7 +2203,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2190,7 +2225,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, JSON params, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2212,7 +2247,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2221,7 +2257,7 @@ public class SQLKit
 
 	public PreparedStatement prepareStatement(String sql, JSON params, int[] columnIndexes) throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2235,7 +2271,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2244,7 +2281,7 @@ public class SQLKit
 
 	public PreparedStatement prepareStatement(String sql, JSON params, String[] columnNames) throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2258,7 +2295,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2273,7 +2311,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, boolean autoGeneratedKeys)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2288,7 +2326,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2309,7 +2348,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2331,7 +2370,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2341,7 +2381,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, int[] columnIndexes)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2355,7 +2395,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2365,7 +2406,7 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, String[] columnNames)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, params);
+		String q = replaceParameters(sql, getBoundary(), params);
 
 		statement = sentences.get(q);
 
@@ -2379,7 +2420,8 @@ public class SQLKit
 
 			if (!parameters.containsKey(q))
 			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, params.keySet()).values()));
+				parameters.put(q,
+						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
 			}
 		}
 
@@ -2526,6 +2568,12 @@ public class SQLKit
 		{
 			this.getConnection().setAutoCommit(autoCommit);
 		}
+		return this;
+	}
+
+	public SQLKit setBoundary(String boundary)
+	{
+		this.boundary = boundary;
 		return this;
 	}
 
