@@ -180,6 +180,12 @@ public class SQLKit
 	public static final String		VALUE_HOLDER_MARK			= "?";
 
 	/**
+	 * Indicate that do not specify any value to the parameter which is useful
+	 * when binding out parameter.
+	 */
+	public static final Object		NONE						= new JSON();
+
+	/**
 	 * In some sql, null parameter is required.<br />
 	 * e.g. {@code update("INSERT INTO `table` (`id`,`name`) VALUES (?,?)",
 	 * null, "John");}<br />
@@ -193,7 +199,7 @@ public class SQLKit
 	 * {@code query("SELECT * FROM `table` WHERE `name`!=?",SQLKit.NULL);}
 	 * 
 	 */
-	public static final Object		NULL						= new byte[0];
+	public static final Object		NULL						= new JSON();
 
 	public static final String		NULL_MARK					= "NULL";
 
@@ -201,7 +207,7 @@ public class SQLKit
 	 * To declare that there is no parameter.<br />
 	 * This object would be ignored if it is not the first parameter.
 	 */
-	public static final Object		EMPTY						= new byte[0];
+	public static final Object		EMPTY						= new JSON();
 
 	public static final byte		OPTIMIZING_AS_DEFAULT		= 0;
 
@@ -251,7 +257,7 @@ public class SQLKit
 					{
 						statement.setObject(index, null);
 					}
-					else
+					else if (param != NONE)
 					{
 						statement.setObject(index, param);
 					}
@@ -292,7 +298,7 @@ public class SQLKit
 					{
 						statement.setObject(index, null);
 					}
-					else
+					else if (param != NONE)
 					{
 						statement.setObject(index, param);
 					}
