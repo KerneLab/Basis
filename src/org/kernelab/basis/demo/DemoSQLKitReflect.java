@@ -95,7 +95,19 @@ public class DemoSQLKitReflect
 			cols.put("id", "ID");
 			cols.put("grp", "GRP");
 			cols.put("rnk", "RNK");
-			cols.put("sal", "SAL");
+			// cols.put("sal", "SAL");
+
+			for (ResultSet rs : seq)
+			{
+				Tools.debug(seq.getRow(DemoPojo.class, cols));
+			}
+
+			Tools.debug("==============================");
+
+			seq = kit.execute("select id, grp, rnk, sal from jdl_test_part where id>?id? order by id desc",
+					new JSON().attr("id", "3"));
+
+			cols = SQLKit.generateCamelStyleKeyMap(seq.getMetaMapName().keySet());
 
 			for (ResultSet rs : seq)
 			{

@@ -4581,7 +4581,6 @@ public class Tools
 	 */
 	public static void main(String[] args)
 	{
-
 	}
 
 	/**
@@ -4674,6 +4673,82 @@ public class Tools
 		{
 		}
 		return result;
+	}
+
+	/**
+	 * Map a camel naming string to underline splitting style.<br />
+	 * e.g helloWorld => hello_world
+	 * 
+	 * @param camelNaming
+	 *            A camel naming style string.
+	 * @return underline splitting style string.
+	 */
+	public static String mapCamelNamingToUnderlineStyle(String camelNaming)
+	{
+		if (camelNaming == null)
+		{
+			return null;
+		}
+		else
+		{
+			StringBuilder buf = new StringBuilder((int) (camelNaming.length() * 1.2));
+
+			char c;
+
+			for (int i = 0; i < camelNaming.length(); i++)
+			{
+				c = camelNaming.charAt(i);
+				if (Character.isUpperCase(c))
+				{
+					buf.append('_');
+				}
+				buf.append(Character.toLowerCase(c));
+			}
+
+			return buf.toString();
+		}
+	}
+
+	/**
+	 * Map a underline splitting naming string to camel style.<br />
+	 * e.g hello_world => helloWorld
+	 * 
+	 * @param underlineNaming
+	 *            A underline splitting naming string.
+	 * @return camel style string.
+	 */
+	public static String mapUnderlineNamingToCamelStyle(String underlineNaming)
+	{
+		if (underlineNaming == null)
+		{
+			return null;
+		}
+		else
+		{
+			String[] words = underlineNaming.split("_", 0);
+
+			StringBuilder buf = new StringBuilder(underlineNaming.length());
+
+			boolean first = true;
+
+			for (String word : words)
+			{
+				if (word.length() > 0)
+				{
+					if (first)
+					{
+						buf.append(word.toLowerCase());
+						first = false;
+					}
+					else
+					{
+						buf.append(Tools.capitalize(word.toLowerCase()));
+					}
+				}
+			}
+
+			return buf.toString();
+		}
 	}
 
 	/**

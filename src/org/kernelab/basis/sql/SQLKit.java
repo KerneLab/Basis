@@ -467,6 +467,48 @@ public class SQLKit
 	}
 
 	/**
+	 * Generate a map according to the given underline style naming columns. The
+	 * keys in result map will be camel style.
+	 * 
+	 * @param underlineStyleColumns
+	 *            Underline style naming columns.
+	 * @return A map which is useful to reflect query result row into java
+	 *         object.
+	 */
+	public static Map<String, Object> generateCamelStyleKeyMap(Iterable<String> underlineStyleColumns)
+	{
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+
+		for (String column : underlineStyleColumns)
+		{
+			map.put(Tools.mapUnderlineNamingToCamelStyle(column), column);
+		}
+
+		return map;
+	}
+
+	/**
+	 * Generate a map according to the given underline style naming columns. The
+	 * keys in result map will be camel style.
+	 * 
+	 * @param underlineStyleColumns
+	 *            Underline style naming columns.
+	 * @return A map which is useful to reflect query result row into java
+	 *         object.
+	 */
+	public static Map<String, Object> generateCamelStyleKeyMap(String... underlineStyleColumns)
+	{
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+
+		for (String column : underlineStyleColumns)
+		{
+			map.put(Tools.mapUnderlineNamingToCamelStyle(column), column);
+		}
+
+		return map;
+	}
+
+	/**
 	 * Get the result number of a ResultSet.
 	 * 
 	 * @param rs
@@ -1007,7 +1049,7 @@ public class SQLKit
 	 * 
 	 * @param meta
 	 *            The ResultSetMetaData.
-	 * @return The map of column name against the column name.
+	 * @return The map of column name against the column index.
 	 * @throws SQLException
 	 */
 	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta) throws SQLException
@@ -1024,7 +1066,7 @@ public class SQLKit
 	 * @param index
 	 *            The List<Integer> which indicates the indexes of columns to be
 	 *            mapped. If null then all of the columns would be mapped.
-	 * @return The map of column name against the column name.
+	 * @return The map of column name against the column index.
 	 * @throws SQLException
 	 */
 	public static Map<String, Object> mapNameOfMetaData(ResultSetMetaData meta, List<Integer> index) throws SQLException
@@ -2502,6 +2544,102 @@ public class SQLKit
 	public ResultSet query(String sql, Object... params) throws SQLException
 	{
 		return query(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+	}
+
+	public SQLKit registerOutParameter(CallableStatement cs, int index, int type) throws SQLException
+	{
+		cs.registerOutParameter(index, type);
+		return this;
+	}
+
+	public SQLKit registerOutParameter(CallableStatement cs, int index, int type, int scale) throws SQLException
+	{
+		cs.registerOutParameter(index, type, scale);
+		return this;
+	}
+
+	public SQLKit registerOutParameter(CallableStatement cs, int index, int type, String typeName) throws SQLException
+	{
+		cs.registerOutParameter(index, type, typeName);
+		return this;
+	}
+
+	public SQLKit registerOutParameter(CallableStatement cs, String name, int type) throws SQLException
+	{
+		int index = 1;
+
+		for (String param : this.getParameter(cs))
+		{
+			if (Tools.equals(name, param))
+			{
+				cs.registerOutParameter(index, type);
+			}
+			index++;
+		}
+
+		return this;
+	}
+
+	public SQLKit registerOutParameter(CallableStatement cs, String name, int type, int scale) throws SQLException
+	{
+		int index = 1;
+
+		for (String param : this.getParameter(cs))
+		{
+			if (Tools.equals(name, param))
+			{
+				cs.registerOutParameter(index, type, scale);
+			}
+			index++;
+		}
+
+		return this;
+	}
+
+	public SQLKit registerOutParameter(CallableStatement cs, String name, int type, String typeName) throws SQLException
+	{
+		int index = 1;
+
+		for (String param : this.getParameter(cs))
+		{
+			if (Tools.equals(name, param))
+			{
+				cs.registerOutParameter(index, type, typeName);
+			}
+			index++;
+		}
+
+		return this;
+	}
+
+	public SQLKit registerOutParameter(int index, int type) throws SQLException
+	{
+		return registerOutParameter((CallableStatement) this.getStatement(), index, type);
+	}
+
+	public SQLKit registerOutParameter(int index, int type, int scale) throws SQLException
+	{
+		return registerOutParameter((CallableStatement) this.getStatement(), index, type, scale);
+	}
+
+	public SQLKit registerOutParameter(int index, int type, String typeName) throws SQLException
+	{
+		return registerOutParameter((CallableStatement) this.getStatement(), index, type, typeName);
+	}
+
+	public SQLKit registerOutParameter(String name, int type) throws SQLException
+	{
+		return registerOutParameter((CallableStatement) this.getStatement(), name, type);
+	}
+
+	public SQLKit registerOutParameter(String name, int type, int scale) throws SQLException
+	{
+		return registerOutParameter((CallableStatement) this.getStatement(), name, type, scale);
+	}
+
+	public SQLKit registerOutParameter(String name, int type, String typeName) throws SQLException
+	{
+		return registerOutParameter((CallableStatement) this.getStatement(), name, type, typeName);
 	}
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException
