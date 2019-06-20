@@ -11,7 +11,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -47,7 +46,7 @@ public class HistoryQueueMap<K, V> implements Map<K, V>
 		this.setHistory(history);
 		this.setReserve(reserve);
 		this.setMap(map);
-		this.setQueue(new ConcurrentLinkedQueue<K>());
+		this.setQueue(new LinkedQueue<K>());
 	}
 
 	public int clean(boolean reserved)
@@ -378,7 +377,7 @@ public class HistoryQueueMap<K, V> implements Map<K, V>
 		}
 		else
 		{
-			return this.getQueue().size();
+			return this.getMap().size();
 		}
 	}
 
