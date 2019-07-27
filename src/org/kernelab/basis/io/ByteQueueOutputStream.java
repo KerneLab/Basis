@@ -61,6 +61,20 @@ public class ByteQueueOutputStream extends OutputStream
 	{
 	}
 
+	public byte[] getBytes()
+	{
+		byte[] bs = new byte[this.getQueue().size()];
+
+		int i = 0;
+
+		for (Byte b : this.getQueue())
+		{
+			bs[i++] = b;
+		}
+
+		return bs;
+	}
+
 	public String getCharset()
 	{
 		return charset;
@@ -122,16 +136,7 @@ public class ByteQueueOutputStream extends OutputStream
 
 	public String toString(String charsetName) throws UnsupportedEncodingException
 	{
-		byte[] bs = new byte[queue.size()];
-
-		int i = 0;
-
-		for (Byte b : queue)
-		{
-			bs[i++] = b;
-		}
-
-		return new String(bs, charsetName);
+		return new String(this.getBytes(), charsetName);
 	}
 
 	@Override
