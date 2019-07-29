@@ -1,12 +1,15 @@
 package org.kernelab.basis;
 
-import java.util.AbstractQueue;
-import java.util.Deque;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.LinkedList;
 
-public class FixedDeque<E> extends AbstractQueue<E> implements Deque<E>
+public class FixedDeque<E> extends LinkedList<E>
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1767881916070322588L;
+
 	public static void main(String[] args)
 	{
 		FixedDeque<Integer> q = new FixedDeque<Integer>(0);
@@ -36,18 +39,10 @@ public class FixedDeque<E> extends AbstractQueue<E> implements Deque<E>
 		Tools.debug(q);
 	}
 
-	private int			fixed;
-
-	private Deque<E>	deque;
+	private int fixed;
 
 	public FixedDeque(int fixed)
 	{
-		this(fixed, new LinkedList<E>());
-	}
-
-	public FixedDeque(int fixed, Deque<E> deque)
-	{
-		this.setDeque(deque);
 		this.setFixed(fixed);
 	}
 
@@ -57,59 +52,40 @@ public class FixedDeque<E> extends AbstractQueue<E> implements Deque<E>
 		return offer(e);
 	}
 
+	@Override
+	public void add(int index, E element)
+	{
+		super.add(index, element);
+
+		int fixed = this.getFixed();
+
+		if (fixed < 0)
+		{
+			this.pollLast();
+		}
+		else if (fixed > 0)
+		{
+			this.pollFirst();
+		}
+	}
+
+	@Override
+	public boolean addAll(int index, Collection<? extends E> c)
+	{
+		boolean res = super.addAll(index, c);
+
+		int fixed = this.getFixed();
+
+		if (fixed != 0)
+		{
+			this.cleanExtra(fixed);
+		}
+
+		return res;
+	}
+
+	@Override
 	public void addFirst(E e)
-	{
-		this.offerFirst(e);
-	}
-
-	public void addLast(E e)
-	{
-		this.offerLast(e);
-	}
-
-	public Iterator<E> descendingIterator()
-	{
-		return this.getDeque().descendingIterator();
-	}
-
-	@Override
-	public E element()
-	{
-		return this.getDeque().element();
-	}
-
-	protected Deque<E> getDeque()
-	{
-		return deque;
-	}
-
-	public E getFirst()
-	{
-		return this.getDeque().getFirst();
-	}
-
-	public int getFixed()
-	{
-		return fixed;
-	}
-
-	public E getLast()
-	{
-		return this.getDeque().getLast();
-	}
-
-	@Override
-	public Iterator<E> iterator()
-	{
-		return this.getDeque().iterator();
-	}
-
-	public boolean offer(E e)
-	{
-		return this.offerLast(e);
-	}
-
-	public boolean offerFirst(E e)
 	{
 		int fixed = this.getFixed();
 
@@ -119,26 +95,27 @@ public class FixedDeque<E> extends AbstractQueue<E> implements Deque<E>
 			{
 				this.pollLast();
 			}
-			return this.getDeque().offerFirst(e);
+			super.addFirst(e);
 		}
 		else if (fixed > 0)
 		{ // fixed tail
 			if (this.size() >= fixed)
 			{
-				return false;
+				return;
 			}
 			else
 			{
-				return this.getDeque().offerFirst(e);
+				super.addFirst(e);
 			}
 		}
 		else
 		{
-			return this.getDeque().offerFirst(e);
+			super.addFirst(e);
 		}
 	}
 
-	public boolean offerLast(E e)
+	@Override
+	public void addLast(E e)
 	{
 		int fixed = this.getFixed();
 
@@ -146,11 +123,11 @@ public class FixedDeque<E> extends AbstractQueue<E> implements Deque<E>
 		{ // fixed head
 			if (this.size() >= -fixed)
 			{
-				return false;
+				return;
 			}
 			else
 			{
-				return this.getDeque().offerLast(e);
+				super.addLast(e);
 			}
 		}
 		else if (fixed > 0)
@@ -159,83 +136,69 @@ public class FixedDeque<E> extends AbstractQueue<E> implements Deque<E>
 			{
 				this.poll();
 			}
-			return this.getDeque().offerLast(e);
+			super.addLast(e);
 		}
 		else
 		{
-			return this.getDeque().offerLast(e);
+			super.addLast(e);
 		}
 	}
 
-	public E peek()
+	protected void cleanExtra(int fixed)
 	{
-		return this.getDeque().peek();
+		if (fixed != 0)
+		{
+			int extra = this.size() - Math.abs(fixed);
+
+			if (extra > 0)
+			{
+				if (fixed < 0)
+				{ // head fixed so that clean tails
+					for (int i = 0; i < extra; i++)
+					{
+						this.pollLast();
+					}
+				}
+				else
+				{ // tail fixed so that clean heads
+					for (int i = 0; i < extra; i++)
+					{
+						this.pollFirst();
+					}
+				}
+			}
+		}
 	}
 
-	public E peekFirst()
+	public int getFixed()
 	{
-		return this.getDeque().peekFirst();
-	}
-
-	public E peekLast()
-	{
-		return this.getDeque().peekLast();
-	}
-
-	public E poll()
-	{
-		return this.getDeque().poll();
-	}
-
-	public E pollFirst()
-	{
-		return this.getDeque().pollFirst();
-	}
-
-	public E pollLast()
-	{
-		return this.getDeque().pollLast();
-	}
-
-	public E pop()
-	{
-		return this.getDeque().pop();
-	}
-
-	public void push(E e)
-	{
-		this.addFirst(e);
+		return fixed;
 	}
 
 	@Override
-	public E remove()
+	public boolean offer(E e)
 	{
-		return this.getDeque().remove();
+		return this.offerLast(e);
 	}
 
-	public E removeFirst()
+	@Override
+	public boolean offerFirst(E e)
 	{
-		return this.getDeque().removeFirst();
+		this.addFirst(e);
+		return true;
 	}
 
-	public boolean removeFirstOccurrence(Object o)
+	@Override
+	public boolean offerLast(E e)
 	{
-		return this.getDeque().removeFirstOccurrence(o);
+		this.addLast(e);
+		return true;
 	}
 
-	public E removeLast()
+	@Override
+	public void push(E e)
 	{
-		return this.getDeque().removeLast();
-	}
-
-	public boolean removeLastOccurrence(Object o)
-	{
-		return this.getDeque().removeLastOccurrence(o);
-	}
-
-	protected void setDeque(Deque<E> deque)
-	{
-		this.deque = deque;
+		this.addFirst(e);
 	}
 
 	/**
@@ -253,34 +216,11 @@ public class FixedDeque<E> extends AbstractQueue<E> implements Deque<E>
 	{
 		if (fixed != 0 && (this.fixed == 0 || Math.abs(fixed) < Math.abs(this.fixed)))
 		{ // clean extra elements
-			int extra = this.size() - Math.abs(fixed);
-			if (extra > 0)
-			{
-				if (fixed < 0)
-				{ // head fixed so that clean tails
-					for (int i = 0; i < extra; i++)
-					{
-						this.removeLast();
-					}
-				}
-				else
-				{ // tail fixed so that clean heads
-					for (int i = 0; i < extra; i++)
-					{
-						this.removeFirst();
-					}
-				}
-			}
+			this.cleanExtra(fixed);
 		}
 
 		this.fixed = fixed;
 
 		return Tools.cast(this);
-	}
-
-	@Override
-	public int size()
-	{
-		return this.getDeque().size();
 	}
 }
