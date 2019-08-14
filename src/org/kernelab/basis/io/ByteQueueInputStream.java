@@ -18,7 +18,7 @@ public class ByteQueueInputStream extends InputStream
 
 	public ByteQueueInputStream()
 	{
-		this(null);
+		this(new LinkedList<Byte>());
 	}
 
 	public ByteQueueInputStream(Queue<Byte> queue)
@@ -247,10 +247,6 @@ public class ByteQueueInputStream extends InputStream
 
 	private <T extends ByteQueueInputStream> T setQueue(Queue<Byte> queue)
 	{
-		if (queue == null)
-		{
-			queue = new LinkedList<Byte>();
-		}
 		this.queue = queue;
 		return Tools.cast(this);
 	}

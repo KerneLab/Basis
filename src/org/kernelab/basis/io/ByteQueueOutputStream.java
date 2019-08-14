@@ -24,7 +24,7 @@ public class ByteQueueOutputStream extends OutputStream
 
 	public ByteQueueOutputStream(Charset charset)
 	{
-		this(null, charset);
+		this(new LinkedList<Byte>(), charset);
 	}
 
 	public ByteQueueOutputStream(Queue<Byte> queue, Charset charset)
@@ -39,7 +39,7 @@ public class ByteQueueOutputStream extends OutputStream
 
 	public ByteQueueOutputStream(String charsetName)
 	{
-		this(null, charsetName);
+		this(Charset.forName(charsetName));
 	}
 
 	@Override
@@ -113,10 +113,6 @@ public class ByteQueueOutputStream extends OutputStream
 
 	private <T extends ByteQueueOutputStream> T setQueue(Queue<Byte> queue)
 	{
-		if (queue == null)
-		{
-			queue = new LinkedList<Byte>();
-		}
 		this.queue = queue;
 		return Tools.cast(this);
 	}
