@@ -184,6 +184,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 		private String	url;
 
+		public GeneralDataBase(String url, String userName, String passWord)
+		{
+			this(null, url, userName, passWord);
+		}
+
 		public GeneralDataBase(String driver, String url, String userName, String passWord)
 		{
 			super(userName, passWord);
