@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.io.ReaderFactory.DefaultReaderFactory;
@@ -15,23 +15,23 @@ public class TextDataSource implements Iterable<String>
 {
 	protected class TextDataSourceIterator implements Iterator<String>
 	{
-		private Reader			reader;
+		private Reader					reader;
 
-		private char[]			lineTerm;
+		private char[]					lineTerm;
 
-		private char[]			termBuff;
+		private LinkedList<Character>	termBuff;
 
-		private StringBuilder	buffer;
+		private StringBuilder			buffer;
 
-		private String			line;
+		private String					line;
 
 		public TextDataSourceIterator() throws IOException
 		{
-			this.reader = getFactory().getReader();
-			this.lineTerm = getLineSeparator().toCharArray();
-			this.termBuff = new char[getLineSeparator().length()];
+			this.reader = TextDataSource.this.getFactory().getReader();
+			this.lineTerm = TextDataSource.this.getLineSeparator().toCharArray();
+			this.termBuff = new LinkedList<Character>();
 			this.buffer = new StringBuilder();
-			this.line = readLine();
+			this.line = this.readLine();
 		}
 
 		protected void close()
@@ -59,55 +59,50 @@ public class TextDataSource implements Iterable<String>
 			}
 			finally
 			{
-				this.line = readLine();
+				this.line = this.readLine();
 			}
 		}
 
 		protected String readLine()
 		{
-			char ch = (char) -1;
 			boolean first = true;
-			int reads = -1, terms = -1, termCh;
+			int reads = -1;
 
 			try
 			{
-				while ((reads = reader.read()) != -1)
+				while (true)
 				{
-					first = false;
-
-					ch = (char) reads;
-
-					if (ch == lineTerm[0])
+					while (termBuff.size() < lineTerm.length)
 					{
-						termBuff[0] = ch;
-						terms = 1;
-
-						for (terms = 1; terms < lineTerm.length; terms++)
-						{
-							termCh = reader.read();
-							if (termCh == -1)
-							{
-								reads = -1;
-								break;
-							}
-							else
-							{
-								termBuff[terms] = (char) termCh;
-							}
-						}
-
-						if (terms == lineTerm.length && Arrays.equals(termBuff, lineTerm))
+						if ((reads = reader.read()) == -1)
 						{
 							break;
 						}
-						else
-						{
-							buffer.append(termBuff, 0, terms);
-						}
+						first = false;
+						termBuff.add((char) reads);
+					}
+
+					if (lineTerm.length == termBuff.size() && startWith(lineTerm, termBuff))
+					{
+						termBuff.clear();
+						break;
 					}
 					else
 					{
-						buffer.append(ch);
+						buffer.append(termBuff.poll());
+						while (!termBuff.isEmpty() && !startWith(lineTerm, termBuff))
+						{
+							buffer.append(termBuff.poll());
+						}
+					}
+
+					if (reads == -1)
+					{
+						while (!termBuff.isEmpty())
+						{
+							buffer.append(termBuff.poll());
+						}
+						break;
 					}
 				}
 			}
@@ -145,6 +140,25 @@ public class TextDataSource implements Iterable<String>
 					Tools.clearStringBuilder(buffer);
 				}
 			}
+		}
+
+		protected boolean startWith(char[] a, LinkedList<Character> b)
+		{
+			if (a.length < b.size())
+			{
+				return false;
+			}
+
+			int i = 0;
+			for (Character c : b)
+			{
+				if (a[i] != c)
+				{
+					return false;
+				}
+				i++;
+			}
+			return true;
 		}
 	}
 
@@ -186,6 +200,7 @@ public class TextDataSource implements Iterable<String>
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace();
 			return null;
 		}
 	}
