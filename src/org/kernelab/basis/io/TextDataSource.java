@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Iterator;
-import java.util.LinkedList;
 
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.io.ReaderFactory.DefaultReaderFactory;
@@ -15,22 +14,28 @@ public class TextDataSource implements Iterable<String>
 {
 	protected class TextDataSourceIterator implements Iterator<String>
 	{
-		private Reader					reader;
+		private Reader			reader;
 
-		private char[]					lineTerm;
+		private char[]			term;
 
-		private LinkedList<Character>	termBuff;
+		private char[]			buff;
 
-		private StringBuilder			buffer;
+		private int				len;
 
-		private String					line;
+		private int				pos;
+
+		private StringBuilder	builder;
+
+		private String			line;
 
 		public TextDataSourceIterator() throws IOException
 		{
 			this.reader = TextDataSource.this.getFactory().getReader();
-			this.lineTerm = TextDataSource.this.getLineSeparator().toCharArray();
-			this.termBuff = new LinkedList<Character>();
-			this.buffer = new StringBuilder();
+			this.buff = new char[8192];
+			this.len = 0;
+			this.pos = 0;
+			this.term = TextDataSource.this.getLineSeparator().toCharArray();
+			this.builder = new StringBuilder();
 			this.line = this.readLine();
 		}
 
@@ -43,7 +48,19 @@ public class TextDataSource implements Iterable<String>
 			catch (Exception e)
 			{
 			}
-			Tools.clearStringBuilder(this.buffer);
+			Tools.clearStringBuilder(this.builder);
+		}
+
+		protected boolean contains(char[] a, int from, char[] b)
+		{
+			for (int i = 0; i < b.length; i++)
+			{
+				if (a[i + from] != b[i])
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		public boolean hasNext()
@@ -65,53 +82,64 @@ public class TextDataSource implements Iterable<String>
 
 		protected String readLine()
 		{
-			boolean first = true;
 			int reads = -1;
-
-			try
+			boolean first = true;
+			boolean termed = false;
+			while (true)
 			{
-				while (true)
+				try
 				{
-					while (termBuff.size() < lineTerm.length)
+					reads = reader.read(buff, len, buff.length - len);
+				}
+				catch (IOException e)
+				{
+					reads = -1;
+				}
+
+				if (reads > 0)
+				{
+					len += reads;
+				}
+
+				for (; pos < len; pos++)
+				{
+					first = false;
+
+					if (pos <= len - term.length)
 					{
-						if ((reads = reader.read()) == -1)
+						if (contains(buff, pos, term))
+						{
+							termed = true;
+							break;
+						}
+					}
+					else if (pos > len - term.length)
+					{
+						if (samePrefix(buff, pos, term))
 						{
 							break;
 						}
-						first = false;
-						termBuff.add((char) reads);
-					}
-
-					if (lineTerm.length == termBuff.size() && startWith(lineTerm, termBuff))
-					{
-						termBuff.clear();
-						break;
-					}
-					else
-					{
-						buffer.append(termBuff.poll());
-						while (!termBuff.isEmpty() && !startWith(lineTerm, termBuff))
-						{
-							buffer.append(termBuff.poll());
-						}
-					}
-
-					if (reads == -1)
-					{
-						while (!termBuff.isEmpty())
-						{
-							buffer.append(termBuff.poll());
-						}
-						break;
 					}
 				}
-			}
-			catch (IOException e)
-			{
-				reads = -1;
+
+				builder.append(buff, 0, pos);
+
+				if (termed)
+				{
+					pos += term.length;
+				}
+
+				System.arraycopy(buff, pos, buff, 0, len - pos);
+				len -= pos;
+				pos = 0;
+
+				if (termed || reads == -1 && pos >= len)
+				{
+					break;
+				}
 			}
 
-			if (reads == -1)
+			if (!termed)
 			{
 				try
 				{
@@ -121,7 +149,7 @@ public class TextDataSource implements Iterable<String>
 					}
 					else
 					{
-						return buffer.toString();
+						return builder.toString();
 					}
 				}
 				finally
@@ -133,30 +161,23 @@ public class TextDataSource implements Iterable<String>
 			{
 				try
 				{
-					return buffer.toString();
+					return builder.toString();
 				}
 				finally
 				{
-					Tools.clearStringBuilder(buffer);
+					Tools.clearStringBuilder(builder);
 				}
 			}
 		}
 
-		protected boolean startWith(char[] a, LinkedList<Character> b)
+		protected boolean samePrefix(char[] a, int from, char[] b)
 		{
-			if (a.length < b.size())
+			for (int i = from; i < a.length; i++)
 			{
-				return false;
-			}
-
-			int i = 0;
-			for (Character c : b)
-			{
-				if (a[i] != c)
+				if (a[i] != b[i - from])
 				{
 					return false;
 				}
-				i++;
 			}
 			return true;
 		}
