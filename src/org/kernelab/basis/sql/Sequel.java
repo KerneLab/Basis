@@ -415,6 +415,18 @@ public class Sequel implements Iterable<ResultSet>
 		return this.isCallResult() ? (CallableStatement) this.getStatement() : null;
 	}
 
+	public Sequel getGeneratedKeys()
+	{
+		try
+		{
+			return new Sequel(this.getStatement().getGeneratedKeys());
+		}
+		catch (SQLException e)
+		{
+			return null;
+		}
+	}
+
 	protected SQLKit getKit()
 	{
 		return kit;

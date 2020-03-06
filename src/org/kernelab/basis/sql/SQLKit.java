@@ -1624,6 +1624,31 @@ public class SQLKit
 		return execute(createStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), sql);
 	}
 
+	public Sequel execute(String sql, int[] columnIndexes, Iterable<?> params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnIndexes), params);
+	}
+
+	public Sequel execute(String sql, int[] columnIndexes, JSAN params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnIndexes), params);
+	}
+
+	public Sequel execute(String sql, int[] columnIndexes, JSON params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnIndexes), params);
+	}
+
+	public Sequel execute(String sql, int[] columnIndexes, Map<String, ?> params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnIndexes), params);
+	}
+
+	public Sequel execute(String sql, int[] columnIndexes, Object... params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnIndexes), params);
+	}
+
 	public Sequel execute(String sql, Iterable<?> params) throws SQLException
 	{
 		return execute(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
@@ -1651,6 +1676,31 @@ public class SQLKit
 		return execute(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
+	public Sequel execute(String sql, String[] columnNames, Iterable<?> params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnNames), params);
+	}
+
+	public Sequel execute(String sql, String[] columnNames, JSAN params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnNames), params);
+	}
+
+	public Sequel execute(String sql, String[] columnNames, JSON params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnNames), params);
+	}
+
+	public Sequel execute(String sql, String[] columnNames, Map<String, ?> params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnNames), params);
+	}
+
+	public Sequel execute(String sql, String[] columnNames, Object... params) throws SQLException
+	{
+		return execute(prepareStatement(sql, columnNames), params);
+	}
+
 	public int[] executeBatch() throws SQLException
 	{
 		return executeBatch(statement);
@@ -1676,6 +1726,16 @@ public class SQLKit
 	public Connection getConnection()
 	{
 		return connection;
+	}
+
+	public ResultSet getGeneratedKeys() throws SQLException
+	{
+		return getGeneratedKeys(statement);
+	}
+
+	public ResultSet getGeneratedKeys(Statement statement) throws SQLException
+	{
+		return statement.getGeneratedKeys();
 	}
 
 	public ConnectionManager getManager()
@@ -2799,6 +2859,31 @@ public class SQLKit
 		return update(createStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), sql);
 	}
 
+	public int update(String sql, int[] columnIndexes, Iterable<?> params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnIndexes), params);
+	}
+
+	public int update(String sql, int[] columnIndexes, JSAN params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnIndexes), params);
+	}
+
+	public int update(String sql, int[] columnIndexes, JSON params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnIndexes), params);
+	}
+
+	public int update(String sql, int[] columnIndexes, Map<String, ?> params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnIndexes), params);
+	}
+
+	public int update(String sql, int[] columnIndexes, Object... params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnIndexes), params);
+	}
+
 	public int update(String sql, Iterable<?> params) throws SQLException
 	{
 		return update(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
@@ -2822,5 +2907,30 @@ public class SQLKit
 	public int update(String sql, Object... params) throws SQLException
 	{
 		return update(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+	}
+
+	public int update(String sql, String[] columnNames, Iterable<?> params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnNames), params);
+	}
+
+	public int update(String sql, String[] columnNames, JSAN params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnNames), params);
+	}
+
+	public int update(String sql, String[] columnNames, JSON params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnNames), params);
+	}
+
+	public int update(String sql, String[] columnNames, Map<String, ?> params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnNames), params);
+	}
+
+	public int update(String sql, String[] columnNames, Object... params) throws SQLException
+	{
+		return update(prepareStatement(sql, columnNames), params);
 	}
 }
