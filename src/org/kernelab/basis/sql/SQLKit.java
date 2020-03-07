@@ -1636,12 +1636,12 @@ public class SQLKit
 
 	public Sequel execute(String sql, int[] columnIndexes, JSON params) throws SQLException
 	{
-		return execute(prepareStatement(sql, columnIndexes), params);
+		return execute(prepareStatement(sql, params, columnIndexes), params);
 	}
 
 	public Sequel execute(String sql, int[] columnIndexes, Map<String, ?> params) throws SQLException
 	{
-		return execute(prepareStatement(sql, columnIndexes), params);
+		return execute(prepareStatement(sql, params, columnIndexes), params);
 	}
 
 	public Sequel execute(String sql, int[] columnIndexes, Object... params) throws SQLException
@@ -1688,12 +1688,12 @@ public class SQLKit
 
 	public Sequel execute(String sql, String[] columnNames, JSON params) throws SQLException
 	{
-		return execute(prepareStatement(sql, columnNames), params);
+		return execute(prepareStatement(sql, params, columnNames), params);
 	}
 
 	public Sequel execute(String sql, String[] columnNames, Map<String, ?> params) throws SQLException
 	{
-		return execute(prepareStatement(sql, columnNames), params);
+		return execute(prepareStatement(sql, params, columnNames), params);
 	}
 
 	public Sequel execute(String sql, String[] columnNames, Object... params) throws SQLException
@@ -2871,12 +2871,12 @@ public class SQLKit
 
 	public int update(String sql, int[] columnIndexes, JSON params) throws SQLException
 	{
-		return update(prepareStatement(sql, columnIndexes), params);
+		return update(prepareStatement(sql, params, columnIndexes), params);
 	}
 
 	public int update(String sql, int[] columnIndexes, Map<String, ?> params) throws SQLException
 	{
-		return update(prepareStatement(sql, columnIndexes), params);
+		return update(prepareStatement(sql, params, columnIndexes), params);
 	}
 
 	public int update(String sql, int[] columnIndexes, Object... params) throws SQLException
@@ -2921,12 +2921,12 @@ public class SQLKit
 
 	public int update(String sql, String[] columnNames, JSON params) throws SQLException
 	{
-		return update(prepareStatement(sql, columnNames), params);
+		return update(prepareStatement(sql, params, columnNames), params);
 	}
 
 	public int update(String sql, String[] columnNames, Map<String, ?> params) throws SQLException
 	{
-		return update(prepareStatement(sql, columnNames), params);
+		return update(prepareStatement(sql, params, columnNames), params);
 	}
 
 	public int update(String sql, String[] columnNames, Object... params) throws SQLException
