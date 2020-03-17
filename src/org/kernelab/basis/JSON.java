@@ -6269,26 +6269,26 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			if (reflect instanceof JSAN.Reflector)
 			{
-				json = JSAN.Reflect((JSAN) (json == null ? new JSAN().reflects(reflects) : json), object,
+				json = JSAN.Reflect((JSAN) (json == null ? new JSAN() : json).reflects(reflects), object,
 						(JSAN.Reflector<?>) reflect);
 			}
 			else if (reflect instanceof JSON.Reflector)
 			{
-				json = JSON.Reflect((json == null ? new JSON().reflects(reflects) : json), object,
+				json = JSON.Reflect((json == null ? new JSON() : json).reflects(reflects), object,
 						(JSON.Reflector<?>) reflect);
 			}
 			else if (JSAN.IsJSAN(reflect))
 			{
-				json = JSAN.Reflect((JSAN) (json == null ? new JSAN().reflects(reflects) : json), object,
+				json = JSAN.Reflect((JSAN) (json == null ? new JSAN() : json).reflects(reflects), object,
 						(JSAN) reflect);
 			}
 			else if (JSON.IsJSON(reflect))
 			{
-				json = JSON.Reflect((json == null ? new JSON().reflects(reflects) : json), object, (JSON) reflect);
+				json = JSON.Reflect((json == null ? new JSON() : json).reflects(reflects), object, (JSON) reflect);
 			}
 			else
 			{
-				json = JSON.Reflect((json == null ? new JSON().reflects(reflects) : json), object);
+				json = JSON.Reflect((json == null ? new JSON() : json).reflects(reflects), object);
 			}
 		}
 
