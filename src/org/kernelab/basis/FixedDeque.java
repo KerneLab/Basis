@@ -181,21 +181,42 @@ public class FixedDeque<E> extends LinkedList<E>
 		return this.offerLast(e);
 	}
 
-	@Override
 	public boolean offerFirst(E e)
 	{
 		this.addFirst(e);
 		return true;
 	}
 
-	@Override
 	public boolean offerLast(E e)
 	{
 		this.addLast(e);
 		return true;
 	}
 
-	@Override
+	public E pollFirst()
+	{
+		if (this.isEmpty())
+		{
+			return null;
+		}
+		else
+		{
+			return this.removeFirst();
+		}
+	}
+
+	public E pollLast()
+	{
+		if (this.isEmpty())
+		{
+			return null;
+		}
+		else
+		{
+			return this.removeLast();
+		}
+	}
+
 	public void push(E e)
 	{
 		this.addFirst(e);
