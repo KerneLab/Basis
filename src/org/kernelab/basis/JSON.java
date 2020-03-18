@@ -5957,20 +5957,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				{
 					Class<?> cls = object.getClass();
 					Field field = null;
+					Object value = null;
+					Type type = null;
 
 					for (Entry<String, ? extends Object> entry : project.entrySet())
 					{
 						try
 						{
 							String name = entry.getKey();
-
 							String key = entry.getValue().toString();
 
 							if (json.has(key))
 							{
 								field = Tools.fieldOf(cls, name);
-
-								Object value = null;
 								try
 								{
 									/*
@@ -5982,15 +5981,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 								}
 								catch (Exception e)
 								{
+									value = null;
 								}
 
-								Type type = null;
-
+								type = null;
 								if (field != null)
 								{
 									type = field.getType();
 									if (IsSubTypeOf(type, Collection.class))
-									{
+									{ // value is container, use generic type
 										type = field.getGenericType();
 									}
 								}
@@ -5999,10 +5998,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 									type = value.getClass();
 								}
 								else
-								{ /*
-									 * In case the value read by "getter" was
-									 * null.
-									 */
+								{ // The value read by "getter" was null.
 									Method m = Tools.accessor(cls, name);
 									if (m != null)
 									{
@@ -6010,23 +6006,27 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 									}
 								}
 
+								Object result = null;
 								if (type != null || value != null)
 								{
 									try
 									{
-										value = ProjectTo(json.attr(key), type, value, json.projects());
+										result = ProjectTo(json.attr(key), type, value, json.projects());
 									}
 									catch (Exception e)
 									{
-										value = json.attr(key);
+										result = json.attr(key);
 									}
 								}
 								else
 								{
-									value = json.attr(key);
+									result = json.attr(key);
 								}
 
-								Access(object, name, field, value);
+								if (value != result)
+								{ // Container should not be set again
+									Access(object, name, field, result);
+								}
 							}
 						}
 						catch (Exception e)
