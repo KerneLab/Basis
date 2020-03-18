@@ -15,6 +15,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.sql.Date;
@@ -5561,18 +5563,28 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static <S, C> boolean IsSubClassOf(Class<S> sub, Class<C> cls)
 	{
-		boolean is = true;
-
 		try
 		{
 			sub.asSubclass(cls);
+			return true;
 		}
 		catch (ClassCastException e)
 		{
-			is = false;
+			return false;
 		}
+	}
 
-		return is;
+	public static boolean IsSubTypeOf(Type sub, Type cls)
+	{
+		try
+		{
+			((Class<?>) sub).asSubclass((Class<?>) cls);
+			return true;
+		}
+		catch (ClassCastException e)
+		{
+			return false;
+		}
 	}
 
 	public static Collection<String> KeysOf(Class<?> cls, Collection<String> keys)
@@ -5896,7 +5908,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T Project(T object, JSON json, Map<String, Object> project) throws Exception
+	public static <T> T Project(T object, JSON json, Map<String, ? extends Object> project) throws Exception
 	{
 		if (object != null)
 		{
@@ -5910,7 +5922,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else
 				{
-					for (Entry<String, Object> entry : project.entrySet())
+					for (Entry<String, ? extends Object> entry : project.entrySet())
 					{
 						try
 						{
@@ -5944,8 +5956,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				if (project != null)
 				{
 					Class<?> cls = object.getClass();
+					Field field = null;
 
-					for (Entry<String, Object> entry : project.entrySet())
+					for (Entry<String, ? extends Object> entry : project.entrySet())
 					{
 						try
 						{
@@ -5955,7 +5968,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 							if (json.has(key))
 							{
-								Field field = Tools.fieldOf(cls, name);
+								field = Tools.fieldOf(cls, name);
 
 								Object value = null;
 								try
@@ -5971,11 +5984,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 								{
 								}
 
-								Class<?> type = null;
+								Type type = null;
 
 								if (field != null)
 								{
 									type = field.getType();
+									if (IsSubTypeOf(type, Collection.class))
+									{
+										type = field.getGenericType();
+									}
 								}
 								else if (value != null)
 								{
@@ -6051,23 +6068,23 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return object;
 	}
 
-	public static Object ProjectOf(Object object, Map<Class<?>, Object> projects)
+	public static Object ProjectOf(Class<?> cls, Map<Class<?>, Object> projects)
 	{
-		if (object != null && projects != null)
+		if (cls != null && projects != null)
 		{
 			Object project = null;
 
 			for (Map.Entry<Class<?>, Object> entry : projects.entrySet())
 			{
-				Class<?> cls = entry.getKey();
+				Class<?> c = entry.getKey();
 
-				if (cls != null && cls.isInstance(object) && (project = entry.getValue()) != null)
+				if (c != null && IsSubClassOf(cls, c) && (project = entry.getValue()) != null)
 				{
-					break;
+					return project;
 				}
 			}
 
-			return project;
+			return null;
 		}
 		else
 		{
@@ -6075,81 +6092,90 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
+	public static Object ProjectOf(Object object, Map<Class<?>, Object> projects)
+	{
+		return object == null ? null : ProjectOf(object.getClass(), projects);
+	}
+
 	@SuppressWarnings("unchecked")
-	public static <T> Object ProjectTo(Object obj, Class<T> cls, Object val, Map<Class<?>, Object> projects)
+	public static <T> Object ProjectTo(Object obj, Type type, Object val, Map<Class<?>, Object> projects)
 			throws InstantiationException, IllegalAccessException
 	{
-		Object project = ProjectOf(cls, projects);
+		Object project = ProjectOf(type, projects);
+
+		Class<T> cls = type instanceof Class ? (Class<T>) type : null;
+
+		ParameterizedType paramedType = type instanceof ParameterizedType ? (ParameterizedType) type : null;
 
 		if (cls != null && cls.isInstance(obj))
 		{
 			val = obj;
 		}
-		else if (String.class == cls)
+		else if (String.class == type)
 		{
 			val = CastToString(obj);
 		}
-		else if (Integer.TYPE == cls || Integer.class == cls)
+		else if (Integer.TYPE == type || Integer.class == type)
 		{
 			val = CastToInteger(obj);
 		}
-		else if (Double.TYPE == cls || Double.class == cls)
+		else if (Double.TYPE == type || Double.class == type)
 		{
 			val = CastToDouble(obj);
 		}
-		else if (Boolean.TYPE == cls || Boolean.class == cls)
+		else if (Boolean.TYPE == type || Boolean.class == type)
 		{
 			val = CastToBoolean(obj);
 		}
-		else if (Character.TYPE == cls || Character.class == cls)
+		else if (Character.TYPE == type || Character.class == type)
 		{
 			val = CastToCharacter(obj);
 		}
-		else if (BigDecimal.class == cls)
+		else if (BigDecimal.class == type)
 		{
 			val = CastToBigDecimal(obj);
 		}
-		else if (JSON.class == cls)
+		else if (JSON.class == type)
 		{
 			val = CastTo(obj, JSON.class);
 		}
-		else if (JSAN.class == cls)
+		else if (JSAN.class == type)
 		{
 			val = CastTo(obj, JSAN.class);
 		}
-		else if (Function.class == cls)
+		else if (Function.class == type)
 		{
 			val = CastToFunction(obj);
 		}
-		else if (Long.TYPE == cls || Long.class == cls)
+		else if (Long.TYPE == type || Long.class == type)
 		{
 			val = CastToLong(obj);
 		}
-		else if (Calendar.class == cls)
+		else if (Calendar.class == type)
 		{
 			val = CastToCalendar(obj);
 		}
-		else if (java.util.Date.class == cls || Date.class == cls)
+		else if (java.util.Date.class == type || Date.class == type)
 		{
 			val = CastToDate(obj);
 		}
-		else if (Timestamp.class == cls)
+		else if (Timestamp.class == type)
 		{
 			val = CastToTimestamp(obj);
 		}
-		else if (Time.class == cls)
+		else if (Time.class == type)
 		{
 			val = CastToTime(obj);
 		}
-		else if (Byte.TYPE == cls || Byte.class == cls)
+		else if (Byte.TYPE == type || Byte.class == type)
 		{
 			val = CastToByte(obj);
 		}
-		else if (Float.TYPE == cls || Float.class == cls)
+		else if (Float.TYPE == type || Float.class == type)
 		{
 			val = CastToFloat(obj);
 		}
-		else if (Short.TYPE == cls || Short.class == cls)
+		else if (Short.TYPE == type || Short.class == type)
 		{
 			val = CastToShort(obj);
 		}
@@ -6157,10 +6183,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			val = ((JSON.Projector<T>) project).project((T) val, (JSON) obj);
 		}
-		else if (cls != null && IsSubClassOf(cls, Map.class) && JSON.IsJSON(obj))
+		else if (paramedType != null && IsSubTypeOf(paramedType.getRawType(), Map.class) && JSON.IsJSON(obj))
 		{
 			// Target class is a Map.
-			Map<Object, Object> map = (Map<Object, Object>) (val == null ? cls.newInstance() : val);
+			Map<Object, Object> map = (Map<Object, Object>) (val == null ? new LinkedHashMap<Object, Object>() : val);
 
 			map.clear();
 
@@ -6194,11 +6220,24 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					}
 				}
 			}
+
+			val = map;
 		}
-		else if (cls != null && IsSubClassOf(cls, Collection.class) && JSON.IsJSON(obj))
+		else if (paramedType != null && IsSubTypeOf(paramedType.getRawType(), Collection.class) && JSON.IsJSON(obj))
 		{
 			// Target class is a Collection.
-			Collection<Object> col = (Collection<Object>) (val == null ? cls.newInstance() : val);
+			Collection<Object> col = (Collection<Object>) (val == null ? new LinkedList<Object>() : val);
+
+			Type eleType = paramedType.getActualTypeArguments()[0];
+			Class<?> eleClass = null;
+			try
+			{
+				eleClass = (Class<?>) eleType;
+				project = ProjectOf(eleClass, projects);
+			}
+			catch (Exception e)
+			{
+			}
 
 			col.clear();
 
@@ -6209,6 +6248,20 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				for (Pair pair : json.pairs())
 				{
 					col.add(pair.getValue());
+				}
+			}
+			else if (project != null && eleClass != null && IsJSAN(json))
+			{
+				for (JSON o : ((JSAN) json).iterator(JSON.class))
+				{
+					try
+					{
+						col.add(Project(eleClass.newInstance(), projects, o));
+					}
+					catch (Exception e)
+					{
+						e.printStackTrace();
+					}
 				}
 			}
 			else
@@ -6232,12 +6285,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					}
 				}
 			}
+
+			val = col;
 		}
 		else if (cls != null && cls.isArray())
 		{
 			val = CastToArray(obj, cls.getComponentType(), projects);
 		}
-		else if (JSON.IsJSON(obj))
+		else if (cls != null && JSON.IsJSON(obj))
 		{
 			// Target class is a normal Object.
 			JSON json = (JSON) obj;
