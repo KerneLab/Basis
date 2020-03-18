@@ -6045,7 +6045,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		if (json != null)
 		{
 			Object project = ProjectOf(object, projects);
-
+			json.projects(projects);
 			try
 			{
 				if (project instanceof JSON.Projector)
