@@ -170,6 +170,10 @@ public class TextDataSource implements Iterable<String>
 			}
 		}
 
+		public void remove()
+		{
+		}
+
 		protected boolean samePrefix(char[] a, int from, char[] b)
 		{
 			for (int i = from; i < a.length; i++)
