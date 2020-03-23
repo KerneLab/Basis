@@ -6023,10 +6023,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 									result = json.attr(key);
 								}
 
-								if (value != result)
-								{ // Container should not be set again
-									Access(object, name, field, result);
-								}
+								Access(object, name, field, result);
 							}
 						}
 						catch (Exception e)
