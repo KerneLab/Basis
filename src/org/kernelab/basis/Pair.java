@@ -35,4 +35,15 @@ public class Pair<K, V> implements Serializable
 	{
 		return (key == null ? 0 : key.hashCode()) + (value == null ? 0 : value.hashCode());
 	}
+
+	@Override
+	public String toString()
+	{
+		return toString("%s\t%s");
+	}
+
+	public String toString(String format)
+	{
+		return String.format(format, key, value);
+	}
 }
