@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1154,9 +1153,9 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	 */
 	public static final String	KEY_VALIDATE_TIMEOUT		= "jdbc.conn.validate.timeout";
 
-	public static final long	DEFAULT_VALIDATE_TIMEOUT	= 1000;
+	public static final int		DEFAULT_VALIDATE_TIMEOUT	= 3;
 
-	public static final int		DEFAULT_PORT_NUMBER			= Integer.MIN_VALUE;
+	public static final int		DEFAULT_PORT_NUMBER			= 0;
 
 	public static final String	USER						= "user";
 
@@ -1169,32 +1168,41 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static boolean IsValid(Connection conn)
 	{
-		return IsValid(conn, Variable.asLong(System.getProperty(KEY_VALIDATE_TIMEOUT), DEFAULT_VALIDATE_TIMEOUT));
+		return IsValid(conn, Variable.asInteger(System.getProperty(KEY_VALIDATE_TIMEOUT), DEFAULT_VALIDATE_TIMEOUT));
 	}
 
-	public static boolean IsValid(final Connection conn, long timeout)
+	public static boolean IsValid(final Connection conn, int timeout)
 	{
-		return Tools.waitFor(new Callable<Boolean>()
+		try
 		{
-			public Boolean call() throws Exception
-			{
-				boolean ac = conn.getAutoCommit();
+			return conn != null && conn.isValid(Math.max(timeout, 0));
+		}
+		catch (SQLException e)
+		{
+			return false;
+		}
 
-				if (ac)
-				{
-					conn.setAutoCommit(false);
-				}
-
-				conn.rollback();
-
-				if (ac)
-				{
-					conn.setAutoCommit(true);
-				}
-
-				return true;
-			}
-		}, false, timeout);
+		// return Tools.waitFor(new Callable<Boolean>()
+		// {
+		// public Boolean call() throws Exception
+		// {
+		// boolean ac = conn.getAutoCommit();
+		//
+		// if (ac)
+		// {
+		// conn.setAutoCommit(false);
+		// }
+		//
+		// conn.rollback();
+		//
+		// if (ac)
+		// {
+		// conn.setAutoCommit(true);
+		// }
+		//
+		// return true;
+		// }
+		// }, false, timeout * 1000);
 	}
 
 	/**
@@ -1271,8 +1279,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	@Override
 	public DataBase clone()
 	{
-		return new DataBase(this)
-		{
+		return new DataBase(this) {
 			@Override
 			public String getDriverName()
 			{

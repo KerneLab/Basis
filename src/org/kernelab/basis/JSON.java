@@ -115,8 +115,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						break;
 					}
-				}
-				while (iter == null);
+				} while (iter == null);
 			}
 
 			return iter;
@@ -2536,7 +2535,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return Sort(this, sorter, target);
 		}
 
-		@SuppressWarnings("unlikely-arg-type")
 		public JSAN splice(int index, int cover, Collection<?> collection)
 		{
 			JSAN result = new JSAN().templates(this);
@@ -2616,7 +2614,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return result;
 		}
 
-		@SuppressWarnings("unlikely-arg-type")
 		public JSAN splice(int index, int cover, JSAN jsan)
 		{
 			JSAN result = new JSAN().templates(this);
@@ -2696,7 +2693,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return result;
 		}
 
-		@SuppressWarnings("unlikely-arg-type")
 		public JSAN splice(int index, int cover, Object... objects)
 		{
 			JSAN result = new JSAN().templates(this);
@@ -3500,8 +3496,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				w.flush();
 
-			}
-			while (j != null);
+			} while (j != null);
 
 			w.close();
 
@@ -4094,8 +4089,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					do
 					{
 						i = Tools.seekIndex(quote, NESTED_ATTRIBUTE_QUOTE, i + 1);
-					}
-					while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
+					} while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
 					break;
 				}
 
