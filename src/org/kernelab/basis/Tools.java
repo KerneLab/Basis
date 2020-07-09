@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.management.ManagementFactory;
@@ -1883,6 +1884,54 @@ public class Tools
 		for (PrintStream o : Outs)
 		{
 			o.println(s);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends Serializable> T deepCopy(T object)
+	{
+		if (object == null)
+		{
+			return null;
+		}
+
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+		ObjectOutputStream oos = null;
+		ObjectInputStream ois = null;
+		try
+		{
+			oos = new ObjectOutputStream(os);
+			oos.writeObject(object);
+			ois = new ObjectInputStream(new ByteArrayInputStream(os.toByteArray()));
+			return (T) ois.readObject();
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
+		finally
+		{
+			if (oos != null)
+			{
+				try
+				{
+					oos.close();
+				}
+				catch (IOException e)
+				{
+				}
+			}
+			if (ois != null)
+			{
+				try
+				{
+					ois.close();
+				}
+				catch (IOException e)
+				{
+				}
+			}
 		}
 	}
 
