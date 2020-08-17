@@ -15,6 +15,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -115,8 +116,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						break;
 					}
-				}
-				while (iter == null);
+				} while (iter == null);
 			}
 
 			return iter;
@@ -3497,8 +3497,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				w.flush();
 
-			}
-			while (j != null);
+			} while (j != null);
 
 			w.close();
 
@@ -4091,8 +4090,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					do
 					{
 						i = Tools.seekIndex(quote, NESTED_ATTRIBUTE_QUOTE, i + 1);
-					}
-					while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
+					} while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
 					break;
 				}
 
@@ -5412,7 +5410,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			for (Field field : cls.getDeclaredFields())
 			{
-				fields.put(field.getName(), field);
+				if (!Modifier.isStatic(field.getModifiers()))
+				{
+					fields.put(field.getName(), field);
+				}
 			}
 		}
 
@@ -5597,7 +5598,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			for (Field field : cls.getDeclaredFields())
 			{
-				keys.add(field.getName());
+				if (!Modifier.isStatic(field.getModifiers()))
+				{
+					keys.add(field.getName());
+				}
 			}
 		}
 
