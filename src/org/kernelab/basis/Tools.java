@@ -3171,6 +3171,28 @@ public class Tools
 		return element;
 	}
 
+	public static Map<String, Field> getFieldsHierarchy(Class<?> cls, Map<String, Field> fields)
+	{
+		if (cls == null)
+		{
+			return fields;
+		}
+
+		if (fields == null)
+		{
+			fields = new LinkedHashMap<String, Field>();
+		}
+
+		fields = getFieldsHierarchy(cls.getSuperclass(), fields);
+
+		for (Field field : cls.getDeclaredFields())
+		{
+			fields.put(field.getName(), field);
+		}
+
+		return fields;
+	}
+
 	/**
 	 * Get the name of a file which represented as URL.
 	 * 
