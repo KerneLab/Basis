@@ -2376,6 +2376,43 @@ public class Tools
 	}
 
 	/**
+	 * To decide whether two Map is equal or not. Return true if and only if the
+	 * keys and corresponding values in both Map are equal.
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static <K, V> boolean equals(Map<K, V> a, Map<K, V> b)
+	{
+		if (a == null || b == null)
+		{
+			return false;
+		}
+
+		if (a == b)
+		{
+			return true;
+		}
+
+		if (a.size() != b.size())
+		{
+			return false;
+		}
+
+		for (Entry<K, V> e : a.entrySet())
+		{
+			if (!b.containsKey(e.getKey()) || //
+					!Tools.equals(e.getValue(), b.get(e.getKey())))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * To decide whether two object is equal or not. It would also be recognized
 	 * as equal if two parameter are both null.
 	 * 
