@@ -116,7 +116,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						break;
 					}
-				} while (iter == null);
+				}
+				while (iter == null);
 			}
 
 			return iter;
@@ -1690,7 +1691,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public <E> E attrCast(int index, Class<E> cls)
 		{
-			return CastTo(this.attr(index), cls);
+			return CastAs(this.attr(index), cls);
 		}
 
 		public Character attrCharacter(int index)
@@ -3497,7 +3498,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				w.flush();
 
-			} while (j != null);
+			}
+			while (j != null);
 
 			w.close();
 
@@ -4090,7 +4092,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					do
 					{
 						i = Tools.seekIndex(quote, NESTED_ATTRIBUTE_QUOTE, i + 1);
-					} while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
+					}
+					while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
 					break;
 				}
 
@@ -4697,7 +4700,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return Tools.as(o, Quotation.class);
 	}
 
-	public static <T> T CastTo(Object obj, Class<T> cls)
+	public static <T> T CastAs(Object obj, Class<T> cls)
 	{
 		T val = null;
 
@@ -4713,6 +4716,83 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		return val;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T CastTo(Object obj, Class<T> cls)
+	{
+		if (cls == String.class)
+		{
+			return (T) CastToString(obj);
+		}
+		else if (cls == Boolean.class || cls == Boolean.TYPE)
+		{
+			return (T) CastToBoolean(obj);
+		}
+		else if (cls == Integer.class || cls == Integer.TYPE)
+		{
+			return (T) CastToInteger(obj);
+		}
+		else if (cls == Double.class || cls == Double.TYPE)
+		{
+			return (T) CastToDouble(obj);
+		}
+		else if (cls == Long.class || cls == Long.TYPE)
+		{
+			return (T) CastToLong(obj);
+		}
+		else if (cls == Short.class || cls == Short.TYPE)
+		{
+			return (T) CastToShort(obj);
+		}
+		else if (cls == Byte.class || cls == Byte.TYPE)
+		{
+			return (T) CastToByte(obj);
+		}
+		else if (cls == Float.class || cls == Float.TYPE)
+		{
+			return (T) CastToFloat(obj);
+		}
+		else if (cls == Character.class || cls == Character.TYPE)
+		{
+			return (T) CastToCharacter(obj);
+		}
+		else if (cls == Calendar.class)
+		{
+			return (T) CastToCalendar(obj);
+		}
+		else if (cls == Timestamp.class)
+		{
+			return (T) CastToTimestamp(obj);
+		}
+		else if (cls == Date.class)
+		{
+			return (T) CastToDate(obj);
+		}
+		else if (cls == Time.class)
+		{
+			return (T) CastToTime(obj);
+		}
+		else if (cls == BigDecimal.class)
+		{
+			return (T) CastToBigDecimal(obj);
+		}
+		else if (cls == JSAN.class)
+		{
+			return (T) CastToJSAN(obj);
+		}
+		else if (cls == JSON.class)
+		{
+			return (T) CastToJSON(obj);
+		}
+		else if (cls == Function.class)
+		{
+			return (T) CastToFunction(obj);
+		}
+		else
+		{
+			return (T) CastAs(obj, cls);
+		}
 	}
 
 	@SuppressWarnings("unused")
@@ -4945,7 +5025,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static Function CastToFunction(Object obj)
 	{
-		return CastTo(obj, Function.class);
+		return CastAs(obj, Function.class);
 	}
 
 	public static Integer CastToInteger(Object obj)
@@ -6135,11 +6215,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 		else if (JSON.class == type)
 		{
-			val = CastTo(obj, JSON.class);
+			val = CastAs(obj, JSON.class);
 		}
 		else if (JSAN.class == type)
 		{
-			val = CastTo(obj, JSAN.class);
+			val = CastAs(obj, JSAN.class);
 		}
 		else if (Function.class == type)
 		{
@@ -7027,7 +7107,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public <E> E attrCast(String key, Class<E> cls)
 	{
-		return CastTo(this.attr(key), cls);
+		return CastAs(this.attr(key), cls);
 	}
 
 	public Character attrCharacter(String key)
