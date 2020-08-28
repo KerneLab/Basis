@@ -28,6 +28,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -564,6 +565,79 @@ public class Tools
 		catch (ClassCastException e)
 		{
 			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T castTo(Object obj, Class<T> cls)
+	{
+		if (cls == String.class)
+		{
+			return (T) JSON.CastToString(obj);
+		}
+		else if (cls == Boolean.class || cls == Boolean.TYPE)
+		{
+			return (T) JSON.CastToBoolean(obj);
+		}
+		else if (cls == Integer.class || cls == Integer.TYPE)
+		{
+			return (T) JSON.CastToInteger(obj);
+		}
+		else if (cls == Double.class || cls == Double.TYPE)
+		{
+			return (T) JSON.CastToDouble(obj);
+		}
+		else if (cls == Long.class || cls == Long.TYPE)
+		{
+			return (T) JSON.CastToLong(obj);
+		}
+		else if (cls == Short.class || cls == Short.TYPE)
+		{
+			return (T) JSON.CastToShort(obj);
+		}
+		else if (cls == Byte.class || cls == Byte.TYPE)
+		{
+			return (T) JSON.CastToByte(obj);
+		}
+		else if (cls == Float.class || cls == Float.TYPE)
+		{
+			return (T) JSON.CastToFloat(obj);
+		}
+		else if (cls == Character.class || cls == Character.TYPE)
+		{
+			return (T) JSON.CastToCharacter(obj);
+		}
+		else if (cls == Calendar.class)
+		{
+			return (T) JSON.CastToCalendar(obj);
+		}
+		else if (cls == java.sql.Timestamp.class)
+		{
+			return (T) JSON.CastToTimestamp(obj);
+		}
+		else if (cls == java.sql.Date.class)
+		{
+			return (T) JSON.CastToDate(obj);
+		}
+		else if (cls == java.sql.Time.class)
+		{
+			return (T) JSON.CastToTime(obj);
+		}
+		else if (cls == BigDecimal.class)
+		{
+			return (T) JSON.CastToBigDecimal(obj);
+		}
+		else if (cls == JSAN.class)
+		{
+			return (T) JSON.CastToJSAN(obj);
+		}
+		else if (cls == JSON.class)
+		{
+			return (T) JSON.CastToJSON(obj);
+		}
+		else
+		{
+			return (T) JSON.CastAs(obj, cls);
 		}
 	}
 
