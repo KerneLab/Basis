@@ -7208,6 +7208,33 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		super.finalize();
 	}
 
+	public JSON flatten()
+	{
+		return this.flatten(null, new JSON());
+	}
+
+	protected JSON flatten(String path, JSON res)
+	{
+		if (IsJSAN(this))
+		{
+			return this;
+		}
+		Object val = null;
+		for (String key : this.keySet())
+		{
+			val = this.val(key);
+			if (IsPlainJSON(val))
+			{
+				((JSON) val).flatten((path != null ? path + '.' : "") + key, res);
+			}
+			else
+			{
+				res.attr((path != null ? path + '.' : "") + key, val);
+			}
+		}
+		return res;
+	}
+
 	public Object get(Object key)
 	{
 		return object().get(key);

@@ -17,7 +17,12 @@ public class DemoJSON
 				.attr("b", 2) //
 				.attr("c", true)//
 				.attr("d", "3.1") //
-				.attr("e", null);
+				.attr("e", null) //
+				.attr("f", new JSON() //
+						.attr("r", 1.5) //
+						.attr("s", "Sss") //
+						.attr("t", true) //
+				);
 		Tools.debug(jsonA.valDouble("d"));
 		Tools.debug(jsonA.toString(0));
 		Tools.debug(jsonA.values());
@@ -36,6 +41,10 @@ public class DemoJSON
 		jsanA.addLast(3, null, "yes");
 		Writer out = new PrintWriter(System.out);
 		JSON.Serialize(jsanA, out, 0);
+		out.write('\n');
 		out.flush();
+
+		JSON jsonD = new JSON().pairs("a", jsonA, "AA", jsanA);
+		Tools.debug(jsonD.flatten().toString(0));
 	}
 }
