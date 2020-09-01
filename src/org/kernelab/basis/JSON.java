@@ -6112,7 +6112,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 
-			return null;
+			try
+			{
+				return projects.get(null);
+			}
+			catch (NullPointerException e)
+			{
+				return null;
+			}
 		}
 		else
 		{
@@ -6677,22 +6684,29 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static Object ReflectOf(Object object, Map<Class<?>, Object> reflects)
 	{
-		Object reflect = null;
-
 		if (object != null && reflects != null)
 		{
 			for (Map.Entry<Class<?>, Object> entry : reflects.entrySet())
 			{
 				Class<?> cls = entry.getKey();
 
-				if (cls != null && cls.isInstance(object) && (reflect = entry.getValue()) != null)
+				if (cls != null && cls.isInstance(object) && entry.getValue() != null)
 				{
-					break;
+					return entry.getValue();
 				}
+			}
+
+			try
+			{
+				return reflects.get(null);
+			}
+			catch (NullPointerException e)
+			{
+				return null;
 			}
 		}
 
-		return reflect;
+		return null;
 	}
 
 	public static String RestoreString(String string)
