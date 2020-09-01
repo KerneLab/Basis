@@ -695,8 +695,7 @@ public class SQLKit
 				int count = 0;
 				while ((limit < 0 || count < limit) && rs.next())
 				{
-					jsan.add(
-							jsonOfResultRow(rs, cls.newInstance().reflects(jsan).projects(jsan).transforms(jsan), map));
+					jsan.add(jsonOfResultRow(rs, cls.newInstance().templates(jsan), map));
 					count++;
 				}
 			}

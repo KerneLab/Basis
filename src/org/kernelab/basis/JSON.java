@@ -2102,6 +2102,20 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return this;
 		}
 
+		@Override
+		public JSAN projectStrict(boolean strict)
+		{
+			super.projectStrict(strict);
+			return this;
+		}
+
+		@Override
+		public JSAN projectStrict(JSON json)
+		{
+			super.projectStrict(json);
+			return this;
+		}
+
 		public JSAN pushAll(Iterable<? extends Object> values)
 		{
 			for (Object o : values)
@@ -2775,7 +2789,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public JSAN templates(JSON json)
 		{
-			return (JSAN) super.templates(json);
+			super.templates(json);
+			return this;
 		}
 
 		public Object[] toArray()
@@ -4719,7 +4734,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	}
 
 	@SuppressWarnings("unused")
-	public static <T> Object CastToArray(Object object, Class<T> type, Map<Class<?>, Object> projects)
+	public static <T> Object CastToArray(Object object, Class<T> type, Map<Class<?>, Object> projects) throws Exception
 	{
 		Object array = null;
 
@@ -4755,6 +4770,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				catch (Exception ex)
 				{
+					if (object instanceof JSON && ((JSON) object).projectStrict())
+					{
+						throw ex;
+					}
 				}
 				length++;
 			}
@@ -5930,7 +5949,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						try
 						{
-							String key = entry.getValue().toString();
+							String key = entry.getValue() != null ? entry.getValue().toString() : null;
 
 							if (json.has(key))
 							{
@@ -5939,6 +5958,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						}
 						catch (Exception e)
 						{
+							if (obj.projectStrict())
+							{
+								throw e;
+							}
 						}
 					}
 				}
@@ -5969,7 +5992,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						try
 						{
 							String name = entry.getKey();
-							String key = entry.getValue().toString();
+							String key = entry.getValue() != null ? entry.getValue().toString() : null;
 
 							if (json.has(key))
 							{
@@ -6032,6 +6055,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						}
 						catch (Exception e)
 						{
+							if (json.projectStrict())
+							{
+								throw e;
+							}
 						}
 					}
 				}
@@ -6100,7 +6127,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	@SuppressWarnings("unchecked")
 	public static <T> Object ProjectTo(Object obj, Type type, Object val, Map<Class<?>, Object> projects)
-			throws InstantiationException, IllegalAccessException
+			throws Exception
 	{
 		Object project = ProjectOf(type, projects);
 
@@ -6208,7 +6235,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						try
 						{
-							String key = entry.getValue().toString();
+							String key = entry.getValue() != null ? entry.getValue().toString() : null;
 
 							if (json.has(key))
 							{
@@ -6217,6 +6244,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						}
 						catch (Exception e)
 						{
+							if (json.projectStrict())
+							{
+								throw e;
+							}
 						}
 					}
 				}
@@ -6261,7 +6292,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					}
 					catch (Exception e)
 					{
-						e.printStackTrace();
+						if (json.projectStrict())
+						{
+							throw e;
+						}
 					}
 				}
 			}
@@ -6282,6 +6316,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						}
 						catch (Exception e)
 						{
+							if (json.projectStrict())
+							{
+								throw e;
+							}
 						}
 					}
 				}
@@ -6963,6 +7001,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	private transient Map<Class<?>, Object>		projects;
 
+	private transient boolean					projectStrict	= false;
+
 	private transient Map<Object, Transform<?>>	transforms;
 
 	public JSON()
@@ -7242,7 +7282,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public boolean has(String entry)
 	{
-		return object().containsKey(entry);
+		try
+		{
+			return object().containsKey(entry);
+		}
+		catch (NullPointerException e)
+		{
+			return false;
+		}
 	}
 
 	public boolean hasVal(Object value)
@@ -7597,6 +7644,26 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		if (projects() == null)
 		{
 			projects(new LinkedHashMap<Class<?>, Object>());
+		}
+		return this;
+	}
+
+	public boolean projectStrict()
+	{
+		return projectStrict;
+	}
+
+	public JSON projectStrict(boolean strict)
+	{
+		this.projectStrict = strict;
+		return this;
+	}
+
+	public JSON projectStrict(JSON json)
+	{
+		if (json != null)
+		{
+			projectStrict(json.projectStrict());
 		}
 		return this;
 	}
@@ -8164,7 +8231,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public JSON templates(JSON json)
 	{
-		return this.transforms(json).reflects(json).projects(json);
+		return this.transforms(json) //
+				.reflects(json) //
+				.projects(json) //
+				.projectStrict(json);
 	}
 
 	public JSAN toJSAN()

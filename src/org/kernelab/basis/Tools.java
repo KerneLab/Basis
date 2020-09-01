@@ -571,7 +571,15 @@ public class Tools
 	@SuppressWarnings("unchecked")
 	public static <T> T castTo(Object obj, Class<T> cls)
 	{
-		if (cls == String.class)
+		if (obj == null)
+		{
+			return null;
+		}
+		else if (cls == null)
+		{
+			return (T) obj;
+		}
+		else if (cls == String.class)
 		{
 			return (T) JSON.CastToString(obj);
 		}
