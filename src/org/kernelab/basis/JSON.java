@@ -3936,7 +3936,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static interface Projector<T> extends Serializable
 	{
-		public T project(T obj, JSON json);
+		public T project(T obj, JSON json) throws Exception;
 	}
 
 	public static class Quotation implements Hierarchical
@@ -5921,7 +5921,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
-	public static <T> T Project(T object, JSON json, JSON.Projector<T> projector)
+	public static <T> T Project(T object, JSON json, JSON.Projector<T> projector) throws Exception
 	{
 		if (object != null && json != null && projector != null)
 		{
