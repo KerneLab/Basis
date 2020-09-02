@@ -116,8 +116,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						break;
 					}
-				}
-				while (iter == null);
+				} while (iter == null);
 			}
 
 			return iter;
@@ -3513,8 +3512,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				w.flush();
 
-			}
-			while (j != null);
+			} while (j != null);
 
 			w.close();
 
@@ -4107,8 +4105,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					do
 					{
 						i = Tools.seekIndex(quote, NESTED_ATTRIBUTE_QUOTE, i + 1);
-					}
-					while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
+					} while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
 					break;
 				}
 
@@ -6091,6 +6088,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			catch (Exception e)
 			{
+				if (json.projectStrict())
+				{
+					throw new RuntimeException(e);
+				}
 			}
 		}
 		return object;
