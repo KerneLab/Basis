@@ -106,15 +106,15 @@ public class Tools
 
 	public static String					DEFAULT_DATETIME_FORMAT	= LOCAL_DATETIME_FORMAT;
 
-	private static final ExecutorService	CACHED_DAEMON_EXECUTOR	= Executors.newCachedThreadPool(new ThreadFactory()
-																	{
-																		public Thread newThread(Runnable r)
-																		{
-																			Thread thread = new Thread(r);
-																			thread.setDaemon(true);
-																			return thread;
-																		}
-																	});
+	private static final ExecutorService	CACHED_DAEMON_EXECUTOR	= Executors
+			.newCachedThreadPool(new ThreadFactory() {
+																				public Thread newThread(Runnable r)
+																				{
+																					Thread thread = new Thread(r);
+																					thread.setDaemon(true);
+																					return thread;
+																				}
+																			});
 
 	static
 	{
@@ -8101,6 +8101,18 @@ public class Tools
 		}
 
 		return c;
+	}
+
+	public static void throwOriginalException(Exception e) throws Exception
+	{
+		if (e.getCause() instanceof Exception)
+		{
+			throwOriginalException((Exception) e.getCause());
+		}
+		else
+		{
+			throw e;
+		}
 	}
 
 	/**

@@ -6054,7 +6054,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						{
 							if (json.projectStrict())
 							{
-								throw e;
+								Tools.throwOriginalException(e);
 							}
 						}
 					}
