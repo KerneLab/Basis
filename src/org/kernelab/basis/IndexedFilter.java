@@ -7,7 +7,7 @@ public interface IndexedFilter<E> extends Serializable
 	/**
 	 * Filter some element from a container such as Collection, List and so
 	 * on.<br />
-	 * If returns false, generally means preserve the element.
+	 * If returns true, generally means preserve the element.
 	 * 
 	 * @param element
 	 *            The element to be filtered.

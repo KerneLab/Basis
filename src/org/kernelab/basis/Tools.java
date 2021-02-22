@@ -106,15 +106,15 @@ public class Tools
 
 	public static String					DEFAULT_DATETIME_FORMAT	= LOCAL_DATETIME_FORMAT;
 
-	private static final ExecutorService	CACHED_DAEMON_EXECUTOR	= Executors
-			.newCachedThreadPool(new ThreadFactory() {
-																				public Thread newThread(Runnable r)
-																				{
-																					Thread thread = new Thread(r);
-																					thread.setDaemon(true);
-																					return thread;
-																				}
-																			});
+	private static final ExecutorService	CACHED_DAEMON_EXECUTOR	= Executors.newCachedThreadPool(new ThreadFactory()
+																	{
+																		public Thread newThread(Runnable r)
+																		{
+																			Thread thread = new Thread(r);
+																			thread.setDaemon(true);
+																			return thread;
+																		}
+																	});
 
 	static
 	{
@@ -2665,7 +2665,7 @@ public class Tools
 		{
 			for (E element : iterable)
 			{
-				if (!filter.filter(element))
+				if (filter.filter(element))
 				{
 					result.add(element);
 				}
@@ -2706,7 +2706,7 @@ public class Tools
 		{
 			for (E element : iterable)
 			{
-				if (!filter.filter(element, index++))
+				if (filter.filter(element, index++))
 				{
 					result.add(element);
 				}
@@ -4095,6 +4095,27 @@ public class Tools
 		}
 
 		return result;
+	}
+
+	public static <E> boolean isEmpty(Iterable<E> iter)
+	{
+		if (iter instanceof Collection<?>)
+		{
+			return ((Collection<E>) iter).isEmpty();
+		}
+
+		if (iter instanceof JSON)
+		{
+			return ((JSON) iter).isEmpty();
+		}
+
+		for (@SuppressWarnings("unused")
+		E obj : iter)
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

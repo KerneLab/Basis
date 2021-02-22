@@ -7,7 +7,7 @@ public interface Filter<E> extends Serializable
 	/**
 	 * Filter some element from a container such as Collection, List and so
 	 * on.<br />
-	 * If returns false, generally means preserve the element.
+	 * If returns true, generally means preserve the element.
 	 * 
 	 * Usually, We use follow statements:
 	 * 
@@ -16,7 +16,7 @@ public interface Filter<E> extends Serializable
 	 * Collection&lt;E&gt; result;
 	 * for (E e : origin)
 	 * {
-	 * 	if (!filter(e))
+	 * 	if (filter(e))
 	 * 	{
 	 * 		result.add(e);
 	 * 	}
