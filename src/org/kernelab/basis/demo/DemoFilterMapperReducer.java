@@ -31,15 +31,10 @@ public class DemoFilterMapperReducer
 		Tools.debug("Filter:");
 		Collection<Double> filtered = Tools.filter(list, new Filter<Double>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 3236273279267107075L;
-
 			public boolean filter(Double e)
 			{
 				// 将小于等于3的元素过滤保留至结果集合中
-				return e <= 3 ? false : true;
+				return e <= 3;
 			}
 
 		}, null);
@@ -50,11 +45,6 @@ public class DemoFilterMapperReducer
 		Tools.debug("Map:");
 		Collection<Double> mapped = Tools.map(list, new Mapper<Double, Double>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 8612178379704653348L;
-
 			public Double map(Double value)
 			{
 				// 新集合中的元素来源于原始集合中每个元素乘2加1
@@ -68,11 +58,6 @@ public class DemoFilterMapperReducer
 		Tools.debug("Reduce:");
 		Double sum = Tools.reduce(list, new Reducer<Double, Double>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -6814612998658805517L;
-
 			public Double reduce(Double r, Double e)
 			{
 				// 对原始集合中所有元素简单求和
@@ -86,11 +71,6 @@ public class DemoFilterMapperReducer
 		Tools.debug("Indexed Reduce:");
 		Double part = Tools.reduce(list, new IndexedReducer<Double, Double>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -3986364317396652873L;
-
 			public Double reduce(Double result, Double element, int index)
 			{
 				if (index < 3)

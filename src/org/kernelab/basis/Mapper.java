@@ -1,6 +1,5 @@
 package org.kernelab.basis;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 /**
@@ -14,7 +13,7 @@ import java.util.Collection;
  * @param <V>
  *            The generic type of the mapping result.
  */
-public interface Mapper<K, V> extends Serializable
+public interface Mapper<K, V>
 {
 	/**
 	 * To map a value into another value.

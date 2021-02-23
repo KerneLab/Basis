@@ -4,8 +4,10 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.TreeSet;
 
 public class Canal<I, O> implements Iterable<O>
@@ -36,9 +38,25 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static abstract class AbstractTerminal<E, T> extends AbstractPond<E, E> implements Terminal<E, T>
 	{
+		@Override
+		public void end()
+		{
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return false;
+		}
+
+		@Override
+		public E next()
+		{
+			return null;
+		}
 	}
 
-	public static interface Action<E> extends Serializable
+	public static interface Action<E>
 	{
 		void action(E el);
 	}
@@ -96,6 +114,44 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class CollectAsMapOp<E> implements Evaluator<E, Map<E, Integer>>
+	{
+		@Override
+		public Terminal<E, Map<E, Integer>> newPond()
+		{
+			return new CollectAsMapPond<E>();
+		}
+	}
+
+	protected static class CollectAsMapPond<E> extends AbstractTerminal<E, Map<E, Integer>>
+	{
+		protected final Map<E, Integer> sediment = new LinkedHashMap<E, Integer>();
+
+		@Override
+		public void begin()
+		{
+			E val = null;
+			while (upstream().hasNext())
+			{
+				val = upstream().next();
+				if (!sediment.containsKey(val))
+				{
+					sediment.put(val, 1);
+				}
+				else
+				{
+					sediment.put(val, sediment.get(val) + 1);
+				}
+			}
+		}
+
+		@Override
+		public Map<E, Integer> get()
+		{
+			return sediment;
+		}
+	}
+
 	protected static class CollectOp<E> implements Evaluator<E, Collection<E>>
 	{
 		@Override
@@ -128,7 +184,7 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class CountPond<E> extends AbstractPond<E, E> implements Terminal<E, Integer>
+	protected static class CountPond<E> extends AbstractTerminal<E, Integer>
 	{
 		protected int count = 0;
 
@@ -143,26 +199,9 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		@Override
-		public void end()
-		{
-		}
-
-		@Override
 		public Integer get()
 		{
 			return count;
-		}
-
-		@Override
-		public boolean hasNext()
-		{
-			return false;
-		}
-
-		@Override
-		public E next()
-		{
-			return null;
 		}
 	}
 
@@ -363,7 +402,7 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class ForeachPond<E> extends AbstractPond<E, E> implements Terminal<E, Void>
+	protected static class ForeachPond<E> extends AbstractTerminal<E, Void>
 	{
 		protected final Action<E> action;
 
@@ -382,24 +421,7 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		@Override
-		public void end()
-		{
-		}
-
-		@Override
 		public Void get()
-		{
-			return null;
-		}
-
-		@Override
-		public boolean hasNext()
-		{
-			return false;
-		}
-
-		@Override
-		public E next()
 		{
 			return null;
 		}
@@ -689,11 +711,6 @@ public class Canal<I, O> implements Iterable<O>
 
 		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public boolean filter(Integer element)
 			{
@@ -705,11 +722,6 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 		Tools.debug(c.map(new Mapper<Integer, Integer>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public Integer map(Integer key)
 			{
@@ -722,11 +734,6 @@ public class Canal<I, O> implements Iterable<O>
 		Integer[] array = new Integer[] { 1, 2, 3, 4, 4, 5, 6 };
 		c = Canal.of(array).filter(new Filter<Integer>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public boolean filter(Integer element)
 			{
@@ -735,11 +742,6 @@ public class Canal<I, O> implements Iterable<O>
 		});
 		c.distinct().foreach(new Action<Integer>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void action(Integer el)
 			{
@@ -755,11 +757,6 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 		Tools.debug(c.map(new IndexedMapper<Integer, String>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public String map(Integer key, int index)
 			{
@@ -771,11 +768,6 @@ public class Canal<I, O> implements Iterable<O>
 		Integer[] array1 = new Integer[] { 1, 2, 3 };
 		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>()
 		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public Iterable<Integer> map(Integer key)
 			{
@@ -788,6 +780,8 @@ public class Canal<I, O> implements Iterable<O>
 			}
 		});
 		Tools.debug(c.collect());
+		Tools.debug("============");
+		Tools.debug(c.collectAsMap());
 	}
 
 	public static <E> Canal<E, E> of(E[] array)
@@ -843,6 +837,11 @@ public class Canal<I, O> implements Iterable<O>
 	public Collection<O> collect()
 	{
 		return this.follow(new CollectOp<O>()).evaluate();
+	}
+
+	public Map<O, Integer> collectAsMap()
+	{
+		return this.follow(new CollectAsMapOp<O>()).evaluate();
 	}
 
 	public int count()

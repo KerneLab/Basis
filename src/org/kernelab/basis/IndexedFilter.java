@@ -1,8 +1,8 @@
 package org.kernelab.basis;
 
-import java.io.Serializable;
+import java.util.Collection;
 
-public interface IndexedFilter<E> extends Serializable
+public interface IndexedFilter<E>
 {
 	/**
 	 * Filter some element from a container such as Collection, List and so

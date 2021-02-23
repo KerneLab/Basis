@@ -1,5 +1,6 @@
 package org.kernelab.basis.sql;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -84,11 +85,8 @@ import org.kernelab.basis.Tools;
  */
 public class SQLKit
 {
-	public static class ProjectMapper<E> implements Mapper<ResultSet, E>
+	public static class ProjectMapper<E> implements Mapper<ResultSet, E>, Serializable
 	{
-		/**
-		 * 
-		 */
 		private static final long		serialVersionUID	= -6021148228942835875L;
 
 		private Class<E>				cls;
