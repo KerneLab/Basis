@@ -114,16 +114,39 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class CollectAsMapOp<E> implements Evaluator<E, Map<E, Integer>>
+	protected static class CollectOp<E> implements Evaluator<E, Collection<E>>
+	{
+		@Override
+		public Terminal<E, Collection<E>> newPond()
+		{
+			return new Desilter<E>()
+			{
+				@Override
+				protected void settle()
+				{
+					while (upstream().hasNext())
+					{
+						sediment.add(upstream().next());
+					}
+				}
+			};
+		}
+	}
+
+	protected static interface Converter<I, O> extends Operator<I, O>
+	{
+	}
+
+	protected static class CountByValueOp<E> implements Evaluator<E, Map<E, Integer>>
 	{
 		@Override
 		public Terminal<E, Map<E, Integer>> newPond()
 		{
-			return new CollectAsMapPond<E>();
+			return new CountByValuePond<E>();
 		}
 	}
 
-	protected static class CollectAsMapPond<E> extends AbstractTerminal<E, Map<E, Integer>>
+	protected static class CountByValuePond<E> extends AbstractTerminal<E, Map<E, Integer>>
 	{
 		protected final Map<E, Integer> sediment = new LinkedHashMap<E, Integer>();
 
@@ -150,29 +173,6 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			return sediment;
 		}
-	}
-
-	protected static class CollectOp<E> implements Evaluator<E, Collection<E>>
-	{
-		@Override
-		public Terminal<E, Collection<E>> newPond()
-		{
-			return new Desilter<E>()
-			{
-				@Override
-				protected void settle()
-				{
-					while (upstream().hasNext())
-					{
-						sediment.add(upstream().next());
-					}
-				}
-			};
-		}
-	}
-
-	protected static interface Converter<I, O> extends Operator<I, O>
-	{
 	}
 
 	protected static class CountOp<E> implements Evaluator<E, Integer>
@@ -253,6 +253,30 @@ public class Canal<I, O> implements Iterable<O>
 					}
 				}
 			};
+		}
+	}
+
+	protected static class EmptySource<E> extends Source<E>
+	{
+		@Override
+		public boolean hasNext()
+		{
+			return false;
+		}
+
+		@Override
+		public E next()
+		{
+			return null;
+		}
+	}
+
+	protected static class EmptySourcer<E> implements Sourcer<E>
+	{
+		@Override
+		public Source<E> newPond()
+		{
+			return new EmptySource<E>();
 		}
 	}
 
@@ -550,9 +574,60 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	public static class None<E> extends Option<E>
+	{
+		public None()
+		{
+			this.setOperator(new EmptySourcer<E>());
+		}
+
+		@Override
+		public E get()
+		{
+			throw new NoneValueGivenException();
+		}
+
+		@Override
+		public boolean given()
+		{
+			return false;
+		}
+
+		@Override
+		public E or(E defaultValue)
+		{
+			return defaultValue;
+		}
+
+		@Override
+		public E orNull()
+		{
+			return null;
+		}
+	}
+
+	public static class NoneValueGivenException extends RuntimeException
+	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -124083433722347402L;
+	}
+
 	protected static interface Operator<I, O>
 	{
 		Pond<I, O> newPond();
+	}
+
+	public static abstract class Option<E> extends Canal<E, E>
+	{
+		public abstract E get();
+
+		public abstract boolean given();
+
+		public abstract E or(E defaultValue);
+
+		public abstract E orNull();
 	}
 
 	protected static interface Pond<I, O> extends Iterator<O>
@@ -564,6 +639,54 @@ public class Canal<I, O> implements Iterable<O>
 		Pond<?, I> upstream();
 
 		void upstream(Pond<?, I> up);
+	}
+
+	public static class Some<E> extends Option<E>
+	{
+		private static <E> E[] makeArray(E... es)
+		{
+			return es;
+		}
+
+		protected final E value;
+
+		@SuppressWarnings("unchecked")
+		public Some(E val)
+		{
+			if (val == null)
+			{
+				throw new NoneValueGivenException();
+			}
+			this.value = val;
+			// @SuppressWarnings("unchecked")
+			// E[] array = (E[]) Array.newInstance(val.getClass(), 1);
+			// array[0] = val;
+			this.setOperator(new ArraySourcer<E>(makeArray(val), 0, 1));
+		}
+
+		@Override
+		public E get()
+		{
+			return value;
+		}
+
+		@Override
+		public boolean given()
+		{
+			return true;
+		}
+
+		@Override
+		public E or(E defaultValue)
+		{
+			return value;
+		}
+
+		@Override
+		public E orNull()
+		{
+			return value;
+		}
 	}
 
 	protected static abstract class Source<E> implements Pond<E, E>
@@ -781,7 +904,12 @@ public class Canal<I, O> implements Iterable<O>
 		});
 		Tools.debug(c.collect());
 		Tools.debug("============");
-		Tools.debug(c.collectAsMap());
+		Tools.debug(c.countByValue());
+
+		Tools.debug("============");
+		Tools.debug(Canal.option(1).count());
+		Tools.debug("============");
+		Tools.debug(Canal.option(null).count());
 	}
 
 	public static <E> Canal<E, E> of(E[] array)
@@ -802,6 +930,11 @@ public class Canal<I, O> implements Iterable<O>
 	public static <E> Canal<E, E> of(Iterable<E> iter)
 	{
 		return new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
+	}
+
+	public static <E> Option<E> option(E value)
+	{
+		return value == null ? new None<E>() : new Some<E>(value);
 	}
 
 	private Canal<?, I>		upstream;
@@ -839,14 +972,14 @@ public class Canal<I, O> implements Iterable<O>
 		return this.follow(new CollectOp<O>()).evaluate();
 	}
 
-	public Map<O, Integer> collectAsMap()
-	{
-		return this.follow(new CollectAsMapOp<O>()).evaluate();
-	}
-
 	public int count()
 	{
 		return this.follow(new CountOp<O>()).evaluate();
+	}
+
+	public Map<O, Integer> countByValue()
+	{
+		return this.follow(new CountByValueOp<O>()).evaluate();
 	}
 
 	public Canal<O, O> distinct()
