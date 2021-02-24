@@ -803,6 +803,81 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class UnionOp<E> implements Converter<E, E>
+	{
+		protected final Canal<?, E>	here;
+
+		protected final Canal<?, E>	that;
+
+		public UnionOp(Canal<?, E> here, Canal<?, E> that)
+		{
+			this.here = here;
+			this.that = that;
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new UnionPond<E>(here.newPond(), that.newPond());
+		}
+	}
+
+	protected static class UnionPond<E> extends AbstractPond<E, E>
+	{
+		protected final Pond<?, E>	self;
+
+		protected final Pond<?, E>	that;
+
+		private boolean				here	= true;
+
+		public UnionPond(Pond<?, E> self, Pond<?, E> that)
+		{
+			this.self = self;
+			this.that = that;
+		}
+
+		@Override
+		public void begin()
+		{
+		}
+
+		@Override
+		public void end()
+		{
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			if (self.hasNext())
+			{
+				return true;
+			}
+			else if (that.hasNext())
+			{
+				here = false;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		@Override
+		public E next()
+		{
+			if (here)
+			{
+				return self.next();
+			}
+			else
+			{
+				return that.next();
+			}
+		}
+	}
+
 	protected static abstract class Wheel<I, O> extends AbstractPond<I, O>
 	{
 		protected int index = 0;
@@ -910,6 +985,10 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug(Canal.option(1).count());
 		Tools.debug("============");
 		Tools.debug(Canal.option(null).count());
+
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).union(Canal.of(new Integer[] { 4, 5 })).collect());
+
 	}
 
 	public static <E> Canal<E, E> of(E[] array)
@@ -1085,5 +1164,10 @@ public class Canal<I, O> implements Iterable<O>
 	public Collection<O> take(int limit)
 	{
 		return this.follow(new TakeOp<O>(limit)).evaluate();
+	}
+
+	public Canal<O, O> union(Canal<?, O> that)
+	{
+		return this.follow(new UnionOp<O>(this, that));
 	}
 }
