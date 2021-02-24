@@ -116,11 +116,23 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static class CollectOp<E> implements Evaluator<E, Collection<E>>
 	{
+		protected final Collection<E> result;
+
+		public CollectOp(Collection<E> result)
+		{
+			this.result = result;
+		}
+
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>()
-			{
+			return new Desilter<E>() {
+				@Override
+				protected Collection<E> newSediment()
+				{
+					return result == null ? super.newSediment() : result;
+				}
+
 				@Override
 				protected void settle()
 				{
@@ -236,8 +248,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>()
-			{
+			return new Heaper<E>() {
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -297,8 +308,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>()
-			{
+			return new Wheel<E, E>() {
 				private E next;
 
 				@Override
@@ -336,8 +346,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>()
-			{
+			return new Wheel<I, O>() {
 				private Iterator<O> iter;
 
 				@Override
@@ -379,8 +388,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>()
-			{
+			return new Wheel<I, O>() {
 				private Iterator<O> iter;
 
 				@Override
@@ -540,8 +548,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>()
-			{
+			return new Wheel<I, O>() {
 				@Override
 				public O next()
 				{
@@ -563,8 +570,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>()
-			{
+			return new Wheel<I, O>() {
 				@Override
 				public O next()
 				{
@@ -723,18 +729,26 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static class TakeOp<E> implements Evaluator<E, Collection<E>>
 	{
-		protected final int limit;
+		protected final int				limit;
 
-		public TakeOp(int limit)
+		protected final Collection<E>	result;
+
+		public TakeOp(int limit, Collection<E> result)
 		{
 			this.limit = limit;
+			this.result = result;
 		}
 
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>()
-			{
+			return new Desilter<E>() {
+				@Override
+				protected Collection<E> newSediment()
+				{
+					return result == null ? super.newSediment() : result;
+				}
+
 				@Override
 				protected void settle()
 				{
@@ -907,8 +921,7 @@ public class Canal<I, O> implements Iterable<O>
 		coll.add(4);
 		coll.add(5);
 
-		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>()
-		{
+		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>() {
 			@Override
 			public boolean filter(Integer element)
 			{
@@ -918,8 +931,7 @@ public class Canal<I, O> implements Iterable<O>
 
 		Tools.debug(c.collect());
 		Tools.debug("============");
-		Tools.debug(c.map(new Mapper<Integer, Integer>()
-		{
+		Tools.debug(c.map(new Mapper<Integer, Integer>() {
 			@Override
 			public Integer map(Integer key)
 			{
@@ -930,16 +942,14 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 
 		Integer[] array = new Integer[] { 1, 2, 3, 4, 4, 5, 6 };
-		c = Canal.of(array).filter(new Filter<Integer>()
-		{
+		c = Canal.of(array).filter(new Filter<Integer>() {
 			@Override
 			public boolean filter(Integer element)
 			{
 				return element > 3;
 			}
 		});
-		c.distinct().foreach(new Action<Integer>()
-		{
+		c.distinct().foreach(new Action<Integer>() {
 			@Override
 			public void action(Integer el)
 			{
@@ -953,8 +963,7 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("------------");
 		Tools.debug(c.count());
 		Tools.debug("============");
-		Tools.debug(c.map(new IndexedMapper<Integer, String>()
-		{
+		Tools.debug(c.map(new IndexedMapper<Integer, String>() {
 			@Override
 			public String map(Integer key, int index)
 			{
@@ -964,8 +973,7 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 
 		Integer[] array1 = new Integer[] { 1, 2, 3 };
-		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>()
-		{
+		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>() {
 			@Override
 			public Iterable<Integer> map(Integer key)
 			{
@@ -1048,7 +1056,12 @@ public class Canal<I, O> implements Iterable<O>
 
 	public Collection<O> collect()
 	{
-		return this.follow(new CollectOp<O>()).evaluate();
+		return this.collect(null);
+	}
+
+	public Collection<O> collect(Collection<O> result)
+	{
+		return this.follow(new CollectOp<O>(result)).evaluate();
 	}
 
 	public int count()
@@ -1163,7 +1176,12 @@ public class Canal<I, O> implements Iterable<O>
 
 	public Collection<O> take(int limit)
 	{
-		return this.follow(new TakeOp<O>(limit)).evaluate();
+		return this.take(limit, null);
+	}
+
+	public Collection<O> take(int limit, Collection<O> result)
+	{
+		return this.follow(new TakeOp<O>(limit, result)).evaluate();
 	}
 
 	public Canal<O, O> union(Canal<?, O> that)
