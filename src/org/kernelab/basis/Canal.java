@@ -114,6 +114,96 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class CartesianOp<A, B> implements Converter<A, Tuple2<A, B>>
+	{
+		protected final Canal<?, A>	self;
+
+		protected final Canal<?, B>	that;
+
+		public CartesianOp(Canal<?, A> self, Canal<?, B> that)
+		{
+			this.self = self;
+			this.that = that;
+		}
+
+		@Override
+		public Pond<A, Tuple2<A, B>> newPond()
+		{
+			return new CartesianPond<A, B>(self, that);
+		}
+	}
+
+	protected static class CartesianPond<A, B> extends AbstractPond<A, Tuple2<A, B>>
+	{
+		protected final Canal<?, A>	self;
+
+		protected final Canal<?, B>	that;
+
+		private Pond<?, A>			here;
+
+		private Pond<?, B>			there;
+
+		private A					left;
+
+		public CartesianPond(Canal<?, A> self, Canal<?, B> that)
+		{
+			this.self = self;
+			this.that = that;
+		}
+
+		@Override
+		public void begin()
+		{
+		}
+
+		@Override
+		public void end()
+		{
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			if (here == null)
+			{
+				here = self.newPond();
+				if (here.hasNext())
+				{
+					left = here.next();
+				}
+				else
+				{
+					return false;
+				}
+			}
+			if (there == null)
+			{
+				there = that.newPond();
+			}
+
+			while (!there.hasNext())
+			{
+				if (!here.hasNext())
+				{
+					return false;
+				}
+				else
+				{
+					left = here.next();
+					there = that.newPond();
+				}
+			}
+
+			return true;
+		}
+
+		@Override
+		public Tuple2<A, B> next()
+		{
+			return new Tuple2<A, B>(left, there.next());
+		}
+	}
+
 	protected static class CollectOp<E> implements Evaluator<E, Collection<E>>
 	{
 		protected final Collection<E> result;
@@ -418,6 +508,12 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
+	// Map<K, V>>
+	// {
+	// // TODO
+	// }
+
 	protected static class ForeachOp<E> implements Evaluator<E, Void>
 	{
 		protected final Action<E> action;
@@ -458,12 +554,6 @@ public class Canal<I, O> implements Iterable<O>
 			return null;
 		}
 	}
-
-	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
-	// Map<K, V>>
-	// {
-	// // TODO
-	// }
 
 	protected static abstract class Heaper<E> extends AbstractPond<E, E>
 	{
@@ -799,6 +889,12 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			this._1 = _1;
 		}
+
+		@Override
+		public String toString()
+		{
+			return "(" + _1 + ")";
+		}
 	}
 
 	public static class Tuple2<E1, E2> extends Tuple1<E1>
@@ -815,24 +911,30 @@ public class Canal<I, O> implements Iterable<O>
 			super(_1);
 			this._2 = _2;
 		}
+
+		@Override
+		public String toString()
+		{
+			return "(" + _1 + ", " + _2 + ")";
+		}
 	}
 
 	protected static class UnionOp<E> implements Converter<E, E>
 	{
-		protected final Canal<?, E>	here;
+		protected final Canal<?, E>	self;
 
 		protected final Canal<?, E>	that;
 
-		public UnionOp(Canal<?, E> here, Canal<?, E> that)
+		public UnionOp(Canal<?, E> self, Canal<?, E> that)
 		{
-			this.here = here;
+			this.self = self;
 			this.that = that;
 		}
 
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new UnionPond<E>(here.newPond(), that.newPond());
+			return new UnionPond<E>(self.newPond(), that.newPond());
 		}
 	}
 
@@ -997,6 +1099,8 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 		Tools.debug(Canal.of(new Integer[] { 1, 2 }).union(Canal.of(new Integer[] { 4, 5 })).collect());
 
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).cartesian(Canal.of(new Integer[] { 4, 5 })).collect());
 	}
 
 	public static <E> Canal<E, E> of(E[] array)
@@ -1052,6 +1156,11 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		return pond;
+	}
+
+	public <N> Canal<O, Tuple2<O, N>> cartesian(Canal<?, N> that)
+	{
+		return this.follow(new CartesianOp<O, N>(this, that));
 	}
 
 	public Collection<O> collect()
