@@ -216,7 +216,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>() {
+			return new Desilter<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -338,7 +339,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>() {
+			return new Heaper<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -398,7 +400,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>() {
+			return new Wheel<E, E>()
+			{
 				private E next;
 
 				@Override
@@ -436,7 +439,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>() {
+			return new Wheel<I, O>()
+			{
 				private Iterator<O> iter;
 
 				@Override
@@ -478,7 +482,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>() {
+			return new Wheel<I, O>()
+			{
 				private Iterator<O> iter;
 
 				@Override
@@ -508,12 +513,6 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
-	// Map<K, V>>
-	// {
-	// // TODO
-	// }
-
 	protected static class ForeachOp<E> implements Evaluator<E, Void>
 	{
 		protected final Action<E> action;
@@ -529,6 +528,12 @@ public class Canal<I, O> implements Iterable<O>
 			return new ForeachPond<E>(action);
 		}
 	}
+
+	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
+	// Map<K, V>>
+	// {
+	// // TODO
+	// }
 
 	protected static class ForeachPond<E> extends AbstractTerminal<E, Void>
 	{
@@ -638,7 +643,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>() {
+			return new Wheel<I, O>()
+			{
 				@Override
 				public O next()
 				{
@@ -660,7 +666,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>() {
+			return new Wheel<I, O>()
+			{
 				@Override
 				public O next()
 				{
@@ -700,6 +707,12 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			return null;
 		}
+
+		@Override
+		public String toString()
+		{
+			return "None";
+		}
 	}
 
 	public static class NoneValueGivenException extends RuntimeException
@@ -737,6 +750,52 @@ public class Canal<I, O> implements Iterable<O>
 		void upstream(Pond<?, I> up);
 	}
 
+	protected static class ReduceOp<E> implements Evaluator<E, Option<E>>
+	{
+		protected final Reducer<E, E> reducer;
+
+		public ReduceOp(Reducer<E, E> reducer)
+		{
+			this.reducer = reducer;
+		}
+
+		@Override
+		public Terminal<E, Option<E>> newPond()
+		{
+			return new AbstractTerminal<E, Option<E>>()
+			{
+				private boolean	empty	= true;
+
+				private E		result;
+
+				@Override
+				public void begin()
+				{
+					E el = null;
+					while (upstream().hasNext())
+					{
+						el = upstream().next();
+						if (empty)
+						{
+							empty = false;
+							result = el;
+						}
+						else
+						{
+							result = reducer.reduce(result, el);
+						}
+					}
+				}
+
+				@Override
+				public Option<E> get()
+				{
+					return empty ? new None<E>() : some(result);
+				}
+			};
+		}
+	}
+
 	public static class Some<E> extends Option<E>
 	{
 		private static <E> E[] makeArray(E... es)
@@ -749,14 +808,7 @@ public class Canal<I, O> implements Iterable<O>
 		@SuppressWarnings("unchecked")
 		public Some(E val)
 		{
-			if (val == null)
-			{
-				throw new NoneValueGivenException();
-			}
 			this.value = val;
-			// @SuppressWarnings("unchecked")
-			// E[] array = (E[]) Array.newInstance(val.getClass(), 1);
-			// array[0] = val;
 			this.setOperator(new ArraySourcer<E>(makeArray(val), 0, 1));
 		}
 
@@ -782,6 +834,12 @@ public class Canal<I, O> implements Iterable<O>
 		public E orNull()
 		{
 			return value;
+		}
+
+		@Override
+		public String toString()
+		{
+			return "Some(" + value + ")";
 		}
 	}
 
@@ -832,7 +890,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>() {
+			return new Desilter<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -1015,6 +1074,9 @@ public class Canal<I, O> implements Iterable<O>
 
 	public static void main(String[] args)
 	{
+		Tools.debug(Canal.of(new Integer[] { 1 }));
+		Tools.debug("============");
+
 		Collection<Integer> coll = new LinkedList<Integer>();
 		coll.add(1);
 		coll.add(2);
@@ -1023,7 +1085,8 @@ public class Canal<I, O> implements Iterable<O>
 		coll.add(4);
 		coll.add(5);
 
-		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>() {
+		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>()
+		{
 			@Override
 			public boolean filter(Integer element)
 			{
@@ -1033,7 +1096,8 @@ public class Canal<I, O> implements Iterable<O>
 
 		Tools.debug(c.collect());
 		Tools.debug("============");
-		Tools.debug(c.map(new Mapper<Integer, Integer>() {
+		Tools.debug(c.map(new Mapper<Integer, Integer>()
+		{
 			@Override
 			public Integer map(Integer key)
 			{
@@ -1044,14 +1108,16 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 
 		Integer[] array = new Integer[] { 1, 2, 3, 4, 4, 5, 6 };
-		c = Canal.of(array).filter(new Filter<Integer>() {
+		c = Canal.of(array).filter(new Filter<Integer>()
+		{
 			@Override
 			public boolean filter(Integer element)
 			{
 				return element > 3;
 			}
 		});
-		c.distinct().foreach(new Action<Integer>() {
+		c.distinct().foreach(new Action<Integer>()
+		{
 			@Override
 			public void action(Integer el)
 			{
@@ -1065,7 +1131,8 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("------------");
 		Tools.debug(c.count());
 		Tools.debug("============");
-		Tools.debug(c.map(new IndexedMapper<Integer, String>() {
+		Tools.debug(c.map(new IndexedMapper<Integer, String>()
+		{
 			@Override
 			public String map(Integer key, int index)
 			{
@@ -1075,7 +1142,8 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 
 		Integer[] array1 = new Integer[] { 1, 2, 3 };
-		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>() {
+		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>()
+		{
 			@Override
 			public Iterable<Integer> map(Integer key)
 			{
@@ -1092,15 +1160,25 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug(c.countByValue());
 
 		Tools.debug("============");
-		Tools.debug(Canal.option(1).count());
+		Tools.debug(Canal.some((Integer) null).count());
 		Tools.debug("============");
-		Tools.debug(Canal.option(null).count());
+		Tools.debug(new Canal.None<Integer>().count());
 
 		Tools.debug("============");
 		Tools.debug(Canal.of(new Integer[] { 1, 2 }).union(Canal.of(new Integer[] { 4, 5 })).collect());
 
 		Tools.debug("============");
 		Tools.debug(Canal.of(new Integer[] { 1, 2 }).cartesian(Canal.of(new Integer[] { 4, 5 })).collect());
+
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).reduce(new Reducer<Integer, Integer>()
+		{
+			@Override
+			public Integer reduce(Integer result, Integer element)
+			{
+				return result + element;
+			}
+		}));
 	}
 
 	public static <E> Canal<E, E> of(E[] array)
@@ -1123,9 +1201,9 @@ public class Canal<I, O> implements Iterable<O>
 		return new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
 	}
 
-	public static <E> Option<E> option(E value)
+	public static <E> Some<E> some(E value)
 	{
-		return value == null ? new None<E>() : new Some<E>(value);
+		return new Some<E>(value);
 	}
 
 	private Canal<?, I>		upstream;
@@ -1150,6 +1228,7 @@ public class Canal<I, O> implements Iterable<O>
 			down.upstream(pond);
 		}
 
+		// The upstream of source is null
 		if (this.upstream != null)
 		{
 			this.upstream.build(pond);
@@ -1244,7 +1323,10 @@ public class Canal<I, O> implements Iterable<O>
 	public Iterator<O> iterator()
 	{
 		Pond<I, O> pond = this.operator.newPond();
-		this.upstream.build(pond);
+		if (this.upstream != null)
+		{
+			this.upstream.build(pond);
+		}
 		return pond;
 	}
 
@@ -1269,6 +1351,11 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			return this.getOperator().newPond();
 		}
+	}
+
+	public Option<O> reduce(Reducer<O, O> reducer)
+	{
+		return this.follow(new ReduceOp<O>(reducer)).evaluate();
 	}
 
 	protected Canal<I, O> setOperator(Operator<I, O> operator)
