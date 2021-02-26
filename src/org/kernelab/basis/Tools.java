@@ -1671,6 +1671,24 @@ public class Tools
 	/**
 	 * To output debug information.
 	 * 
+	 * @param option
+	 *            the Option data.
+	 */
+	public static <E> void debug(Canal.Option<E> option)
+	{
+		if (option == null)
+		{
+			debug("null");
+		}
+		else
+		{
+			debug(option.toString());
+		}
+	}
+
+	/**
+	 * To output debug information.
+	 * 
 	 * @param c
 	 *            the char information.
 	 */

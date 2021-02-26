@@ -3,6 +3,7 @@ package org.kernelab.basis;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -204,7 +205,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>() {
+			return new Desilter<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -326,7 +328,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>() {
+			return new Heaper<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -386,7 +389,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>() {
+			return new Wheel<E, E>()
+			{
 				private E next;
 
 				@Override
@@ -412,6 +416,87 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class FirstIndexedOp<E> implements Evaluator<E, Option<E>>
+	{
+		protected final IndexedFilter<E> filter;
+
+		public FirstIndexedOp(IndexedFilter<E> filter)
+		{
+			this.filter = filter;
+		}
+
+		@Override
+		public Terminal<E, Option<E>> newPond()
+		{
+			return new AbstractTerminal<E, Option<E>>()
+			{
+				private boolean	found	= false;
+
+				private E		result;
+
+				@Override
+				public void begin()
+				{
+					int index = 0;
+					while (upstream().hasNext())
+					{
+						if (filter.filter(result = upstream().next(), index++))
+						{
+							found = true;
+							break;
+						}
+					}
+				}
+
+				@Override
+				public Option<E> get()
+				{
+					return found ? some(result) : new None<E>();
+				}
+			};
+		}
+	}
+
+	protected static class FirstOp<E> implements Evaluator<E, Option<E>>
+	{
+		protected final Filter<E> filter;
+
+		public FirstOp(Filter<E> filter)
+		{
+			this.filter = filter;
+		}
+
+		@Override
+		public Terminal<E, Option<E>> newPond()
+		{
+			return new AbstractTerminal<E, Option<E>>()
+			{
+				private boolean	found	= false;
+
+				private E		result;
+
+				@Override
+				public void begin()
+				{
+					while (upstream().hasNext())
+					{
+						if (filter.filter(result = upstream().next()))
+						{
+							found = true;
+							break;
+						}
+					}
+				}
+
+				@Override
+				public Option<E> get()
+				{
+					return found ? some(result) : new None<E>();
+				}
+			};
+		}
+	}
+
 	protected static class FlatMapIndexedOp<I, O> implements Converter<I, O>
 	{
 		protected final IndexedMapper<I, Iterable<O>> mapper;
@@ -424,7 +509,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>() {
+			return new Wheel<I, O>()
+			{
 				private Iterator<O> iter;
 
 				@Override
@@ -454,6 +540,12 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
+	// Map<K, V>>
+	// {
+	// // TODO
+	// }
+
 	protected static class FlatMapOp<I, O> implements Converter<I, O>
 	{
 		protected final Mapper<I, Iterable<O>> mapper;
@@ -466,7 +558,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>() {
+			return new Wheel<I, O>()
+			{
 				private Iterator<O> iter;
 
 				@Override
@@ -496,6 +589,41 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class FoldOp<E, R> implements Evaluator<E, R>
+	{
+		private R						result;
+
+		protected final Reducer<E, R>	folder;
+
+		public FoldOp(R init, Reducer<E, R> folder)
+		{
+			this.result = init;
+			this.folder = folder;
+		}
+
+		@Override
+		public Terminal<E, R> newPond()
+		{
+			return new AbstractTerminal<E, R>()
+			{
+				@Override
+				public void begin()
+				{
+					while (upstream().hasNext())
+					{
+						result = folder.reduce(result, upstream().next());
+					}
+				}
+
+				@Override
+				public R get()
+				{
+					return result;
+				}
+			};
+		}
+	}
+
 	protected static class ForeachOp<E> implements Evaluator<E, Void>
 	{
 		protected final Action<E> action;
@@ -511,12 +639,6 @@ public class Canal<I, O> implements Iterable<O>
 			return new ForeachPond<E>(action);
 		}
 	}
-
-	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
-	// Map<K, V>>
-	// {
-	// // TODO
-	// }
 
 	protected static class ForeachPond<E> extends AbstractTerminal<E, Void>
 	{
@@ -626,7 +748,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>() {
+			return new Wheel<I, O>()
+			{
 				@Override
 				public O next()
 				{
@@ -648,7 +771,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>() {
+			return new Wheel<I, O>()
+			{
 				@Override
 				public O next()
 				{
@@ -743,7 +867,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Terminal<E, Option<E>> newPond()
 		{
-			return new AbstractTerminal<E, Option<E>>() {
+			return new AbstractTerminal<E, Option<E>>()
+			{
 				private boolean	empty	= true;
 
 				private E		result;
@@ -870,7 +995,8 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>() {
+			return new Desilter<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -1074,7 +1200,8 @@ public class Canal<I, O> implements Iterable<O>
 		coll.add(4);
 		coll.add(5);
 
-		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>() {
+		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>()
+		{
 			@Override
 			public boolean filter(Integer element)
 			{
@@ -1084,7 +1211,8 @@ public class Canal<I, O> implements Iterable<O>
 
 		Tools.debug(c.collect());
 		Tools.debug("============");
-		Tools.debug(c.map(new Mapper<Integer, Integer>() {
+		Tools.debug(c.map(new Mapper<Integer, Integer>()
+		{
 			@Override
 			public Integer map(Integer key)
 			{
@@ -1095,14 +1223,16 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 
 		Integer[] array = new Integer[] { 1, 2, 3, 4, 4, 5, 6 };
-		c = Canal.of(array).filter(new Filter<Integer>() {
+		c = Canal.of(array).filter(new Filter<Integer>()
+		{
 			@Override
 			public boolean filter(Integer element)
 			{
 				return element > 3;
 			}
 		});
-		c.distinct().foreach(new Action<Integer>() {
+		c.distinct().foreach(new Action<Integer>()
+		{
 			@Override
 			public void action(Integer el)
 			{
@@ -1116,7 +1246,8 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("------------");
 		Tools.debug(c.count());
 		Tools.debug("============");
-		Tools.debug(c.map(new IndexedMapper<Integer, String>() {
+		Tools.debug(c.map(new IndexedMapper<Integer, String>()
+		{
 			@Override
 			public String map(Integer key, int index)
 			{
@@ -1126,7 +1257,8 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug("============");
 
 		Integer[] array1 = new Integer[] { 1, 2, 3 };
-		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>() {
+		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>()
+		{
 			@Override
 			public Iterable<Integer> map(Integer key)
 			{
@@ -1154,11 +1286,45 @@ public class Canal<I, O> implements Iterable<O>
 		Tools.debug(Canal.of(new Integer[] { 1, 2 }).cartesian(Canal.of(new Integer[] { 4, 5 })).collect());
 
 		Tools.debug("============");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).reduce(new Reducer<Integer, Integer>() {
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).reduce(new Reducer<Integer, Integer>()
+		{
 			@Override
 			public Integer reduce(Integer result, Integer element)
 			{
 				return result + element;
+			}
+		}));
+
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).fold(new HashSet<Integer>(),
+				new Reducer<Integer, Collection<Integer>>()
+				{
+					@Override
+					public Collection<Integer> reduce(Collection<Integer> result, Integer element)
+					{
+						result.add(element);
+						return result;
+					}
+				}));
+
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).first());
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).first(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer element)
+			{
+				return element > 1;
+			}
+		}));
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).first(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer element)
+			{
+				return element > 3;
 			}
 		}));
 	}
@@ -1261,6 +1427,28 @@ public class Canal<I, O> implements Iterable<O>
 		return this.follow(new FilterOp<O>(filter));
 	}
 
+	public Option<O> first()
+	{
+		return first(new Filter<O>()
+		{
+			@Override
+			public boolean filter(O element)
+			{
+				return true;
+			}
+		});
+	}
+
+	public Option<O> first(Filter<O> filter)
+	{
+		return this.follow(new FirstOp<O>(filter)).evaluate();
+	}
+
+	public Option<O> first(IndexedFilter<O> filter)
+	{
+		return this.follow(new FirstIndexedOp<O>(filter)).evaluate();
+	}
+
 	public <N> Canal<O, N> flatMap(IndexedMapper<O, Iterable<N>> mapper)
 	{
 		return this.follow(new FlatMapIndexedOp<O, N>(mapper));
@@ -1269,6 +1457,11 @@ public class Canal<I, O> implements Iterable<O>
 	public <N> Canal<O, N> flatMap(Mapper<O, Iterable<N>> mapper)
 	{
 		return this.follow(new FlatMapOp<O, N>(mapper));
+	}
+
+	public <R> R fold(R init, Reducer<O, R> folder)
+	{
+		return this.follow(new FoldOp<O, R>(init, folder)).evaluate();
 	}
 
 	protected <N> Canal<O, N> follow(Operator<O, N> op)
