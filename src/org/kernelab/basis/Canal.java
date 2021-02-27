@@ -3,7 +3,6 @@ package org.kernelab.basis;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -193,6 +192,46 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class CollectAsMapOp<E, K, V> implements Evaluator<E, Map<K, V>>
+	{
+		protected final Map<K, V>		result;
+
+		protected final Mapper<E, K>	kop;
+
+		protected final Mapper<E, V>	vop;
+
+		public CollectAsMapOp(Map<K, V> result, Mapper<E, K> kop, Mapper<E, V> vop)
+		{
+			this.result = result != null ? result : new LinkedHashMap<K, V>();
+			this.kop = kop != null ? kop : new DefaultKop<E, K>();
+			this.vop = vop != null ? vop : new DefaultVop<E, V>();
+		}
+
+		@Override
+		public Terminal<E, Map<K, V>> newPond()
+		{
+			return new AbstractTerminal<E, Map<K, V>>()
+			{
+				@Override
+				public void begin()
+				{
+					E el = null;
+					while (upstream().hasNext())
+					{
+						el = upstream().next();
+						result.put(kop.map(el), vop.map(el));
+					}
+				}
+
+				@Override
+				public Map<K, V> get()
+				{
+					return result;
+				}
+			};
+		}
+	}
+
 	protected static class CollectOp<E> implements Evaluator<E, Collection<E>>
 	{
 		protected final Collection<E> result;
@@ -294,6 +333,26 @@ public class Canal<I, O> implements Iterable<O>
 		public Integer get()
 		{
 			return count;
+		}
+	}
+
+	public static class DefaultKop<E, K> implements Mapper<E, K>
+	{
+		@SuppressWarnings("unchecked")
+		@Override
+		public K map(E data)
+		{
+			return data == null ? null : ((Tuple2<K, ?>) data)._1;
+		}
+	}
+
+	public static class DefaultVop<E, V> implements Mapper<E, V>
+	{
+		@SuppressWarnings("unchecked")
+		@Override
+		public V map(E data)
+		{
+			return data == null ? null : ((Tuple2<?, V>) data)._2;
 		}
 	}
 
@@ -451,7 +510,7 @@ public class Canal<I, O> implements Iterable<O>
 				@Override
 				public Option<E> get()
 				{
-					return found ? some(result) : new None<E>();
+					return found ? Canal.some(result) : Canal.<E> none();
 				}
 			};
 		}
@@ -491,7 +550,7 @@ public class Canal<I, O> implements Iterable<O>
 				@Override
 				public Option<E> get()
 				{
-					return found ? some(result) : new None<E>();
+					return found ? Canal.some(result) : Canal.<E> none();
 				}
 			};
 		}
@@ -539,12 +598,6 @@ public class Canal<I, O> implements Iterable<O>
 			};
 		}
 	}
-
-	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
-	// Map<K, V>>
-	// {
-	// // TODO
-	// }
 
 	protected static class FlatMapOp<I, O> implements Converter<I, O>
 	{
@@ -664,6 +717,12 @@ public class Canal<I, O> implements Iterable<O>
 			return null;
 		}
 	}
+
+	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
+	// Map<K, V>>
+	// {
+	// // TODO
+	// }
 
 	protected static abstract class Heaper<E> extends AbstractPond<E, E>
 	{
@@ -895,7 +954,7 @@ public class Canal<I, O> implements Iterable<O>
 				@Override
 				public Option<E> get()
 				{
-					return empty ? new None<E>() : some(result);
+					return empty ? Canal.<E> none() : Canal.some(result);
 				}
 			};
 		}
@@ -1187,146 +1246,15 @@ public class Canal<I, O> implements Iterable<O>
 		return pond;
 	}
 
-	public static void main(String[] args)
+	/**
+	 * Make a None object.<br />
+	 * Call like {@code Canal.<Type>none()}
+	 * 
+	 * @return
+	 */
+	public static <E> None<E> none()
 	{
-		Tools.debug(Canal.of(new Integer[] { 1 }));
-		Tools.debug("============");
-
-		Collection<Integer> coll = new LinkedList<Integer>();
-		coll.add(1);
-		coll.add(2);
-		coll.add(2);
-		coll.add(3);
-		coll.add(4);
-		coll.add(5);
-
-		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>()
-		{
-			@Override
-			public boolean filter(Integer element)
-			{
-				return element > 2;
-			}
-		});
-
-		Tools.debug(c.collect());
-		Tools.debug("============");
-		Tools.debug(c.map(new Mapper<Integer, Integer>()
-		{
-			@Override
-			public Integer map(Integer key)
-			{
-				return key * 2;
-			}
-		}).take(2));
-
-		Tools.debug("============");
-
-		Integer[] array = new Integer[] { 1, 2, 3, 4, 4, 5, 6 };
-		c = Canal.of(array).filter(new Filter<Integer>()
-		{
-			@Override
-			public boolean filter(Integer element)
-			{
-				return element > 3;
-			}
-		});
-		c.distinct().foreach(new Action<Integer>()
-		{
-			@Override
-			public void action(Integer el)
-			{
-				Tools.debug(el + "..");
-			}
-		});
-		Tools.debug("------------");
-		Tools.debug(c.distinct().count());
-		Tools.debug("============");
-		Tools.debug(c.collect());
-		Tools.debug("------------");
-		Tools.debug(c.count());
-		Tools.debug("============");
-		Tools.debug(c.map(new IndexedMapper<Integer, String>()
-		{
-			@Override
-			public String map(Integer key, int index)
-			{
-				return key + "-" + index;
-			}
-		}).take(2));
-		Tools.debug("============");
-
-		Integer[] array1 = new Integer[] { 1, 2, 3 };
-		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>()
-		{
-			@Override
-			public Iterable<Integer> map(Integer key)
-			{
-				Collection<Integer> a = new LinkedList<Integer>();
-				for (int i = 1; i < key; i++)
-				{
-					a.add(key);
-				}
-				return a;
-			}
-		});
-		Tools.debug(c.collect());
-		Tools.debug("============");
-		Tools.debug(c.countByValue());
-
-		Tools.debug("============");
-		Tools.debug(Canal.some((Integer) null).count());
-		Tools.debug("============");
-		Tools.debug(new Canal.None<Integer>().count());
-
-		Tools.debug("============");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).union(Canal.of(new Integer[] { 4, 5 })).collect());
-
-		Tools.debug("============");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).cartesian(Canal.of(new Integer[] { 4, 5 })).collect());
-
-		Tools.debug("============");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).reduce(new Reducer<Integer, Integer>()
-		{
-			@Override
-			public Integer reduce(Integer result, Integer element)
-			{
-				return result + element;
-			}
-		}));
-
-		Tools.debug("============");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).fold(new HashSet<Integer>(),
-				new Reducer<Integer, Collection<Integer>>()
-				{
-					@Override
-					public Collection<Integer> reduce(Collection<Integer> result, Integer element)
-					{
-						result.add(element);
-						return result;
-					}
-				}));
-
-		Tools.debug("============");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).first());
-		Tools.debug("============");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).first(new Filter<Integer>()
-		{
-			@Override
-			public boolean filter(Integer element)
-			{
-				return element > 1;
-			}
-		}));
-		Tools.debug("============");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).first(new Filter<Integer>()
-		{
-			@Override
-			public boolean filter(Integer element)
-			{
-				return element > 3;
-			}
-		}));
+		return new None<E>();
 	}
 
 	public static <E> Canal<E, E> of(E[] array)
@@ -1347,6 +1275,11 @@ public class Canal<I, O> implements Iterable<O>
 	public static <E> Canal<E, E> of(Iterable<E> iter)
 	{
 		return new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
+	}
+
+	public static <E> Option<E> option(E value)
+	{
+		return value != null ? some(value) : Canal.<E> none();
 	}
 
 	public static <E> Some<E> some(E value)
@@ -1394,6 +1327,26 @@ public class Canal<I, O> implements Iterable<O>
 	public Collection<O> collect(Collection<O> result)
 	{
 		return this.follow(new CollectOp<O>(result)).evaluate();
+	}
+
+	public <K, V> Map<K, V> collectAsMap()
+	{
+		return collectAsMap(null);
+	}
+
+	public <K, V> Map<K, V> collectAsMap(Map<K, V> result)
+	{
+		return collectAsMap(result, null);
+	}
+
+	public <K, V> Map<K, V> collectAsMap(Map<K, V> result, Mapper<O, K> kop)
+	{
+		return collectAsMap(result, kop, null);
+	}
+
+	public <K, V> Map<K, V> collectAsMap(Map<K, V> result, Mapper<O, K> kop, Mapper<O, V> vop)
+	{
+		return this.follow(new CollectAsMapOp<O, K, V>(result, kop, vop)).evaluate();
 	}
 
 	public int count()
