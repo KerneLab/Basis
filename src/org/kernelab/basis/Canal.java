@@ -268,41 +268,88 @@ public class Canal<I, O> implements Iterable<O>
 	{
 	}
 
-	protected static class CountByValueOp<E> implements Evaluator<E, Map<E, Integer>>
+	protected static class CountByKeyOp<E, K> implements Evaluator<E, Map<K, Integer>>
 	{
-		@Override
-		public Terminal<E, Map<E, Integer>> newPond()
+		protected final Map<K, Integer>	result;
+
+		protected final Mapper<E, K>	kop;
+
+		public CountByKeyOp(Map<K, Integer> result, Mapper<E, K> kop)
 		{
-			return new CountByValuePond<E>();
+			this.result = result != null ? result : new LinkedHashMap<K, Integer>();
+			this.kop = kop != null ? kop : new DefaultKop<E, K>();
+		}
+
+		@Override
+		public Terminal<E, Map<K, Integer>> newPond()
+		{
+			return new AbstractTerminal<E, Map<K, Integer>>()
+			{
+				@Override
+				public void begin()
+				{
+					K key = null;
+					while (upstream().hasNext())
+					{
+						key = kop.map(upstream().next());
+						if (!result.containsKey(key))
+						{
+							result.put(key, 1);
+						}
+						else
+						{
+							result.put(key, result.get(key) + 1);
+						}
+					}
+				}
+
+				@Override
+				public Map<K, Integer> get()
+				{
+					return result;
+				}
+			};
 		}
 	}
 
-	protected static class CountByValuePond<E> extends AbstractTerminal<E, Map<E, Integer>>
+	protected static class CountByValueOp<E> implements Evaluator<E, Map<E, Integer>>
 	{
-		protected final Map<E, Integer> sediment = new LinkedHashMap<E, Integer>();
+		protected final Map<E, Integer> result;
 
-		@Override
-		public void begin()
+		public CountByValueOp(Map<E, Integer> result)
 		{
-			E val = null;
-			while (upstream().hasNext())
-			{
-				val = upstream().next();
-				if (!sediment.containsKey(val))
-				{
-					sediment.put(val, 1);
-				}
-				else
-				{
-					sediment.put(val, sediment.get(val) + 1);
-				}
-			}
+			this.result = result == null ? new LinkedHashMap<E, Integer>() : result;
 		}
 
 		@Override
-		public Map<E, Integer> get()
+		public Terminal<E, Map<E, Integer>> newPond()
 		{
-			return sediment;
+			return new AbstractTerminal<E, Map<E, Integer>>()
+			{
+				@Override
+				public void begin()
+				{
+					E val = null;
+					while (upstream().hasNext())
+					{
+						val = upstream().next();
+						if (!result.containsKey(val))
+						{
+							result.put(val, 1);
+						}
+						else
+						{
+							result.put(val, result.get(val) + 1);
+						}
+					}
+				}
+
+				@Override
+				public Map<E, Integer> get()
+				{
+					return result;
+				}
+			};
 		}
 	}
 
@@ -718,12 +765,6 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
-	// Map<K, V>>
-	// {
-	// // TODO
-	// }
-
 	protected static abstract class Heaper<E> extends AbstractPond<E, E>
 	{
 		protected final Collection<E>	sediment	= this.newSediment();
@@ -817,6 +858,12 @@ public class Canal<I, O> implements Iterable<O>
 			};
 		}
 	}
+
+	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
+	// Map<K, V>>
+	// {
+	// // TODO
+	// }
 
 	protected static class MapOp<I, O> implements Converter<I, O>
 	{
@@ -957,6 +1004,15 @@ public class Canal<I, O> implements Iterable<O>
 					return empty ? Canal.<E> none() : Canal.some(result);
 				}
 			};
+		}
+	}
+
+	public static class SelfMapper<E> implements Mapper<E, E>
+	{
+		@Override
+		public E map(E key)
+		{
+			return key;
 		}
 	}
 
@@ -1314,56 +1370,166 @@ public class Canal<I, O> implements Iterable<O>
 		return pond;
 	}
 
+	/**
+	 * Make Cartesian product result against another given
+	 * {@code Canal<?,N>}.<br />
+	 * The output type is {@code Tuple2<O,N>}
+	 * 
+	 * @param that
+	 * @return
+	 */
 	public <N> Canal<O, Tuple2<O, N>> cartesian(Canal<?, N> that)
 	{
 		return this.follow(new CartesianOp<O, N>(this, that));
 	}
 
+	/**
+	 * Collect elements into a Collection.
+	 * 
+	 * @return
+	 */
 	public Collection<O> collect()
 	{
 		return this.collect(null);
 	}
 
+	/**
+	 * Collect elements into a given Collection.
+	 * 
+	 * @param result
+	 *            The result Collection.
+	 * @return
+	 */
 	public Collection<O> collect(Collection<O> result)
 	{
 		return this.follow(new CollectOp<O>(result)).evaluate();
 	}
 
+	/**
+	 * Collect elements into map.<br />
+	 * It assumes that the upstream is a pair Canal.<br />
+	 * In order to indicate the key/value type <br />
+	 * please call like {@code Canal.<K,V>collectAsMap()}
+	 * 
+	 * @return
+	 */
 	public <K, V> Map<K, V> collectAsMap()
 	{
 		return collectAsMap(null);
 	}
 
+	/**
+	 * Collect elements into a given map.<br />
+	 * It assumes that the upstream is a pair Canal.<br />
+	 * 
+	 * @param result
+	 *            The result map.
+	 * @return
+	 */
 	public <K, V> Map<K, V> collectAsMap(Map<K, V> result)
 	{
-		return collectAsMap(result, null);
+		return collectAsMap(result, null, null);
 	}
 
-	public <K, V> Map<K, V> collectAsMap(Map<K, V> result, Mapper<O, K> kop)
-	{
-		return collectAsMap(result, kop, null);
-	}
-
+	/**
+	 * Collect elements into a given map with a given KOP and VOP.<br />
+	 * 
+	 * @param result
+	 *            The result map.
+	 * @param kop
+	 *            The "key of pair" recognizer.
+	 * @param vop
+	 *            The "value of pair" recognizer.
+	 * @return
+	 */
 	public <K, V> Map<K, V> collectAsMap(Map<K, V> result, Mapper<O, K> kop, Mapper<O, V> vop)
 	{
 		return this.follow(new CollectAsMapOp<O, K, V>(result, kop, vop)).evaluate();
 	}
 
+	/**
+	 * Count the number of elements.
+	 * 
+	 * @return
+	 */
 	public int count()
 	{
 		return this.follow(new CountOp<O>()).evaluate();
 	}
 
-	public Map<O, Integer> countByValue()
+	/**
+	 * Count the number each key.<br />
+	 * It assumes that the upstream is a pair Canal.
+	 * 
+	 * @return
+	 */
+	public <K> Map<K, Integer> countByKey()
 	{
-		return this.follow(new CountByValueOp<O>()).evaluate();
+		return countByKey(null);
 	}
 
+	/**
+	 * Count the number each key into a given result map.<br />
+	 * It assumes that the upstream is a pair Canal.
+	 * 
+	 * @param result
+	 * @return
+	 */
+	public <K> Map<K, Integer> countByKey(Map<K, Integer> result)
+	{
+		return countByKey(result, null);
+	}
+
+	/**
+	 * 
+	 * Count the number each key into a given result map with a given KOP.<br />
+	 * 
+	 * @param result
+	 * @param kop
+	 * @return
+	 */
+	public <K> Map<K, Integer> countByKey(Map<K, Integer> result, Mapper<O, K> kop)
+	{
+		return this.follow(new CountByKeyOp<O, K>(result, kop)).evaluate();
+	}
+
+	/**
+	 * Count the number of each element.
+	 * 
+	 * @return
+	 */
+	public Map<O, Integer> countByValue()
+	{
+		return countByValue(null);
+	}
+
+	/**
+	 * Count the number of each element into a given result map.
+	 * 
+	 * @param result
+	 * @return
+	 */
+	public Map<O, Integer> countByValue(Map<O, Integer> result)
+	{
+		return this.follow(new CountByValueOp<O>(result)).evaluate();
+	}
+
+	/**
+	 * Remove duplicate elements.
+	 * 
+	 * @return
+	 */
 	public Canal<O, O> distinct()
 	{
 		return this.distinct(null);
 	}
 
+	/**
+	 * Remove duplicate elements with a given {@link Comparator}.
+	 * 
+	 * @param cmp
+	 * @return
+	 */
 	public Canal<O, O> distinct(Comparator<O> cmp)
 	{
 		return this.follow(new DistinctOp<O>(cmp));
@@ -1375,11 +1541,22 @@ public class Canal<I, O> implements Iterable<O>
 		return ((Terminal<I, T>) this.build()).get();
 	}
 
+	/**
+	 * Filter the elements.
+	 * 
+	 * @param filter
+	 * @return
+	 */
 	public Canal<O, O> filter(Filter<O> filter)
 	{
 		return this.follow(new FilterOp<O>(filter));
 	}
 
+	/**
+	 * Get the first element.
+	 * 
+	 * @return
+	 */
 	public Option<O> first()
 	{
 		return first(new Filter<O>()
@@ -1392,26 +1569,57 @@ public class Canal<I, O> implements Iterable<O>
 		});
 	}
 
+	/**
+	 * Get the first element that satisfied the given predicate.
+	 * 
+	 * @param filter
+	 * @return
+	 */
 	public Option<O> first(Filter<O> filter)
 	{
 		return this.follow(new FirstOp<O>(filter)).evaluate();
 	}
 
+	/**
+	 * Get the first element that satisfied the given predicate.
+	 * 
+	 * @param filter
+	 * @return
+	 */
 	public Option<O> first(IndexedFilter<O> filter)
 	{
 		return this.follow(new FirstIndexedOp<O>(filter)).evaluate();
 	}
 
+	/**
+	 * Map each element into a flat result.
+	 * 
+	 * @param mapper
+	 * @return
+	 */
 	public <N> Canal<O, N> flatMap(IndexedMapper<O, Iterable<N>> mapper)
 	{
 		return this.follow(new FlatMapIndexedOp<O, N>(mapper));
 	}
 
+	/**
+	 * Map each element into a flat result.
+	 * 
+	 * @param mapper
+	 * @return
+	 */
 	public <N> Canal<O, N> flatMap(Mapper<O, Iterable<N>> mapper)
 	{
 		return this.follow(new FlatMapOp<O, N>(mapper));
 	}
 
+	/**
+	 * Fold each element with a given initial value.
+	 * 
+	 * @param init
+	 * @param folder
+	 * @return
+	 */
 	public <R> R fold(R init, Reducer<O, R> folder)
 	{
 		return this.follow(new FoldOp<O, R>(init, folder)).evaluate();
@@ -1422,6 +1630,11 @@ public class Canal<I, O> implements Iterable<O>
 		return new Canal<O, N>().setUpstream(this).setOperator(op);
 	}
 
+	/**
+	 * Take action on each element.
+	 * 
+	 * @param action
+	 */
 	public void foreach(Action<O> action)
 	{
 		this.follow(new ForeachOp<O>(action)).evaluate();
@@ -1443,11 +1656,23 @@ public class Canal<I, O> implements Iterable<O>
 		return this.build();
 	}
 
+	/**
+	 * Map each element.
+	 * 
+	 * @param mapper
+	 * @return
+	 */
 	public <N> Canal<O, N> map(IndexedMapper<O, N> mapper)
 	{
 		return this.follow(new MapIndexedOp<O, N>(mapper));
 	}
 
+	/**
+	 * Map each element.
+	 * 
+	 * @param mapper
+	 * @return
+	 */
 	public <N> Canal<O, N> map(Mapper<O, N> mapper)
 	{
 		return this.follow(new MapOp<O, N>(mapper));
@@ -1466,6 +1691,12 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	/**
+	 * Reduce each element.
+	 * 
+	 * @param reducer
+	 * @return
+	 */
 	public Option<O> reduce(Reducer<O, O> reducer)
 	{
 		return this.follow(new ReduceOp<O>(reducer)).evaluate();
@@ -1483,16 +1714,36 @@ public class Canal<I, O> implements Iterable<O>
 		return this;
 	}
 
+	/**
+	 * Take first few elements within a given limit number.
+	 * 
+	 * @param limit
+	 * @return
+	 */
 	public Collection<O> take(int limit)
 	{
 		return this.take(limit, null);
 	}
 
+	/**
+	 * Take first few elements within a given limit number into a given result
+	 * Collection.
+	 * 
+	 * @param limit
+	 * @param result
+	 * @return
+	 */
 	public Collection<O> take(int limit, Collection<O> result)
 	{
 		return this.follow(new TakeOp<O>(limit, result)).evaluate();
 	}
 
+	/**
+	 * Union with another given Canal.
+	 * 
+	 * @param that
+	 * @return
+	 */
 	public Canal<O, O> union(Canal<?, O> that)
 	{
 		return this.follow(new UnionOp<O>(this, that));
