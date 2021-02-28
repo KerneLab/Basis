@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeSet;
 
 public class Canal<I, O> implements Iterable<O>
@@ -765,6 +767,84 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class GroupByOp<E, K, V> implements Converter<E, Tuple2<K, Iterable<V>>>
+	{
+		protected final Mapper<E, K>	kop;
+
+		protected final Mapper<E, V>	vop;
+
+		public GroupByOp(Mapper<E, K> kop, Mapper<E, V> vop)
+		{
+			this.kop = kop;
+			this.vop = vop;
+		}
+
+		@Override
+		public Pond<E, Tuple2<K, Iterable<V>>> newPond()
+		{
+			return new Grouper<E, K, V>(kop, vop);
+		}
+	}
+
+	protected static class Grouper<E, K, V> extends AbstractPond<E, Tuple2<K, Iterable<V>>>
+	{
+		protected final Mapper<E, K>		kop;
+
+		protected final Mapper<E, V>		vop;
+
+		protected final Map<K, List<V>>		sediment;
+
+		private Iterator<Entry<K, List<V>>>	iter;
+
+		public Grouper(Mapper<E, K> kop, Mapper<E, V> vop)
+		{
+			this.kop = kop;
+			this.vop = vop;
+			this.sediment = new LinkedHashMap<K, List<V>>();
+		}
+
+		@Override
+		public void begin()
+		{
+			E el = null;
+			K key = null;
+			List<V> list = null;
+			while (upstream().hasNext())
+			{
+				el = upstream().next();
+				key = kop.map(el);
+				if (!sediment.containsKey(key))
+				{
+					sediment.put(key, list = new LinkedList<V>());
+				}
+				else
+				{
+					list = sediment.get(key);
+				}
+				list.add(vop.map(el));
+			}
+			this.iter = sediment.entrySet().iterator();
+		}
+
+		@Override
+		public void end()
+		{
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return iter.hasNext();
+		}
+
+		@Override
+		public Tuple2<K, Iterable<V>> next()
+		{
+			Entry<K, List<V>> entry = iter.next();
+			return new Tuple2<K, Iterable<V>>(entry.getKey(), entry.getValue());
+		}
+	}
+
 	protected static abstract class Heaper<E> extends AbstractPond<E, E>
 	{
 		protected final Collection<E>	sediment	= this.newSediment();
@@ -836,6 +916,36 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class LimitOp<E> implements Converter<E, E>
+	{
+		protected final int limit;
+
+		public LimitOp(int limit)
+		{
+			this.limit = limit;
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new Wheel<E, E>()
+			{
+				@Override
+				public boolean hasNext()
+				{
+					return index < limit;
+				}
+
+				@Override
+				public E next()
+				{
+					index++;
+					return upstream().next();
+				}
+			};
+		}
+	}
+
 	protected static class MapIndexedOp<I, O> implements Converter<I, O>
 	{
 		protected final IndexedMapper<I, O> mapper;
@@ -858,12 +968,6 @@ public class Canal<I, O> implements Iterable<O>
 			};
 		}
 	}
-
-	// protected static abstract class Grouper<I, K, V> extends Desilter<I,
-	// Map<K, V>>
-	// {
-	// // TODO
-	// }
 
 	protected static class MapOp<I, O> implements Converter<I, O>
 	{
@@ -1013,6 +1117,44 @@ public class Canal<I, O> implements Iterable<O>
 		public E map(E key)
 		{
 			return key;
+		}
+	}
+
+	protected static class SkipOp<E> implements Converter<E, E>
+	{
+		protected final int skip;
+
+		public SkipOp(int skip)
+		{
+			this.skip = skip;
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new Wheel<E, E>()
+			{
+				@Override
+				public void begin()
+				{
+					while (upstream().hasNext() && index++ < skip)
+					{
+						upstream().next();
+					}
+				}
+
+				@Override
+				public boolean hasNext()
+				{
+					return upstream().hasNext();
+				}
+
+				@Override
+				public E next()
+				{
+					return upstream().next();
+				}
+			};
 		}
 	}
 
@@ -1650,10 +1792,63 @@ public class Canal<I, O> implements Iterable<O>
 		return upstream;
 	}
 
+	/**
+	 * Gather each element into correspondent group identified by same key.
+	 * 
+	 * @param kop
+	 * @return
+	 */
+	public <K> Canal<O, Tuple2<K, Iterable<O>>> groupBy(Mapper<O, K> kop)
+	{
+		return groupBy(kop, new SelfMapper<O>());
+	}
+
+	/**
+	 * Gather each element into correspondent group identified by same key.
+	 * 
+	 * @param kop
+	 * @param vop
+	 * @return
+	 */
+	public <K, V> Canal<O, Tuple2<K, Iterable<V>>> groupBy(Mapper<O, K> kop, Mapper<O, V> vop)
+	{
+		return this.follow(new GroupByOp<O, K, V>(kop, vop));
+	}
+
 	@Override
 	public Iterator<O> iterator()
 	{
 		return this.build();
+	}
+
+	/**
+	 * Map each element into {@code Tuple2<K,O>}. The first element is the key
+	 * defined by kop.
+	 * 
+	 * @param kop
+	 * @return
+	 */
+	public <K> Canal<O, Tuple2<K, O>> keyBy(final Mapper<O, K> kop)
+	{
+		return this.map(new Mapper<O, Tuple2<K, O>>()
+		{
+			@Override
+			public Tuple2<K, O> map(O key)
+			{
+				return new Tuple2<K, O>(kop.map(key), key);
+			}
+		});
+	}
+
+	/**
+	 * Pass at most {@code limit} elements to downstream.
+	 * 
+	 * @param limit
+	 * @return
+	 */
+	public Canal<O, O> limit(int limit)
+	{
+		return this.follow(new LimitOp<O>(limit));
 	}
 
 	/**
@@ -1712,6 +1907,17 @@ public class Canal<I, O> implements Iterable<O>
 	{
 		this.upstream = upstream;
 		return this;
+	}
+
+	/**
+	 * Skip at most {@code skip} elements and pass the rests to downstream.
+	 * 
+	 * @param skip
+	 * @return
+	 */
+	public Canal<O, O> skip(int skip)
+	{
+		return this.follow(new SkipOp<O>(skip));
 	}
 
 	/**
