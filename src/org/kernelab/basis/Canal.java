@@ -3,6 +3,7 @@ package org.kernelab.basis;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -10,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class Canal<I, O> implements Iterable<O>
@@ -135,33 +137,15 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class CartesianPond<A, B> extends AbstractPond<A, Tuple2<A, B>>
+	protected static class CartesianPond<A, B> extends Dam<A, B, Tuple2<A, B>>
 	{
-		protected final Canal<?, A>	self;
+		private Pond<?, B>	there;
 
-		protected final Canal<?, B>	that;
-
-		private Pond<?, A>			here;
-
-		private Pond<?, B>			there;
-
-		private A					left;
+		private A			left;
 
 		public CartesianPond(Canal<?, A> self, Canal<?, B> that)
 		{
-			this.self = self;
-			this.that = that;
-		}
-
-		@Override
-		public void begin()
-		{
-			here = self.build();
-		}
-
-		@Override
-		public void end()
-		{
+			super(that);
 		}
 
 		@Override
@@ -169,21 +153,16 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			while (there == null || !there.hasNext())
 			{
-				if (!here.hasNext())
+				if (!upstream().hasNext())
 				{
 					return false;
 				}
 				else
 				{
-					if (there == null)
-					{
-						there = that.build();
-					}
-					left = here.next();
+					left = upstream().next();
 					there = that.build();
 				}
 			}
-
 			return true;
 		}
 
@@ -382,6 +361,26 @@ public class Canal<I, O> implements Iterable<O>
 		public Integer get()
 		{
 			return count;
+		}
+	}
+
+	protected static abstract class Dam<A, B, C> extends AbstractPond<A, C>
+	{
+		protected final Canal<?, B> that;
+
+		public Dam(Canal<?, B> that)
+		{
+			this.that = that;
+		}
+
+		@Override
+		public void begin()
+		{
+		}
+
+		@Override
+		public void end()
+		{
 		}
 	}
 
@@ -878,6 +877,66 @@ public class Canal<I, O> implements Iterable<O>
 		protected abstract void settle();
 	}
 
+	protected static class IntersectionOp<E> implements Converter<E, E>
+	{
+		protected final Canal<?, E>		that;
+
+		protected final Comparator<E>	cmp;
+
+		public IntersectionOp(Canal<?, E> that, Comparator<E> cmp)
+		{
+			this.that = that;
+			this.cmp = cmp;
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new IntersectionPond<E>(that, cmp);
+		}
+	}
+
+	protected static class IntersectionPond<E> extends Dam<E, E, E>
+	{
+		protected final Comparator<E>	cmp;
+
+		private Set<E>					there;
+
+		private E						here;
+
+		public IntersectionPond(Canal<?, E> that, Comparator<E> cmp)
+		{
+			super(that);
+			this.cmp = cmp;
+		}
+
+		@Override
+		public void begin()
+		{
+			there = (Set<E>) that.collect(cmp == null ? new HashSet<E>() : new TreeSet<E>(cmp));
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			while (upstream().hasNext())
+			{
+				here = upstream().next();
+				if (there.contains(here))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public E next()
+		{
+			return here;
+		}
+	}
+
 	protected static class IterableSourcer<E> implements Sourcer<E>
 	{
 		protected final Iterable<E> iter;
@@ -1235,6 +1294,66 @@ public class Canal<I, O> implements Iterable<O>
 	protected static interface Sourcer<E> extends Operator<E, E>
 	{
 		Source<E> newPond();
+	}
+
+	protected static class SubtractOp<E> implements Converter<E, E>
+	{
+		protected final Canal<?, E>		that;
+
+		protected final Comparator<E>	cmp;
+
+		public SubtractOp(Canal<?, E> that, Comparator<E> cmp)
+		{
+			this.that = that;
+			this.cmp = cmp;
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new SubtractPond<E>(that, cmp);
+		}
+	}
+
+	protected static class SubtractPond<E> extends Dam<E, E, E>
+	{
+		protected final Comparator<E>	cmp;
+
+		private Set<E>					there;
+
+		private E						here;
+
+		public SubtractPond(Canal<?, E> that, Comparator<E> cmp)
+		{
+			super(that);
+			this.cmp = cmp;
+		}
+
+		@Override
+		public void begin()
+		{
+			there = (Set<E>) that.collect(cmp == null ? new HashSet<E>() : new TreeSet<E>(cmp));
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			while (upstream().hasNext())
+			{
+				here = upstream().next();
+				if (!there.contains(here))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public E next()
+		{
+			return here;
+		}
 	}
 
 	protected static class TakeOp<E> implements Evaluator<E, Collection<E>>
@@ -1815,6 +1934,29 @@ public class Canal<I, O> implements Iterable<O>
 		return this.follow(new GroupByOp<O, K, V>(kop, vop));
 	}
 
+	/**
+	 * Pass the element that both in this and that Canal to the downstream.
+	 * 
+	 * @param that
+	 * @return
+	 */
+	public Canal<O, O> intersection(Canal<?, O> that)
+	{
+		return intersection(that, null);
+	}
+
+	/**
+	 * Pass the element that both in this and that Canal to the downstream.
+	 * 
+	 * @param that
+	 * @param cmp
+	 * @return
+	 */
+	public Canal<O, O> intersection(Canal<?, O> that, Comparator<O> cmp)
+	{
+		return this.follow(new IntersectionOp<O>(that, cmp));
+	}
+
 	@Override
 	public Iterator<O> iterator()
 	{
@@ -1918,6 +2060,29 @@ public class Canal<I, O> implements Iterable<O>
 	public Canal<O, O> skip(int skip)
 	{
 		return this.follow(new SkipOp<O>(skip));
+	}
+
+	/**
+	 * Pass the elements in this Canal but not in that Canal to the downstream.
+	 * 
+	 * @param that
+	 * @return
+	 */
+	public Canal<O, O> subtract(Canal<?, O> that)
+	{
+		return subtract(that, null);
+	}
+
+	/**
+	 * Pass the elements in this Canal but not in that Canal to the downstream.
+	 * 
+	 * @param that
+	 * @param cmp
+	 * @return
+	 */
+	public Canal<O, O> subtract(Canal<?, O> that, Comparator<O> cmp)
+	{
+		return this.follow(new SubtractOp<O>(that, cmp));
 	}
 
 	/**

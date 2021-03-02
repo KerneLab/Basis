@@ -4115,6 +4115,12 @@ public class Tools
 		return result;
 	}
 
+	/**
+	 * To determine whether an Iterable object is empty or not.
+	 * 
+	 * @param iter
+	 * @return
+	 */
 	public static <E> boolean isEmpty(Iterable<E> iter)
 	{
 		if (iter instanceof Collection<?>)
@@ -4127,13 +4133,7 @@ public class Tools
 			return ((JSON) iter).isEmpty();
 		}
 
-		for (@SuppressWarnings("unused")
-		E obj : iter)
-		{
-			return false;
-		}
-
-		return true;
+		return !iter.iterator().hasNext();
 	}
 
 	/**
