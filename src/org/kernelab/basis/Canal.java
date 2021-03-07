@@ -1296,6 +1296,71 @@ public class Canal<I, O> implements Iterable<O>
 		Source<E> newPond();
 	}
 
+	protected static class StringConcater<E> implements Evaluator<E, String>
+	{
+		protected final CharSequence	split;
+
+		protected final CharSequence	prefix;
+
+		protected final CharSequence	suffix;
+
+		protected final boolean			emptyWrap;
+
+		public StringConcater(CharSequence split, CharSequence prefix, CharSequence suffix, boolean emptyWrap)
+		{
+			this.split = split == null || split.length() == 0 ? null : split;
+			this.prefix = prefix == null || prefix.length() == 0 ? null : prefix;
+			this.suffix = suffix == null || suffix.length() == 0 ? null : suffix;
+			this.emptyWrap = emptyWrap;
+		}
+
+		@Override
+		public Terminal<E, String> newPond()
+		{
+			return new AbstractTerminal<E, String>()
+			{
+				private StringBuilder	buff	= new StringBuilder();
+
+				private boolean			empty	= true;
+
+				@Override
+				public void begin()
+				{
+					while (upstream().hasNext())
+					{
+						if (empty)
+						{
+							empty = false;
+						}
+						else if (split != null)
+						{
+							buff.append(split);
+						}
+						buff.append(upstream().next());
+					}
+
+					if (emptyWrap || !empty)
+					{
+						if (prefix != null)
+						{
+							buff.insert(0, prefix);
+						}
+						if (suffix != null)
+						{
+							buff.append(suffix);
+						}
+					}
+				}
+
+				@Override
+				public String get()
+				{
+					return buff.toString();
+				}
+			};
+		}
+	}
+
 	protected static class SubtractOp<E> implements Converter<E, E>
 	{
 		protected final Canal<?, E>		that;
@@ -2107,6 +2172,47 @@ public class Canal<I, O> implements Iterable<O>
 	public Collection<O> take(int limit, Collection<O> result)
 	{
 		return this.follow(new TakeOp<O>(limit, result)).evaluate();
+	}
+
+	/**
+	 * To concatenate elements in this Canal to a String with given split.
+	 * 
+	 * @param split
+	 * @return
+	 */
+	public String toString(CharSequence split)
+	{
+		return toString(split, null, null);
+	}
+
+	/**
+	 * To concatenate elements in this Canal to a String with given split,
+	 * prefix and suffix.
+	 * 
+	 * @param split
+	 * @param prefix
+	 * @param suffix
+	 * @return
+	 */
+	public String toString(CharSequence split, CharSequence prefix, CharSequence suffix)
+	{
+		return toString(split, prefix, suffix, true);
+	}
+
+	/**
+	 * To concatenate elements in this Canal to a String with given split,
+	 * prefix and suffix. When the Canal is empty and the emptyWrap is false
+	 * then the prefix and suffix will not be wrapped.
+	 * 
+	 * @param split
+	 * @param prefix
+	 * @param suffix
+	 * @param emptyWrap
+	 * @return
+	 */
+	public String toString(CharSequence split, CharSequence prefix, CharSequence suffix, boolean emptyWrap)
+	{
+		return this.follow(new StringConcater<O>(split, prefix, suffix, emptyWrap)).evaluate();
 	}
 
 	/**

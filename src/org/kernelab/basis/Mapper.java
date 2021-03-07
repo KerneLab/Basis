@@ -18,7 +18,7 @@ public interface Mapper<K, V>
 	/**
 	 * To map a value into another value.
 	 * 
-	 * @param key
+	 * @param el
 	 *            The certain value to be mapped.
 	 * @return A mapped value.
 	 * @throws Terminator
@@ -26,5 +26,5 @@ public interface Mapper<K, V>
 	 *             is recommended.
 	 * @see Tools#map(Iterable, Mapper, Collection)
 	 */
-	public V map(K key);
+	public V map(K el);
 }

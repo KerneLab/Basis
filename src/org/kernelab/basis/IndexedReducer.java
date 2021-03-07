@@ -18,10 +18,10 @@ public interface IndexedReducer<E, R>
 	 * To reduce the element in a certain Iterable object into the reduction
 	 * result.
 	 * 
-	 * @param result
+	 * @param res
 	 *            A former result of reduction. Attention that the result might
 	 *            be null sometime in the reduce operation.
-	 * @param element
+	 * @param el
 	 *            An element in a certain Iterable object.
 	 * @param index
 	 *            The index (ZERO based) of the element in the Iterable object.
@@ -31,5 +31,5 @@ public interface IndexedReducer<E, R>
 	 *             {@link Terminator#SIGNAL} is recommended.
 	 * @see Tools#reduce(Iterable, IndexedReducer)
 	 */
-	public R reduce(R result, E element, int index);
+	public R reduce(R res, E el, int index);
 }

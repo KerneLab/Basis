@@ -28,7 +28,7 @@ public interface Filter<E>
 	 * another container that obey the condition of {@link #filter()}
 	 * 
 	 * 
-	 * @param element
+	 * @param el
 	 *            The element to be filtered.
 	 * @return true or false defined by condition.
 	 * @throws Terminator
@@ -36,5 +36,5 @@ public interface Filter<E>
 	 *             {@link Terminator#SIGNAL} is recommended.
 	 * @see Tools#filter(Iterable, Filter, Collection)
 	 */
-	public boolean filter(E element);
+	public boolean filter(E el);
 }

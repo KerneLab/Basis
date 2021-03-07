@@ -18,7 +18,7 @@ public interface IndexedMapper<K, V>
 	/**
 	 * To map a value into another value.
 	 * 
-	 * @param key
+	 * @param el
 	 *            The certain value to be mapped.
 	 * @param index
 	 *            The index (ZERO based) of the element in the Iterable object.
@@ -29,5 +29,5 @@ public interface IndexedMapper<K, V>
 	 * @see Mapper#map(Object)
 	 * @see Tools#map(Iterable, IndexedMapper, Collection)
 	 */
-	public V map(K key, int index);
+	public V map(K el, int index);
 }

@@ -9,7 +9,7 @@ public interface IndexedFilter<E>
 	 * on.<br />
 	 * If returns true, generally means preserve the element.
 	 * 
-	 * @param element
+	 * @param el
 	 *            The element to be filtered.
 	 * @param index
 	 *            The index (ZERO based) of the element in the Iterable object.
@@ -20,5 +20,5 @@ public interface IndexedFilter<E>
 	 * @see Filter#filter(Object)
 	 * @see Tools#filter(Iterable, IndexedFilter, Collection)
 	 */
-	public boolean filter(E element, int index);
+	public boolean filter(E el, int index);
 }
