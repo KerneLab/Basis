@@ -530,9 +530,9 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static class FirstIndexedOp<E> implements Evaluator<E, Option<E>>
 	{
-		protected final IndexedFilter<E> filter;
+		protected final FilterIndexed<E> filter;
 
-		public FirstIndexedOp(IndexedFilter<E> filter)
+		public FirstIndexedOp(FilterIndexed<E> filter)
 		{
 			this.filter = filter;
 		}
@@ -611,9 +611,9 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static class FlatMapIndexedOp<I, O> implements Converter<I, O>
 	{
-		protected final IndexedMapper<I, Iterable<O>> mapper;
+		protected final MapperIndexed<I, Iterable<O>> mapper;
 
-		public FlatMapIndexedOp(IndexedMapper<I, Iterable<O>> mapper)
+		public FlatMapIndexedOp(MapperIndexed<I, Iterable<O>> mapper)
 		{
 			this.mapper = mapper;
 		}
@@ -1012,9 +1012,9 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static class MapIndexedOp<I, O> implements Converter<I, O>
 	{
-		protected final IndexedMapper<I, O> mapper;
+		protected final MapperIndexed<I, O> mapper;
 
-		public MapIndexedOp(IndexedMapper<I, O> mapper)
+		public MapIndexedOp(MapperIndexed<I, O> mapper)
 		{
 			this.mapper = mapper;
 		}
@@ -1220,6 +1220,33 @@ public class Canal<I, O> implements Iterable<O>
 				public Option<E> get()
 				{
 					return empty ? Canal.<E> none() : Canal.some(result);
+				}
+			};
+		}
+	}
+
+	protected static class ReverseOp<E> implements Converter<E, E>
+	{
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new Heaper<E>()
+			{
+				@Override
+				protected Collection<E> newSediment()
+				{
+					return new LinkedList<E>();
+				}
+
+				@Override
+				protected void settle()
+				{
+					LinkedList<E> settle = (LinkedList<E>) this.sediment;
+
+					while (upstream().hasNext())
+					{
+						settle.addFirst(upstream().next());
+					}
 				}
 			};
 		}
@@ -1972,7 +1999,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param filter
 	 * @return
 	 */
-	public Option<O> first(IndexedFilter<O> filter)
+	public Option<O> first(FilterIndexed<O> filter)
 	{
 		return this.follow(new FirstIndexedOp<O>(filter)).evaluate();
 	}
@@ -1983,7 +2010,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param mapper
 	 * @return
 	 */
-	public <N> Canal<O, N> flatMap(IndexedMapper<O, Iterable<N>> mapper)
+	public <N> Canal<O, N> flatMap(MapperIndexed<O, Iterable<N>> mapper)
 	{
 		return this.follow(new FlatMapIndexedOp<O, N>(mapper));
 	}
@@ -2124,7 +2151,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param mapper
 	 * @return
 	 */
-	public <N> Canal<O, N> map(IndexedMapper<O, N> mapper)
+	public <N> Canal<O, N> map(MapperIndexed<O, N> mapper)
 	{
 		return this.follow(new MapIndexedOp<O, N>(mapper));
 	}
@@ -2186,6 +2213,16 @@ public class Canal<I, O> implements Iterable<O>
 	public Option<O> reduce(Reducer<O, O> reducer)
 	{
 		return this.follow(new ReduceOp<O>(reducer)).evaluate();
+	}
+
+	/**
+	 * Reverse the elements' order in this Canal.
+	 * 
+	 * @return
+	 */
+	public Canal<O, O> reverse()
+	{
+		return this.follow(new ReverseOp<O>());
 	}
 
 	protected Canal<I, O> setOperator(Operator<I, O> operator)

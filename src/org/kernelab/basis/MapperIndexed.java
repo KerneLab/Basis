@@ -13,7 +13,7 @@ import java.util.Collection;
  * @param <V>
  *            The generic type of the mapping result.
  */
-public interface IndexedMapper<K, V>
+public interface MapperIndexed<K, V>
 {
 	/**
 	 * To map a value into another value.

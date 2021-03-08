@@ -2711,7 +2711,7 @@ public class Tools
 	 *            LinkedList would be created.
 	 * @return The result Collection.
 	 */
-	public static <E> Collection<E> filter(Iterable<E> iterable, IndexedFilter<E> filter, Collection<E> result)
+	public static <E> Collection<E> filter(Iterable<E> iterable, FilterIndexed<E> filter, Collection<E> result)
 	{
 		if (result == null)
 		{
@@ -4847,7 +4847,7 @@ public class Tools
 	 *            null, an empty LinkedList would be created.
 	 * @return The mapping result.
 	 */
-	public static <K, V> Collection<V> map(Iterable<K> iterable, IndexedMapper<K, V> mapper, Collection<V> result)
+	public static <K, V> Collection<V> map(Iterable<K> iterable, MapperIndexed<K, V> mapper, Collection<V> result)
 	{
 		if (result == null)
 		{
@@ -6262,7 +6262,7 @@ public class Tools
 	 *            The initial value of the reduction result.
 	 * @return The result of the reduction.
 	 */
-	public static <E, R> R reduce(Iterable<E> iterable, IndexedReducer<E, R> reducer, R result)
+	public static <E, R> R reduce(Iterable<E> iterable, ReducerIndexed<E, R> reducer, R result)
 	{
 		int index = 0;
 		try

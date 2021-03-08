@@ -12,7 +12,7 @@ package org.kernelab.basis;
  * @param <R>
  *            The generic type of the reduce result.
  */
-public interface IndexedReducer<E, R>
+public interface ReducerIndexed<E, R>
 {
 	/**
 	 * To reduce the element in a certain Iterable object into the reduction

@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.kernelab.basis.Filter;
-import org.kernelab.basis.IndexedReducer;
+import org.kernelab.basis.ReducerIndexed;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Reducer;
 import org.kernelab.basis.Terminator;
@@ -69,7 +69,7 @@ public class DemoFilterMapperReducer
 
 		// 带循环索引的化简算子
 		Tools.debug("Indexed Reduce:");
-		Double part = Tools.reduce(list, new IndexedReducer<Double, Double>()
+		Double part = Tools.reduce(list, new ReducerIndexed<Double, Double>()
 		{
 			public Double reduce(Double result, Double element, int index)
 			{

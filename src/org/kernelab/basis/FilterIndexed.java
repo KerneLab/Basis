@@ -2,7 +2,7 @@ package org.kernelab.basis;
 
 import java.util.Collection;
 
-public interface IndexedFilter<E>
+public interface FilterIndexed<E>
 {
 	/**
 	 * Filter some element from a container such as Collection, List and so
