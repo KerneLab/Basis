@@ -65,6 +65,11 @@ public class Canal<I, O> implements Iterable<O>
 		void action(E el);
 	}
 
+	public static interface ActionIndexed<E>
+	{
+		void action(E el, int index);
+	}
+
 	protected static class ArraySource<E> extends Source<E>
 	{
 		protected final E[]	array;
@@ -1113,6 +1118,56 @@ public class Canal<I, O> implements Iterable<O>
 		public abstract E orNull();
 	}
 
+	protected static class PeekIndexedOp<E> implements Converter<E, E>
+	{
+		protected final ActionIndexed<E> action;
+
+		public PeekIndexedOp(ActionIndexed<E> action)
+		{
+			this.action = action;
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new Wheel<E, E>()
+			{
+				@Override
+				public E next()
+				{
+					E el = upstream().next();
+					action.action(el, index++);
+					return el;
+				}
+			};
+		}
+	}
+
+	protected static class PeekOp<E> implements Converter<E, E>
+	{
+		protected final Action<E> action;
+
+		public PeekOp(Action<E> action)
+		{
+			this.action = action;
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new Wheel<E, E>()
+			{
+				@Override
+				public E next()
+				{
+					E el = upstream().next();
+					action.action(el);
+					return el;
+				}
+			};
+		}
+	}
+
 	protected static interface Pond<I, O> extends Iterator<O>
 	{
 		void begin();
@@ -1601,6 +1656,11 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static abstract class Wheel<I, O> extends AbstractPond<I, O>
 	{
+		/**
+		 * The index of current iterating element.<br />
+		 * This index should {@code +1} after {@code upstream().next()} is
+		 * called.
+		 */
 		protected int index = 0;
 
 		public void begin()
@@ -2091,6 +2151,30 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			return this.getOperator().newPond();
 		}
+	}
+
+	/**
+	 * Peek the elements in this Canal, take some action and pass them to the
+	 * downstream.
+	 * 
+	 * @param action
+	 * @return
+	 */
+	public Canal<O, O> peek(Action<O> action)
+	{
+		return this.follow(new PeekOp<O>(action));
+	}
+
+	/**
+	 * Peek the elements in this Canal, take some action and pass them to the
+	 * downstream.
+	 * 
+	 * @param action
+	 * @return
+	 */
+	public Canal<O, O> peek(ActionIndexed<O> action)
+	{
+		return this.follow(new PeekIndexedOp<O>(action));
 	}
 
 	/**
