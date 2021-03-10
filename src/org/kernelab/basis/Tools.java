@@ -2696,48 +2696,6 @@ public class Tools
 	}
 
 	/**
-	 * To filter some element from a certain Iterable object into another
-	 * Collection.
-	 * 
-	 * @param <E>
-	 *            The generic type of the elements in the Iterable object.
-	 * @param iterable
-	 *            The Iterable object which is to be filtered.
-	 * @param filter
-	 *            The IndexedFilter object which indicates the elements should
-	 *            be preserved if filter returns false.
-	 * @param result
-	 *            The Collection holding the result of filter. If null, an empty
-	 *            LinkedList would be created.
-	 * @return The result Collection.
-	 */
-	public static <E> Collection<E> filter(Iterable<E> iterable, FilterIndexed<E> filter, Collection<E> result)
-	{
-		if (result == null)
-		{
-			result = new LinkedList<E>();
-		}
-
-		int index = 0;
-
-		try
-		{
-			for (E element : iterable)
-			{
-				if (filter.filter(element, index++))
-				{
-					result.add(element);
-				}
-			}
-		}
-		catch (Terminator t)
-		{
-		}
-
-		return result;
-	}
-
-	/**
 	 * To find the first index of non-white character from the given position.
 	 * 
 	 * @param seq
@@ -4841,44 +4799,6 @@ public class Tools
 	 * @param iterable
 	 *            The source Iterable object to be mapped.
 	 * @param mapper
-	 *            The IndexedMapper object which defines the mapping operation.
-	 * @param result
-	 *            The Collection which holds the result of mapping operation. If
-	 *            null, an empty LinkedList would be created.
-	 * @return The mapping result.
-	 */
-	public static <K, V> Collection<V> map(Iterable<K> iterable, MapperIndexed<K, V> mapper, Collection<V> result)
-	{
-		if (result == null)
-		{
-			result = new LinkedList<V>();
-		}
-		int index = 0;
-		try
-		{
-			for (K value : iterable)
-			{
-				result.add(mapper.map(value, index++));
-			}
-		}
-		catch (Terminator t)
-		{
-		}
-		return result;
-	}
-
-	/**
-	 * To map each element in a certain Iterable object into another Collection
-	 * by the definition of Mapper.
-	 * 
-	 * @param <K>
-	 *            The generic type of the elements in the source Iterable
-	 *            object.
-	 * @param <V>
-	 *            The generic type of the elements in the target Collection.
-	 * @param iterable
-	 *            The source Iterable object to be mapped.
-	 * @param mapper
 	 *            The Mapper object which defines the mapping operation.
 	 * @param result
 	 *            The Collection which holds the result of mapping operation. If
@@ -6243,38 +6163,6 @@ public class Tools
 			}
 		}
 
-		return result;
-	}
-
-	/**
-	 * To reduce a certain Iterable object into one value.
-	 * 
-	 * @param <E>
-	 *            The generic type of the elements in the Iterable object.
-	 * @param <R>
-	 *            The generic type of the reduction result.
-	 * @param iterable
-	 *            The Iterable object to be reduced.
-	 * @param reducer
-	 *            The IndexedReducer object which defines the reducing
-	 *            operation.
-	 * @param result
-	 *            The initial value of the reduction result.
-	 * @return The result of the reduction.
-	 */
-	public static <E, R> R reduce(Iterable<E> iterable, ReducerIndexed<E, R> reducer, R result)
-	{
-		int index = 0;
-		try
-		{
-			for (E element : iterable)
-			{
-				result = reducer.reduce(result, element, index++);
-			}
-		}
-		catch (Terminator t)
-		{
-		}
 		return result;
 	}
 

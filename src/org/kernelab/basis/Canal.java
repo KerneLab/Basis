@@ -2,6 +2,7 @@ package org.kernelab.basis;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -65,11 +66,6 @@ public class Canal<I, O> implements Iterable<O>
 		void action(E el);
 	}
 
-	public static interface ActionIndexed<E>
-	{
-		void action(E el, int index);
-	}
-
 	protected static class ArraySource<E> extends Source<E>
 	{
 		protected final E[]	array;
@@ -125,20 +121,17 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static class CartesianOp<A, B> implements Converter<A, Tuple2<A, B>>
 	{
-		protected final Canal<?, A>	self;
+		protected final Canal<?, B> that;
 
-		protected final Canal<?, B>	that;
-
-		public CartesianOp(Canal<?, A> self, Canal<?, B> that)
+		public CartesianOp(Canal<?, B> that)
 		{
-			this.self = self;
 			this.that = that;
 		}
 
 		@Override
 		public Pond<A, Tuple2<A, B>> newPond()
 		{
-			return new CartesianPond<A, B>(self, that);
+			return new CartesianPond<A, B>(that);
 		}
 	}
 
@@ -148,7 +141,7 @@ public class Canal<I, O> implements Iterable<O>
 
 		private A			left;
 
-		public CartesianPond(Canal<?, A> self, Canal<?, B> that)
+		public CartesianPond(Canal<?, B> that)
 		{
 			super(that);
 		}
@@ -369,6 +362,25 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static abstract class Creek<I, O> extends AbstractPond<I, O>
+	{
+		@Override
+		public void begin()
+		{
+		}
+
+		@Override
+		public void end()
+		{
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return upstream().hasNext();
+		}
+	}
+
 	protected static abstract class Dam<A, B, C> extends AbstractPond<A, C>
 	{
 		protected final Canal<?, B> that;
@@ -501,7 +513,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>()
+			return new Creek<E, E>()
 			{
 				private E next;
 
@@ -523,47 +535,6 @@ public class Canal<I, O> implements Iterable<O>
 				public E next()
 				{
 					return next;
-				}
-			};
-		}
-	}
-
-	protected static class FirstIndexedOp<E> implements Evaluator<E, Option<E>>
-	{
-		protected final FilterIndexed<E> filter;
-
-		public FirstIndexedOp(FilterIndexed<E> filter)
-		{
-			this.filter = filter;
-		}
-
-		@Override
-		public Terminal<E, Option<E>> newPond()
-		{
-			return new AbstractTerminal<E, Option<E>>()
-			{
-				private boolean	found	= false;
-
-				private E		result;
-
-				@Override
-				public void begin()
-				{
-					int index = 0;
-					while (upstream().hasNext())
-					{
-						if (filter.filter(result = upstream().next(), index++))
-						{
-							found = true;
-							break;
-						}
-					}
-				}
-
-				@Override
-				public Option<E> get()
-				{
-					return found ? Canal.some(result) : Canal.<E> none();
 				}
 			};
 		}
@@ -609,49 +580,6 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class FlatMapIndexedOp<I, O> implements Converter<I, O>
-	{
-		protected final MapperIndexed<I, Iterable<O>> mapper;
-
-		public FlatMapIndexedOp(MapperIndexed<I, Iterable<O>> mapper)
-		{
-			this.mapper = mapper;
-		}
-
-		@Override
-		public Pond<I, O> newPond()
-		{
-			return new Wheel<I, O>()
-			{
-				private Iterator<O> iter;
-
-				@Override
-				public boolean hasNext()
-				{
-					if (iter != null && iter.hasNext())
-					{
-						return true;
-					}
-					while (upstream().hasNext())
-					{
-						iter = mapper.map(upstream().next(), index++).iterator();
-						if (iter.hasNext())
-						{
-							return true;
-						}
-					}
-					return false;
-				}
-
-				@Override
-				public O next()
-				{
-					return iter.next();
-				}
-			};
-		}
-	}
-
 	protected static class FlatMapOp<I, O> implements Converter<I, O>
 	{
 		protected final Mapper<I, Iterable<O>> mapper;
@@ -664,7 +592,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>()
+			return new Creek<I, O>()
 			{
 				private Iterator<O> iter;
 
@@ -1010,29 +938,6 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class MapIndexedOp<I, O> implements Converter<I, O>
-	{
-		protected final MapperIndexed<I, O> mapper;
-
-		public MapIndexedOp(MapperIndexed<I, O> mapper)
-		{
-			this.mapper = mapper;
-		}
-
-		@Override
-		public Pond<I, O> newPond()
-		{
-			return new Wheel<I, O>()
-			{
-				@Override
-				public O next()
-				{
-					return mapper.map(upstream().next(), index++);
-				}
-			};
-		}
-	}
-
 	protected static class MapOp<I, O> implements Converter<I, O>
 	{
 		protected final Mapper<I, O> mapper;
@@ -1045,7 +950,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Wheel<I, O>()
+			return new Creek<I, O>()
 			{
 				@Override
 				public O next()
@@ -1118,31 +1023,6 @@ public class Canal<I, O> implements Iterable<O>
 		public abstract E orNull();
 	}
 
-	protected static class PeekIndexedOp<E> implements Converter<E, E>
-	{
-		protected final ActionIndexed<E> action;
-
-		public PeekIndexedOp(ActionIndexed<E> action)
-		{
-			this.action = action;
-		}
-
-		@Override
-		public Pond<E, E> newPond()
-		{
-			return new Wheel<E, E>()
-			{
-				@Override
-				public E next()
-				{
-					E el = upstream().next();
-					action.action(el, index++);
-					return el;
-				}
-			};
-		}
-	}
-
 	protected static class PeekOp<E> implements Converter<E, E>
 	{
 		protected final Action<E> action;
@@ -1155,7 +1035,7 @@ public class Canal<I, O> implements Iterable<O>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>()
+			return new Creek<E, E>()
 			{
 				@Override
 				public E next()
@@ -1285,12 +1165,6 @@ public class Canal<I, O> implements Iterable<O>
 				}
 
 				@Override
-				public boolean hasNext()
-				{
-					return upstream().hasNext();
-				}
-
-				@Override
 				public E next()
 				{
 					return upstream().next();
@@ -1343,6 +1217,46 @@ public class Canal<I, O> implements Iterable<O>
 		public String toString()
 		{
 			return "Some(" + value + ")";
+		}
+	}
+
+	protected static class SortWithOp<E> implements Converter<E, E>
+	{
+		protected final Comparator<E> cmp;
+
+		public SortWithOp(final Comparator<E> cmp, boolean ascend)
+		{
+			this.cmp = ascend ? cmp : new Comparator<E>()
+			{
+				@Override
+				public int compare(E o1, E o2)
+				{
+					return cmp.compare(o2, o1);
+				}
+			};
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new Heaper<E>()
+			{
+				@Override
+				protected Collection<E> newSediment()
+				{
+					return new LinkedList<E>();
+				}
+
+				@Override
+				protected void settle()
+				{
+					while (upstream().hasNext())
+					{
+						this.sediment.add(upstream().next());
+					}
+					Collections.sort((List<E>) this.sediment, cmp);
+				}
+			};
 		}
 	}
 
@@ -1685,10 +1599,10 @@ public class Canal<I, O> implements Iterable<O>
 	{
 		/**
 		 * The index of current iterating element.<br />
-		 * This index should {@code +1} after {@code upstream().next()} is
-		 * called.
+		 * This index should {@code +1} just after {@code upstream().next()} is
+		 * called and before any other action.
 		 */
-		protected int index = 0;
+		protected long index = 0;
 
 		public void begin()
 		{
@@ -1702,6 +1616,66 @@ public class Canal<I, O> implements Iterable<O>
 		public boolean hasNext()
 		{
 			return upstream().hasNext();
+		}
+	}
+
+	protected static class ZipOp<A, B> implements Converter<A, Tuple2<A, B>>
+	{
+		protected final Canal<?, B> that;
+
+		public ZipOp(Canal<?, B> that)
+		{
+			this.that = that;
+		}
+
+		@Override
+		public Pond<A, Tuple2<A, B>> newPond()
+		{
+			return new ZipPond<A, B>(that);
+		}
+	}
+
+	protected static class ZipPond<A, B> extends Dam<A, B, Tuple2<A, B>>
+	{
+		private Pond<?, B> there;
+
+		public ZipPond(Canal<?, B> that)
+		{
+			super(that);
+		}
+
+		@Override
+		public void begin()
+		{
+			this.there = that.build();
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return upstream().hasNext() && there.hasNext();
+		}
+
+		@Override
+		public Tuple2<A, B> next()
+		{
+			return new Tuple2<A, B>(upstream().next(), there.next());
+		}
+	}
+
+	protected static class ZipWithIndexOp<E> implements Converter<E, Tuple2<E, Long>>
+	{
+		@Override
+		public Pond<E, Tuple2<E, Long>> newPond()
+		{
+			return new Wheel<E, Tuple2<E, Long>>()
+			{
+				@Override
+				public Tuple2<E, Long> next()
+				{
+					return new Tuple2<E, Long>(upstream().next(), index++);
+				}
+			};
 		}
 	}
 
@@ -1793,7 +1767,7 @@ public class Canal<I, O> implements Iterable<O>
 	 */
 	public <N> Canal<O, Tuple2<O, N>> cartesian(Canal<?, N> that)
 	{
-		return this.follow(new CartesianOp<O, N>(this, that));
+		return this.follow(new CartesianOp<O, N>(that));
 	}
 
 	/**
@@ -1994,28 +1968,6 @@ public class Canal<I, O> implements Iterable<O>
 	}
 
 	/**
-	 * Get the first element that satisfied the given predicate.
-	 * 
-	 * @param filter
-	 * @return
-	 */
-	public Option<O> first(FilterIndexed<O> filter)
-	{
-		return this.follow(new FirstIndexedOp<O>(filter)).evaluate();
-	}
-
-	/**
-	 * Map each element into a flat result.
-	 * 
-	 * @param mapper
-	 * @return
-	 */
-	public <N> Canal<O, N> flatMap(MapperIndexed<O, Iterable<N>> mapper)
-	{
-		return this.follow(new FlatMapIndexedOp<O, N>(mapper));
-	}
-
-	/**
 	 * Map each element into a flat result.
 	 * 
 	 * @param mapper
@@ -2151,17 +2103,6 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param mapper
 	 * @return
 	 */
-	public <N> Canal<O, N> map(MapperIndexed<O, N> mapper)
-	{
-		return this.follow(new MapIndexedOp<O, N>(mapper));
-	}
-
-	/**
-	 * Map each element.
-	 * 
-	 * @param mapper
-	 * @return
-	 */
 	public <N> Canal<O, N> map(Mapper<O, N> mapper)
 	{
 		return this.follow(new MapOp<O, N>(mapper));
@@ -2190,18 +2131,6 @@ public class Canal<I, O> implements Iterable<O>
 	public Canal<O, O> peek(Action<O> action)
 	{
 		return this.follow(new PeekOp<O>(action));
-	}
-
-	/**
-	 * Peek the elements in this Canal, take some action and pass them to the
-	 * downstream.
-	 * 
-	 * @param action
-	 * @return
-	 */
-	public Canal<O, O> peek(ActionIndexed<O> action)
-	{
-		return this.follow(new PeekIndexedOp<O>(action));
 	}
 
 	/**
@@ -2246,6 +2175,32 @@ public class Canal<I, O> implements Iterable<O>
 	public Canal<O, O> skip(int skip)
 	{
 		return this.follow(new SkipOp<O>(skip));
+	}
+
+	/**
+	 * Sort each element in this Canal by a given Comparator.
+	 * 
+	 * @param cmp
+	 * @param ascend
+	 * @return
+	 */
+	public Canal<O, O> sortWith(Comparator<O> cmp, boolean ascend)
+	{
+		if (cmp != null)
+		{
+			return this.follow(new SortWithOp<O>(cmp, ascend));
+		}
+		else
+		{
+			if (ascend)
+			{
+				return this.map(new SelfMapper<O>());
+			}
+			else
+			{
+				return this.reverse();
+			}
+		}
 	}
 
 	/**
@@ -2345,5 +2300,26 @@ public class Canal<I, O> implements Iterable<O>
 	public Canal<O, O> union(Canal<?, O> that)
 	{
 		return this.follow(new UnionOp<O>(this, that));
+	}
+
+	/**
+	 * Zip with another Canal into a Tuple2.
+	 * 
+	 * @param that
+	 * @return
+	 */
+	public <N> Canal<O, Tuple2<O, N>> zip(Canal<?, N> that)
+	{
+		return this.follow(new ZipOp<O, N>(that));
+	}
+
+	/**
+	 * Zip each element in this Canal with its index number as a Tuple2.
+	 * 
+	 * @return
+	 */
+	public Canal<O, Tuple2<O, Long>> zipWithIndex()
+	{
+		return this.follow(new ZipWithIndexOp<O>());
 	}
 }
