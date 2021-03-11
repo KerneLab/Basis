@@ -730,6 +730,26 @@ public class Tools
 	}
 
 	/**
+	 * Compare each pair of values in the given parameters.
+	 * 
+	 * @param values
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static int compare(Object... values)
+	{
+		int c = 0;
+		for (int i = 0; i < values.length - 1; i += 2)
+		{
+			if ((c = ((Comparable<Object>) values[i]).compareTo(values[i + 1])) != 0)
+			{
+				return c;
+			}
+		}
+		return 0;
+	}
+
+	/**
 	 * Configure the application's look and feel as the system style.<br />
 	 * Attention that this method should be called in static block of the
 	 * <b>Main Class</b> and before any other GUI components being instanced.

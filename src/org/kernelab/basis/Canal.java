@@ -401,6 +401,16 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class DefaultComparator<E> implements Comparator<E>
+	{
+		@SuppressWarnings("unchecked")
+		@Override
+		public int compare(E o1, E o2)
+		{
+			return ((Comparable<E>) o1).compareTo(o2);
+		}
+	}
+
 	public static class DefaultKop<E, K> implements Mapper<E, K>
 	{
 		@SuppressWarnings("unchecked")
@@ -1105,6 +1115,22 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class ReverseComparator<E> implements Comparator<E>
+	{
+		protected final Comparator<E> cmp;
+
+		public ReverseComparator(Comparator<E> cmp)
+		{
+			this.cmp = cmp;
+		}
+
+		@Override
+		public int compare(E o1, E o2)
+		{
+			return cmp.compare(o2, o1);
+		}
+	}
+
 	protected static class ReverseOp<E> implements Converter<E, E>
 	{
 		@Override
@@ -1220,20 +1246,46 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class SortByOp<E> implements Converter<E, E>
+	{
+		protected final ComparatorsChain<E> cmps;
+
+		public SortByOp(List<Comparator<E>> cmps)
+		{
+			this.cmps = new ComparatorsChain<E>(cmps);
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new Heaper<E>()
+			{
+				@Override
+				protected Collection<E> newSediment()
+				{
+					return new LinkedList<E>();
+				}
+
+				@Override
+				protected void settle()
+				{
+					while (upstream().hasNext())
+					{
+						this.sediment.add(upstream().next());
+					}
+					Collections.sort((List<E>) this.sediment, cmps);
+				}
+			};
+		}
+	}
+
 	protected static class SortWithOp<E> implements Converter<E, E>
 	{
 		protected final Comparator<E> cmp;
 
 		public SortWithOp(final Comparator<E> cmp, boolean ascend)
 		{
-			this.cmp = ascend ? cmp : new Comparator<E>()
-			{
-				@Override
-				public int compare(E o1, E o2)
-				{
-					return cmp.compare(o2, o1);
-				}
-			};
+			this.cmp = ascend ? cmp : new ReverseComparator<E>(cmp);
 		}
 
 		@Override
@@ -1459,7 +1511,7 @@ public class Canal<I, O> implements Iterable<O>
 		T get();
 	}
 
-	public static class Tuple implements Serializable
+	public static abstract class Tuple implements Serializable, Comparable<Object>
 	{
 		/**
 		 * 
@@ -1491,6 +1543,13 @@ public class Canal<I, O> implements Iterable<O>
 			this._1 = _1;
 		}
 
+		@SuppressWarnings("unchecked")
+		@Override
+		public int compareTo(Object o)
+		{
+			return Tools.compare(this._1, ((Tuple1<E1>) o)._1);
+		}
+
 		@Override
 		public String toString()
 		{
@@ -1511,6 +1570,14 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			super(_1);
 			this._2 = _2;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public int compareTo(Object o)
+		{
+			Tuple2<E1, E2> t = ((Tuple2<E1, E2>) o);
+			return Tools.compare(this._1, t._1, this._2, t._2);
 		}
 
 		@Override
@@ -2178,6 +2245,38 @@ public class Canal<I, O> implements Iterable<O>
 	}
 
 	/**
+	 * Sort each element in this Canal by natural ascending order.
+	 * 
+	 * @return
+	 */
+	public Canal<O, O> sortWith()
+	{
+		return sortWith(null);
+	}
+
+	/**
+	 * Sort each element in this Canal by natural order.
+	 * 
+	 * @param ascend
+	 * @return
+	 */
+	public Canal<O, O> sortWith(boolean ascend)
+	{
+		return sortWith(null, ascend);
+	}
+
+	/**
+	 * Sort each element in this Canal by a given Comparator in ascending order.
+	 * 
+	 * @param cmp
+	 * @return
+	 */
+	public Canal<O, O> sortWith(Comparator<O> cmp)
+	{
+		return sortWith(cmp, true);
+	}
+
+	/**
 	 * Sort each element in this Canal by a given Comparator.
 	 * 
 	 * @param cmp
@@ -2186,20 +2285,13 @@ public class Canal<I, O> implements Iterable<O>
 	 */
 	public Canal<O, O> sortWith(Comparator<O> cmp, boolean ascend)
 	{
-		if (cmp != null)
+		if (cmp == null && !ascend)
 		{
-			return this.follow(new SortWithOp<O>(cmp, ascend));
+			return this.follow(new SortWithOp<O>(new DefaultComparator<O>(), ascend));
 		}
 		else
 		{
-			if (ascend)
-			{
-				return this.map(new SelfMapper<O>());
-			}
-			else
-			{
-				return this.reverse();
-			}
+			return this.follow(new SortWithOp<O>(cmp, ascend));
 		}
 	}
 

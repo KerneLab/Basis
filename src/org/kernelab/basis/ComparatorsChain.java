@@ -14,7 +14,7 @@ import java.util.LinkedList;
  */
 public class ComparatorsChain<E> implements Comparator<E>
 {
-	private Collection<Comparator<E>>	chain;
+	private Collection<Comparator<E>> chain;
 
 	public ComparatorsChain(Collection<Comparator<E>> chain)
 	{
@@ -42,11 +42,11 @@ public class ComparatorsChain<E> implements Comparator<E>
 		{
 			if ((result = c.compare(o1, o2)) != 0)
 			{
-				break;
+				return result;
 			}
 		}
 
-		return result;
+		return 0;
 	}
 
 	public Collection<Comparator<E>> getChain()
