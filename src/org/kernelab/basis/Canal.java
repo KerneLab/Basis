@@ -15,6 +15,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.kernelab.basis.JSON.Pair;
+
 public class Canal<I, O> implements Iterable<O>
 {
 	protected static abstract class AbstractPond<I, O> implements Pond<I, O>
@@ -1785,6 +1787,34 @@ public class Canal<I, O> implements Iterable<O>
 	public static <E> Canal<E, E> of(Iterable<E> iter)
 	{
 		return new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
+	}
+
+	public static Canal<JSON.Pair, Tuple2<String, Object>> of(JSON json)
+	{
+		return new Canal<JSON.Pair, JSON.Pair>() //
+				.setOperator(new IterableSourcer<JSON.Pair>(json.pairs())) //
+				.map(new Mapper<JSON.Pair, Tuple2<String, Object>>()
+				{
+					@Override
+					public Tuple2<String, Object> map(Pair el)
+					{
+						return new Tuple2<String, Object>(el.key, el.val());
+					}
+				});
+	}
+
+	public static <K, V> Canal<Entry<K, V>, Tuple2<K, V>> of(Map<K, V> map)
+	{
+		return new Canal<Entry<K, V>, Entry<K, V>>() //
+				.setOperator(new IterableSourcer<Entry<K, V>>(map.entrySet())) //
+				.map(new Mapper<Entry<K, V>, Tuple2<K, V>>()
+				{
+					@Override
+					public Tuple2<K, V> map(Entry<K, V> el)
+					{
+						return new Tuple2<K, V>(el.getKey(), el.getValue());
+					}
+				});
 	}
 
 	public static <E> Option<E> option(E value)
