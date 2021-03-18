@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -1738,12 +1739,12 @@ public class SQLKit
 		return manager;
 	}
 
-	protected List<String> getParameter(Statement statement)
+	public List<String> getParameter(Statement statement)
 	{
 		return getParameter(statements.get(statement));
 	}
 
-	protected List<String> getParameter(String sql)
+	public List<String> getParameter(String sql)
 	{
 		return parameters.get(sql);
 	}
@@ -1966,10 +1967,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(call, getBoundary(), params).values()));
-			}
+			this.registerParameters(call, q, params);
 		}
 
 		return (CallableStatement) statement;
@@ -2014,11 +2012,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(call, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(call, q, params.keySet());
 		}
 
 		return (CallableStatement) statement;
@@ -2063,11 +2057,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(call, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(call, q, params.keySet());
 		}
 
 		return (CallableStatement) statement;
@@ -2177,10 +2167,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values()));
-			}
+			this.registerParameters(sql, q, params);
 		}
 
 		return (PreparedStatement) statement;
@@ -2221,10 +2208,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values()));
-			}
+			this.registerParameters(sql, q, params);
 		}
 
 		return (PreparedStatement) statement;
@@ -2245,10 +2229,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values()));
-			}
+			this.registerParameters(sql, q, params);
 		}
 
 		return (PreparedStatement) statement;
@@ -2269,10 +2250,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q, new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values()));
-			}
+			this.registerParameters(sql, q, params);
 		}
 
 		return (PreparedStatement) statement;
@@ -2298,11 +2276,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(sql, q, params.keySet());
 		}
 
 		return (PreparedStatement) statement;
@@ -2342,11 +2316,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(sql, q, params.keySet());
 		}
 
 		return (PreparedStatement) statement;
@@ -2366,11 +2336,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(sql, q, params.keySet());
 		}
 
 		return (PreparedStatement) statement;
@@ -2390,11 +2356,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(sql, q, params.keySet());
 		}
 
 		return (PreparedStatement) statement;
@@ -2421,11 +2383,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(sql, q, params.keySet());
 		}
 
 		return (PreparedStatement) statement;
@@ -2465,11 +2423,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(sql, q, params.keySet());
 		}
 
 		return (PreparedStatement) statement;
@@ -2490,11 +2444,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(sql, q, params.keySet());
 		}
 
 		return (PreparedStatement) statement;
@@ -2515,11 +2465,7 @@ public class SQLKit
 
 			statements.put(statement, q);
 
-			if (!parameters.containsKey(q))
-			{
-				parameters.put(q,
-						new LinkedList<String>(indexOfParameters(sql, getBoundary(), params.keySet()).values()));
-			}
+			this.registerParameters(sql, q, params.keySet());
 		}
 
 		return (PreparedStatement) statement;
@@ -2695,6 +2641,16 @@ public class SQLKit
 	public SQLKit registerOutParameter(String name, int type, String typeName) throws SQLException
 	{
 		return registerOutParameter((CallableStatement) this.getStatement(), name, type, typeName);
+	}
+
+	protected SQLKit registerParameters(String sql, String q, Iterable<String> params)
+	{
+		if (!parameters.containsKey(q))
+		{
+			parameters.put(q, Collections.unmodifiableList( //
+					new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values())));
+		}
+		return this;
 	}
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException
