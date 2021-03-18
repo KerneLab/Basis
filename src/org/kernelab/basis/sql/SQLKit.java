@@ -236,7 +236,6 @@ public class SQLKit
 	{
 		if (statement != null && params != null && params.iterator().hasNext())
 		{
-			statement.clearParameters();
 			int from = 1 + offset;
 			int index = from;
 			for (Object param : params)
@@ -277,7 +276,6 @@ public class SQLKit
 	{
 		if (statement != null && params != null && params.length > 0)
 		{
-			statement.clearParameters();
 			int from = 1 + offset;
 			int index = from;
 			for (Object param : params)
