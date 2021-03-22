@@ -1769,27 +1769,27 @@ public class Canal<I, O> implements Iterable<O>
 		return new None<E>();
 	}
 
-	public static <E> Canal<E, E> of(E[] array)
+	public static <E> Canal<?, E> of(E[] array)
 	{
 		return of(array, 0);
 	}
 
-	public static <E> Canal<E, E> of(E[] array, int begin)
+	public static <E> Canal<?, E> of(E[] array, int begin)
 	{
 		return of(array, begin, array.length);
 	}
 
-	public static <E> Canal<E, E> of(E[] array, int begin, int end)
+	public static <E> Canal<?, E> of(E[] array, int begin, int end)
 	{
 		return new Canal<E, E>().setOperator(new ArraySourcer<E>(array, begin, end));
 	}
 
-	public static <E> Canal<E, E> of(Iterable<E> iter)
+	public static <E> Canal<?, E> of(Iterable<E> iter)
 	{
 		return new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
 	}
 
-	public static Canal<JSON.Pair, Tuple2<String, Object>> of(JSON json)
+	public static Canal<?, Tuple2<String, Object>> of(JSON json)
 	{
 		return new Canal<JSON.Pair, JSON.Pair>() //
 				.setOperator(new IterableSourcer<JSON.Pair>(json.pairs())) //
@@ -1803,7 +1803,7 @@ public class Canal<I, O> implements Iterable<O>
 				});
 	}
 
-	public static <K, V> Canal<Entry<K, V>, Tuple2<K, V>> of(Map<K, V> map)
+	public static <K, V> Canal<?, Tuple2<K, V>> of(Map<K, V> map)
 	{
 		return new Canal<Entry<K, V>, Entry<K, V>>() //
 				.setOperator(new IterableSourcer<Entry<K, V>>(map.entrySet())) //
