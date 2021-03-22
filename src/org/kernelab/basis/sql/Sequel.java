@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.kernelab.basis.Canal;
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.Mapper;
@@ -345,6 +346,21 @@ public class Sequel implements Iterable<ResultSet>
 		this.setKit(kit).setStatement(statement).hasResultSetObject(hasResultSet).refreshUpdateCount();
 	}
 
+	public Canal<?, ResultSet> canal()
+	{
+		return Canal.of(this);
+	}
+
+	public Canal<?, Sequel> canalSequel()
+	{
+		return Canal.of(this.iterate());
+	}
+
+	public Canal<?, Sequel> canalSequel(int current)
+	{
+		return Canal.of(this.iterate(current));
+	}
+
 	public Sequel close()
 	{
 		try
@@ -479,40 +495,6 @@ public class Sequel implements Iterable<ResultSet>
 			}
 		}
 		return metaMapName;
-	}
-
-	public JSAN getNextRowAsJSAN()
-	{
-		return getNextRowAsJSAN(null);
-	}
-
-	public JSAN getNextRowAsJSAN(Map<String, Object> map)
-	{
-		JSAN jsan = null;
-
-		if (this.nextRow())
-		{
-			jsan = this.getRowAsJSAN(map);
-		}
-
-		return jsan;
-	}
-
-	public JSON getNextRowAsJSON()
-	{
-		return getNextRowAsJSON(null);
-	}
-
-	public JSON getNextRowAsJSON(Map<String, Object> map)
-	{
-		JSON json = null;
-
-		if (this.nextRow())
-		{
-			json = this.getRowAsJSON(map);
-		}
-
-		return json;
 	}
 
 	public ResultSet getResultSet()
