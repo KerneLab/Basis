@@ -351,12 +351,12 @@ public class Sequel implements Iterable<ResultSet>
 		return Canal.of(this);
 	}
 
-	public Canal<?, Sequel> canalSequel()
+	public Canal<?, Sequel> canals()
 	{
 		return Canal.of(this.iterate());
 	}
 
-	public Canal<?, Sequel> canalSequel(int current)
+	public Canal<?, Sequel> canals(int current)
 	{
 		return Canal.of(this.iterate(current));
 	}
