@@ -1274,6 +1274,10 @@ public class SQLKit
 
 	private Connection					connection;
 
+	private Class<? extends Connection>	unwrap;
+
+	private Connection					real;
+
 	private Statement					statement;
 
 	private Map<String, Statement>		sentences;
@@ -1302,7 +1306,7 @@ public class SQLKit
 		{
 			throw new SQLException(ERR_NO_DB_CONN);
 		}
-		this.setConnection(connection);
+		this.setConnectionOrigin(connection);
 		this.setManager(manager);
 		this.setBoundary(TextFiller.DEFAULT_BOUNDARY);
 		this.setSentences(new HashMap<String, Statement>());
@@ -1476,6 +1480,8 @@ public class SQLKit
 			manager = null;
 		}
 		connection = null;
+		unwrap = null;
+		real = null;
 	}
 
 	public SQLKit closeStatement() throws SQLException
@@ -1751,7 +1757,12 @@ public class SQLKit
 
 	public Connection getConnection()
 	{
-		return connection;
+		return real;
+	}
+
+	protected final Connection getConnectionOrigin()
+	{
+		return this.connection;
 	}
 
 	public ResultSet getGeneratedKeys() throws SQLException
@@ -2756,9 +2767,10 @@ public class SQLKit
 		return this;
 	}
 
-	protected SQLKit setConnection(Connection connection)
+	protected SQLKit setConnectionOrigin(Connection connection)
 	{
 		this.connection = connection;
+		this.real = connection;
 		return this;
 	}
 
@@ -2789,6 +2801,18 @@ public class SQLKit
 	protected SQLKit setStatements(Map<Statement, String> statements)
 	{
 		this.statements = statements;
+		return this;
+	}
+
+	public Class<? extends Connection> unwrap()
+	{
+		return this.unwrap;
+	}
+
+	public <T extends Connection> SQLKit unwrap(Class<T> cls) throws SQLException
+	{
+		this.unwrap = cls;
+		this.real = cls == null ? this.getConnectionOrigin() : this.getConnectionOrigin().unwrap(cls);
 		return this;
 	}
 
