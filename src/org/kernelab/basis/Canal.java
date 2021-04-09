@@ -882,6 +882,22 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class InverseComparator<E> implements Comparator<E>
+	{
+		protected final Comparator<E> cmp;
+
+		public InverseComparator(Comparator<E> cmp)
+		{
+			this.cmp = cmp;
+		}
+
+		@Override
+		public int compare(E o1, E o2)
+		{
+			return cmp.compare(o2, o1);
+		}
+	}
+
 	protected static class IterableSourcer<E> implements Sourcer<E>
 	{
 		protected final Iterable<E> iter;
@@ -970,6 +986,22 @@ public class Canal<I, O> implements Iterable<O>
 					return mapper.map(upstream().next());
 				}
 			};
+		}
+	}
+
+	protected static class MappedComparator<O, M extends Comparable<M>> implements Comparator<O>
+	{
+		protected final Mapper<O, M> mapper;
+
+		public MappedComparator(Mapper<O, M> mapper)
+		{
+			this.mapper = mapper;
+		}
+
+		@Override
+		public int compare(O o1, O o2)
+		{
+			return mapper.map(o1).compareTo(mapper.map(o2));
 		}
 	}
 
@@ -1114,22 +1146,6 @@ public class Canal<I, O> implements Iterable<O>
 					return empty ? Canal.<E> none() : Canal.some(result);
 				}
 			};
-		}
-	}
-
-	protected static class ReverseComparator<E> implements Comparator<E>
-	{
-		protected final Comparator<E> cmp;
-
-		public ReverseComparator(Comparator<E> cmp)
-		{
-			this.cmp = cmp;
-		}
-
-		@Override
-		public int compare(E o1, E o2)
-		{
-			return cmp.compare(o2, o1);
 		}
 	}
 
@@ -1287,7 +1303,7 @@ public class Canal<I, O> implements Iterable<O>
 
 		public SortWithOp(final Comparator<E> cmp, boolean ascend)
 		{
-			this.cmp = ascend ? cmp : new ReverseComparator<E>(cmp);
+			this.cmp = ascend ? cmp : inverse(cmp);
 		}
 
 		@Override
@@ -1756,6 +1772,62 @@ public class Canal<I, O> implements Iterable<O>
 		}
 		pond.begin();
 		return pond;
+	}
+
+	public static <E, M extends Comparable<M>> Comparator<E> comparator(Mapper<E, M> mapper)
+	{
+		return new MappedComparator<E, M>(mapper);
+	}
+
+	/**
+	 * Make a list of comparators.<br />
+	 * The parameters could be either Mapper or Boolean.<br />
+	 * The Mapper type parameter stands for a vop to extract value to be
+	 * compared from a given element.<br />
+	 * The Boolean type parameter means the ascending order of its previous
+	 * Mapper parameter.
+	 * 
+	 * @param vops
+	 * @return
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <E> List<Comparator<E>> comparatorsOfVops(Object... vops)
+	{
+		List<Comparator<E>> list = new LinkedList<Comparator<E>>();
+		Comparator<E> cmp = null;
+
+		for (Object o : vops)
+		{
+			if (o instanceof Mapper<?, ?>)
+			{
+				if (cmp != null)
+				{
+					list.add(cmp);
+				}
+				cmp = comparator((Mapper<E, Comparable>) o);
+			}
+			else if (o instanceof Boolean)
+			{
+				if (cmp != null)
+				{
+					boolean asc = (Boolean) o;
+					list.add(asc ? cmp : inverse(cmp));
+					cmp = null;
+				}
+			}
+		}
+
+		if (cmp != null)
+		{
+			list.add(cmp);
+		}
+
+		return list;
+	}
+
+	public static <E> Comparator<E> inverse(Comparator<E> cmp)
+	{
+		return new InverseComparator<E>(cmp);
 	}
 
 	/**
@@ -2272,6 +2344,17 @@ public class Canal<I, O> implements Iterable<O>
 	public Canal<O, O> skip(int skip)
 	{
 		return this.follow(new SkipOp<O>(skip));
+	}
+
+	/**
+	 * Sort each element in this Canal by given
+	 * 
+	 * @param vops
+	 * @return
+	 */
+	public Canal<O, O> sortBy(Object... vops)
+	{
+		return this.follow(new SortByOp<O>(Canal.<O> comparatorsOfVops(vops)));
 	}
 
 	/**

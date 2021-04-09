@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -116,7 +115,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						break;
 					}
-				} while (iter == null);
+				}
+				while (iter == null);
 			}
 
 			return iter;
@@ -775,23 +775,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		/**
 		 * 
 		 */
-		private static final long					serialVersionUID	= 2156642568827950757L;
+		private static final long	serialVersionUID	= 2156642568827950757L;
 
-		public static final int						LAST				= -1;
-
-		private static final Map<Integer, String>	INDEX				= new WeakHashMap<Integer, String>();
+		public static final int		LAST				= -1;
 
 		protected static final String Index(int i)
 		{
-			String index = INDEX.get(i);
-
-			if (index == null)
-			{
-				index = String.valueOf(i);
-				INDEX.put(i, index);
-			}
-
-			return index;
+			return String.valueOf(i);
 		}
 
 		protected static final Integer Index(Object o)
@@ -3512,7 +3502,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				w.flush();
 
-			} while (j != null);
+			}
+			while (j != null);
 
 			w.close();
 
@@ -4105,7 +4096,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					do
 					{
 						i = Tools.seekIndex(quote, NESTED_ATTRIBUTE_QUOTE, i + 1);
-					} while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
+					}
+					while (quote.charAt(i - 1) == JSON.ESCAPE_CHAR);
 					break;
 				}
 
