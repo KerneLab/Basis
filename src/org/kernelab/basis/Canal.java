@@ -1266,11 +1266,11 @@ public class Canal<I, O> implements Iterable<O>
 
 	protected static class SortByOp<E> implements Converter<E, E>
 	{
-		protected final ComparatorsChain<E> cmps;
+		protected final Comparator<E> cmps;
 
 		public SortByOp(List<Comparator<E>> cmps)
 		{
-			this.cmps = new ComparatorsChain<E>(cmps);
+			this.cmps = comparator(cmps);
 		}
 
 		@Override
@@ -1360,6 +1360,64 @@ public class Canal<I, O> implements Iterable<O>
 	protected static interface Sourcer<E> extends Operator<E, E>
 	{
 		Source<E> newPond();
+	}
+
+	protected static class StratifyPond<E> extends AbstractPond<E, Iterable<E>>
+	{
+		protected final Comparator<E>	cmp;
+
+		private Iterator<Iterable<E>>	res;
+
+		public StratifyPond(Comparator<E> cmp)
+		{
+			this.cmp = cmp;
+		}
+
+		@Override
+		public void begin()
+		{
+			List<E> dat = new LinkedList<E>();
+
+			while (this.upstream().hasNext())
+			{
+				dat.add(this.upstream().next());
+			}
+
+			this.res = stratify(dat, cmp).iterator();
+		}
+
+		@Override
+		public void end()
+		{
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return res.hasNext();
+		}
+
+		@Override
+		public Iterable<E> next()
+		{
+			return res.next();
+		}
+	}
+
+	protected static class StratifyWithOp<E> implements Converter<E, Iterable<E>>
+	{
+		protected final Comparator<E> cmp;
+
+		public StratifyWithOp(Comparator<E> cmp)
+		{
+			this.cmp = cmp;
+		}
+
+		@Override
+		public Pond<E, Iterable<E>> newPond()
+		{
+			return new StratifyPond<E>(cmp);
+		}
 	}
 
 	protected static class StringConcater<E> implements Evaluator<E, String>
@@ -1774,6 +1832,11 @@ public class Canal<I, O> implements Iterable<O>
 		return pond;
 	}
 
+	public static <E> Comparator<E> comparator(List<Comparator<E>> cmps)
+	{
+		return new ComparatorsChain<E>(cmps);
+	}
+
 	public static <E, M extends Comparable<M>> Comparator<E> comparator(Mapper<E, M> mapper)
 	{
 		return new MappedComparator<E, M>(mapper);
@@ -1787,16 +1850,16 @@ public class Canal<I, O> implements Iterable<O>
 	 * The Boolean type parameter means the ascending order of its previous
 	 * Mapper parameter.
 	 * 
-	 * @param vops
+	 * @param orders
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static <E> List<Comparator<E>> comparatorsOfVops(Object... vops)
+	public static <E> List<Comparator<E>> comparatorsOfOrders(Object... orders)
 	{
 		List<Comparator<E>> list = new LinkedList<Comparator<E>>();
 		Comparator<E> cmp = null;
 
-		for (Object o : vops)
+		for (Object o : orders)
 		{
 			if (o instanceof Mapper<?, ?>)
 			{
@@ -1897,6 +1960,35 @@ public class Canal<I, O> implements Iterable<O>
 	public static <E> Some<E> some(E value)
 	{
 		return new Some<E>(value);
+	}
+
+	public static <E> List<Iterable<E>> stratify(Iterable<E> data, Comparator<E> cmp)
+	{
+		List<Iterable<E>> res = new LinkedList<Iterable<E>>();
+
+		E last = null;
+		int c = 0;
+		List<E> lvl = null;
+
+		for (E el : Canal.of(data).sortWith(cmp))
+		{
+			if (lvl != null)
+			{
+				c = cmp.compare(last, el);
+			}
+
+			if (c != 0 || lvl == null)
+			{
+				lvl = new LinkedList<E>();
+				res.add(lvl);
+			}
+
+			lvl.add(el);
+
+			last = el;
+		}
+
+		return res;
 	}
 
 	private Canal<?, I>		upstream;
@@ -2349,12 +2441,12 @@ public class Canal<I, O> implements Iterable<O>
 	/**
 	 * Sort each element in this Canal by given
 	 * 
-	 * @param vops
+	 * @param orders
 	 * @return
 	 */
-	public Canal<O, O> sortBy(Object... vops)
+	public Canal<O, O> sortBy(Object... orders)
 	{
-		return this.follow(new SortByOp<O>(Canal.<O> comparatorsOfVops(vops)));
+		return this.follow(new SortByOp<O>(Canal.<O> comparatorsOfOrders(orders)));
 	}
 
 	/**
@@ -2406,6 +2498,41 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			return this.follow(new SortWithOp<O>(cmp, ascend));
 		}
+	}
+
+	/**
+	 * Stratify each elements into levels according to the given orders.
+	 * 
+	 * @param orders
+	 * @return
+	 */
+	public Canal<O, Iterable<O>> stratifyBy(Object... orders)
+	{
+		return this.stratifyWith(comparator(Canal.<O> comparatorsOfOrders(orders)));
+	}
+
+	/**
+	 * Stratify each elements into levels according to the given Comparator.
+	 * 
+	 * @param cmp
+	 * @return
+	 */
+	public Canal<O, Iterable<O>> stratifyWith(Comparator<O> cmp)
+	{
+		return this.follow(new StratifyWithOp<O>(cmp));
+	}
+
+	/**
+	 * Stratify each elements into levels according to the given Comparator and
+	 * order.
+	 * 
+	 * @param cmp
+	 * @param ascend
+	 * @return
+	 */
+	public Canal<O, Iterable<O>> stratifyWith(Comparator<O> cmp, boolean ascend)
+	{
+		return this.stratifyWith(ascend ? cmp : inverse(cmp));
 	}
 
 	/**
