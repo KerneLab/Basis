@@ -149,6 +149,11 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		@Override
+		public void begin()
+		{
+		}
+
+		@Override
 		public boolean hasNext()
 		{
 			while (there == null || !there.hasNext())
@@ -390,11 +395,6 @@ public class Canal<I, O> implements Iterable<O>
 		public Dam(Canal<?, B> that)
 		{
 			this.that = that;
-		}
-
-		@Override
-		public void begin()
-		{
 		}
 
 		@Override
@@ -822,6 +822,84 @@ public class Canal<I, O> implements Iterable<O>
 		protected abstract void settle();
 	}
 
+	protected static class InnerJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, U, V>
+	{
+		public InnerJoiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			super(that, kol, kor, vol, vor);
+		}
+
+		@Override
+		protected Set<K> keys(Set<K> left, Set<K> right)
+		{
+			return (Set<K>) Canal.of(left).intersection(Canal.of(right)).collect(new LinkedHashSet<K>());
+		}
+
+		@Override
+		protected boolean needLeft(boolean isEmpty)
+		{
+			return !isEmpty;
+		}
+
+		@Override
+		protected boolean needRight(boolean isEmpty)
+		{
+			return !isEmpty;
+		}
+
+		@Override
+		protected U valLeft()
+		{
+			return null;
+		}
+
+		@Override
+		protected U valLeft(U u)
+		{
+			return u;
+		}
+
+		@Override
+		protected V valRight()
+		{
+			return null;
+		}
+
+		@Override
+		protected V valRight(V v)
+		{
+			return v;
+		}
+	}
+
+	protected static class InnerJoinOp<L, R, K, U, V> implements Converter<L, Tuple2<K, Tuple2<U, V>>>
+	{
+		protected final Canal<?, R>		that;
+
+		protected final Mapper<L, K>	kol;
+
+		protected final Mapper<R, K>	kor;
+
+		protected final Mapper<L, U>	vol;
+
+		protected final Mapper<R, V>	vor;
+
+		public InnerJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			this.that = that;
+			this.kol = kol;
+			this.kor = kor;
+			this.vol = vol;
+			this.vor = vor;
+		}
+
+		@Override
+		public Pond<L, Tuple2<K, Tuple2<U, V>>> newPond()
+		{
+			return new InnerJoiner<L, R, K, U, V>(that, kol, kor, vol, vor);
+		}
+	}
+
 	protected static class IntersectionOp<E> implements Converter<E, E>
 	{
 		protected final Canal<?, E>		that;
@@ -933,6 +1011,266 @@ public class Canal<I, O> implements Iterable<O>
 		public E next()
 		{
 			return iter.next();
+		}
+	}
+
+	protected static abstract class Joiner<L, R, K, U, V, M, N> extends AbstractPond<L, Tuple2<K, Tuple2<M, N>>>
+	{
+		protected final Canal<?, R>		that;
+
+		protected final Mapper<L, K>	kol;
+
+		protected final Mapper<R, K>	kor;
+
+		protected final Mapper<L, U>	vol;
+
+		protected final Mapper<R, V>	vor;
+
+		private Map<K, List<U>>			here;
+
+		private Map<K, List<V>>			there;
+
+		private Iterator<K>				iterK;
+
+		private boolean					isEmptyK;
+
+		private Iterator<U>				iterU;
+
+		private Iterator<V>				iterV;
+
+		private List<U>					listU;
+
+		private List<V>					listV;
+
+		private final List<U>			emptyU	= new LinkedList<U>();
+
+		private final List<V>			emptyV	= new LinkedList<V>();
+
+		private boolean					isEmptyU;
+
+		private boolean					isEmptyV;
+
+		private K						k;
+
+		private M						m;
+
+		private N						n;
+
+		private final M					missM;
+
+		private final N					missN;
+
+		private boolean					hasM;
+
+		private boolean					hasN;
+
+		public Joiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			this.that = that;
+			this.kol = kol;
+			this.kor = kor;
+			this.vol = vol;
+			this.vor = vor;
+			this.missM = valLeft();
+			this.missN = valRight();
+		}
+
+		@Override
+		public void begin()
+		{
+			this.here = group(this.upstream(), this.kol, this.vol);
+			this.there = group(that.build(), this.kor, this.vor);
+			this.iterK = keys(here.keySet(), there.keySet()).iterator();
+			this.isEmptyK = !this.nextK();
+		}
+
+		@Override
+		public void end()
+		{
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			if (isEmptyK)
+			{
+				return false;
+			}
+
+			while (true)
+			{
+				hasN = true;
+				if (iterV.hasNext())
+				{
+					n = valRight(iterV.next());
+				}
+				else if (isEmptyV && needRight(isEmptyV))
+				{
+					n = missN;
+					hasN = false;
+				}
+				else
+				{
+					hasN = false;
+				}
+
+				if (!hasN || !hasM)
+				{
+					hasM = true;
+					if (iterU.hasNext())
+					{
+						m = valLeft(iterU.next());
+						if (!hasN)
+						{
+							iterV = listV.iterator();
+						}
+					}
+					else if (isEmptyU && needLeft(isEmptyU))
+					{
+						m = missM;
+						hasM = false;
+					}
+					else
+					{
+						hasM = false;
+					}
+				}
+
+				if (!hasN && !hasM)
+				{
+					if (!iterK.hasNext())
+					{
+						return false;
+					}
+					this.nextK();
+				}
+				else if (hasN || hasM)
+				{
+					break;
+				}
+			}
+
+			return true;
+		}
+
+		protected abstract Set<K> keys(Set<K> left, Set<K> right);
+
+		protected abstract boolean needLeft(boolean isEmpty);
+
+		protected abstract boolean needRight(boolean isEmpty);
+
+		@Override
+		public Tuple2<K, Tuple2<M, N>> next()
+		{
+			return new Tuple2<K, Tuple2<M, N>>(k, new Tuple2<M, N>(m, n));
+		}
+
+		private boolean nextK()
+		{
+			if (!iterK.hasNext())
+			{
+				return false;
+			}
+
+			k = iterK.next();
+			listU = here.get(k);
+			listV = there.get(k);
+			listU = listU != null ? listU : emptyU;
+			listV = listV != null ? listV : emptyV;
+			isEmptyU = listU.isEmpty();
+			isEmptyV = listV.isEmpty();
+			iterU = listU.iterator();
+			iterV = listV.iterator();
+			hasM = false;
+			hasN = false;
+
+			return true;
+		}
+
+		protected abstract M valLeft();
+
+		protected abstract M valLeft(U u);
+
+		protected abstract N valRight();
+
+		protected abstract N valRight(V v);
+	}
+
+	protected static class LeftJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, U, Option<V>>
+	{
+		public LeftJoiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			super(that, kol, kor, vol, vor);
+		}
+
+		@Override
+		protected Set<K> keys(Set<K> left, Set<K> right)
+		{
+			return left;
+		}
+
+		@Override
+		protected boolean needLeft(boolean isEmpty)
+		{
+			return !isEmpty;
+		}
+
+		@Override
+		protected boolean needRight(boolean isEmpty)
+		{
+			return true;
+		}
+
+		@Override
+		protected U valLeft()
+		{
+			return null;
+		}
+
+		@Override
+		protected U valLeft(U u)
+		{
+			return u;
+		}
+
+		@Override
+		protected Option<V> valRight()
+		{
+			return Option.none();
+		}
+
+		@Override
+		protected Option<V> valRight(V v)
+		{
+			return Option.some(v);
+		}
+	}
+
+	protected static class LeftJoinOp<L, R, K, U, V> implements Converter<L, Tuple2<K, Tuple2<U, Option<V>>>>
+	{
+		protected final Canal<?, R>		that;
+
+		protected final Mapper<L, K>	kol;
+
+		protected final Mapper<R, K>	kor;
+
+		protected final Mapper<L, U>	vol;
+
+		protected final Mapper<R, V>	vor;
+
+		public LeftJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			this.that = that;
+			this.kol = kol;
+			this.kor = kor;
+			this.vol = vol;
+			this.vor = vor;
+		}
+
+		@Override
+		public Pond<L, Tuple2<K, Tuple2<U, Option<V>>>> newPond()
+		{
+			return new LeftJoiner<L, R, K, U, V>(that, kol, kor, vol, vor);
 		}
 	}
 
@@ -1103,6 +1441,11 @@ public class Canal<I, O> implements Iterable<O>
 		void upstream(Pond<?, I> up);
 	}
 
+	public static interface Producer<E>
+	{
+		E produce();
+	}
+
 	protected static class ReduceOp<E> implements Evaluator<E, Option<E>>
 	{
 		protected final Reducer<E, E> reducer;
@@ -1173,6 +1516,84 @@ public class Canal<I, O> implements Iterable<O>
 					}
 				}
 			};
+		}
+	}
+
+	protected static class RightJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, Option<U>, V>
+	{
+		public RightJoiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			super(that, kol, kor, vol, vor);
+		}
+
+		@Override
+		protected Set<K> keys(Set<K> left, Set<K> right)
+		{
+			return right;
+		}
+
+		@Override
+		protected boolean needLeft(boolean isEmpty)
+		{
+			return true;
+		}
+
+		@Override
+		protected boolean needRight(boolean isEmpty)
+		{
+			return !isEmpty;
+		}
+
+		@Override
+		protected Option<U> valLeft()
+		{
+			return Option.none();
+		}
+
+		@Override
+		protected Option<U> valLeft(U u)
+		{
+			return Option.some(u);
+		}
+
+		@Override
+		protected V valRight()
+		{
+			return null;
+		}
+
+		@Override
+		protected V valRight(V v)
+		{
+			return v;
+		}
+	}
+
+	protected static class RightJoinOp<L, R, K, U, V> implements Converter<L, Tuple2<K, Tuple2<Option<U>, V>>>
+	{
+		protected final Canal<?, R>		that;
+
+		protected final Mapper<L, K>	kol;
+
+		protected final Mapper<R, K>	kor;
+
+		protected final Mapper<L, U>	vol;
+
+		protected final Mapper<R, V>	vor;
+
+		public RightJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			this.that = that;
+			this.kol = kol;
+			this.kor = kor;
+			this.vol = vol;
+			this.vor = vor;
+		}
+
+		@Override
+		public Pond<L, Tuple2<K, Tuple2<Option<U>, V>>> newPond()
+		{
+			return new RightJoiner<L, R, K, U, V>(that, kol, kor, vol, vor);
 		}
 	}
 
@@ -1888,6 +2309,24 @@ public class Canal<I, O> implements Iterable<O>
 		return list;
 	}
 
+	public static <E, K, V> Map<K, List<V>> group(Iterator<E> iter, Mapper<E, K> kop, Mapper<E, V> vop)
+	{
+		Map<K, List<V>> map = new LinkedHashMap<K, List<V>>();
+		E el;
+		K k;
+		while (iter.hasNext())
+		{
+			el = iter.next();
+			k = kop.map(el);
+			if (!map.containsKey(k))
+			{
+				map.put(k, new LinkedList<V>());
+			}
+			map.get(k).add(vop.map(el));
+		}
+		return map;
+	}
+
 	public static <E> Comparator<E> inverse(Comparator<E> cmp)
 	{
 		return new InverseComparator<E>(cmp);
@@ -2328,6 +2767,22 @@ public class Canal<I, O> implements Iterable<O>
 		return this.build();
 	}
 
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that)
+	{
+		return join(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
+	}
+
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that, Mapper<O, K> kol, Mapper<R, K> kor)
+	{
+		return join(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
+	}
+
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that, Mapper<O, K> kol, Mapper<R, K> kor,
+			Mapper<O, U> vol, Mapper<R, V> vor)
+	{
+		return this.follow(new InnerJoinOp<O, R, K, U, V>(that, kol, kor, vol, vor));
+	}
+
 	/**
 	 * Map each element into {@code Tuple2<K,O>}. The first element is the key
 	 * defined by kop.
@@ -2345,6 +2800,23 @@ public class Canal<I, O> implements Iterable<O>
 				return new Tuple2<K, O>(kop.map(key), key);
 			}
 		});
+	}
+
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that)
+	{
+		return leftJoin(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
+	}
+
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that, Mapper<O, K> kol,
+			Mapper<R, K> kor)
+	{
+		return leftJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
+	}
+
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that, Mapper<O, K> kol,
+			Mapper<R, K> kor, Mapper<O, U> vol, Mapper<R, V> vor)
+	{
+		return this.follow(new LeftJoinOp<O, R, K, U, V>(that, kol, kor, vol, vor));
 	}
 
 	/**
@@ -2413,6 +2885,23 @@ public class Canal<I, O> implements Iterable<O>
 	public Canal<O, O> reverse()
 	{
 		return this.follow(new ReverseOp<O>());
+	}
+
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that)
+	{
+		return rightJoin(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
+	}
+
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that, Mapper<O, K> kol,
+			Mapper<R, K> kor)
+	{
+		return rightJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
+	}
+
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that, Mapper<O, K> kol,
+			Mapper<R, K> kor, Mapper<O, U> vol, Mapper<R, V> vor)
+	{
+		return this.follow(new RightJoinOp<O, R, K, U, V>(that, kol, kor, vol, vor));
 	}
 
 	protected Canal<I, O> setOperator(Operator<I, O> operator)

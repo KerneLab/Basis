@@ -4455,7 +4455,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
-	protected class ValuesCollection extends AbstractCollection<Object>
+	public class ValuesCollection extends AbstractCollection<Object>
 	{
 		protected class ValuesIterator extends AbstractIterator<Object>
 		{
