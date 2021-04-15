@@ -711,6 +711,71 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class FullJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, Option<U>, Option<V>>
+	{
+		public FullJoiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			super(that, kol, kor, vol, vor);
+		}
+
+		@Override
+		protected Set<K> keys(Set<K> left, Set<K> right)
+		{
+			return (Set<K>) Canal.of(left).union(Canal.of(right)).collect(new LinkedHashSet<K>());
+		}
+
+		@Override
+		protected boolean needLeft(boolean isEmpty)
+		{
+			return true;
+		}
+
+		@Override
+		protected boolean needRight(boolean isEmpty)
+		{
+			return true;
+		}
+
+		@Override
+		protected Option<U> valLeft()
+		{
+			return Option.none();
+		}
+
+		@Override
+		protected Option<U> valLeft(U u)
+		{
+			return Option.some(u);
+		}
+
+		@Override
+		protected Option<V> valRight()
+		{
+			return Canal.none();
+		}
+
+		@Override
+		protected Option<V> valRight(V v)
+		{
+			return Option.some(v);
+		}
+	}
+
+	protected static class FullJoinOp<L, R, K, U, V> extends JoinOp<L, R, K, U, V>
+			implements Converter<L, Tuple2<K, Tuple2<Option<U>, Option<V>>>>
+	{
+		public FullJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			super(that, kol, kor, vol, vor);
+		}
+
+		@Override
+		public Pond<L, Tuple2<K, Tuple2<Option<U>, Option<V>>>> newPond()
+		{
+			return new FullJoiner<L, R, K, U, V>(that, kol, kor, vol, vor);
+		}
+	}
+
 	protected static class GroupByOp<E, K, V> implements Converter<E, Tuple2<K, Iterable<V>>>
 	{
 		protected final Mapper<E, K>	kop;
@@ -872,25 +937,12 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class InnerJoinOp<L, R, K, U, V> implements Converter<L, Tuple2<K, Tuple2<U, V>>>
+	protected static class InnerJoinOp<L, R, K, U, V> extends JoinOp<L, R, K, U, V>
+			implements Converter<L, Tuple2<K, Tuple2<U, V>>>
 	{
-		protected final Canal<?, R>		that;
-
-		protected final Mapper<L, K>	kol;
-
-		protected final Mapper<R, K>	kor;
-
-		protected final Mapper<L, U>	vol;
-
-		protected final Mapper<R, V>	vor;
-
 		public InnerJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
-			this.that = that;
-			this.kol = kol;
-			this.kor = kor;
-			this.vol = vol;
-			this.vor = vor;
+			super(that, kol, kor, vol, vor);
 		}
 
 		@Override
@@ -1060,9 +1112,9 @@ public class Canal<I, O> implements Iterable<O>
 
 		private final N					missN;
 
-		private boolean					hasM;
+		private byte					hasM;
 
-		private boolean					hasN;
+		private byte					hasN;
 
 		public Joiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
@@ -1099,28 +1151,28 @@ public class Canal<I, O> implements Iterable<O>
 
 			while (true)
 			{
-				hasN = true;
 				if (iterV.hasNext())
 				{
 					n = valRight(iterV.next());
+					hasN = 2;
 				}
 				else if (isEmptyV && needRight(isEmptyV))
 				{
 					n = missN;
-					hasN = false;
+					hasN = 1;
 				}
 				else
 				{
-					hasN = false;
+					hasN = 0;
 				}
 
-				if (!hasN || !hasM)
+				if (hasN < 2 || hasM < 2)
 				{
-					hasM = true;
 					if (iterU.hasNext())
 					{
 						m = valLeft(iterU.next());
-						if (!hasN)
+						hasM = 2;
+						if (hasN == 0)
 						{
 							iterV = listV.iterator();
 						}
@@ -1128,15 +1180,15 @@ public class Canal<I, O> implements Iterable<O>
 					else if (isEmptyU && needLeft(isEmptyU))
 					{
 						m = missM;
-						hasM = false;
+						hasM = 1;
 					}
 					else
 					{
-						hasM = false;
+						hasM = 0;
 					}
 				}
 
-				if (!hasN && !hasM)
+				if (hasN <= 1 && hasM <= 1)
 				{
 					if (!iterK.hasNext())
 					{
@@ -1144,7 +1196,7 @@ public class Canal<I, O> implements Iterable<O>
 					}
 					this.nextK();
 				}
-				else if (hasN || hasM)
+				else if (hasN > 0 && hasM > 0)
 				{
 					break;
 				}
@@ -1181,8 +1233,8 @@ public class Canal<I, O> implements Iterable<O>
 			isEmptyV = listV.isEmpty();
 			iterU = listU.iterator();
 			iterV = listV.iterator();
-			hasM = false;
-			hasN = false;
+			hasM = 0;
+			hasN = 0;
 
 			return true;
 		}
@@ -1194,6 +1246,28 @@ public class Canal<I, O> implements Iterable<O>
 		protected abstract N valRight();
 
 		protected abstract N valRight(V v);
+	}
+
+	protected static abstract class JoinOp<L, R, K, U, V>
+	{
+		protected final Canal<?, R>		that;
+
+		protected final Mapper<L, K>	kol;
+
+		protected final Mapper<R, K>	kor;
+
+		protected final Mapper<L, U>	vol;
+
+		protected final Mapper<R, V>	vor;
+
+		public JoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		{
+			this.that = that;
+			this.kol = kol;
+			this.kor = kor;
+			this.vol = vol;
+			this.vor = vor;
+		}
 	}
 
 	protected static class LeftJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, U, Option<V>>
@@ -1246,25 +1320,12 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class LeftJoinOp<L, R, K, U, V> implements Converter<L, Tuple2<K, Tuple2<U, Option<V>>>>
+	protected static class LeftJoinOp<L, R, K, U, V> extends JoinOp<L, R, K, U, V>
+			implements Converter<L, Tuple2<K, Tuple2<U, Option<V>>>>
 	{
-		protected final Canal<?, R>		that;
-
-		protected final Mapper<L, K>	kol;
-
-		protected final Mapper<R, K>	kor;
-
-		protected final Mapper<L, U>	vol;
-
-		protected final Mapper<R, V>	vor;
-
 		public LeftJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
-			this.that = that;
-			this.kol = kol;
-			this.kor = kor;
-			this.vol = vol;
-			this.vor = vor;
+			super(that, kol, kor, vol, vor);
 		}
 
 		@Override
@@ -1569,25 +1630,12 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class RightJoinOp<L, R, K, U, V> implements Converter<L, Tuple2<K, Tuple2<Option<U>, V>>>
+	protected static class RightJoinOp<L, R, K, U, V> extends JoinOp<L, R, K, U, V>
+			implements Converter<L, Tuple2<K, Tuple2<Option<U>, V>>>
 	{
-		protected final Canal<?, R>		that;
-
-		protected final Mapper<L, K>	kol;
-
-		protected final Mapper<R, K>	kor;
-
-		protected final Mapper<L, U>	vol;
-
-		protected final Mapper<R, V>	vor;
-
 		public RightJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
-			this.that = that;
-			this.kol = kol;
-			this.kor = kor;
-			this.vol = vol;
-			this.vor = vor;
+			super(that, kol, kor, vol, vor);
 		}
 
 		@Override
@@ -2705,6 +2753,47 @@ public class Canal<I, O> implements Iterable<O>
 		this.follow(new ForeachOp<O>(action)).evaluate();
 	}
 
+	/**
+	 * Full join with another Canal.
+	 * 
+	 * @param that
+	 * @return
+	 */
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, Option<V>>>> fullJoin(Canal<?, R> that)
+	{
+		return fullJoin(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
+	}
+
+	/**
+	 * Full join with another Canal.
+	 * 
+	 * @param that
+	 * @param kol
+	 * @param kor
+	 * @return
+	 */
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, Option<V>>>> fullJoin(Canal<?, R> that, Mapper<O, K> kol,
+			Mapper<R, K> kor)
+	{
+		return fullJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
+	}
+
+	/**
+	 * Full join with another Canal.
+	 * 
+	 * @param that
+	 * @param kol
+	 * @param kor
+	 * @param vol
+	 * @param vor
+	 * @return
+	 */
+	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, Option<V>>>> fullJoin(Canal<?, R> that, Mapper<O, K> kol,
+			Mapper<R, K> kor, Mapper<O, U> vol, Mapper<R, V> vor)
+	{
+		return this.follow(new FullJoinOp<O, R, K, U, V>(that, kol, kor, vol, vor));
+	}
+
 	protected Operator<I, O> getOperator()
 	{
 		return operator;
@@ -2767,16 +2856,40 @@ public class Canal<I, O> implements Iterable<O>
 		return this.build();
 	}
 
+	/**
+	 * Inner join with another Canal.
+	 * 
+	 * @param that
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that)
 	{
 		return join(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
 	}
 
+	/**
+	 * Inner join with another Canal.
+	 * 
+	 * @param that
+	 * @param kol
+	 * @param kor
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that, Mapper<O, K> kol, Mapper<R, K> kor)
 	{
 		return join(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
 	}
 
+	/**
+	 * Inner join with another Canal.
+	 * 
+	 * @param that
+	 * @param kol
+	 * @param kor
+	 * @param vol
+	 * @param vor
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that, Mapper<O, K> kol, Mapper<R, K> kor,
 			Mapper<O, U> vol, Mapper<R, V> vor)
 	{
@@ -2802,17 +2915,41 @@ public class Canal<I, O> implements Iterable<O>
 		});
 	}
 
+	/**
+	 * Left join with another Canal.
+	 * 
+	 * @param that
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that)
 	{
 		return leftJoin(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
 	}
 
+	/**
+	 * Left join with another Canal.
+	 * 
+	 * @param that
+	 * @param kol
+	 * @param kor
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that, Mapper<O, K> kol,
 			Mapper<R, K> kor)
 	{
 		return leftJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
 	}
 
+	/**
+	 * Left join with another Canal.
+	 * 
+	 * @param that
+	 * @param kol
+	 * @param kor
+	 * @param vol
+	 * @param vor
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that, Mapper<O, K> kol,
 			Mapper<R, K> kor, Mapper<O, U> vol, Mapper<R, V> vor)
 	{
@@ -2887,17 +3024,41 @@ public class Canal<I, O> implements Iterable<O>
 		return this.follow(new ReverseOp<O>());
 	}
 
+	/**
+	 * Right join with another Canal.
+	 * 
+	 * @param that
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that)
 	{
 		return rightJoin(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
 	}
 
+	/**
+	 * Right join with another Canal.
+	 * 
+	 * @param that
+	 * @param kol
+	 * @param kor
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that, Mapper<O, K> kol,
 			Mapper<R, K> kor)
 	{
 		return rightJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
 	}
 
+	/**
+	 * Right join with another Canal.
+	 * 
+	 * @param that
+	 * @param kol
+	 * @param kor
+	 * @param vol
+	 * @param vor
+	 * @return
+	 */
 	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that, Mapper<O, K> kol,
 			Mapper<R, K> kor, Mapper<O, U> vol, Mapper<R, V> vor)
 	{
