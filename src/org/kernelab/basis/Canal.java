@@ -1469,6 +1469,30 @@ public class Canal<I, O> implements Iterable<O>
 	public static class PairCanal<I, K, U> extends Canal<I, Tuple2<K, U>>
 	{
 		/**
+		 * Collect elements into map.<br />
+		 * It assumes that the upstream is a pair Canal.<br />
+		 * In order to indicate the key/value type <br />
+		 * please call like {@code Canal.<K,V>collectAsMap()}
+		 * 
+		 * @return
+		 */
+		public Map<K, U> collectAsMap()
+		{
+			return collectAsMap(null);
+		}
+
+		/**
+		 * Count the number each key.<br />
+		 * It assumes that the upstream is a pair Canal.
+		 * 
+		 * @return
+		 */
+		public Map<K, Integer> countByKey()
+		{
+			return countByKey(null);
+		}
+
+		/**
 		 * Full join with another Canal.
 		 * 
 		 * @param that
@@ -2588,19 +2612,6 @@ public class Canal<I, O> implements Iterable<O>
 	}
 
 	/**
-	 * Collect elements into map.<br />
-	 * It assumes that the upstream is a pair Canal.<br />
-	 * In order to indicate the key/value type <br />
-	 * please call like {@code Canal.<K,V>collectAsMap()}
-	 * 
-	 * @return
-	 */
-	public <K, V> Map<K, V> collectAsMap()
-	{
-		return collectAsMap(null);
-	}
-
-	/**
 	 * Collect elements into a given map.<br />
 	 * It assumes that the upstream is a pair Canal.<br />
 	 * 
@@ -2608,7 +2619,7 @@ public class Canal<I, O> implements Iterable<O>
 	 *            The result map.
 	 * @return
 	 */
-	public <K, V> Map<K, V> collectAsMap(Map<K, V> result)
+	public <K, U> Map<K, U> collectAsMap(Map<K, U> result)
 	{
 		return collectAsMap(result, null, null);
 	}
@@ -2637,17 +2648,6 @@ public class Canal<I, O> implements Iterable<O>
 	public int count()
 	{
 		return this.follow(new CountOp<O>()).evaluate();
-	}
-
-	/**
-	 * Count the number each key.<br />
-	 * It assumes that the upstream is a pair Canal.
-	 * 
-	 * @return
-	 */
-	public <K> Map<K, Integer> countByKey()
-	{
-		return countByKey(null);
 	}
 
 	/**
@@ -2940,7 +2940,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param kop
 	 * @return
 	 */
-	public <K> Canal<O, Tuple2<K, O>> keyBy(final Mapper<O, K> kop)
+	public <K> PairCanal<O, K, O> keyBy(final Mapper<O, K> kop)
 	{
 		return this.map(new Mapper<O, Tuple2<K, O>>()
 		{
@@ -2949,7 +2949,7 @@ public class Canal<I, O> implements Iterable<O>
 			{
 				return new Tuple2<K, O>(kop.map(key), key);
 			}
-		});
+		}).toPair();
 	}
 
 	/**
@@ -3312,9 +3312,9 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param that
 	 * @return
 	 */
-	public <N> Canal<O, Tuple2<O, N>> zip(Canal<?, N> that)
+	public <N> PairCanal<O, O, N> zip(Canal<?, N> that)
 	{
-		return this.follow(new ZipOp<O, N>(that));
+		return this.follow(new ZipOp<O, N>(that)).toPair();
 	}
 
 	/**
@@ -3322,8 +3322,8 @@ public class Canal<I, O> implements Iterable<O>
 	 * 
 	 * @return
 	 */
-	public Canal<O, Tuple2<O, Long>> zipWithIndex()
+	public PairCanal<O, O, Long> zipWithIndex()
 	{
-		return this.follow(new ZipWithIndexOp<O>());
+		return this.follow(new ZipWithIndexOp<O>()).toPair();
 	}
 }
