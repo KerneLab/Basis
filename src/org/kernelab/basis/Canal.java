@@ -1466,6 +1466,53 @@ public class Canal<I, O> implements Iterable<O>
 		public abstract E orNull();
 	}
 
+	public static class PairCanal<I, K, U> extends Canal<I, Tuple2<K, U>>
+	{
+		/**
+		 * Full join with another Canal.
+		 * 
+		 * @param that
+		 * @return
+		 */
+		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<Option<U>, Option<V>>> fullJoin(Canal<?, Tuple2<K, V>> that)
+		{
+			return fullJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+		}
+
+		/**
+		 * Inner join with another Canal.
+		 * 
+		 * @param that
+		 * @return
+		 */
+		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<U, V>> join(Canal<?, Tuple2<K, V>> that)
+		{
+			return join(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+		}
+
+		/**
+		 * Left join with another Canal.
+		 * 
+		 * @param that
+		 * @return
+		 */
+		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<U, Option<V>>> leftJoin(Canal<?, Tuple2<K, V>> that)
+		{
+			return leftJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+		}
+
+		/**
+		 * Right join with another Canal.
+		 * 
+		 * @param that
+		 * @return
+		 */
+		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<Option<U>, V>> rightJoin(Canal<?, Tuple2<K, V>> that)
+		{
+			return rightJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+		}
+	}
+
 	protected static class PeekOp<E> implements Converter<E, E>
 	{
 		protected final Action<E> action;
@@ -2757,23 +2804,12 @@ public class Canal<I, O> implements Iterable<O>
 	 * Full join with another Canal.
 	 * 
 	 * @param that
-	 * @return
-	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, Option<V>>>> fullJoin(Canal<?, R> that)
-	{
-		return fullJoin(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
-	}
-
-	/**
-	 * Full join with another Canal.
-	 * 
-	 * @param that
 	 * @param kol
 	 * @param kor
 	 * @return
 	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, Option<V>>>> fullJoin(Canal<?, R> that, Mapper<O, K> kol,
-			Mapper<R, K> kor)
+	protected <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, Option<V>>>> fullJoin(Canal<?, R> that,
+			Mapper<O, K> kol, Mapper<R, K> kor)
 	{
 		return fullJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
 	}
@@ -2856,16 +2892,17 @@ public class Canal<I, O> implements Iterable<O>
 		return this.build();
 	}
 
-	/**
-	 * Inner join with another Canal.
-	 * 
-	 * @param that
-	 * @return
-	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that)
-	{
-		return join(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
-	}
+	// /**
+	// * Inner join with another Canal.
+	// *
+	// * @param that
+	// * @return
+	// */
+	// public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R>
+	// that)
+	// {
+	// return join(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
+	// }
 
 	/**
 	 * Inner join with another Canal.
@@ -2875,7 +2912,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param kor
 	 * @return
 	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that, Mapper<O, K> kol, Mapper<R, K> kor)
+	protected <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that, Mapper<O, K> kol, Mapper<R, K> kor)
 	{
 		return join(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
 	}
@@ -2919,22 +2956,11 @@ public class Canal<I, O> implements Iterable<O>
 	 * Left join with another Canal.
 	 * 
 	 * @param that
-	 * @return
-	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that)
-	{
-		return leftJoin(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
-	}
-
-	/**
-	 * Left join with another Canal.
-	 * 
-	 * @param that
 	 * @param kol
 	 * @param kor
 	 * @return
 	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that, Mapper<O, K> kol,
+	protected <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that, Mapper<O, K> kol,
 			Mapper<R, K> kor)
 	{
 		return leftJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
@@ -3028,22 +3054,11 @@ public class Canal<I, O> implements Iterable<O>
 	 * Right join with another Canal.
 	 * 
 	 * @param that
-	 * @return
-	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that)
-	{
-		return rightJoin(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
-	}
-
-	/**
-	 * Right join with another Canal.
-	 * 
-	 * @param that
 	 * @param kol
 	 * @param kor
 	 * @return
 	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that, Mapper<O, K> kol,
+	protected <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that, Mapper<O, K> kol,
 			Mapper<R, K> kor)
 	{
 		return rightJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
@@ -3230,6 +3245,13 @@ public class Canal<I, O> implements Iterable<O>
 	public Collection<O> take(int limit, Collection<O> result)
 	{
 		return this.follow(new TakeOp<O>(limit, result)).evaluate();
+	}
+
+	@SuppressWarnings("unchecked")
+	public <K, V> PairCanal<I, K, V> toPair()
+	{
+		return (PairCanal<I, K, V>) new PairCanal<I, K, V>().setUpstream(this.getUpstream())
+				.setOperator((Operator<I, Tuple2<K, V>>) this.getOperator());
 	}
 
 	/**
