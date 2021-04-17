@@ -1546,6 +1546,24 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		/**
+		 * Map each value in pair.
+		 * 
+		 * @param mapper
+		 * @return
+		 */
+		public <V> PairCanal<Tuple2<K, U>, K, V> mapValues(final Mapper<U, V> mapper)
+		{
+			return this.map(new Mapper<Tuple2<K, U>, Tuple2<K, V>>()
+			{
+				@Override
+				public Tuple2<K, V> map(Tuple2<K, U> el)
+				{
+					return new Tuple2<K, V>(el._1, mapper.map(el._2));
+				}
+			}).toPair();
+		}
+
+		/**
 		 * Right join with another Canal.
 		 * 
 		 * @param that
