@@ -2584,9 +2584,9 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param that
 	 * @return
 	 */
-	public <N> Canal<O, Tuple2<O, N>> cartesian(Canal<?, N> that)
+	public <N> PairCanal<O, O, N> cartesian(Canal<?, N> that)
 	{
-		return this.follow(new CartesianOp<O, N>(that));
+		return this.follow(new CartesianOp<O, N>(that)).toPair();
 	}
 
 	/**
@@ -2846,7 +2846,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param kop
 	 * @return
 	 */
-	public <K> Canal<O, Tuple2<K, Iterable<O>>> groupBy(Mapper<O, K> kop)
+	public <K> PairCanal<O, K, Iterable<O>> groupBy(Mapper<O, K> kop)
 	{
 		return groupBy(kop, new SelfMapper<O>());
 	}
@@ -2858,9 +2858,9 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param vop
 	 * @return
 	 */
-	public <K, V> Canal<O, Tuple2<K, Iterable<V>>> groupBy(Mapper<O, K> kop, Mapper<O, V> vop)
+	public <K, V> PairCanal<O, K, Iterable<V>> groupBy(Mapper<O, K> kop, Mapper<O, V> vop)
 	{
-		return this.follow(new GroupByOp<O, K, V>(kop, vop));
+		return this.follow(new GroupByOp<O, K, V>(kop, vop)).toPair();
 	}
 
 	/**
