@@ -1504,6 +1504,16 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		/**
+		 * Gather each value into correspondent group identified by same key.
+		 * 
+		 * @return
+		 */
+		public PairCanal<Tuple2<K, U>, K, Iterable<U>> groupByKey()
+		{
+			return this.groupBy(new DefaultKop<Tuple2<K, U>, K>(), new DefaultVop<Tuple2<K, U>, U>());
+		}
+
+		/**
 		 * Inner join with another Canal.
 		 * 
 		 * @param that
@@ -1512,6 +1522,16 @@ public class Canal<I, O> implements Iterable<O>
 		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<U, V>> join(Canal<?, Tuple2<K, V>> that)
 		{
 			return join(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+		}
+
+		/**
+		 * Pass each key of pair to downstream.
+		 * 
+		 * @return
+		 */
+		public Canal<Tuple2<K, U>, K> keys()
+		{
+			return this.map(new DefaultKop<Tuple2<K, U>, K>());
 		}
 
 		/**
@@ -1534,6 +1554,16 @@ public class Canal<I, O> implements Iterable<O>
 		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<Option<U>, V>> rightJoin(Canal<?, Tuple2<K, V>> that)
 		{
 			return rightJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+		}
+
+		/**
+		 * Pass each value of pair to downstream.
+		 * 
+		 * @return
+		 */
+		public Canal<Tuple2<K, U>, U> values()
+		{
+			return this.map(new DefaultVop<Tuple2<K, U>, U>());
 		}
 	}
 
