@@ -1066,6 +1066,27 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	public static class JoinCanal<I, K, L, R> extends PairCanal<I, K, Tuple2<L, R>>
+	{
+		/**
+		 * Map each joint in this Canal.
+		 * 
+		 * @param mapper
+		 * @return
+		 */
+		public <V> Canal<Tuple2<K, Tuple2<L, R>>, V> mapJoint(final JointMapper<K, L, R, V> mapper)
+		{
+			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, V>()
+			{
+				@Override
+				public V map(Tuple2<K, Tuple2<L, R>> el)
+				{
+					return mapper.map(el._2._1, el._2._2, el._1);
+				}
+			});
+		}
+	}
+
 	protected static abstract class Joiner<L, R, K, U, V, M, N> extends AbstractPond<L, Tuple2<K, Tuple2<M, N>>>
 	{
 		protected final Canal<?, R>		that;
@@ -1268,6 +1289,11 @@ public class Canal<I, O> implements Iterable<O>
 			this.vol = vol;
 			this.vor = vor;
 		}
+	}
+
+	public static interface JointMapper<K, L, R, V>
+	{
+		public V map(L left, R right, K key);
 	}
 
 	protected static class LeftJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, U, Option<V>>
@@ -1498,9 +1524,11 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param that
 		 * @return
 		 */
-		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<Option<U>, Option<V>>> fullJoin(Canal<?, Tuple2<K, V>> that)
+		public <V> JoinCanal<Tuple2<K, Tuple2<Option<U>, Option<V>>>, K, Option<U>, Option<V>> fullJoin(
+				Canal<?, Tuple2<K, V>> that)
 		{
-			return fullJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+			return fullJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>())
+					.<K, Tuple2<Option<U>, Option<V>>> toPair().toJoin();
 		}
 
 		/**
@@ -1519,9 +1547,10 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param that
 		 * @return
 		 */
-		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<U, V>> join(Canal<?, Tuple2<K, V>> that)
+		public <V> JoinCanal<Tuple2<K, Tuple2<U, V>>, K, U, V> join(Canal<?, Tuple2<K, V>> that)
 		{
-			return join(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+			return join(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>())
+					.<K, Tuple2<U, V>> toPair().toJoin();
 		}
 
 		/**
@@ -1540,9 +1569,10 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param that
 		 * @return
 		 */
-		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<U, Option<V>>> leftJoin(Canal<?, Tuple2<K, V>> that)
+		public <V> JoinCanal<Tuple2<K, Tuple2<U, Option<V>>>, K, U, Option<V>> leftJoin(Canal<?, Tuple2<K, V>> that)
 		{
-			return leftJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+			return leftJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>())
+					.<K, Tuple2<U, Option<V>>> toPair().toJoin();
 		}
 
 		/**
@@ -1569,9 +1599,25 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param that
 		 * @return
 		 */
-		public <V> PairCanal<Tuple2<K, U>, K, Tuple2<Option<U>, V>> rightJoin(Canal<?, Tuple2<K, V>> that)
+		public <V> JoinCanal<Tuple2<K, Tuple2<Option<U>, V>>, K, Option<U>, V> rightJoin(Canal<?, Tuple2<K, V>> that)
 		{
-			return rightJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>()).toPair();
+			return rightJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>())
+					.<K, Tuple2<Option<U>, V>> toPair().toJoin();
+		}
+
+		@SuppressWarnings("unchecked")
+		public <L, R> JoinCanal<Tuple2<K, U>, K, L, R> toJoin()
+		{
+			return (JoinCanal<Tuple2<K, U>, K, L, R>) new JoinCanal<Tuple2<K, U>, K, L, R>().setUpstream(this)
+					.setOperator(new MapOp<Tuple2<K, U>, Tuple2<K, Tuple2<L, R>>>(
+							new Mapper<Tuple2<K, U>, Tuple2<K, Tuple2<L, R>>>()
+							{
+								@Override
+								public Tuple2<K, Tuple2<L, R>> map(Tuple2<K, U> el)
+								{
+									return (Tuple2<K, Tuple2<L, R>>) el;
+								}
+							}));
 		}
 
 		/**
@@ -1583,6 +1629,7 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			return this.map(new DefaultVop<Tuple2<K, U>, U>());
 		}
+
 	}
 
 	protected static class PeekOp<E> implements Converter<E, E>
@@ -1767,9 +1814,9 @@ public class Canal<I, O> implements Iterable<O>
 	public static class SelfMapper<E> implements Mapper<E, E>
 	{
 		@Override
-		public E map(E key)
+		public E map(E el)
 		{
-			return key;
+			return el;
 		}
 	}
 
