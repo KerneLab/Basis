@@ -1519,6 +1519,26 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		/**
+		 * Folder each value within same group.
+		 * 
+		 * @param initiator
+		 * @param folder
+		 * @return
+		 */
+		public <V> PairCanal<Tuple2<K, Iterable<U>>, K, V> foldByKey(final Producer<V> initiator,
+				final Reducer<U, V> folder)
+		{
+			return this.groupByKey().mapValues(new Mapper<Iterable<U>, V>()
+			{
+				@Override
+				public V map(Iterable<U> el)
+				{
+					return Canal.of(el).fold(initiator.produce(), folder);
+				}
+			});
+		}
+
+		/**
 		 * Full join with another Canal.
 		 * 
 		 * @param that
@@ -1591,6 +1611,24 @@ public class Canal<I, O> implements Iterable<O>
 					return new Tuple2<K, V>(el._1, mapper.map(el._2));
 				}
 			}).toPair();
+		}
+
+		/**
+		 * Reduce each value within same group.
+		 * 
+		 * @param reducer
+		 * @return
+		 */
+		public PairCanal<Tuple2<K, Iterable<U>>, K, U> reduceByKey(final Reducer<U, U> reducer)
+		{
+			return this.groupByKey().mapValues(new Mapper<Iterable<U>, U>()
+			{
+				@Override
+				public U map(Iterable<U> el)
+				{
+					return Canal.of(el).reduce(reducer).get();
+				}
+			});
 		}
 
 		/**
