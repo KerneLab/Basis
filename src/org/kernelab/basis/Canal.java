@@ -776,7 +776,7 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static class GroupByOp<E, K, V> implements Converter<E, Tuple2<K, Iterable<V>>>
+	protected static class GroupByOp<E, K, V> implements Converter<E, Tuple2<K, Canal<?, V>>>
 	{
 		protected final Mapper<E, K>	kop;
 
@@ -789,13 +789,13 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		@Override
-		public Pond<E, Tuple2<K, Iterable<V>>> newPond()
+		public Pond<E, Tuple2<K, Canal<?, V>>> newPond()
 		{
 			return new Grouper<E, K, V>(kop, vop);
 		}
 	}
 
-	protected static class Grouper<E, K, V> extends AbstractPond<E, Tuple2<K, Iterable<V>>>
+	protected static class Grouper<E, K, V> extends AbstractPond<E, Tuple2<K, Canal<?, V>>>
 	{
 		protected final Mapper<E, K>		kop;
 
@@ -847,10 +847,10 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		@Override
-		public Tuple2<K, Iterable<V>> next()
+		public Tuple2<K, Canal<?, V>> next()
 		{
 			Entry<K, List<V>> entry = iter.next();
-			return new Tuple2<K, Iterable<V>>(entry.getKey(), entry.getValue());
+			return new Tuple2<K, Canal<?, V>>(entry.getKey(), Canal.of(entry.getValue()));
 		}
 	}
 
@@ -1525,15 +1525,15 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param folder
 		 * @return
 		 */
-		public <V> PairCanal<Tuple2<K, Iterable<U>>, K, V> foldByKey(final Producer<V> initiator,
+		public <V> PairCanal<Tuple2<K, Canal<?, U>>, K, V> foldByKey(final Producer<V> initiator,
 				final Reducer<U, V> folder)
 		{
-			return this.groupByKey().mapValues(new Mapper<Iterable<U>, V>()
+			return this.groupByKey().mapValues(new Mapper<Canal<?, U>, V>()
 			{
 				@Override
-				public V map(Iterable<U> el)
+				public V map(Canal<?, U> el)
 				{
-					return Canal.of(el).fold(initiator.produce(), folder);
+					return el.fold(initiator.produce(), folder);
 				}
 			});
 		}
@@ -1556,9 +1556,27 @@ public class Canal<I, O> implements Iterable<O>
 		 * 
 		 * @return
 		 */
-		public PairCanal<Tuple2<K, U>, K, Iterable<U>> groupByKey()
+		public PairCanal<Tuple2<K, U>, K, Canal<?, U>> groupByKey()
 		{
 			return this.groupBy(new DefaultKop<Tuple2<K, U>, K>(), new DefaultVop<Tuple2<K, U>, U>());
+		}
+
+		/**
+		 * Filter pairs whose value statisfy the pred.
+		 * 
+		 * @param pred
+		 * @return
+		 */
+		public PairCanal<Tuple2<K, U>, K, U> having(final Filter<U> pred)
+		{
+			return this.filter(new Filter<Tuple2<K, U>>()
+			{
+				@Override
+				public boolean filter(Tuple2<K, U> el)
+				{
+					return pred.filter(el._2);
+				}
+			}).toPair();
 		}
 
 		/**
@@ -1619,14 +1637,14 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param reducer
 		 * @return
 		 */
-		public PairCanal<Tuple2<K, Iterable<U>>, K, U> reduceByKey(final Reducer<U, U> reducer)
+		public PairCanal<Tuple2<K, Canal<?, U>>, K, U> reduceByKey(final Reducer<U, U> reducer)
 		{
-			return this.groupByKey().mapValues(new Mapper<Iterable<U>, U>()
+			return this.groupByKey().mapValues(new Mapper<Canal<?, U>, U>()
 			{
 				@Override
-				public U map(Iterable<U> el)
+				public U map(Canal<?, U> el)
 				{
-					return Canal.of(el).reduce(reducer).get();
+					return el.reduce(reducer).get();
 				}
 			});
 		}
@@ -1667,7 +1685,6 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			return this.map(new DefaultVop<Tuple2<K, U>, U>());
 		}
-
 	}
 
 	protected static class PeekOp<E> implements Converter<E, E>
@@ -2035,7 +2052,7 @@ public class Canal<I, O> implements Iterable<O>
 		Source<E> newPond();
 	}
 
-	protected static class StratifyPond<E> extends AbstractPond<E, Iterable<E>>
+	protected static class StratifyPond<E> extends AbstractPond<E, Canal<?, E>>
 	{
 		protected final Comparator<E>	cmp;
 
@@ -2071,13 +2088,13 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		@Override
-		public Iterable<E> next()
+		public Canal<?, E> next()
 		{
-			return res.next();
+			return Canal.of(res.next());
 		}
 	}
 
-	protected static class StratifyWithOp<E> implements Converter<E, Iterable<E>>
+	protected static class StratifyWithOp<E> implements Converter<E, Canal<?, E>>
 	{
 		protected final Comparator<E> cmp;
 
@@ -2087,7 +2104,7 @@ public class Canal<I, O> implements Iterable<O>
 		}
 
 		@Override
-		public Pond<E, Iterable<E>> newPond()
+		public Pond<E, Canal<?, E>> newPond()
 		{
 			return new StratifyPond<E>(cmp);
 		}
@@ -2979,7 +2996,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param kop
 	 * @return
 	 */
-	public <K> PairCanal<O, K, Iterable<O>> groupBy(Mapper<O, K> kop)
+	public <K> PairCanal<O, K, Canal<?, O>> groupBy(Mapper<O, K> kop)
 	{
 		return groupBy(kop, new SelfMapper<O>());
 	}
@@ -2991,7 +3008,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param vop
 	 * @return
 	 */
-	public <K, V> PairCanal<O, K, Iterable<V>> groupBy(Mapper<O, K> kop, Mapper<O, V> vop)
+	public <K, V> PairCanal<O, K, Canal<?, V>> groupBy(Mapper<O, K> kop, Mapper<O, V> vop)
 	{
 		return this.follow(new GroupByOp<O, K, V>(kop, vop)).toPair();
 	}
@@ -3024,18 +3041,6 @@ public class Canal<I, O> implements Iterable<O>
 	{
 		return this.build();
 	}
-
-	// /**
-	// * Inner join with another Canal.
-	// *
-	// * @param that
-	// * @return
-	// */
-	// public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R>
-	// that)
-	// {
-	// return join(that, new DefaultKop<O, K>(), new DefaultKop<R, K>());
-	// }
 
 	/**
 	 * Inner join with another Canal.
@@ -3304,7 +3309,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param orders
 	 * @return
 	 */
-	public Canal<O, Iterable<O>> stratifyBy(Object... orders)
+	public Canal<O, Canal<?, O>> stratifyBy(Object... orders)
 	{
 		return this.stratifyWith(comparator(Canal.<O> comparatorsOfOrders(orders)));
 	}
@@ -3315,7 +3320,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<O, Iterable<O>> stratifyWith(Comparator<O> cmp)
+	public Canal<O, Canal<?, O>> stratifyWith(Comparator<O> cmp)
 	{
 		return this.follow(new StratifyWithOp<O>(cmp));
 	}
@@ -3328,7 +3333,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<O, Iterable<O>> stratifyWith(Comparator<O> cmp, boolean ascend)
+	public Canal<O, Canal<?, O>> stratifyWith(Comparator<O> cmp, boolean ascend)
 	{
 		return this.stratifyWith(ascend ? cmp : inverse(cmp));
 	}
@@ -3385,6 +3390,12 @@ public class Canal<I, O> implements Iterable<O>
 	{
 		return (PairCanal<I, K, V>) new PairCanal<I, K, V>().setUpstream(this.getUpstream())
 				.setOperator((Operator<I, Tuple2<K, V>>) this.getOperator());
+	}
+
+	@Override
+	public String toString()
+	{
+		return toString(",", "[", "]");
 	}
 
 	/**
