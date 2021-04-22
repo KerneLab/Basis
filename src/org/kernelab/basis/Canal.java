@@ -17,27 +17,27 @@ import java.util.TreeSet;
 
 import org.kernelab.basis.JSON.Pair;
 
-public class Canal<I, O> implements Iterable<O>
+public class Canal<U, D> implements Iterable<D>
 {
-	protected static abstract class AbstractPond<I, O> implements Pond<I, O>
+	protected static abstract class AbstractPond<U, D> implements Pond<U, D>
 	{
-		private Pond<?, I> up;
+		private Pond<?, U> up;
 
 		public abstract boolean hasNext();
 
-		public abstract O next();
+		public abstract D next();
 
 		@Override
 		public void remove()
 		{
 		}
 
-		public Pond<?, I> upstream()
+		public Pond<?, U> upstream()
 		{
 			return up;
 		}
 
-		public void upstream(Pond<?, I> up)
+		public void upstream(Pond<?, U> up)
 		{
 			this.up = up;
 		}
@@ -250,7 +250,7 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static interface Converter<I, O> extends Operator<I, O>
+	protected static interface Converter<U, D> extends Operator<U, D>
 	{
 	}
 
@@ -369,7 +369,7 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	protected static abstract class Creek<I, O> extends AbstractPond<I, O>
+	protected static abstract class Creek<U, D> extends AbstractPond<U, D>
 	{
 		@Override
 		public void begin()
@@ -445,11 +445,6 @@ public class Canal<I, O> implements Iterable<O>
 		{
 			return new LinkedList<E>();
 		}
-	}
-
-	protected static abstract class Distiller
-	{
-
 	}
 
 	protected static class DistinctOp<E> implements Converter<E, E>
@@ -776,6 +771,44 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
+	protected static class GeneratedSource<E> extends Source<E>
+	{
+		protected final Producer<E> generator;
+
+		public GeneratedSource(Producer<E> generator)
+		{
+			this.generator = generator;
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return true;
+		}
+
+		@Override
+		public E next()
+		{
+			return generator.produce();
+		}
+	}
+
+	protected static class GeneratedSourcer<E> implements Sourcer<E>
+	{
+		protected final Producer<E> generator;
+
+		public GeneratedSourcer(Producer<E> generator)
+		{
+			this.generator = generator;
+		}
+
+		@Override
+		public Source<E> newPond()
+		{
+			return new GeneratedSource<E>(generator);
+		}
+	}
+
 	protected static class GroupByOp<E, K, V> implements Converter<E, Tuple2<K, Canal<?, V>>>
 	{
 		protected final Mapper<E, K>	kop;
@@ -1066,7 +1099,7 @@ public class Canal<I, O> implements Iterable<O>
 		}
 	}
 
-	public static class JoinCanal<I, K, L, R> extends PairCanal<I, K, Tuple2<L, R>>
+	public static class JoinCanal<U, K, L, R> extends PairCanal<U, K, Tuple2<L, R>>
 	{
 		/**
 		 * Map each joint in this Canal.
@@ -1074,12 +1107,12 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param mapper
 		 * @return
 		 */
-		public <V> Canal<Tuple2<K, Tuple2<L, R>>, V> mapJoint(final JointMapper<K, L, R, V> mapper)
+		public <W> Canal<Tuple2<K, Tuple2<L, R>>, W> mapJoint(final JointMapper<K, L, R, W> mapper)
 		{
-			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, V>()
+			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, W>()
 			{
 				@Override
-				public V map(Tuple2<K, Tuple2<L, R>> el)
+				public W map(Tuple2<K, Tuple2<L, R>> el)
 				{
 					return mapper.map(el._2._1, el._2._2, el._1);
 				}
@@ -1492,7 +1525,7 @@ public class Canal<I, O> implements Iterable<O>
 		public abstract E orNull();
 	}
 
-	public static class PairCanal<I, K, U> extends Canal<I, Tuple2<K, U>>
+	public static class PairCanal<U, K, V> extends Canal<U, Tuple2<K, V>>
 	{
 		/**
 		 * Collect elements into map.<br />
@@ -1502,7 +1535,7 @@ public class Canal<I, O> implements Iterable<O>
 		 * 
 		 * @return
 		 */
-		public Map<K, U> collectAsMap()
+		public Map<K, V> collectAsMap()
 		{
 			return collectAsMap(null);
 		}
@@ -1525,13 +1558,13 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param folder
 		 * @return
 		 */
-		public <V> PairCanal<Tuple2<K, Canal<?, U>>, K, V> foldByKey(final Producer<V> initiator,
-				final Reducer<U, V> folder)
+		public <W> PairCanal<Tuple2<K, Canal<?, V>>, K, W> foldByKey(final Producer<W> initiator,
+				final Reducer<V, W> folder)
 		{
-			return this.groupByKey().mapValues(new Mapper<Canal<?, U>, V>()
+			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, W>()
 			{
 				@Override
-				public V map(Canal<?, U> el)
+				public W map(Canal<?, V> el)
 				{
 					return el.fold(initiator.produce(), folder);
 				}
@@ -1544,11 +1577,11 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param that
 		 * @return
 		 */
-		public <V> JoinCanal<Tuple2<K, Tuple2<Option<U>, Option<V>>>, K, Option<U>, Option<V>> fullJoin(
-				Canal<?, Tuple2<K, V>> that)
+		public <W> JoinCanal<Tuple2<K, Tuple2<Option<V>, Option<W>>>, K, Option<V>, Option<W>> fullJoin(
+				Canal<?, Tuple2<K, W>> that)
 		{
-			return fullJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>())
-					.<K, Tuple2<Option<U>, Option<V>>> toPair().toJoin();
+			return fullJoin(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
+					.<K, Tuple2<Option<V>, Option<W>>> toPair().toJoin();
 		}
 
 		/**
@@ -1556,9 +1589,9 @@ public class Canal<I, O> implements Iterable<O>
 		 * 
 		 * @return
 		 */
-		public PairCanal<Tuple2<K, U>, K, Canal<?, U>> groupByKey()
+		public PairCanal<Tuple2<K, V>, K, Canal<?, V>> groupByKey()
 		{
-			return this.groupBy(new DefaultKop<Tuple2<K, U>, K>(), new DefaultVop<Tuple2<K, U>, U>());
+			return this.groupBy(new DefaultKop<Tuple2<K, V>, K>(), new DefaultVop<Tuple2<K, V>, V>());
 		}
 
 		/**
@@ -1567,12 +1600,12 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param pred
 		 * @return
 		 */
-		public PairCanal<Tuple2<K, U>, K, U> having(final Filter<U> pred)
+		public PairCanal<Tuple2<K, V>, K, V> having(final Filter<V> pred)
 		{
-			return this.filter(new Filter<Tuple2<K, U>>()
+			return this.filter(new Filter<Tuple2<K, V>>()
 			{
 				@Override
-				public boolean filter(Tuple2<K, U> el)
+				public boolean filter(Tuple2<K, V> el)
 				{
 					return pred.filter(el._2);
 				}
@@ -1585,10 +1618,10 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param that
 		 * @return
 		 */
-		public <V> JoinCanal<Tuple2<K, Tuple2<U, V>>, K, U, V> join(Canal<?, Tuple2<K, V>> that)
+		public <W> JoinCanal<Tuple2<K, Tuple2<V, W>>, K, V, W> join(Canal<?, Tuple2<K, W>> that)
 		{
-			return join(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>())
-					.<K, Tuple2<U, V>> toPair().toJoin();
+			return join(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
+					.<K, Tuple2<V, W>> toPair().toJoin();
 		}
 
 		/**
@@ -1596,9 +1629,9 @@ public class Canal<I, O> implements Iterable<O>
 		 * 
 		 * @return
 		 */
-		public Canal<Tuple2<K, U>, K> keys()
+		public Canal<Tuple2<K, V>, K> keys()
 		{
-			return this.map(new DefaultKop<Tuple2<K, U>, K>());
+			return this.map(new DefaultKop<Tuple2<K, V>, K>());
 		}
 
 		/**
@@ -1607,10 +1640,10 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param that
 		 * @return
 		 */
-		public <V> JoinCanal<Tuple2<K, Tuple2<U, Option<V>>>, K, U, Option<V>> leftJoin(Canal<?, Tuple2<K, V>> that)
+		public <W> JoinCanal<Tuple2<K, Tuple2<V, Option<W>>>, K, V, Option<W>> leftJoin(Canal<?, Tuple2<K, W>> that)
 		{
-			return leftJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>())
-					.<K, Tuple2<U, Option<V>>> toPair().toJoin();
+			return leftJoin(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
+					.<K, Tuple2<V, Option<W>>> toPair().toJoin();
 		}
 
 		/**
@@ -1619,14 +1652,14 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param mapper
 		 * @return
 		 */
-		public <V> PairCanal<Tuple2<K, U>, K, V> mapValues(final Mapper<U, V> mapper)
+		public <W> PairCanal<Tuple2<K, V>, K, W> mapValues(final Mapper<V, W> mapper)
 		{
-			return this.map(new Mapper<Tuple2<K, U>, Tuple2<K, V>>()
+			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>()
 			{
 				@Override
-				public Tuple2<K, V> map(Tuple2<K, U> el)
+				public Tuple2<K, W> map(Tuple2<K, V> el)
 				{
-					return new Tuple2<K, V>(el._1, mapper.map(el._2));
+					return new Tuple2<K, W>(el._1, mapper.map(el._2));
 				}
 			}).toPair();
 		}
@@ -1637,12 +1670,12 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param reducer
 		 * @return
 		 */
-		public PairCanal<Tuple2<K, Canal<?, U>>, K, U> reduceByKey(final Reducer<U, U> reducer)
+		public PairCanal<Tuple2<K, Canal<?, V>>, K, V> reduceByKey(final Reducer<V, V> reducer)
 		{
-			return this.groupByKey().mapValues(new Mapper<Canal<?, U>, U>()
+			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, V>()
 			{
 				@Override
-				public U map(Canal<?, U> el)
+				public V map(Canal<?, V> el)
 				{
 					return el.reduce(reducer).get();
 				}
@@ -1655,21 +1688,21 @@ public class Canal<I, O> implements Iterable<O>
 		 * @param that
 		 * @return
 		 */
-		public <V> JoinCanal<Tuple2<K, Tuple2<Option<U>, V>>, K, Option<U>, V> rightJoin(Canal<?, Tuple2<K, V>> that)
+		public <W> JoinCanal<Tuple2<K, Tuple2<Option<V>, W>>, K, Option<V>, W> rightJoin(Canal<?, Tuple2<K, W>> that)
 		{
-			return rightJoin(that, new DefaultKop<Tuple2<K, U>, K>(), new DefaultKop<Tuple2<K, V>, K>())
-					.<K, Tuple2<Option<U>, V>> toPair().toJoin();
+			return rightJoin(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
+					.<K, Tuple2<Option<V>, W>> toPair().toJoin();
 		}
 
 		@SuppressWarnings("unchecked")
-		public <L, R> JoinCanal<Tuple2<K, U>, K, L, R> toJoin()
+		public <L, R> JoinCanal<Tuple2<K, V>, K, L, R> toJoin()
 		{
-			return (JoinCanal<Tuple2<K, U>, K, L, R>) new JoinCanal<Tuple2<K, U>, K, L, R>().setUpstream(this)
-					.setOperator(new MapOp<Tuple2<K, U>, Tuple2<K, Tuple2<L, R>>>(
-							new Mapper<Tuple2<K, U>, Tuple2<K, Tuple2<L, R>>>()
+			return (JoinCanal<Tuple2<K, V>, K, L, R>) new JoinCanal<Tuple2<K, V>, K, L, R>().setUpstream(this)
+					.setOperator(new MapOp<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>(
+							new Mapper<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>()
 							{
 								@Override
-								public Tuple2<K, Tuple2<L, R>> map(Tuple2<K, U> el)
+								public Tuple2<K, Tuple2<L, R>> map(Tuple2<K, V> el)
 								{
 									return (Tuple2<K, Tuple2<L, R>>) el;
 								}
@@ -1681,9 +1714,9 @@ public class Canal<I, O> implements Iterable<O>
 		 * 
 		 * @return
 		 */
-		public Canal<Tuple2<K, U>, U> values()
+		public Canal<Tuple2<K, V>, V> values()
 		{
-			return this.map(new DefaultVop<Tuple2<K, U>, U>());
+			return this.map(new DefaultVop<Tuple2<K, V>, V>());
 		}
 	}
 
@@ -2660,6 +2693,11 @@ public class Canal<I, O> implements Iterable<O>
 				});
 	}
 
+	public static <E> Canal<?, E> of(Producer<E> spring)
+	{
+		return new Canal<E, E>().setOperator(new GeneratedSourcer<E>(spring));
+	}
+
 	public static <E> Option<E> option(E value)
 	{
 		return value != null ? some(value) : Canal.<E> none();
@@ -2699,18 +2737,18 @@ public class Canal<I, O> implements Iterable<O>
 		return res;
 	}
 
-	private Canal<?, I>		upstream;
+	private Canal<?, U>		upstream;
 
-	private Operator<I, O>	operator;
+	private Operator<U, D>	operator;
 
-	protected Pond<I, O> build()
+	protected Pond<U, D> build()
 	{
 		return begin(build(null));
 	}
 
-	protected Pond<I, O> build(Pond<O, ?> down)
+	protected Pond<U, D> build(Pond<D, ?> down)
 	{
-		Pond<I, O> pond = this.newPond();
+		Pond<U, D> pond = this.newPond();
 
 		if (down != null)
 		{
@@ -2727,16 +2765,14 @@ public class Canal<I, O> implements Iterable<O>
 	}
 
 	/**
-	 * Make Cartesian product result against another given
-	 * {@code Canal<?,N>}.<br />
-	 * The output type is {@code Tuple2<O,N>}
+	 * Make Cartesian product result against another given {@code Canal<?,N>}.
 	 * 
 	 * @param that
 	 * @return
 	 */
-	public <N> PairCanal<O, O, N> cartesian(Canal<?, N> that)
+	public <N> PairCanal<D, D, N> cartesian(Canal<?, N> that)
 	{
-		return this.follow(new CartesianOp<O, N>(that)).toPair();
+		return this.follow(new CartesianOp<D, N>(that)).toPair();
 	}
 
 	/**
@@ -2744,7 +2780,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * 
 	 * @return
 	 */
-	public Collection<O> collect()
+	public Collection<D> collect()
 	{
 		return this.collect(null);
 	}
@@ -2756,9 +2792,9 @@ public class Canal<I, O> implements Iterable<O>
 	 *            The result Collection.
 	 * @return
 	 */
-	public Collection<O> collect(Collection<O> result)
+	public Collection<D> collect(Collection<D> result)
 	{
-		return this.follow(new CollectOp<O>(result)).evaluate();
+		return this.follow(new CollectOp<D>(result)).evaluate();
 	}
 
 	/**
@@ -2769,7 +2805,7 @@ public class Canal<I, O> implements Iterable<O>
 	 *            The result map.
 	 * @return
 	 */
-	public <K, U> Map<K, U> collectAsMap(Map<K, U> result)
+	public <K, V> Map<K, V> collectAsMap(Map<K, V> result)
 	{
 		return collectAsMap(result, null, null);
 	}
@@ -2780,14 +2816,14 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param result
 	 *            The result map.
 	 * @param kop
-	 *            The "key of pair" recognizer.
+	 *            {@code (D data)->K key} the "key of pair" recognizer.
 	 * @param vop
-	 *            The "value of pair" recognizer.
+	 *            {@code (D data)->V value} the "value of pair" recognizer.
 	 * @return
 	 */
-	public <K, V> Map<K, V> collectAsMap(Map<K, V> result, Mapper<O, K> kop, Mapper<O, V> vop)
+	public <K, V> Map<K, V> collectAsMap(Map<K, V> result, Mapper<D, K> kop, Mapper<D, V> vop)
 	{
-		return this.follow(new CollectAsMapOp<O, K, V>(result, kop, vop)).evaluate();
+		return this.follow(new CollectAsMapOp<D, K, V>(result, kop, vop)).evaluate();
 	}
 
 	/**
@@ -2797,7 +2833,7 @@ public class Canal<I, O> implements Iterable<O>
 	 */
 	public int count()
 	{
-		return this.follow(new CountOp<O>()).evaluate();
+		return this.follow(new CountOp<D>()).evaluate();
 	}
 
 	/**
@@ -2820,9 +2856,9 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param kop
 	 * @return
 	 */
-	public <K> Map<K, Integer> countByKey(Map<K, Integer> result, Mapper<O, K> kop)
+	public <K> Map<K, Integer> countByKey(Map<K, Integer> result, Mapper<D, K> kop)
 	{
-		return this.follow(new CountByKeyOp<O, K>(result, kop)).evaluate();
+		return this.follow(new CountByKeyOp<D, K>(result, kop)).evaluate();
 	}
 
 	/**
@@ -2830,7 +2866,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * 
 	 * @return
 	 */
-	public Map<O, Integer> countByValue()
+	public Map<D, Integer> countByValue()
 	{
 		return countByValue(null);
 	}
@@ -2841,9 +2877,9 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param result
 	 * @return
 	 */
-	public Map<O, Integer> countByValue(Map<O, Integer> result)
+	public Map<D, Integer> countByValue(Map<D, Integer> result)
 	{
-		return this.follow(new CountByValueOp<O>(result)).evaluate();
+		return this.follow(new CountByValueOp<D>(result)).evaluate();
 	}
 
 	/**
@@ -2851,7 +2887,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * 
 	 * @return
 	 */
-	public Canal<O, O> distinct()
+	public Canal<D, D> distinct()
 	{
 		return this.distinct(null);
 	}
@@ -2862,26 +2898,28 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<O, O> distinct(Comparator<O> cmp)
+	public Canal<D, D> distinct(Comparator<D> cmp)
 	{
-		return this.follow(new DistinctOp<O>(cmp));
+		return this.follow(new DistinctOp<D>(cmp));
 	}
 
 	@SuppressWarnings("unchecked")
 	protected <T> T evaluate()
 	{
-		return ((Terminal<I, T>) this.build()).get();
+		return ((Terminal<U, T>) this.build()).get();
 	}
 
 	/**
 	 * Filter the elements.
 	 * 
 	 * @param filter
+	 *            {@code (D data)->boolean} returns true if and only if the
+	 *            element need to be passed to the downstream.
 	 * @return
 	 */
-	public Canal<O, O> filter(Filter<O> filter)
+	public Canal<D, D> filter(Filter<D> filter)
 	{
-		return this.follow(new FilterOp<O>(filter));
+		return this.follow(new FilterOp<D>(filter));
 	}
 
 	/**
@@ -2889,12 +2927,12 @@ public class Canal<I, O> implements Iterable<O>
 	 * 
 	 * @return
 	 */
-	public Option<O> first()
+	public Option<D> first()
 	{
-		return first(new Filter<O>()
+		return first(new Filter<D>()
 		{
 			@Override
-			public boolean filter(O element)
+			public boolean filter(D element)
 			{
 				return true;
 			}
@@ -2905,22 +2943,25 @@ public class Canal<I, O> implements Iterable<O>
 	 * Get the first element that satisfied the given predicate.
 	 * 
 	 * @param filter
+	 *            {@code (D data)->boolean} returns true if and only if the
+	 *            element need to be passed to the downstream.
 	 * @return
 	 */
-	public Option<O> first(Filter<O> filter)
+	public Option<D> first(Filter<D> filter)
 	{
-		return this.follow(new FirstOp<O>(filter)).evaluate();
+		return this.follow(new FirstOp<D>(filter)).evaluate();
 	}
 
 	/**
 	 * Map each element into a flat result.
 	 * 
 	 * @param mapper
+	 *            {@code (D data)->Iterable<V>}
 	 * @return
 	 */
-	public <N> Canal<O, N> flatMap(Mapper<O, Iterable<N>> mapper)
+	public <V> Canal<D, V> flatMap(Mapper<D, Iterable<V>> mapper)
 	{
-		return this.follow(new FlatMapOp<O, N>(mapper));
+		return this.follow(new FlatMapOp<D, V>(mapper));
 	}
 
 	/**
@@ -2928,64 +2969,75 @@ public class Canal<I, O> implements Iterable<O>
 	 * 
 	 * @param init
 	 * @param folder
+	 *            {@code (R res,D data)->R res} a fold reducer.
 	 * @return
 	 */
-	public <R> R fold(R init, Reducer<O, R> folder)
+	public <R> R fold(R init, Reducer<D, R> folder)
 	{
-		return this.follow(new FoldOp<O, R>(init, folder)).evaluate();
+		return this.follow(new FoldOp<D, R>(init, folder)).evaluate();
 	}
 
-	protected <N> Canal<O, N> follow(Operator<O, N> op)
+	protected <N> Canal<D, N> follow(Operator<D, N> op)
 	{
-		return new Canal<O, N>().setUpstream(this).setOperator(op);
+		return new Canal<D, N>().setUpstream(this).setOperator(op);
 	}
 
 	/**
 	 * Take action on each element.
 	 * 
 	 * @param action
+	 *            {@code (D data)->void} the action to be applied to each
+	 *            element.
 	 */
-	public void foreach(Action<O> action)
+	public void foreach(Action<D> action)
 	{
-		this.follow(new ForeachOp<O>(action)).evaluate();
+		this.follow(new ForeachOp<D>(action)).evaluate();
 	}
 
 	/**
 	 * Full join with another Canal.
 	 * 
 	 * @param that
+	 *            the data on right side.
 	 * @param kol
+	 *            {@code (D data)->K key} the kop of left.
 	 * @param kor
+	 *            {@code (R data)->K key} the kop of right.
 	 * @return
 	 */
-	protected <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, Option<V>>>> fullJoin(Canal<?, R> that,
-			Mapper<O, K> kol, Mapper<R, K> kor)
+	protected <R, K, M, N> Canal<D, Tuple2<K, Tuple2<Option<M>, Option<N>>>> fullJoin(Canal<?, R> that,
+			Mapper<D, K> kol, Mapper<R, K> kor)
 	{
-		return fullJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
+		return fullJoin(that, kol, kor, new DefaultVop<D, M>(), new DefaultVop<R, N>());
 	}
 
 	/**
 	 * Full join with another Canal.
 	 * 
 	 * @param that
+	 *            the data on right side.
 	 * @param kol
+	 *            {@code (D data)->K key} the kop of left.
 	 * @param kor
+	 *            {@code (R data)->K key} the kop of right.
 	 * @param vol
+	 *            {@code (D data)->M value} the vop of left.
 	 * @param vor
+	 *            {@code (R data)->N value} the vop of right.
 	 * @return
 	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, Option<V>>>> fullJoin(Canal<?, R> that, Mapper<O, K> kol,
-			Mapper<R, K> kor, Mapper<O, U> vol, Mapper<R, V> vor)
+	public <R, K, M, N> Canal<D, Tuple2<K, Tuple2<Option<M>, Option<N>>>> fullJoin(Canal<?, R> that, Mapper<D, K> kol,
+			Mapper<R, K> kor, Mapper<D, M> vol, Mapper<R, N> vor)
 	{
-		return this.follow(new FullJoinOp<O, R, K, U, V>(that, kol, kor, vol, vor));
+		return this.follow(new FullJoinOp<D, R, K, M, N>(that, kol, kor, vol, vor));
 	}
 
-	protected Operator<I, O> getOperator()
+	protected Operator<U, D> getOperator()
 	{
 		return operator;
 	}
 
-	protected Canal<?, I> getUpstream()
+	protected Canal<?, U> getUpstream()
 	{
 		return upstream;
 	}
@@ -2994,23 +3046,26 @@ public class Canal<I, O> implements Iterable<O>
 	 * Gather each element into correspondent group identified by same key.
 	 * 
 	 * @param kop
+	 *            {@code (D data)->K key} the kop of data.
 	 * @return
 	 */
-	public <K> PairCanal<O, K, Canal<?, O>> groupBy(Mapper<O, K> kop)
+	public <K> PairCanal<D, K, Canal<?, D>> groupBy(Mapper<D, K> kop)
 	{
-		return groupBy(kop, new SelfMapper<O>());
+		return groupBy(kop, new SelfMapper<D>());
 	}
 
 	/**
-	 * Gather each element into correspondent group identified by same key.
+	 * Gather each value into correspondent group identified by same key.
 	 * 
 	 * @param kop
+	 *            {@code (D data)->K key} the kop of data.
 	 * @param vop
+	 *            {@code (D data)->V value} the vop of data.
 	 * @return
 	 */
-	public <K, V> PairCanal<O, K, Canal<?, V>> groupBy(Mapper<O, K> kop, Mapper<O, V> vop)
+	public <K, V> PairCanal<D, K, Canal<?, V>> groupBy(Mapper<D, K> kop, Mapper<D, V> vop)
 	{
-		return this.follow(new GroupByOp<O, K, V>(kop, vop)).toPair();
+		return this.follow(new GroupByOp<D, K, V>(kop, vop)).toPair();
 	}
 
 	/**
@@ -3019,7 +3074,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param that
 	 * @return
 	 */
-	public Canal<O, O> intersection(Canal<?, O> that)
+	public Canal<D, D> intersection(Canal<?, D> that)
 	{
 		return intersection(that, null);
 	}
@@ -3031,13 +3086,13 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<O, O> intersection(Canal<?, O> that, Comparator<O> cmp)
+	public Canal<D, D> intersection(Canal<?, D> that, Comparator<D> cmp)
 	{
-		return this.follow(new IntersectionOp<O>(that, cmp));
+		return this.follow(new IntersectionOp<D>(that, cmp));
 	}
 
 	@Override
-	public Iterator<O> iterator()
+	public Iterator<D> iterator()
 	{
 		return this.build();
 	}
@@ -3046,29 +3101,37 @@ public class Canal<I, O> implements Iterable<O>
 	 * Inner join with another Canal.
 	 * 
 	 * @param that
+	 *            the data on right side.
 	 * @param kol
+	 *            {@code (D data)->K key} the kop of left.
 	 * @param kor
+	 *            {@code (R data)->K key} the kop of right.
 	 * @return
 	 */
-	protected <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that, Mapper<O, K> kol, Mapper<R, K> kor)
+	protected <R, K, M, N> Canal<D, Tuple2<K, Tuple2<M, N>>> join(Canal<?, R> that, Mapper<D, K> kol, Mapper<R, K> kor)
 	{
-		return join(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
+		return join(that, kol, kor, new DefaultVop<D, M>(), new DefaultVop<R, N>());
 	}
 
 	/**
 	 * Inner join with another Canal.
 	 * 
 	 * @param that
+	 *            the data on right side.
 	 * @param kol
+	 *            {@code (D data)->K key} the kop of left.
 	 * @param kor
+	 *            {@code (R data)->K key} the kop of right.
 	 * @param vol
+	 *            {@code (D data)->M value} the vop of left.
 	 * @param vor
+	 *            {@code (R data)->N value} the vop of right.
 	 * @return
 	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, V>>> join(Canal<?, R> that, Mapper<O, K> kol, Mapper<R, K> kor,
-			Mapper<O, U> vol, Mapper<R, V> vor)
+	public <R, K, M, N> Canal<D, Tuple2<K, Tuple2<M, N>>> join(Canal<?, R> that, Mapper<D, K> kol, Mapper<R, K> kor,
+			Mapper<D, M> vol, Mapper<R, N> vor)
 	{
-		return this.follow(new InnerJoinOp<O, R, K, U, V>(that, kol, kor, vol, vor));
+		return this.follow(new InnerJoinOp<D, R, K, M, N>(that, kol, kor, vol, vor));
 	}
 
 	/**
@@ -3076,16 +3139,17 @@ public class Canal<I, O> implements Iterable<O>
 	 * defined by kop.
 	 * 
 	 * @param kop
+	 *            {@code (D data)->K key} the kop of data.
 	 * @return
 	 */
-	public <K> PairCanal<O, K, O> keyBy(final Mapper<O, K> kop)
+	public <K> PairCanal<D, K, D> keyBy(final Mapper<D, K> kop)
 	{
-		return this.map(new Mapper<O, Tuple2<K, O>>()
+		return this.map(new Mapper<D, Tuple2<K, D>>()
 		{
 			@Override
-			public Tuple2<K, O> map(O key)
+			public Tuple2<K, D> map(D key)
 			{
-				return new Tuple2<K, O>(kop.map(key), key);
+				return new Tuple2<K, D>(kop.map(key), key);
 			}
 		}).toPair();
 	}
@@ -3094,30 +3158,38 @@ public class Canal<I, O> implements Iterable<O>
 	 * Left join with another Canal.
 	 * 
 	 * @param that
+	 *            the data on right side.
 	 * @param kol
+	 *            {@code (D data)->K key} the kop of left.
 	 * @param kor
+	 *            {@code (R data)->K key} the kop of right.
 	 * @return
 	 */
-	protected <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that, Mapper<O, K> kol,
+	protected <R, K, M, N> Canal<D, Tuple2<K, Tuple2<M, Option<N>>>> leftJoin(Canal<?, R> that, Mapper<D, K> kol,
 			Mapper<R, K> kor)
 	{
-		return leftJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
+		return leftJoin(that, kol, kor, new DefaultVop<D, M>(), new DefaultVop<R, N>());
 	}
 
 	/**
 	 * Left join with another Canal.
 	 * 
 	 * @param that
+	 *            the data on right side.
 	 * @param kol
+	 *            {@code (D data)->K key} the kop of left.
 	 * @param kor
+	 *            {@code (R data)->K key} the kop of right.
 	 * @param vol
+	 *            {@code (D data)->M value} the vop of left.
 	 * @param vor
+	 *            {@code (R data)->N value} the vop of right.
 	 * @return
 	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<U, Option<V>>>> leftJoin(Canal<?, R> that, Mapper<O, K> kol,
-			Mapper<R, K> kor, Mapper<O, U> vol, Mapper<R, V> vor)
+	public <R, K, M, N> Canal<D, Tuple2<K, Tuple2<M, Option<N>>>> leftJoin(Canal<?, R> that, Mapper<D, K> kol,
+			Mapper<R, K> kor, Mapper<D, M> vol, Mapper<R, N> vor)
 	{
-		return this.follow(new LeftJoinOp<O, R, K, U, V>(that, kol, kor, vol, vor));
+		return this.follow(new LeftJoinOp<D, R, K, M, N>(that, kol, kor, vol, vor));
 	}
 
 	/**
@@ -3126,28 +3198,29 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param limit
 	 * @return
 	 */
-	public Canal<O, O> limit(int limit)
+	public Canal<D, D> limit(int limit)
 	{
-		return this.follow(new LimitOp<O>(limit));
+		return this.follow(new LimitOp<D>(limit));
 	}
 
 	/**
 	 * Map each element.
 	 * 
 	 * @param mapper
+	 *            {@code (D data)->V value}
 	 * @return
 	 */
-	public <N> Canal<O, N> map(Mapper<O, N> mapper)
+	public <V> Canal<D, V> map(Mapper<D, V> mapper)
 	{
-		return this.follow(new MapOp<O, N>(mapper));
+		return this.follow(new MapOp<D, V>(mapper));
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Pond<I, O> newPond()
+	protected Pond<U, D> newPond()
 	{
 		if (this.getOperator() instanceof Sourcer<?>)
 		{
-			return (Pond<I, O>) ((Sourcer<O>) this.getOperator()).newPond();
+			return (Pond<U, D>) ((Sourcer<D>) this.getOperator()).newPond();
 		}
 		else
 		{
@@ -3160,22 +3233,26 @@ public class Canal<I, O> implements Iterable<O>
 	 * downstream.
 	 * 
 	 * @param action
+	 *            {@code (D data)->void} the action to be applied to each
+	 *            element.
 	 * @return
 	 */
-	public Canal<O, O> peek(Action<O> action)
+	public Canal<D, D> peek(Action<D> action)
 	{
-		return this.follow(new PeekOp<O>(action));
+		return this.follow(new PeekOp<D>(action));
 	}
 
 	/**
 	 * Reduce each element.
 	 * 
 	 * @param reducer
-	 * @return
+	 *            {@code (D a,D b)->D res}
+	 * @return The reduce result or {@link Canal.None} only if this Canal is
+	 *         empty.
 	 */
-	public Option<O> reduce(Reducer<O, O> reducer)
+	public Option<D> reduce(Reducer<D, D> reducer)
 	{
-		return this.follow(new ReduceOp<O>(reducer)).evaluate();
+		return this.follow(new ReduceOp<D>(reducer)).evaluate();
 	}
 
 	/**
@@ -3183,48 +3260,56 @@ public class Canal<I, O> implements Iterable<O>
 	 * 
 	 * @return
 	 */
-	public Canal<O, O> reverse()
+	public Canal<D, D> reverse()
 	{
-		return this.follow(new ReverseOp<O>());
+		return this.follow(new ReverseOp<D>());
 	}
 
 	/**
 	 * Right join with another Canal.
 	 * 
 	 * @param that
+	 *            the data on right side.
 	 * @param kol
+	 *            {@code (D data)->K key} the kop of left.
 	 * @param kor
+	 *            {@code (R data)->K key} the kop of right.
 	 * @return
 	 */
-	protected <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that, Mapper<O, K> kol,
+	protected <R, K, M, N> Canal<D, Tuple2<K, Tuple2<Option<M>, N>>> rightJoin(Canal<?, R> that, Mapper<D, K> kol,
 			Mapper<R, K> kor)
 	{
-		return rightJoin(that, kol, kor, new DefaultVop<O, U>(), new DefaultVop<R, V>());
+		return rightJoin(that, kol, kor, new DefaultVop<D, M>(), new DefaultVop<R, N>());
 	}
 
 	/**
 	 * Right join with another Canal.
 	 * 
 	 * @param that
+	 *            the data on right side.
 	 * @param kol
+	 *            {@code (D data)->K key} the kop of left.
 	 * @param kor
+	 *            {@code (R data)->K key} the kop of right.
 	 * @param vol
+	 *            {@code (D data)->M value} the vop of left.
 	 * @param vor
+	 *            {@code (R data)->N value} the vop of right.
 	 * @return
 	 */
-	public <R, K, U, V> Canal<O, Tuple2<K, Tuple2<Option<U>, V>>> rightJoin(Canal<?, R> that, Mapper<O, K> kol,
-			Mapper<R, K> kor, Mapper<O, U> vol, Mapper<R, V> vor)
+	public <R, K, M, N> Canal<D, Tuple2<K, Tuple2<Option<M>, N>>> rightJoin(Canal<?, R> that, Mapper<D, K> kol,
+			Mapper<R, K> kor, Mapper<D, M> vol, Mapper<R, N> vor)
 	{
-		return this.follow(new RightJoinOp<O, R, K, U, V>(that, kol, kor, vol, vor));
+		return this.follow(new RightJoinOp<D, R, K, M, N>(that, kol, kor, vol, vor));
 	}
 
-	protected Canal<I, O> setOperator(Operator<I, O> operator)
+	protected Canal<U, D> setOperator(Operator<U, D> operator)
 	{
 		this.operator = operator;
 		return this;
 	}
 
-	protected Canal<I, O> setUpstream(Canal<?, I> upstream)
+	protected Canal<U, D> setUpstream(Canal<?, U> upstream)
 	{
 		this.upstream = upstream;
 		return this;
@@ -3236,20 +3321,25 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param skip
 	 * @return
 	 */
-	public Canal<O, O> skip(int skip)
+	public Canal<D, D> skip(int skip)
 	{
-		return this.follow(new SkipOp<O>(skip));
+		return this.follow(new SkipOp<D>(skip));
 	}
 
 	/**
 	 * Sort each element in this Canal by given
 	 * 
 	 * @param orders
+	 *            Either Mapper or Boolean.<br />
+	 *            The Mapper type parameter stands for a vop to extract value to
+	 *            be compared from a given element.<br />
+	 *            The Boolean type parameter means the ascending order of its
+	 *            previous Mapper parameter.
 	 * @return
 	 */
-	public Canal<O, O> sortBy(Object... orders)
+	public Canal<D, D> sortBy(Object... orders)
 	{
-		return this.follow(new SortByOp<O>(Canal.<O> comparatorsOfOrders(orders)));
+		return this.follow(new SortByOp<D>(Canal.<D> comparatorsOfOrders(orders)));
 	}
 
 	/**
@@ -3257,7 +3347,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * 
 	 * @return
 	 */
-	public Canal<O, O> sortWith()
+	public Canal<D, D> sortWith()
 	{
 		return sortWith(null);
 	}
@@ -3268,7 +3358,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<O, O> sortWith(boolean ascend)
+	public Canal<D, D> sortWith(boolean ascend)
 	{
 		return sortWith(null, ascend);
 	}
@@ -3279,7 +3369,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<O, O> sortWith(Comparator<O> cmp)
+	public Canal<D, D> sortWith(Comparator<D> cmp)
 	{
 		return sortWith(cmp, true);
 	}
@@ -3291,15 +3381,15 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<O, O> sortWith(Comparator<O> cmp, boolean ascend)
+	public Canal<D, D> sortWith(Comparator<D> cmp, boolean ascend)
 	{
 		if (cmp == null && !ascend)
 		{
-			return this.follow(new SortWithOp<O>(new DefaultComparator<O>(), ascend));
+			return this.follow(new SortWithOp<D>(new DefaultComparator<D>(), ascend));
 		}
 		else
 		{
-			return this.follow(new SortWithOp<O>(cmp, ascend));
+			return this.follow(new SortWithOp<D>(cmp, ascend));
 		}
 	}
 
@@ -3307,11 +3397,16 @@ public class Canal<I, O> implements Iterable<O>
 	 * Stratify each elements into levels according to the given orders.
 	 * 
 	 * @param orders
+	 *            Either Mapper or Boolean.<br />
+	 *            The Mapper type parameter stands for a vop to extract value to
+	 *            be compared from a given element.<br />
+	 *            The Boolean type parameter means the ascending order of its
+	 *            previous Mapper parameter.
 	 * @return
 	 */
-	public Canal<O, Canal<?, O>> stratifyBy(Object... orders)
+	public Canal<D, Canal<?, D>> stratifyBy(Object... orders)
 	{
-		return this.stratifyWith(comparator(Canal.<O> comparatorsOfOrders(orders)));
+		return this.stratifyWith(comparator(Canal.<D> comparatorsOfOrders(orders)));
 	}
 
 	/**
@@ -3320,9 +3415,9 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<O, Canal<?, O>> stratifyWith(Comparator<O> cmp)
+	public Canal<D, Canal<?, D>> stratifyWith(Comparator<D> cmp)
 	{
-		return this.follow(new StratifyWithOp<O>(cmp));
+		return this.follow(new StratifyWithOp<D>(cmp));
 	}
 
 	/**
@@ -3333,7 +3428,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<O, Canal<?, O>> stratifyWith(Comparator<O> cmp, boolean ascend)
+	public Canal<D, Canal<?, D>> stratifyWith(Comparator<D> cmp, boolean ascend)
 	{
 		return this.stratifyWith(ascend ? cmp : inverse(cmp));
 	}
@@ -3344,7 +3439,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param that
 	 * @return
 	 */
-	public Canal<O, O> subtract(Canal<?, O> that)
+	public Canal<D, D> subtract(Canal<?, D> that)
 	{
 		return subtract(that, null);
 	}
@@ -3356,9 +3451,9 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<O, O> subtract(Canal<?, O> that, Comparator<O> cmp)
+	public Canal<D, D> subtract(Canal<?, D> that, Comparator<D> cmp)
 	{
-		return this.follow(new SubtractOp<O>(that, cmp));
+		return this.follow(new SubtractOp<D>(that, cmp));
 	}
 
 	/**
@@ -3367,7 +3462,7 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param limit
 	 * @return
 	 */
-	public Collection<O> take(int limit)
+	public Collection<D> take(int limit)
 	{
 		return this.take(limit, null);
 	}
@@ -3380,18 +3475,28 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param result
 	 * @return
 	 */
-	public Collection<O> take(int limit, Collection<O> result)
+	public Collection<D> take(int limit, Collection<D> result)
 	{
-		return this.follow(new TakeOp<O>(limit, result)).evaluate();
+		return this.follow(new TakeOp<D>(limit, result)).evaluate();
 	}
 
+	/**
+	 * Convert this Canal to PairCanal.<br />
+	 * The elements' type in this Canal MUST be {@code Tuple2<K,V>}.
+	 * 
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
-	public <K, V> PairCanal<I, K, V> toPair()
+	public <K, V> PairCanal<U, K, V> toPair()
 	{
-		return (PairCanal<I, K, V>) new PairCanal<I, K, V>().setUpstream(this.getUpstream())
-				.setOperator((Operator<I, Tuple2<K, V>>) this.getOperator());
+		return (PairCanal<U, K, V>) new PairCanal<U, K, V>().setUpstream(this.getUpstream())
+				.setOperator((Operator<U, Tuple2<K, V>>) this.getOperator());
 	}
 
+	/**
+	 * To concatenate elements in this Canal to a String using comma as
+	 * delimiter and wrapped by brackets.
+	 */
 	@Override
 	public String toString()
 	{
@@ -3399,44 +3504,44 @@ public class Canal<I, O> implements Iterable<O>
 	}
 
 	/**
-	 * To concatenate elements in this Canal to a String with given split.
+	 * To concatenate elements in this Canal to a String with given delimiter.
 	 * 
-	 * @param split
+	 * @param delimiter
 	 * @return
 	 */
-	public String toString(CharSequence split)
+	public String toString(CharSequence delimiter)
 	{
-		return toString(split, null, null);
+		return toString(delimiter, null, null);
 	}
 
 	/**
-	 * To concatenate elements in this Canal to a String with given split,
-	 * prefix and suffix.
+	 * To concatenate elements in this Canal to a String with given delimiter,
+	 * wrapped by given prefix and suffix.
 	 * 
-	 * @param split
+	 * @param delimiter
 	 * @param prefix
 	 * @param suffix
 	 * @return
 	 */
-	public String toString(CharSequence split, CharSequence prefix, CharSequence suffix)
+	public String toString(CharSequence delimiter, CharSequence prefix, CharSequence suffix)
 	{
-		return toString(split, prefix, suffix, true);
+		return toString(delimiter, prefix, suffix, true);
 	}
 
 	/**
-	 * To concatenate elements in this Canal to a String with given split,
-	 * prefix and suffix. When the Canal is empty and the emptyWrap is false
-	 * then the prefix and suffix will not be wrapped.
+	 * To concatenate elements in this Canal to a String with given delimiter,
+	 * wrapped by given prefix and suffix. When the Canal is empty and the
+	 * emptyWrap is false then the prefix and suffix will not be wrapped.
 	 * 
-	 * @param split
+	 * @param delimiter
 	 * @param prefix
 	 * @param suffix
 	 * @param emptyWrap
 	 * @return
 	 */
-	public String toString(CharSequence split, CharSequence prefix, CharSequence suffix, boolean emptyWrap)
+	public String toString(CharSequence delimiter, CharSequence prefix, CharSequence suffix, boolean emptyWrap)
 	{
-		return this.follow(new StringConcater<O>(split, prefix, suffix, emptyWrap)).evaluate();
+		return this.follow(new StringConcater<D>(delimiter, prefix, suffix, emptyWrap)).evaluate();
 	}
 
 	/**
@@ -3445,29 +3550,31 @@ public class Canal<I, O> implements Iterable<O>
 	 * @param that
 	 * @return
 	 */
-	public Canal<O, O> union(Canal<?, O> that)
+	public Canal<D, D> union(Canal<?, D> that)
 	{
-		return this.follow(new UnionOp<O>(this, that));
+		return this.follow(new UnionOp<D>(this, that));
 	}
 
 	/**
-	 * Zip with another Canal into a Tuple2.
+	 * Zip each element with element in another Canal into a
+	 * {@code Tuple2<D,E>}.
 	 * 
 	 * @param that
 	 * @return
 	 */
-	public <N> PairCanal<O, O, N> zip(Canal<?, N> that)
+	public <E> PairCanal<D, D, E> zip(Canal<?, E> that)
 	{
-		return this.follow(new ZipOp<O, N>(that)).toPair();
+		return this.follow(new ZipOp<D, E>(that)).toPair();
 	}
 
 	/**
-	 * Zip each element in this Canal with its index number as a Tuple2.
+	 * Zip each element in this Canal with its index number as a
+	 * {@code Tuple2<D,Long>}.
 	 * 
 	 * @return
 	 */
-	public PairCanal<O, O, Long> zipWithIndex()
+	public PairCanal<D, D, Long> zipWithIndex()
 	{
-		return this.follow(new ZipWithIndexOp<O>()).toPair();
+		return this.follow(new ZipWithIndexOp<D>()).toPair();
 	}
 }
