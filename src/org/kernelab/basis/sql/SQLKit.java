@@ -143,22 +143,15 @@ public class SQLKit
 
 						if (acs != null)
 						{
-							try
-							{
-								val = col instanceof Integer //
-										? rs.getObject((Integer) col) //
-										: rs.getObject(col.toString());
+							val = col instanceof Integer //
+									? rs.getObject((Integer) col) //
+									: rs.getObject(col.toString());
 
-								acs.set(obj, JSON.ProjectTo(val, acs.getField().getType(), val, null));
+							acs.set(obj, JSON.ProjectTo(val, acs.getField().getType(), val, null));
 
-								if (finding)
-								{
-									this.acs.put(key, acs);
-								}
-							}
-							catch (Exception e)
+							if (finding)
 							{
-								e.printStackTrace();
+								this.acs.put(key, acs);
 							}
 						}
 					}
@@ -168,8 +161,7 @@ public class SQLKit
 			}
 			catch (Exception e)
 			{
-				e.printStackTrace();
-				return null;
+				throw new RuntimeException(e);
 			}
 		}
 	}
