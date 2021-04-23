@@ -529,21 +529,18 @@ public class Sequel implements Iterable<ResultSet>
 
 	public <E> E getRow(Class<E> cls, Map<String, Object> map)
 	{
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (map == null)
 			{
-				if (map == null)
-				{
-					map = this.getMetaMapName();
-				}
-				return SQLKit.mapResultRow(this.getResultSet(), cls, map);
+				map = this.getMetaMapName();
 			}
+			return SQLKit.mapResultRow(this.getResultSet(), cls, map);
 		}
-		catch (Exception e)
+		else
 		{
+			return null;
 		}
-		return null;
 	}
 
 	public JSAN getRowAsJSAN()
@@ -553,8 +550,6 @@ public class Sequel implements Iterable<ResultSet>
 
 	public JSAN getRowAsJSAN(Map<String, Object> map)
 	{
-		JSAN jsan = null;
-
 		try
 		{
 			if (this.preparedResultSet())
@@ -563,14 +558,13 @@ public class Sequel implements Iterable<ResultSet>
 				{
 					map = this.getMetaMapIndex();
 				}
-				jsan = SQLKit.jsanOfResultRow(this.getResultSet(), map);
+				return SQLKit.jsanOfResultRow(this.getResultSet(), map);
 			}
 		}
 		catch (Exception e)
 		{
 		}
-
-		return jsan;
+		return null;
 	}
 
 	public JSON getRowAsJSON()
