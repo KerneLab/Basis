@@ -3060,7 +3060,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(Calendar calendar)
 	{
-		return getDateTimeString(calendar.getTime());
+		return getDateTimeString(calendar != null ? calendar.getTime() : null);
 	}
 
 	/**
@@ -3068,13 +3068,13 @@ public class Tools
 	 * 
 	 * @param calendar
 	 *            The Calendar.
-	 * @param dateFormat
+	 * @param format
 	 *            The DateFormat object.
 	 * @return The String of the Calendar.
 	 */
-	public static String getDateTimeString(Calendar calendar, DateFormat dateFormat)
+	public static String getDateTimeString(Calendar calendar, DateFormat format)
 	{
-		return getDateTimeString(calendar.getTime(), dateFormat);
+		return getDateTimeString(calendar != null ? calendar.getTime() : null, format);
 	}
 
 	/**
@@ -3089,7 +3089,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(Calendar calendar, String format)
 	{
-		return getDateTimeString(calendar, format, Locale.getDefault());
+		return getDateTimeString(calendar != null ? calendar.getTime() : null, format, Locale.getDefault());
 	}
 
 	/**
@@ -3106,7 +3106,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(Calendar calendar, String format, Locale locale)
 	{
-		return getDateTimeString(calendar.getTime(), format, locale);
+		return getDateTimeString(calendar != null ? calendar.getTime() : null, format, locale);
 	}
 
 	/**
@@ -3126,13 +3126,13 @@ public class Tools
 	 * 
 	 * @param date
 	 *            The Date.
-	 * @param dateFormat
+	 * @param format
 	 *            The DateFormat object.
 	 * @return The String of the Date Time.
 	 */
-	public static String getDateTimeString(Date date, DateFormat dateFormat)
+	public static String getDateTimeString(Date date, DateFormat format)
 	{
-		return dateFormat.format(date);
+		return date != null ? format.format(date) : null;
 	}
 
 	/**
@@ -3170,48 +3170,48 @@ public class Tools
 	/**
 	 * Get the String of a current time form as a given Date format.
 	 * 
-	 * @param dateFormat
+	 * @param format
 	 *            The Date format object.
 	 * @return The String of the Date Time.
 	 */
-	public static String getDateTimeString(DateFormat dateFormat)
+	public static String getDateTimeString(DateFormat format)
 	{
-		return getDateTimeString(System.currentTimeMillis(), dateFormat);
+		return getDateTimeString(System.currentTimeMillis(), format);
 	}
 
 	/**
 	 * Get the String of a long time variable form as "yyyy-MM-dd HH:mm:ss".
 	 * 
-	 * @param timeStamp
+	 * @param timestamp
 	 *            The long type variable, may be given by
 	 *            {@link System#currentTimeMillis()}.
 	 * @return The String of the long type variable.
 	 */
-	public static String getDateTimeString(long timeStamp)
+	public static String getDateTimeString(long timestamp)
 	{
-		return getDateTimeString(new Date(timeStamp));
+		return getDateTimeString(new Date(timestamp));
 	}
 
 	/**
 	 * Get the String of a long time variable form as a given Date format.
 	 * 
-	 * @param timeStamp
+	 * @param timestamp
 	 *            The long type variable, may be given by
 	 *            {@link System#currentTimeMillis()}.
-	 * @param dateFormat
+	 * @param format
 	 *            The Date format object.
 	 * @return The String of the Date Time.
 	 */
-	public static String getDateTimeString(long timeStamp, DateFormat dateFormat)
+	public static String getDateTimeString(long timestamp, DateFormat format)
 	{
-		return getDateTimeString(new Date(timeStamp), dateFormat);
+		return getDateTimeString(new Date(timestamp), format);
 	}
 
 	/**
 	 * Get the String of a long time variable form as a given Date format
 	 * string.
 	 * 
-	 * @param timeStamp
+	 * @param timestamp
 	 *            The long type variable, may be given by
 	 *            {@link System#currentTimeMillis()}.
 	 * @param format
@@ -3219,16 +3219,16 @@ public class Tools
 	 * @return The String of the Date Time.
 	 * @see java.text.SimpleDateFormat
 	 */
-	public static String getDateTimeString(long timeStamp, String format)
+	public static String getDateTimeString(long timestamp, String format)
 	{
-		return getDateTimeString(timeStamp, format, Locale.getDefault());
+		return getDateTimeString(timestamp, format, Locale.getDefault());
 	}
 
 	/**
 	 * Get the String of a long time variable form as a given Date format
 	 * string.
 	 * 
-	 * @param timeStamp
+	 * @param timestamp
 	 *            The long type variable, may be given by
 	 *            {@link System#currentTimeMillis()}.
 	 * @param format
@@ -3238,9 +3238,9 @@ public class Tools
 	 * @return The String of the Date Time.
 	 * @see java.text.SimpleDateFormat
 	 */
-	public static String getDateTimeString(long timeStamp, String format, Locale locale)
+	public static String getDateTimeString(long timestamp, String format, Locale locale)
 	{
-		return getDateTimeString(new Date(timeStamp), format, locale);
+		return getDateTimeString(new Date(timestamp), format, locale);
 	}
 
 	/**
