@@ -1723,6 +1723,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return attrCast(index, Long.class);
 		}
 
+		public Object attrObject(int index)
+		{
+			return attr(index);
+		}
+
 		public Short attrShort(int index)
 		{
 			return attrCast(index, Short.class);
@@ -2871,19 +2876,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@SuppressWarnings("unchecked")
 		public <E> E val(int index)
 		{
-			E val = null;
-
-			Object obj = attr(index);
-
 			try
 			{
-				val = (E) obj;
+				return (E) attr(index);
 			}
 			catch (ClassCastException e)
 			{
+				return null;
 			}
-
-			return val;
 		}
 
 		public <E> E val(int index, E defaultValue)
@@ -3074,6 +3074,17 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public Long valLong(int index, Long defaultValue)
 		{
 			Long val = valLong(index);
+			return val == null ? defaultValue : val;
+		}
+
+		public Object valObject(int index)
+		{
+			return attr(index);
+		}
+
+		public Object valObject(int index, Object defaultValue)
+		{
+			Object val = valObject(index);
 			return val == null ? defaultValue : val;
 		}
 
@@ -7035,17 +7046,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	@SuppressWarnings("unchecked")
 	public <E> E attr(String key)
 	{
-		E value = null;
-
 		try
 		{
-			value = (E) Quote(this.get(key));
+			return (E) Quote(this.get(key));
 		}
 		catch (ClassCastException e)
 		{
+			return null;
 		}
-
-		return value;
 	}
 
 	public JSON attr(String key, Object value)
@@ -7077,7 +7085,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public <E> E attrCast(String key, Class<E> cls)
 	{
-		return CastAs(this.attr(key), cls);
+		return CastAs(this.valObject(key), cls);
 	}
 
 	public Character attrCharacter(String key)
@@ -7118,6 +7126,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public Long attrLong(String key)
 	{
 		return attrCast(key, Long.class);
+	}
+
+	public Object attrObject(String key)
+	{
+		return attr(key);
 	}
 
 	public Short attrShort(String key)
@@ -7236,7 +7249,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				for (String key : this.keySet())
 				{
-					if (!Tools.equals(this.val(key), that.val(key)))
+					if (!Tools.equals(this.valObject(key), that.valObject(key)))
 					{
 						is = false;
 						break;
@@ -7305,7 +7318,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		for (String key : this.keySet())
 		{
-			if (Tools.equals(value, this.val(key)))
+			if (Tools.equals(value, this.valObject(key)))
 			{
 				has = true;
 				break;
@@ -7327,7 +7340,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			for (String key : this.keySet())
 			{
-				if (cmp.compare(value, this.val(key)) == 0)
+				if (cmp.compare(value, this.valObject(key)) == 0)
 				{
 					has = true;
 					break;
@@ -8230,7 +8243,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		for (String key : this.keySet())
 		{
-			json.put(this.attr(key).toString(), key);
+			json.put(String.valueOf(this.valObject(key)), key);
 		}
 
 		return json;
@@ -8344,19 +8357,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	@SuppressWarnings("unchecked")
 	public <E> E val(String key)
 	{
-		E val = null;
-
-		Object obj = this.attr(key);
-
 		try
 		{
-			val = (E) obj;
+			return (E) this.attr(key);
 		}
 		catch (ClassCastException e)
 		{
+			return null;
 		}
-
-		return val;
 	}
 
 	public <E> E val(String key, E defaultValue)
@@ -8547,6 +8555,17 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public Long valLong(String key, Long defaultValue)
 	{
 		Long val = valLong(key);
+		return val == null ? defaultValue : val;
+	}
+
+	public Object valObject(String key)
+	{
+		return attr(key);
+	}
+
+	public Object valObject(String key, Object defaultValue)
+	{
+		Object val = valObject(key);
 		return val == null ? defaultValue : val;
 	}
 

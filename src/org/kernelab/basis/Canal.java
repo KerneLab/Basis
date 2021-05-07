@@ -2799,7 +2799,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	/**
 	 * Collect elements into a given map.<br />
-	 * It assumes that the upstream is a pair Canal.<br />
+	 * It assumes that the upstream is a pair Canal.
 	 * 
 	 * @param result
 	 *            The result map.
@@ -2811,7 +2811,7 @@ public class Canal<U, D> implements Iterable<D>
 	}
 
 	/**
-	 * Collect elements into a given map with a given KOP and VOP.<br />
+	 * Collect elements into a given map with a given KOP and VOP.
 	 * 
 	 * @param result
 	 *            The result map.

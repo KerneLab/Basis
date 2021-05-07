@@ -92,7 +92,7 @@ public class TextFiller
 	{
 		for (String key : json.keySet())
 		{
-			fillWith(key, json.attr(key), leftBoundary, rightBoundary);
+			fillWith(key, json.valObject(key), leftBoundary, rightBoundary);
 		}
 
 		return this;
