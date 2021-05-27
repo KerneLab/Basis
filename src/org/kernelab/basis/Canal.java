@@ -2665,7 +2665,7 @@ public class Canal<U, D> implements Iterable<D>
 		return new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
 	}
 
-	public static Canal<?, Tuple2<String, Object>> of(JSON json)
+	public static PairCanal<?, String, Object> of(JSON json)
 	{
 		return new Canal<JSON.Pair, JSON.Pair>() //
 				.setOperator(new IterableSourcer<JSON.Pair>(json.pairs())) //
@@ -2676,10 +2676,10 @@ public class Canal<U, D> implements Iterable<D>
 					{
 						return new Tuple2<String, Object>(el.key, el.val());
 					}
-				});
+				}).toPair();
 	}
 
-	public static <K, V> Canal<?, Tuple2<K, V>> of(Map<K, V> map)
+	public static <K, V> PairCanal<?, K, V> of(Map<K, V> map)
 	{
 		return new Canal<Entry<K, V>, Entry<K, V>>() //
 				.setOperator(new IterableSourcer<Entry<K, V>>(map.entrySet())) //
@@ -2690,7 +2690,7 @@ public class Canal<U, D> implements Iterable<D>
 					{
 						return new Tuple2<K, V>(el.getKey(), el.getValue());
 					}
-				});
+				}).toPair();
 	}
 
 	public static <E> Canal<?, E> of(Producer<E> spring)

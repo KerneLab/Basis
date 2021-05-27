@@ -343,7 +343,6 @@ public class TestCanal
 		map1.put(3, "five");
 		Canal.of(map1).foreach(new Action<Tuple2<Integer, String>>()
 		{
-
 			@Override
 			public void action(Tuple2<Integer, String> el)
 			{
