@@ -174,7 +174,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Tuple2<A, B> next()
 		{
-			return new Tuple2<A, B>(left, there.next());
+			return Tuple.of(left, there.next());
 		}
 	}
 
@@ -883,7 +883,7 @@ public class Canal<U, D> implements Iterable<D>
 		public Tuple2<K, Canal<?, V>> next()
 		{
 			Entry<K, List<V>> entry = iter.next();
-			return new Tuple2<K, Canal<?, V>>(entry.getKey(), Canal.of(entry.getValue()));
+			return Tuple.<K, Canal<?, V>> of(entry.getKey(), Canal.of(entry.getValue()));
 		}
 	}
 
@@ -1268,7 +1268,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Tuple2<K, Tuple2<M, N>> next()
 		{
-			return new Tuple2<K, Tuple2<M, N>>(k, new Tuple2<M, N>(m, n));
+			return Tuple.of(k, Tuple.of(m, n));
 		}
 
 		private boolean nextK()
@@ -1659,7 +1659,7 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public Tuple2<K, W> map(Tuple2<K, V> el)
 				{
-					return new Tuple2<K, W>(el._1, mapper.map(el._2));
+					return Tuple.of(el._1, mapper.map(el._2));
 				}
 			}).toPair();
 		}
@@ -2326,6 +2326,27 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			return new Tuple2<E1, E2>(_1, _2);
 		}
+
+		public static <E1, E2, E3> Tuple3<E1, E2, E3> of(E1 _1, E2 _2, E3 _3)
+		{
+			return new Tuple3<E1, E2, E3>(_1, _2, _3);
+		}
+
+		@Override
+		public boolean equals(Object o)
+		{
+			if (o == null)
+			{
+				return false;
+			}
+
+			if (!this.getClass().equals(o.getClass()))
+			{
+				return false;
+			}
+
+			return this.compareTo(o) == 0;
+		}
 	}
 
 	public static class Tuple1<E1> extends Tuple
@@ -2383,6 +2404,36 @@ public class Canal<U, D> implements Iterable<D>
 		public String toString()
 		{
 			return "(" + _1 + ", " + _2 + ")";
+		}
+	}
+
+	public static class Tuple3<E1, E2, E3> extends Tuple2<E1, E2>
+	{
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 2128204413194342750L;
+
+		public final E3				_3;
+
+		public Tuple3(E1 _1, E2 _2, E3 _3)
+		{
+			super(_1, _2);
+			this._3 = _3;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public int compareTo(Object o)
+		{
+			Tuple3<E1, E2, E3> t = ((Tuple3<E1, E2, E3>) o);
+			return Tools.compare(this._1, t._1, this._2, t._2, this._3, t._3);
+		}
+
+		@Override
+		public String toString()
+		{
+			return "(" + _1 + ", " + _2 + ", " + _3 + ")";
 		}
 	}
 
@@ -2525,7 +2576,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Tuple2<A, B> next()
 		{
-			return new Tuple2<A, B>(upstream().next(), there.next());
+			return Tuple.of(upstream().next(), there.next());
 		}
 	}
 
@@ -2539,7 +2590,7 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public Tuple2<E, Long> next()
 				{
-					return new Tuple2<E, Long>(upstream().next(), index++);
+					return Tuple.of(upstream().next(), index++);
 				}
 			};
 		}
@@ -2674,7 +2725,7 @@ public class Canal<U, D> implements Iterable<D>
 					@Override
 					public Tuple2<String, Object> map(Pair el)
 					{
-						return new Tuple2<String, Object>(el.key, el.val());
+						return Tuple.of(el.key, el.val());
 					}
 				}).toPair();
 	}
@@ -2688,7 +2739,7 @@ public class Canal<U, D> implements Iterable<D>
 					@Override
 					public Tuple2<K, V> map(Entry<K, V> el)
 					{
-						return new Tuple2<K, V>(el.getKey(), el.getValue());
+						return Tuple.of(el.getKey(), el.getValue());
 					}
 				}).toPair();
 	}
@@ -3149,7 +3200,7 @@ public class Canal<U, D> implements Iterable<D>
 			@Override
 			public Tuple2<K, D> map(D key)
 			{
-				return new Tuple2<K, D>(kop.map(key), key);
+				return Tuple.of(kop.map(key), key);
 			}
 		}).toPair();
 	}

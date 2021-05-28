@@ -12,6 +12,7 @@ import org.kernelab.basis.Canal.Action;
 import org.kernelab.basis.Canal.JointMapper;
 import org.kernelab.basis.Canal.Option;
 import org.kernelab.basis.Canal.Producer;
+import org.kernelab.basis.Canal.Tuple;
 import org.kernelab.basis.Canal.Tuple2;
 import org.kernelab.basis.Filter;
 import org.kernelab.basis.JSON;
@@ -201,7 +202,7 @@ public class TestCanal
 			@Override
 			public Tuple2<Integer, Integer> map(Integer key)
 			{
-				return new Tuple2<Integer, Integer>(key, key * 2);
+				return Tuple.of(key, key * 2);
 			}
 		}).<Integer, Integer> toPair().collectAsMap();
 		Tools.debug(map);
@@ -214,7 +215,7 @@ public class TestCanal
 					@Override
 					public Tuple2<Integer, Integer> map(Integer key)
 					{
-						return new Tuple2<Integer, Integer>(key, key * 2);
+						return Tuple.of(key, key * 2);
 					}
 				}).<Integer, Integer> toPair().countByKey();
 		Tools.debug(map0);
@@ -520,7 +521,7 @@ public class TestCanal
 					public Tuple2<Option<Integer>, Option<Integer>> map(Option<Integer> left, Option<Integer> right,
 							Integer key)
 					{
-						return new Tuple2<Option<Integer>, Option<Integer>>(left, right);
+						return Tuple.of(left, right);
 					}
 				}).foreach(new Action<Tuple2<Option<Integer>, Option<Integer>>>()
 				{
