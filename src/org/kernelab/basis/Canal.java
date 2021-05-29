@@ -1107,7 +1107,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param mapper
 		 * @return
 		 */
-		public <W> Canal<Tuple2<K, Tuple2<L, R>>, W> mapJoint(final JointMapper<K, L, R, W> mapper)
+		public <W> Canal<Tuple2<K, Tuple2<L, R>>, W> mapJoint(final JointMapper<L, R, K, W> mapper)
 		{
 			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, W>()
 			{
@@ -1324,7 +1324,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
-	public static interface JointMapper<K, L, R, V>
+	public static interface JointMapper<L, R, K, V>
 	{
 		public V map(L left, R right, K key);
 	}

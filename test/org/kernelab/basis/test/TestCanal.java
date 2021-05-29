@@ -515,7 +515,7 @@ public class TestCanal
 				return el % 3;
 			}
 		})).mapJoint(
-				new JointMapper<Integer, Option<Integer>, Option<Integer>, Tuple2<Option<Integer>, Option<Integer>>>()
+				new JointMapper<Option<Integer>, Option<Integer>, Integer, Tuple2<Option<Integer>, Option<Integer>>>()
 				{
 					@Override
 					public Tuple2<Option<Integer>, Option<Integer>> map(Option<Integer> left, Option<Integer> right,
