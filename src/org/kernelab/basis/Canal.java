@@ -447,6 +447,22 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
+	public static class DisposableIterable<E> implements Iterable<E>
+	{
+		protected final Iterator<E> iter;
+
+		public DisposableIterable(Iterator<E> iter)
+		{
+			this.iter = iter;
+		}
+
+		@Override
+		public Iterator<E> iterator()
+		{
+			return iter;
+		}
+	}
+
 	protected static class DistinctOp<E> implements Converter<E, E>
 	{
 		protected final Comparator<E> cmp;
@@ -2683,6 +2699,11 @@ public class Canal<U, D> implements Iterable<D>
 	public static <E> Comparator<E> inverse(Comparator<E> cmp)
 	{
 		return new InverseComparator<E>(cmp);
+	}
+
+	public static <E> Iterable<E> iterable(Iterator<E> iter)
+	{
+		return new DisposableIterable<E>(iter);
 	}
 
 	/**

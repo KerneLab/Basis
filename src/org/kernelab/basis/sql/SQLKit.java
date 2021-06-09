@@ -1411,7 +1411,7 @@ public class SQLKit
 			{
 				clearBatch(statement);
 			}
-			catch (SQLException e)
+			catch (Exception e)
 			{
 			}
 			statement = null;
