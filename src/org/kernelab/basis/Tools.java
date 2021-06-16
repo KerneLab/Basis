@@ -1,6 +1,8 @@
 package org.kernelab.basis;
 
 import java.awt.AlphaComposite;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -4657,6 +4659,74 @@ public class Tools
 		}
 
 		return buffer;
+	}
+
+	/**
+	 * Layout each component into the given container with even width.
+	 * 
+	 * @param container
+	 * @param comps
+	 * @param gbc
+	 */
+	public static void layoutComponentsEvenly(Container container, Component[][] comps, GridBagConstraints gbc)
+	{
+		for (Component[] row : comps)
+		{
+			gbc.gridx = 0;
+
+			for (Component c : row)
+			{
+				container.add(c, gbc);
+				gbc.gridx++;
+			}
+
+			gbc.gridy++;
+		}
+	}
+
+	/**
+	 * Layout each component into the given container and make the "LEFT"
+	 * columns fixed width.
+	 * 
+	 * @param container
+	 * @param comps
+	 * @param gbc
+	 */
+	public static void layoutComponentsFixedLeft(Container container, Component[][] comps, GridBagConstraints gbc)
+	{
+		double weight = gbc.weightx;
+
+		for (Component[] row : comps)
+		{
+			gbc.gridx = 0;
+
+			for (Component c : row)
+			{
+				gbc.weightx = gbc.gridx % 2 == 0 ? 0 : weight;
+				container.add(c, gbc);
+				gbc.gridx++;
+			}
+
+			gbc.gridy++;
+		}
+	}
+
+	/**
+	 * Layout each component into the given container in a single column.
+	 * 
+	 * @param container
+	 * @param comps
+	 * @param gbc
+	 */
+	public static void layoutComponentsInColumn(Container container, Component[] comps, GridBagConstraints gbc)
+	{
+		gbc.gridx = 0;
+
+		for (Component c : comps)
+		{
+			container.add(c, gbc);
+			gbc.gridy++;
+		}
 	}
 
 	/**
