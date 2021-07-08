@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.kernelab.basis.Accessor;
+import org.kernelab.basis.Canal;
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
@@ -760,6 +761,26 @@ public class SQLKit
 		return jsonOfResultRow(rs, null, map);
 	}
 
+	public static Canal<?, JSON> jsonOfResultSet(final ResultSet rs, final Map<String, Object> map,
+			final Class<? extends JSON> cls) throws SQLException
+	{
+		return Canal.of(Sequel.iterate(rs).closing(false)).map(new Mapper<ResultSet, JSON>()
+		{
+			@Override
+			public JSON map(ResultSet el)
+			{
+				try
+				{
+					return jsonOfResultRow(rs, (cls != null ? cls : JSON.class).newInstance(), map);
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+		});
+	}
+
 	/**
 	 * List the column names.
 	 * 
@@ -1106,6 +1127,11 @@ public class SQLKit
 		}
 	}
 
+	public static <E> Canal<?, E> mapResultSet(ResultSet rs, Class<E> cls, Map<String, Object> map) throws SQLException
+	{
+		return mapResultSet(rs, new ProjectMapper<E>(cls, map));
+	}
+
 	public static <E> Collection<E> mapResultSet(ResultSet rs, Collection<E> rows, Class<E> cls,
 			Map<String, Object> map, int limit) throws SQLException
 	{
@@ -1129,6 +1155,11 @@ public class SQLKit
 			}
 		}
 		return rows;
+	}
+
+	public static <E> Canal<?, E> mapResultSet(ResultSet rs, Mapper<ResultSet, E> mapper) throws SQLException
+	{
+		return Canal.of(Sequel.iterate(rs).closing(false)).map(mapper);
 	}
 
 	/**

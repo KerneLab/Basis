@@ -25,12 +25,45 @@ public class TestSQLKit
 		{
 			SQLKit kit = db.getSQLKit();
 
-			testSequelCanal(kit);
+			testSequelCanal1(kit);
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
 		}
+
+	}
+
+	public static void testSequelCanal1(SQLKit kit) throws SQLException
+	{
+		String sql = "select comp_id \"id\", com_name \"name\" from comp where com_name like ?";
+
+		kit.execute(sql, "B%").getRows(Company.class).limit(2).skip(1).foreach(new Action<Company>()
+		{
+			@Override
+			public void action(Company el)
+			{
+				Tools.debug(el);
+			}
+		});
+
+		kit.execute(sql, "B%").getRows(JSON.class).limit(2).skip(1).foreach(new Action<JSON>()
+		{
+			@Override
+			public void action(JSON el)
+			{
+				Tools.debug(el);
+			}
+		});
+
+		kit.execute(sql, "B%").getRows(JSAN.class).limit(2).skip(1).foreach(new Action<JSAN>()
+		{
+			@Override
+			public void action(JSAN el)
+			{
+				Tools.debug(el);
+			}
+		});
 
 	}
 

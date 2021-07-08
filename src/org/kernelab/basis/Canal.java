@@ -1427,7 +1427,7 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public boolean hasNext()
 				{
-					return index < limit;
+					return index < limit && upstream().hasNext();
 				}
 
 				@Override
@@ -1941,7 +1941,7 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					while (upstream().hasNext() && index++ < skip)
+					while (index++ < skip && upstream().hasNext())
 					{
 						upstream().next();
 					}
@@ -2701,7 +2701,7 @@ public class Canal<U, D> implements Iterable<D>
 		return new InverseComparator<E>(cmp);
 	}
 
-	public static <E> Iterable<E> iterable(Iterator<E> iter)
+	public static <E> DisposableIterable<E> iterable(Iterator<E> iter)
 	{
 		return new DisposableIterable<E>(iter);
 	}

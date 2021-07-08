@@ -240,6 +240,16 @@ public class TestCanal
 			}
 		}).collect());
 
+		Tools.debug("============collectAsArray");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).keyBy(new Mapper<Integer, Integer>()
+		{
+			@Override
+			public Integer map(Integer key)
+			{
+				return key % 2;
+			}
+		}).collect().toArray(new Tuple2[0]));
+
 		Tools.debug("============limit");
 		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).limit(3));
 

@@ -25,12 +25,15 @@ import org.kernelab.basis.Canal;
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.Mapper;
+import org.kernelab.basis.Tools;
 
 public class Sequel implements Iterable<ResultSet>
 {
 	public static abstract class AbstractIterator<T> implements Iterable<T>, Iterator<T>
 	{
 		private ResultSet	rs;
+
+		private ResultSet	next;
 
 		private SQLKit		kit;
 
@@ -59,10 +62,16 @@ public class Sequel implements Iterable<ResultSet>
 		{
 			if (rs != null)
 			{
+				if (next != null)
+				{
+					return true;
+				}
+
 				try
 				{
 					if (rs.next())
 					{
+						next = rs;
 						return true;
 					}
 					else
@@ -101,7 +110,19 @@ public class Sequel implements Iterable<ResultSet>
 			return this;
 		}
 
-		public abstract T next();
+		public T next()
+		{
+			try
+			{
+				return this.next(this.next);
+			}
+			finally
+			{
+				this.next = null;
+			}
+		}
+
+		protected abstract T next(ResultSet rs);
 
 		protected void release()
 		{
@@ -124,13 +145,20 @@ public class Sequel implements Iterable<ResultSet>
 								st.close();
 							}
 						}
-
-						rs.close();
 					}
 					catch (SQLException e)
 					{
 					}
 				}
+
+				try
+				{
+					rs.close();
+				}
+				catch (SQLException e)
+				{
+				}
+
 				rs = null;
 			}
 			kit = null;
@@ -185,11 +213,11 @@ public class Sequel implements Iterable<ResultSet>
 			return this;
 		}
 
-		public T next()
+		protected T next(ResultSet rs)
 		{
 			if (mapper() != null)
 			{
-				return mapper().map(this.resultSet());
+				return mapper().map(rs);
 			}
 			else
 			{
@@ -224,9 +252,9 @@ public class Sequel implements Iterable<ResultSet>
 			return this;
 		}
 
-		public ResultSet next()
+		protected ResultSet next(ResultSet rs)
 		{
-			return resultSet();
+			return rs;
 		}
 	}
 
@@ -594,6 +622,33 @@ public class Sequel implements Iterable<ResultSet>
 		return json;
 	}
 
+	@SuppressWarnings("unchecked")
+	public <E> Canal<?, E> getRows(Class<E> cls) throws SQLException
+	{
+		if (Tools.isSubClass(cls, JSON.class))
+		{
+			if (Tools.isSubClass(cls, JSAN.class))
+			{
+				return (Canal<?, E>) this.getRows(SQLKit.mapIndexOfMetaData(this.getResultSet().getMetaData()),
+						JSAN.class);
+			}
+			else
+			{
+				return (Canal<?, E>) this.getRows(SQLKit.mapNameOfMetaData(this.getResultSet().getMetaData()),
+						JSON.class);
+			}
+		}
+		else
+		{
+			return this.getRows(cls, null);
+		}
+	}
+
+	public <E> Canal<?, E> getRows(Class<E> cls, Map<String, Object> map) throws SQLException
+	{
+		return SQLKit.mapResultSet(this.getResultSet(), cls, map);
+	}
+
 	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls)
 	{
 		return getRows(rows, cls, -1);
@@ -663,6 +718,21 @@ public class Sequel implements Iterable<ResultSet>
 		{
 		}
 		return rows;
+	}
+
+	public Canal<?, JSON> getRows(Map<String, Object> map) throws SQLException
+	{
+		return this.getRows(map, JSON.class);
+	}
+
+	public Canal<?, JSON> getRows(Map<String, Object> map, Class<? extends JSON> cls) throws SQLException
+	{
+		return SQLKit.jsonOfResultSet(this.getResultSet(), map, cls);
+	}
+
+	public <E> Canal<?, E> getRows(Mapper<ResultSet, E> mapper) throws SQLException
+	{
+		return SQLKit.mapResultSet(this.getResultSet(), mapper);
 	}
 
 	public Statement getStatement()
