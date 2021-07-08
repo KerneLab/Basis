@@ -1427,7 +1427,7 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public boolean hasNext()
 				{
-					return index < limit && upstream().hasNext();
+					return (limit < 0 || index < limit) && upstream().hasNext();
 				}
 
 				@Override

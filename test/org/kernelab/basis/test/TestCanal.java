@@ -253,6 +253,9 @@ public class TestCanal
 		Tools.debug("============limit");
 		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).limit(3));
 
+		Tools.debug("============limit -1");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).limit(-1));
+
 		Tools.debug("============skip");
 		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).skip(2));
 
