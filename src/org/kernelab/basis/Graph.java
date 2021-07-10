@@ -103,6 +103,11 @@ public class Graph<N, E>
 			return true;
 		}
 
+		public int getDegree()
+		{
+			return 1;
+		}
+
 		@Override
 		public int hashCode()
 		{
@@ -180,6 +185,12 @@ public class Graph<N, E>
 		}
 
 		@Override
+		public int getDegree()
+		{
+			return this.attr.size();
+		}
+
+		@Override
 		public Link<N, E> reverse()
 		{
 			return new Link<N, E>(target, source, attr);
@@ -231,6 +242,12 @@ public class Graph<N, E>
 		public Trace(N source, N target)
 		{
 			super(source, target, null);
+		}
+
+		@Override
+		public int getDegree()
+		{
+			return 1;
 		}
 
 		@Override
@@ -504,7 +521,14 @@ public class Graph<N, E>
 
 	public int getInDegree(N node)
 	{
-		return this.getInLinks(node).size();
+		return Canal.of(this.getInLinks(node)).fold(0, new Reducer<Link<N, E>, Integer>()
+		{
+			@Override
+			public Integer reduce(Integer res, Link<N, E> el)
+			{
+				return res + el.getDegree();
+			}
+		});
 	}
 
 	public Canal<?, Edge<N, E>> getInEdges(N node)
@@ -570,7 +594,14 @@ public class Graph<N, E>
 
 	public int getOutDegree(N node)
 	{
-		return this.getOutLinks(node).size();
+		return Canal.of(this.getOutLinks(node)).fold(0, new Reducer<Link<N, E>, Integer>()
+		{
+			@Override
+			public Integer reduce(Integer res, Link<N, E> el)
+			{
+				return res + el.getDegree();
+			}
+		});
 	}
 
 	public Canal<?, Edge<N, E>> getOutEdges(N node)
