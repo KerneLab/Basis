@@ -38,6 +38,17 @@ public class TestSQLKit
 	{
 		String sql = "select comp_id \"id\", com_name \"name\" from comp where com_name like ?";
 
+		kit.setReuseStatements(false);
+
+		kit.execute(sql, "B%").getRows(Company.class).foreach(new Action<Company>()
+		{
+			@Override
+			public void action(Company el)
+			{
+				Tools.debug(el);
+			}
+		});
+
 		kit.execute(sql, "B%").getRows(Company.class).limit(2).skip(1).foreach(new Action<Company>()
 		{
 			@Override

@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.kernelab.basis.Canal;
+import org.kernelab.basis.CloseableIterator;
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.Mapper;
@@ -29,7 +30,7 @@ import org.kernelab.basis.Tools;
 
 public class Sequel implements Iterable<ResultSet>
 {
-	public static abstract class AbstractIterator<T> implements Iterable<T>, Iterator<T>
+	public static abstract class AbstractIterator<T> implements Iterable<T>, CloseableIterator<T>
 	{
 		private ResultSet	rs;
 
@@ -45,86 +46,7 @@ public class Sequel implements Iterable<ResultSet>
 			this.closing = true;
 		}
 
-		public boolean closing()
-		{
-			return closing;
-		}
-
-		public AbstractIterator<T> closing(boolean closing)
-		{
-			this.closing = closing;
-			return this;
-		}
-
-		protected abstract void done();
-
-		public boolean hasNext()
-		{
-			if (rs != null)
-			{
-				if (next != null)
-				{
-					return true;
-				}
-
-				try
-				{
-					if (rs.next())
-					{
-						next = rs;
-						return true;
-					}
-					else
-					{
-						done();
-						release();
-						return false;
-					}
-				}
-				catch (SQLException e)
-				{
-					release();
-					return false;
-				}
-			}
-			else
-			{
-				release();
-				return false;
-			}
-		}
-
-		public Iterator<T> iterator()
-		{
-			return this;
-		}
-
-		public SQLKit kit()
-		{
-			return kit;
-		}
-
-		public AbstractIterator<T> kit(SQLKit kit)
-		{
-			this.kit = kit;
-			return this;
-		}
-
-		public T next()
-		{
-			try
-			{
-				return this.next(this.next);
-			}
-			finally
-			{
-				this.next = null;
-			}
-		}
-
-		protected abstract T next(ResultSet rs);
-
-		protected void release()
+		public void close()
 		{
 			if (rs != null)
 			{
@@ -164,6 +86,82 @@ public class Sequel implements Iterable<ResultSet>
 			kit = null;
 		}
 
+		public boolean closing()
+		{
+			return closing;
+		}
+
+		public AbstractIterator<T> closing(boolean closing)
+		{
+			this.closing = closing;
+			return this;
+		}
+
+		public boolean hasNext()
+		{
+			if (rs != null)
+			{
+				if (next != null)
+				{
+					return true;
+				}
+
+				try
+				{
+					if (rs.next())
+					{
+						next = rs;
+						return true;
+					}
+					else
+					{
+						close();
+						return false;
+					}
+				}
+				catch (SQLException e)
+				{
+					close();
+					return false;
+				}
+			}
+			else
+			{
+				close();
+				return false;
+			}
+		}
+
+		public Iterator<T> iterator()
+		{
+			return this;
+		}
+
+		public SQLKit kit()
+		{
+			return kit;
+		}
+
+		public AbstractIterator<T> kit(SQLKit kit)
+		{
+			this.kit = kit;
+			return this;
+		}
+
+		public T next()
+		{
+			try
+			{
+				return this.next(this.next);
+			}
+			finally
+			{
+				this.next = null;
+			}
+		}
+
+		protected abstract T next(ResultSet rs);
+
 		public void remove()
 		{
 		}
@@ -188,11 +186,6 @@ public class Sequel implements Iterable<ResultSet>
 		{
 			super.closing(closing);
 			return this;
-		}
-
-		@Override
-		protected void done()
-		{
 		}
 
 		@Override
@@ -238,11 +231,6 @@ public class Sequel implements Iterable<ResultSet>
 		{
 			super.closing(closing);
 			return this;
-		}
-
-		@Override
-		protected void done()
-		{
 		}
 
 		@Override

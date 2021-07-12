@@ -764,7 +764,7 @@ public class SQLKit
 	public static Canal<?, JSON> jsonOfResultSet(final ResultSet rs, final Map<String, Object> map,
 			final Class<? extends JSON> cls) throws SQLException
 	{
-		return Canal.of(Sequel.iterate(rs).closing(false)).map(new Mapper<ResultSet, JSON>()
+		return Canal.of(Sequel.iterate(rs)).map(new Mapper<ResultSet, JSON>()
 		{
 			@Override
 			public JSON map(ResultSet el)
@@ -1159,7 +1159,7 @@ public class SQLKit
 
 	public static <E> Canal<?, E> mapResultSet(ResultSet rs, Mapper<ResultSet, E> mapper) throws SQLException
 	{
-		return Canal.of(Sequel.iterate(rs).closing(false)).map(mapper);
+		return Canal.of(Sequel.iterate(rs)).map(mapper);
 	}
 
 	/**
@@ -1310,6 +1310,8 @@ public class SQLKit
 	private Map<String, List<String>>	parameters;
 
 	private String						boundary;
+
+	private boolean						reuseStatements			= true;
 
 	private int							resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
 
@@ -1930,6 +1932,11 @@ public class SQLKit
 		return is;
 	}
 
+	public boolean isReuseStatements()
+	{
+		return reuseStatements;
+	}
+
 	public SQLKit optimizingAs(byte i)
 	{
 		return optimizingAs(OPTIMIZING_PRESET_SCHEMES[i]);
@@ -1970,9 +1977,26 @@ public class SQLKit
 	public CallableStatement prepareCall(String call, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		statement = sentences.get(call);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(call);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().prepareCall(call, resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().prepareCall(call);
+				}
+				statements.put(statement, call);
+				sentences.put(call, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -1983,9 +2007,6 @@ public class SQLKit
 			{
 				statement = this.getConnection().prepareCall(call);
 			}
-
-			sentences.put(call, statement);
-
 			statements.put(statement, call);
 		}
 
@@ -2013,9 +2034,28 @@ public class SQLKit
 	{
 		String q = replaceParameters(call, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().prepareCall(q);
+				}
+
+				this.registerParameters(call, q, params);
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -2027,11 +2067,8 @@ public class SQLKit
 				statement = this.getConnection().prepareCall(q);
 			}
 
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(call, q, params);
+			statements.put(statement, q);
 		}
 
 		return (CallableStatement) statement;
@@ -2058,9 +2095,27 @@ public class SQLKit
 	{
 		String q = replaceParameters(call, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().prepareCall(q);
+				}
+				this.registerParameters(call, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -2071,12 +2126,8 @@ public class SQLKit
 			{
 				statement = this.getConnection().prepareCall(q);
 			}
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(call, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (CallableStatement) statement;
@@ -2103,9 +2154,27 @@ public class SQLKit
 	{
 		String q = replaceParameters(call, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().prepareCall(q);
+				}
+				this.registerParameters(call, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -2116,12 +2185,8 @@ public class SQLKit
 			{
 				statement = this.getConnection().prepareCall(q);
 			}
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(call, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (CallableStatement) statement;
@@ -2143,15 +2208,22 @@ public class SQLKit
 
 	public PreparedStatement prepareStatement(String sql, boolean autoGeneratedKeys) throws SQLException
 	{
-		statement = sentences.get(sql);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(sql);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(sql,
+						autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+				statements.put(statement, sql);
+				sentences.put(sql, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(sql,
 					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-
-			sentences.put(sql, statement);
-
 			statements.put(statement, sql);
 		}
 
@@ -2172,9 +2244,26 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		statement = sentences.get(sql);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(sql);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().prepareStatement(sql);
+				}
+				statements.put(statement, sql);
+				sentences.put(sql, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -2185,9 +2274,6 @@ public class SQLKit
 			{
 				statement = this.getConnection().prepareStatement(sql);
 			}
-
-			sentences.put(sql, statement);
-
 			statements.put(statement, sql);
 		}
 
@@ -2196,14 +2282,20 @@ public class SQLKit
 
 	public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException
 	{
-		statement = sentences.get(sql);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(sql);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(sql, columnIndexes);
+				statements.put(statement, sql);
+				sentences.put(sql, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(sql, columnIndexes);
-
-			sentences.put(sql, statement);
-
 			statements.put(statement, sql);
 		}
 
@@ -2220,18 +2312,25 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q,
+						autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+				this.registerParameters(sql, q, params);
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q,
 					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params);
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2254,9 +2353,27 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().prepareStatement(q);
+				}
+				this.registerParameters(sql, q, params);
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -2267,12 +2384,8 @@ public class SQLKit
 			{
 				statement = this.getConnection().prepareStatement(q);
 			}
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params);
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2283,17 +2396,23 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q, columnIndexes);
+				this.registerParameters(sql, q, params);
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q, columnIndexes);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params);
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2304,17 +2423,23 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q, columnNames);
+				this.registerParameters(sql, q, params);
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q, columnNames);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params);
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2329,18 +2454,25 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q,
+						autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+				this.registerParameters(sql, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q,
 					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2362,9 +2494,27 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().prepareStatement(q);
+				}
+				this.registerParameters(sql, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -2375,12 +2525,8 @@ public class SQLKit
 			{
 				statement = this.getConnection().prepareStatement(q);
 			}
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2390,17 +2536,23 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q, columnIndexes);
+				this.registerParameters(sql, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q, columnIndexes);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2410,17 +2562,23 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q, columnNames);
+				this.registerParameters(sql, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q, columnNames);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2436,18 +2594,25 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q,
+						autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+				this.registerParameters(sql, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q,
 					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2469,9 +2634,27 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().prepareStatement(q);
+				}
+				this.registerParameters(sql, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -2482,12 +2665,8 @@ public class SQLKit
 			{
 				statement = this.getConnection().prepareStatement(q);
 			}
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2498,17 +2677,23 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q, columnIndexes);
+				this.registerParameters(sql, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q, columnIndexes);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2519,17 +2704,23 @@ public class SQLKit
 	{
 		String q = replaceParameters(sql, getBoundary(), params);
 
-		statement = sentences.get(q);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(q);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(q, columnNames);
+				this.registerParameters(sql, q, params.keySet());
+				statements.put(statement, q);
+				sentences.put(q, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(q, columnNames);
-
-			sentences.put(q, statement);
-
-			statements.put(statement, q);
-
 			this.registerParameters(sql, q, params.keySet());
+			statements.put(statement, q);
 		}
 
 		return (PreparedStatement) statement;
@@ -2537,14 +2728,20 @@ public class SQLKit
 
 	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException
 	{
-		statement = sentences.get(sql);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(sql);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				statement = this.getConnection().prepareStatement(sql, columnNames);
+				statements.put(statement, sql);
+				sentences.put(sql, statement);
+			}
+		}
+		else
 		{
 			statement = this.getConnection().prepareStatement(sql, columnNames);
-
-			sentences.put(sql, statement);
-
 			statements.put(statement, sql);
 		}
 
@@ -2806,6 +3003,12 @@ public class SQLKit
 	protected SQLKit setParameters(Map<String, List<String>> parameters)
 	{
 		this.parameters = parameters;
+		return this;
+	}
+
+	public SQLKit setReuseStatements(boolean reuseStatements)
+	{
+		this.reuseStatements = reuseStatements;
 		return this;
 	}
 
