@@ -23,6 +23,19 @@ public class Canal<U, D> implements Iterable<D>
 	{
 		private Pond<?, U> up;
 
+		public void close() throws Exception
+		{
+			if (upstream() != null)
+			{
+				upstream().close();
+			}
+		}
+
+		public void end() throws Exception
+		{
+			this.close();
+		}
+
 		public abstract boolean hasNext();
 
 		public abstract D next();
@@ -45,11 +58,6 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static abstract class AbstractTerminal<E, T> extends AbstractPond<E, E> implements Terminal<E, T>
 	{
-		@Override
-		public void end()
-		{
-		}
-
 		@Override
 		public boolean hasNext()
 		{
@@ -201,11 +209,24 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					E el = null;
-					while (upstream().hasNext())
+					try
 					{
-						el = upstream().next();
-						result.put(kop.map(el), vop.map(el));
+						E el = null;
+						while (upstream().hasNext())
+						{
+							el = upstream().next();
+							result.put(kop.map(el), vop.map(el));
+						}
+					}
+					finally
+					{
+						try
+						{
+							this.end();
+						}
+						catch (Exception e)
+						{
+						}
 					}
 				}
 
@@ -274,17 +295,30 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					K key = null;
-					while (upstream().hasNext())
+					try
 					{
-						key = kop.map(upstream().next());
-						if (!result.containsKey(key))
+						K key = null;
+						while (upstream().hasNext())
 						{
-							result.put(key, 1);
+							key = kop.map(upstream().next());
+							if (!result.containsKey(key))
+							{
+								result.put(key, 1);
+							}
+							else
+							{
+								result.put(key, result.get(key) + 1);
+							}
 						}
-						else
+					}
+					finally
+					{
+						try
 						{
-							result.put(key, result.get(key) + 1);
+							this.end();
+						}
+						catch (Exception e)
+						{
 						}
 					}
 				}
@@ -315,17 +349,30 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					E val = null;
-					while (upstream().hasNext())
+					try
 					{
-						val = upstream().next();
-						if (!result.containsKey(val))
+						E val = null;
+						while (upstream().hasNext())
 						{
-							result.put(val, 1);
+							val = upstream().next();
+							if (!result.containsKey(val))
+							{
+								result.put(val, 1);
+							}
+							else
+							{
+								result.put(val, result.get(val) + 1);
+							}
 						}
-						else
+					}
+					finally
+					{
+						try
 						{
-							result.put(val, result.get(val) + 1);
+							this.end();
+						}
+						catch (Exception e)
+						{
 						}
 					}
 				}
@@ -355,10 +402,23 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public void begin()
 		{
-			while (upstream().hasNext())
+			try
 			{
-				upstream().next();
-				count++;
+				while (upstream().hasNext())
+				{
+					upstream().next();
+					count++;
+				}
+			}
+			finally
+			{
+				try
+				{
+					this.end();
+				}
+				catch (Exception e)
+				{
+				}
 			}
 		}
 
@@ -377,11 +437,6 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public void end()
-		{
-		}
-
-		@Override
 		public boolean hasNext()
 		{
 			return upstream().hasNext();
@@ -395,11 +450,6 @@ public class Canal<U, D> implements Iterable<D>
 		public Dam(Canal<?, B> that)
 		{
 			this.that = that;
-		}
-
-		@Override
-		public void end()
-		{
 		}
 	}
 
@@ -584,12 +634,25 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					while (upstream().hasNext())
+					try
 					{
-						if (filter.filter(result = upstream().next()))
+						while (upstream().hasNext())
 						{
-							found = true;
-							break;
+							if (filter.filter(result = upstream().next()))
+							{
+								found = true;
+								break;
+							}
+						}
+					}
+					finally
+					{
+						try
+						{
+							this.end();
+						}
+						catch (Exception e)
+						{
 						}
 					}
 				}
@@ -666,9 +729,22 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					while (upstream().hasNext())
+					try
 					{
-						result = folder.reduce(result, upstream().next());
+						while (upstream().hasNext())
+						{
+							result = folder.reduce(result, upstream().next());
+						}
+					}
+					finally
+					{
+						try
+						{
+							this.end();
+						}
+						catch (Exception e)
+						{
+						}
 					}
 				}
 
@@ -709,9 +785,23 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public void begin()
 		{
-			while (upstream().hasNext())
+			try
 			{
-				action.action(upstream().next());
+				while (upstream().hasNext())
+				{
+					action.action(upstream().next());
+				}
+			}
+			finally
+			{
+				try
+				{
+					this.end();
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -794,6 +884,15 @@ public class Canal<U, D> implements Iterable<D>
 		public GeneratedSource(Producer<E> generator)
 		{
 			this.generator = generator;
+		}
+
+		@Override
+		public void close() throws Exception
+		{
+			if (generator instanceof Closeable)
+			{
+				((Closeable) generator).close();
+			}
 		}
 
 		@Override
@@ -885,11 +984,6 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public void end()
-		{
-		}
-
-		@Override
 		public boolean hasNext()
 		{
 			return iter.hasNext();
@@ -913,10 +1007,6 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			this.settle();
 			this.iter = sediment.iterator();
-		}
-
-		public void end()
-		{
 		}
 
 		@Override
@@ -1103,6 +1193,15 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
+		public void close() throws Exception
+		{
+			if (iter instanceof Closeable)
+			{
+				((Closeable) iter).close();
+			}
+		}
+
+		@Override
 		public boolean hasNext()
 		{
 			return iter.hasNext();
@@ -1204,11 +1303,6 @@ public class Canal<U, D> implements Iterable<D>
 			this.there = group(that.build(), this.kor, this.vor);
 			this.iterK = keys(here.keySet(), there.keySet()).iterator();
 			this.isEmptyK = !this.nextK();
-		}
-
-		@Override
-		public void end()
-		{
 		}
 
 		@Override
@@ -1761,11 +1855,13 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
-	protected static interface Pond<I, O> extends Iterator<O>
+	protected static interface Pond<I, O> extends CloseableIterator<O>
 	{
-		void begin();
+		void begin() throws Exception;
 
-		void end();
+		void close() throws Exception;
+
+		void end() throws Exception;
 
 		Pond<?, I> upstream();
 
@@ -1798,18 +1894,31 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					E el = null;
-					while (upstream().hasNext())
+					try
 					{
-						el = upstream().next();
-						if (empty)
+						E el = null;
+						while (upstream().hasNext())
 						{
-							empty = false;
-							result = el;
+							el = upstream().next();
+							if (empty)
+							{
+								empty = false;
+								result = el;
+							}
+							else
+							{
+								result = reducer.reduce(result, el);
+							}
 						}
-						else
+					}
+					finally
+					{
+						try
 						{
-							result = reducer.reduce(result, el);
+							this.end();
+						}
+						catch (Exception e)
+						{
 						}
 					}
 				}
@@ -2071,12 +2180,17 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static abstract class Source<E> implements Pond<E, E>
 	{
-		public void begin()
+		public void begin() throws Exception
 		{
 		}
 
-		public void end()
+		public void close() throws Exception
 		{
+		}
+
+		public void end() throws Exception
+		{
+			this.close();
 		}
 
 		@Override
@@ -2123,11 +2237,6 @@ public class Canal<U, D> implements Iterable<D>
 			}
 
 			this.res = stratify(dat, cmp).iterator();
-		}
-
-		@Override
-		public void end()
-		{
 		}
 
 		@Override
@@ -2189,28 +2298,41 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					while (upstream().hasNext())
+					try
 					{
-						if (empty)
+						while (upstream().hasNext())
 						{
-							empty = false;
+							if (empty)
+							{
+								empty = false;
+							}
+							else if (split != null)
+							{
+								buff.append(split);
+							}
+							buff.append(upstream().next());
 						}
-						else if (split != null)
-						{
-							buff.append(split);
-						}
-						buff.append(upstream().next());
-					}
 
-					if (emptyWrap || !empty)
-					{
-						if (prefix != null)
+						if (emptyWrap || !empty)
 						{
-							buff.insert(0, prefix);
+							if (prefix != null)
+							{
+								buff.insert(0, prefix);
+							}
+							if (suffix != null)
+							{
+								buff.append(suffix);
+							}
 						}
-						if (suffix != null)
+					}
+					finally
+					{
+						try
 						{
-							buff.append(suffix);
+							this.end();
+						}
+						catch (Exception e)
+						{
 						}
 					}
 				}
@@ -2492,11 +2614,6 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public void end()
-		{
-		}
-
-		@Override
 		public boolean hasNext()
 		{
 			if (self.hasNext())
@@ -2538,10 +2655,6 @@ public class Canal<U, D> implements Iterable<D>
 		protected long index = 0;
 
 		public void begin()
-		{
-		}
-
-		public void end()
 		{
 		}
 
@@ -2618,7 +2731,14 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			begin(pond.upstream());
 		}
-		pond.begin();
+		try
+		{
+			pond.begin();
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
 		return pond;
 	}
 
@@ -2732,9 +2852,11 @@ public class Canal<U, D> implements Iterable<D>
 		return new Canal<E, E>().setOperator(new ArraySourcer<E>(array, begin, end));
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <E> Canal<?, E> of(Iterable<E> iter)
 	{
-		return new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
+		return iter instanceof Canal ? (Canal<?, E>) iter //
+				: new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
 	}
 
 	public static PairCanal<?, String, Object> of(JSON json)

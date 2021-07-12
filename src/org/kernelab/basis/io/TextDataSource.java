@@ -6,13 +6,14 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 
+import org.kernelab.basis.CloseableIterator;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.io.ReaderFactory.DefaultReaderFactory;
 import org.kernelab.basis.io.ReaderFactory.FileReaderFactory;
 
 public class TextDataSource implements Iterable<String>
 {
-	protected class TextDataSourceIterator implements Iterator<String>
+	protected class TextDataSourceIterator implements CloseableIterator<String>
 	{
 		private Reader			reader;
 
@@ -39,7 +40,7 @@ public class TextDataSource implements Iterable<String>
 			this.line = this.readLine();
 		}
 
-		protected void close()
+		public void close()
 		{
 			try
 			{
