@@ -379,12 +379,15 @@ public class Sequel implements Iterable<ResultSet>
 
 	public Sequel close()
 	{
-		try
+		if (isClosing())
 		{
-			this.closeStatement();
-		}
-		catch (SQLException e)
-		{
+			try
+			{
+				this.closeStatement();
+			}
+			catch (SQLException e)
+			{
+			}
 		}
 
 		try
@@ -661,6 +664,10 @@ public class Sequel implements Iterable<ResultSet>
 		catch (SQLException e)
 		{
 		}
+		finally
+		{
+			this.close();
+		}
 		return rows;
 	}
 
@@ -677,6 +684,10 @@ public class Sequel implements Iterable<ResultSet>
 		}
 		catch (SQLException e)
 		{
+		}
+		finally
+		{
+			this.close();
 		}
 		return rows;
 	}
@@ -704,6 +715,10 @@ public class Sequel implements Iterable<ResultSet>
 		}
 		catch (SQLException e)
 		{
+		}
+		finally
+		{
+			this.close();
 		}
 		return rows;
 	}
@@ -2465,6 +2480,13 @@ public class Sequel implements Iterable<ResultSet>
 		catch (SQLException e)
 		{
 			this.updateCount = N_A;
+		}
+		finally
+		{
+			if (!this.isResultSet())
+			{
+				this.close();
+			}
 		}
 		return this;
 	}

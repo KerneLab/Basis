@@ -1516,7 +1516,7 @@ public class SQLKit
 
 	public SQLKit closeStatement(Statement statement) throws SQLException
 	{
-		if (statement != null)
+		if (statement != null && !isReuseStatements())
 		{
 			sentences.remove(statements.remove(statement));
 			statement.close();
@@ -1569,9 +1569,26 @@ public class SQLKit
 	public Statement createStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException
 	{
-		statement = sentences.get(sql);
+		if (isReuseStatements())
+		{
+			statement = sentences.get(sql);
 
-		if (statement == null)
+			if (statement == null)
+			{
+				try
+				{
+					statement = this.getConnection().createStatement(resultSetType, resultSetConcurrency,
+							resultSetHoldability);
+				}
+				catch (SQLException e)
+				{
+					statement = this.getConnection().createStatement();
+				}
+				statements.put(statement, sql);
+				sentences.put(sql, statement);
+			}
+		}
+		else
 		{
 			try
 			{
@@ -1582,9 +1599,6 @@ public class SQLKit
 			{
 				statement = this.getConnection().createStatement();
 			}
-
-			sentences.put(sql, statement);
-
 			statements.put(statement, sql);
 		}
 
