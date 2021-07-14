@@ -439,70 +439,31 @@ public class Graph<N, E>
 		return this;
 	}
 
-	protected Link<N, E> findCycle()
+	public Graph<N, Object> findCycle()
 	{
-		return this.findCycle(new HashSet<N>(this.getNodes()));
-	}
+		final Graph<N, Object> trace = this.toTrace();
 
-	protected Link<N, E> findCycle(Set<N> nodes)
-	{
-		Set<Link<N, E>> visited = new HashSet<Link<N, E>>();
 		Set<N> removes = new HashSet<N>();
-		Link<N, E> find = null;
 
-		while (!nodes.isEmpty())
+		while (!trace.getNodes().isEmpty())
 		{
 			removes.clear();
 
-			N visit = null;
-
-			for (N node : nodes)
+			for (N node : trace.getNodes())
 			{
-				removes.add(node);
-
-				if (!this.getOutLinks(node).isEmpty())
+				if (trace.getInDegree(node) == 0 || trace.getOutDegree(node) == 0)
 				{
-					visit = node;
-					break;
+					removes.add(node);
 				}
 			}
 
-			nodes.removeAll(removes);
-
-			if (visit != null)
+			if (removes.isEmpty())
 			{
-				if ((find = findCycle(nodes, visit, visited)) != null)
-				{
-					return find;
-				}
+				return trace;
 			}
-		}
-		return null;
-	}
-
-	protected Link<N, E> findCycle(Set<N> nodes, N node, Set<Link<N, E>> visited)
-	{
-		Link<N, E> find = null;
-
-		for (Link<N, E> link : this.getOutLinks(node))
-		{
-			if (visited.contains(link))
+			else
 			{
-				return link;
-			}
-
-			nodes.remove(link.target);
-
-			if (!this.getOutLinks(link.target).isEmpty())
-			{
-				visited.add(link);
-
-				if ((find = findCycle(nodes, link.target, visited)) != null)
-				{
-					return find;
-				}
-
-				visited.remove(link);
+				trace.removeNodes(removes);
 			}
 		}
 
