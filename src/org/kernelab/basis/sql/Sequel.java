@@ -162,6 +162,7 @@ public class Sequel implements Iterable<ResultSet>
 
 		protected abstract T next(ResultSet rs);
 
+		@Override
 		public void remove()
 		{
 		}
@@ -246,11 +247,11 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	public class SequelIterator implements Iterable<Sequel>, Iterator<Sequel>
+	public class SequelIterator implements Iterable<Sequel>, CloseableIterator<Sequel>
 	{
 		private int		current;
 
-		private boolean	first	= true;
+		private Sequel	next	= null;
 
 		public SequelIterator()
 		{
@@ -262,26 +263,33 @@ public class Sequel implements Iterable<ResultSet>
 			this.current = current;
 		}
 
+		public void close()
+		{
+			setIterating(false);
+			Sequel.this.close();
+		}
+
 		public boolean hasNext()
 		{
-			if (first)
+			if (isClosed())
 			{
-				first = false;
-			}
-			else
-			{
-				nextResult(current);
+				return false;
 			}
 
-			if (hasResult())
+			if (next != null)
 			{
-				Sequel.this.setIterating(true);
+				return true;
+			}
+
+			if (nextResult(current))
+			{
+				setIterating(true);
+				next = Sequel.this;
 				return true;
 			}
 			else
 			{
-				Sequel.this.setIterating(false);
-				release();
+				this.close();
 				return false;
 			}
 		}
@@ -293,17 +301,17 @@ public class Sequel implements Iterable<ResultSet>
 
 		public Sequel next()
 		{
-			return Sequel.this;
-		}
-
-		protected void release()
-		{
-			if (Sequel.this.isClosing())
+			try
 			{
-				Sequel.this.close();
+				return next;
+			}
+			finally
+			{
+				next = null;
 			}
 		}
 
+		@Override
 		public void remove()
 		{
 		}
@@ -338,15 +346,17 @@ public class Sequel implements Iterable<ResultSet>
 
 	private SQLKit				kit;
 
-	private boolean				closing			= true;
-
-	private boolean				iterating		= false;
-
 	private Statement			statement;
 
 	private ResultSet			resultSet;
 
 	private int					updateCount		= N_A;
+
+	private boolean				closed			= false;
+
+	private boolean				closing			= true;
+
+	private boolean				iterating		= false;
 
 	private Map<String, Object>	metaMapIndex	= null;
 
@@ -379,29 +389,34 @@ public class Sequel implements Iterable<ResultSet>
 
 	public Sequel close()
 	{
-		if (isClosing())
+		if (!isClosed())
 		{
+			if (isClosing())
+			{
+				try
+				{
+					this.closeStatement();
+				}
+				catch (SQLException e)
+				{
+				}
+			}
+
 			try
 			{
-				this.closeStatement();
+				this.closeResultSet();
 			}
 			catch (SQLException e)
 			{
 			}
-		}
 
-		try
-		{
-			this.closeResultSet();
-		}
-		catch (SQLException e)
-		{
-		}
+			this.setIterating(false);
 
-		kit = null;
-
-		metaMapIndex = null;
-		metaMapName = null;
+			kit = null;
+			metaMapIndex = null;
+			metaMapName = null;
+			closed = true;
+		}
 
 		return this;
 	}
@@ -2314,7 +2329,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public boolean isClosed()
 	{
-		return statement == null;
+		return closed;
 	}
 
 	public boolean isClosing()
@@ -2400,25 +2415,37 @@ public class Sequel implements Iterable<ResultSet>
 		return this;
 	}
 
-	public Sequel nextResult()
+	public boolean nextResult()
 	{
 		return nextResult(Statement.CLOSE_CURRENT_RESULT);
 	}
 
-	public Sequel nextResult(int current)
+	public boolean nextResult(int current)
 	{
 		try
 		{
-			this.hasResultSetObject(this.getStatement().getMoreResults(current));
+			if (this.getStatement().getMoreResults(current))
+			{
+				this.hasResultSetObject(true);
+				if (this.isResultSet())
+				{
+					return true;
+				}
+			}
 		}
 		catch (SQLException e)
 		{
 			this.hasResultSetObject(false);
 		}
 
-		this.refreshUpdateCount();
-
-		return this;
+		if (this.refreshUpdateCount())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	public boolean nextRow()
@@ -2471,7 +2498,7 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	private Sequel refreshUpdateCount()
+	private boolean refreshUpdateCount()
 	{
 		try
 		{
@@ -2481,13 +2508,12 @@ public class Sequel implements Iterable<ResultSet>
 		{
 			this.updateCount = N_A;
 		}
-		finally
-		{
-			if (!this.isResultSet())
-			{
-				this.close();
-			}
-		}
+		return this.updateCount != N_A;
+	}
+
+	protected Sequel setClosed(boolean closed)
+	{
+		this.closed = closed;
 		return this;
 	}
 
