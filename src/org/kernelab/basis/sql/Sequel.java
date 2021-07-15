@@ -251,6 +251,8 @@ public class Sequel implements Iterable<ResultSet>
 	{
 		private int		current;
 
+		private boolean	first	= true;
+
 		private Sequel	next	= null;
 
 		public SequelIterator()
@@ -271,7 +273,7 @@ public class Sequel implements Iterable<ResultSet>
 
 		public boolean hasNext()
 		{
-			if (isClosed())
+			if (Sequel.this.isClosed())
 			{
 				return false;
 			}
@@ -281,9 +283,18 @@ public class Sequel implements Iterable<ResultSet>
 				return true;
 			}
 
-			if (nextResult(current))
+			if (first)
 			{
-				setIterating(true);
+				first = false;
+			}
+			else
+			{
+				Sequel.this.nextResult(current);
+			}
+
+			if (Sequel.this.hasResult())
+			{
+				Sequel.this.setIterating(true);
 				next = Sequel.this;
 				return true;
 			}
