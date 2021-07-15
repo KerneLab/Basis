@@ -10,8 +10,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.kernelab.basis.Canal.Action;
-
 public class Graph<N, E>
 {
 	public static class CyclicPathDetectException extends RuntimeException
@@ -783,24 +781,27 @@ public class Graph<N, E>
 
 	protected void topLevel(N node, final int level, final Map<N, Variable<Integer>> map)
 	{
+		boolean upd = false;
+
 		Variable<Integer> lv = map.get(node);
 		if (lv == null)
 		{
 			map.put(node, new Variable<Integer>(level));
+			upd = true;
 		}
 		else if (level > lv.value)
 		{
 			lv.value = level;
+			upd = true;
 		}
 
-		this.getOutNeighbors(node).foreach(new Action<N>()
+		if (upd)
 		{
-			@Override
-			public void action(N el)
+			for (N n : this.getOutNeighbors(node))
 			{
-				topLevel(el, level + 1, map);
+				topLevel(n, level + 1, map);
 			}
-		});
+		}
 	}
 
 	/**
