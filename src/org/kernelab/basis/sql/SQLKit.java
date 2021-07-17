@@ -761,10 +761,10 @@ public class SQLKit
 		return jsonOfResultRow(rs, null, map);
 	}
 
-	public static Canal<?, JSON> jsonOfResultSet(final ResultSet rs, final Map<String, Object> map,
+	public static Canal<?, JSON> jsonOfResultSet(SQLKit kit, final ResultSet rs, final Map<String, Object> map,
 			final Class<? extends JSON> cls) throws SQLException
 	{
-		return Canal.of(Sequel.iterate(rs)).map(new Mapper<ResultSet, JSON>()
+		return Canal.of(Sequel.iterate(rs).kit(kit)).map(new Mapper<ResultSet, JSON>()
 		{
 			@Override
 			public JSON map(ResultSet el)
@@ -1127,11 +1127,6 @@ public class SQLKit
 		}
 	}
 
-	public static <E> Canal<?, E> mapResultSet(ResultSet rs, Class<E> cls, Map<String, Object> map) throws SQLException
-	{
-		return mapResultSet(rs, new ProjectMapper<E>(cls, map));
-	}
-
 	public static <E> Collection<E> mapResultSet(ResultSet rs, Collection<E> rows, Class<E> cls,
 			Map<String, Object> map, int limit) throws SQLException
 	{
@@ -1157,9 +1152,16 @@ public class SQLKit
 		return rows;
 	}
 
-	public static <E> Canal<?, E> mapResultSet(ResultSet rs, Mapper<ResultSet, E> mapper) throws SQLException
+	public static <E> Canal<?, E> mapResultSet(SQLKit kit, ResultSet rs, Class<E> cls, Map<String, Object> map)
+			throws SQLException
 	{
-		return Canal.of(Sequel.iterate(rs)).map(mapper);
+		return mapResultSet(kit, rs, new ProjectMapper<E>(cls, map));
+	}
+
+	public static <E> Canal<?, E> mapResultSet(SQLKit kit, ResultSet rs, Mapper<ResultSet, E> mapper)
+			throws SQLException
+	{
+		return Canal.of(Sequel.iterate(rs).kit(kit)).map(mapper);
 	}
 
 	/**

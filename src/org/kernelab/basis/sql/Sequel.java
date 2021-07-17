@@ -663,7 +663,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public <E> Canal<?, E> getRows(Class<E> cls, Map<String, Object> map) throws SQLException
 	{
-		return SQLKit.mapResultSet(this.getResultSet(), cls, map);
+		return SQLKit.mapResultSet(this.getKit(), this.getResultSet(), cls, map);
 	}
 
 	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls)
@@ -756,12 +756,12 @@ public class Sequel implements Iterable<ResultSet>
 
 	public Canal<?, JSON> getRows(Map<String, Object> map, Class<? extends JSON> cls) throws SQLException
 	{
-		return SQLKit.jsonOfResultSet(this.getResultSet(), map, cls);
+		return SQLKit.jsonOfResultSet(this.getKit(), this.getResultSet(), map, cls);
 	}
 
 	public <E> Canal<?, E> getRows(Mapper<ResultSet, E> mapper) throws SQLException
 	{
-		return SQLKit.mapResultSet(this.getResultSet(), mapper);
+		return SQLKit.mapResultSet(this.getKit(), this.getResultSet(), mapper);
 	}
 
 	public Statement getStatement()
