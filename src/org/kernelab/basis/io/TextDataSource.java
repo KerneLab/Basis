@@ -171,6 +171,7 @@ public class TextDataSource implements Iterable<String>
 			}
 		}
 
+		@Override
 		public void remove()
 		{
 		}
@@ -226,8 +227,7 @@ public class TextDataSource implements Iterable<String>
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
-			return null;
+			throw new RuntimeException(e);
 		}
 	}
 
