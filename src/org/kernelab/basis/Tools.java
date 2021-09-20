@@ -349,11 +349,9 @@ public class Tools
 	{
 		if (cls != null && name != null && type != null)
 		{
-			String methodName = "set" + Tools.capitalize(name);
-
 			try
 			{
-				return cls.getMethod(methodName, type);
+				return cls.getMethod("set" + Tools.capitalize(name), type);
 			}
 			catch (NoSuchMethodException e)
 			{
@@ -367,7 +365,6 @@ public class Tools
 			{
 			}
 		}
-
 		return null;
 	}
 
@@ -397,13 +394,13 @@ public class Tools
 				name = field.getName();
 			}
 
-			String methodName = "set" + Tools.capitalize(name);
+			String setter = "set" + Tools.capitalize(name);
 
 			if (type != null)
 			{
 				try
 				{
-					return cls.getMethod(methodName, type);
+					return cls.getMethod(setter, type);
 				}
 				catch (NoSuchMethodException e)
 				{
@@ -414,7 +411,7 @@ public class Tools
 			{
 				try
 				{
-					return cls.getMethod(methodName, field.getType());
+					return cls.getMethod(setter, field.getType());
 				}
 				catch (NoSuchMethodException e)
 				{
@@ -444,6 +441,31 @@ public class Tools
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Get the "getter" method of a field. The "getter" method and the method
+	 * with the same name to the field's name would be tried one by one.
+	 * 
+	 * @param field
+	 * @return
+	 */
+	public static <T> Method accessor(Field field)
+	{
+		return accessor(field.getDeclaringClass(), field.getName());
+	}
+
+	/**
+	 * Get the "setter" method of a field. The "setter" method and the method
+	 * with the same name to the field's name would be tried one by one.
+	 * 
+	 * @param field
+	 * @param type
+	 * @return
+	 */
+	public static <T> Method accessor(Field field, Class<?> type)
+	{
+		return accessor(field.getDeclaringClass(), field.getName(), field, type);
 	}
 
 	/**
