@@ -314,6 +314,33 @@ public class SQLKit
 		return bindParameters(0, statement, params);
 	}
 
+	public static void fillParameter(Object value, List<Object> list)
+	{
+		if (value == SQLKit.NULL || value == SQLKit.NONE || value == SQLKit.EMPTY)
+		{
+			list.add(value);
+		}
+		else if (value instanceof Iterable)
+		{
+			for (Object v : (Iterable<?>) value)
+			{
+				fillParameter(v, list);
+			}
+		}
+		else if (value != null && value.getClass().isArray())
+		{
+			int len = Array.getLength(value);
+			for (int i = 0; i < len; i++)
+			{
+				fillParameter(Array.get(value, i), list);
+			}
+		}
+		else
+		{
+			list.add(value);
+		}
+	}
+
 	/**
 	 * To fill a list of parameters according to the keys which are the names of
 	 * parameters.
@@ -358,23 +385,7 @@ public class SQLKit
 
 		for (String key : keys)
 		{
-			Object v = params.attr(key);
-
-			if (v == SQLKit.NULL || v == SQLKit.NONE || v == SQLKit.EMPTY)
-			{
-				list.add(v);
-			}
-			else if (v instanceof Iterable)
-			{
-				for (Object o : (Iterable<?>) v)
-				{
-					list.add(o);
-				}
-			}
-			else
-			{
-				list.add(v);
-			}
+			fillParameter(params.attr(key), list);
 		}
 
 		return list;
@@ -426,31 +437,7 @@ public class SQLKit
 
 		for (String key : keys)
 		{
-			Object v = params.get(key);
-
-			if (v == SQLKit.NULL || v == SQLKit.NONE || v == SQLKit.EMPTY)
-			{
-				list.add(v);
-			}
-			else if (v instanceof Iterable)
-			{
-				for (Object o : (Iterable<?>) v)
-				{
-					list.add(o);
-				}
-			}
-			else if (v != null && v.getClass().isArray())
-			{
-				int length = Array.getLength(v);
-				for (int i = 0; i < length; i++)
-				{
-					list.add(Array.get(v, i));
-				}
-			}
-			else
-			{
-				list.add(v);
-			}
+			fillParameter(params.get(key), list);
 		}
 
 		return list;
@@ -1164,6 +1151,118 @@ public class SQLKit
 		return Canal.of(Sequel.iterate(rs).kit(kit)).map(mapper);
 	}
 
+	public static String replaceParameter(Object value)
+	{
+		if (value == SQLKit.NULL || value == SQLKit.NONE || value == SQLKit.EMPTY)
+		{
+			return VALUE_HOLDER_MARK;
+		}
+		else if (value instanceof Iterable)
+		{
+			StringBuilder buf = null;
+			for (Object v : (Iterable<?>) value)
+			{
+				if (buf == null)
+				{
+					buf = new StringBuilder();
+				}
+				else
+				{
+					buf.append(',');
+				}
+				replaceParameter(buf, v);
+			}
+			if (buf == null)
+			{
+				return NULL_MARK;
+			}
+			else
+			{
+				return buf.toString();
+			}
+		}
+		else if (value != null && value.getClass().isArray())
+		{
+			int len = Array.getLength(value);
+			if (len == 0)
+			{
+				return NULL_MARK;
+			}
+			else
+			{
+				StringBuilder buf = new StringBuilder();
+				for (int i = 0; i < len; i++)
+				{
+					if (i > 0)
+					{
+						buf.append(',');
+					}
+					replaceParameter(buf, Array.get(value, i));
+				}
+				return buf.toString();
+			}
+		}
+		else
+		{
+			return VALUE_HOLDER_MARK;
+		}
+	}
+
+	public static void replaceParameter(StringBuilder buf, Object value)
+	{
+		if (value == SQLKit.NULL || value == SQLKit.NONE || value == SQLKit.EMPTY)
+		{
+			buf.append(VALUE_HOLDER_MARK);
+		}
+		else if (value instanceof Iterable)
+		{
+			buf.append('(');
+			boolean empty = true;
+			for (Object v : (Iterable<?>) value)
+			{
+				if (empty)
+				{
+					empty = false;
+				}
+				else
+				{
+					buf.append(',');
+				}
+				replaceParameter(buf, v);
+			}
+			if (empty)
+			{
+				buf.append(NULL_MARK);
+			}
+			buf.append(')');
+		}
+		else if (value != null && value.getClass().isArray())
+		{
+			buf.append('(');
+			int len = Array.getLength(value);
+			if (len == 0)
+			{
+				buf.append(NULL_MARK);
+			}
+			else
+			{
+				for (int i = 0; i < len; i++)
+				{
+					if (i > 0)
+					{
+						buf.append(',');
+					}
+					replaceParameter(buf, Array.get(value, i));
+				}
+			}
+			buf.append(')');
+		}
+		else
+		{
+			buf.append(VALUE_HOLDER_MARK);
+		}
+	}
+
 	/**
 	 * Replace each parameters name in SQL with the VALUE_HOLDER in order to be
 	 * prepared.
@@ -1207,29 +1306,7 @@ public class SQLKit
 
 		for (Pair pair : params.pairs())
 		{
-			Object value = pair.getValue();
-
-			if (value == SQLKit.NULL || value == SQLKit.NONE || value == SQLKit.EMPTY)
-			{
-				filler.fillWith(pair.getKey(), VALUE_HOLDER_MARK);
-			}
-			else if (value instanceof Iterable)
-			{
-				Iterable<?> iter = (Iterable<?>) value;
-
-				if (iter.iterator().hasNext())
-				{
-					filler.fillWith(pair.getKey(), Tools.repeat(VALUE_HOLDER_CHAR, Tools.sizeOfIterable(iter), ','));
-				}
-				else
-				{
-					filler.fillWith(pair.getKey(), NULL_MARK);
-				}
-			}
-			else
-			{
-				filler.fillWith(pair.getKey(), VALUE_HOLDER_MARK);
-			}
+			filler.fillWith(pair.getKey(), replaceParameter(pair.getValue()));
 		}
 
 		return filler.toString();
@@ -1255,41 +1332,7 @@ public class SQLKit
 
 		for (Entry<String, ?> pair : params.entrySet())
 		{
-			Object value = pair.getValue();
-
-			if (value == SQLKit.NULL || value == SQLKit.NONE || value == SQLKit.EMPTY)
-			{
-				filler.fillWith(pair.getKey(), VALUE_HOLDER_MARK);
-			}
-			else if (value instanceof Iterable)
-			{
-				Iterable<?> iter = (Iterable<?>) value;
-
-				if (iter.iterator().hasNext())
-				{
-					filler.fillWith(pair.getKey(), Tools.repeat(VALUE_HOLDER_CHAR, Tools.sizeOfIterable(iter), ','));
-				}
-				else
-				{
-					filler.fillWith(pair.getKey(), NULL_MARK);
-				}
-			}
-			else if (value != null && value.getClass().isArray())
-			{
-				int length = Array.getLength(value);
-				if (length > 0)
-				{
-					filler.fillWith(pair.getKey(), Tools.repeat(VALUE_HOLDER_CHAR, length, ','));
-				}
-				else
-				{
-					filler.fillWith(pair.getKey(), NULL_MARK);
-				}
-			}
-			else
-			{
-				filler.fillWith(pair.getKey(), VALUE_HOLDER_MARK);
-			}
+			filler.fillWith(pair.getKey(), replaceParameter(pair.getValue()));
 		}
 
 		return filler.toString();
