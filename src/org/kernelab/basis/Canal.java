@@ -2448,8 +2448,48 @@ public class Canal<U, D> implements Iterable<D>
 		T get();
 	}
 
-	public static abstract class Tuple implements Serializable, Comparable<Object>
+	public static abstract class Tuple implements Serializable, Iterable<Object>, Comparable<Object>
 	{
+		public static class TupleIndexOutOfBoundsException extends IndexOutOfBoundsException
+		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 3877085772370116982L;
+
+			public TupleIndexOutOfBoundsException()
+			{
+				super();
+			}
+
+			public TupleIndexOutOfBoundsException(int index)
+			{
+				super("Tuple index out of range: " + index);
+			}
+
+			public TupleIndexOutOfBoundsException(String msg)
+			{
+				super(msg);
+			}
+		}
+
+		protected class TupleIterator implements Iterator<Object>
+		{
+			private int index = 0;
+
+			@Override
+			public boolean hasNext()
+			{
+				return index < size();
+			}
+
+			@Override
+			public Object next()
+			{
+				return get(index++);
+			}
+		}
+
 		/**
 		 * 
 		 */
@@ -2470,6 +2510,14 @@ public class Canal<U, D> implements Iterable<D>
 			return new Tuple3<E1, E2, E3>(_1, _2, _3);
 		}
 
+		protected void ensureIndex(int index)
+		{
+			if (index < 0 || index >= size())
+			{
+				throw new TupleIndexOutOfBoundsException(index);
+			}
+		}
+
 		@Override
 		public boolean equals(Object o)
 		{
@@ -2485,6 +2533,15 @@ public class Canal<U, D> implements Iterable<D>
 
 			return this.compareTo(o) == 0;
 		}
+
+		public abstract Object get(int i);
+
+		public Iterator<Object> iterator()
+		{
+			return new TupleIterator();
+		}
+
+		public abstract int size();
 	}
 
 	public static class Tuple1<E1> extends Tuple
@@ -2506,6 +2563,19 @@ public class Canal<U, D> implements Iterable<D>
 		public int compareTo(Object o)
 		{
 			return Tools.compare(this._1, ((Tuple1<E1>) o)._1);
+		}
+
+		@Override
+		public Object get(int i)
+		{
+			ensureIndex(i);
+			return _1;
+		}
+
+		@Override
+		public int size()
+		{
+			return 1;
 		}
 
 		@Override
@@ -2539,6 +2609,26 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
+		public Object get(int i)
+		{
+			ensureIndex(i);
+			if (i == size() - 1)
+			{
+				return _2;
+			}
+			else
+			{
+				return super.get(i);
+			}
+		}
+
+		@Override
+		public int size()
+		{
+			return 2;
+		}
+
+		@Override
 		public String toString()
 		{
 			return "(" + _1 + ", " + _2 + ")";
@@ -2566,6 +2656,26 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			Tuple3<E1, E2, E3> t = ((Tuple3<E1, E2, E3>) o);
 			return Tools.compare(this._1, t._1, this._2, t._2, this._3, t._3);
+		}
+
+		@Override
+		public Object get(int i)
+		{
+			ensureIndex(i);
+			if (i == size() - 1)
+			{
+				return _3;
+			}
+			else
+			{
+				return super.get(i);
+			}
+		}
+
+		@Override
+		public int size()
+		{
+			return 3;
 		}
 
 		@Override

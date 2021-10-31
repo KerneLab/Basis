@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.kernelab.basis.Canal.Action;
+import org.kernelab.basis.Canal.Tuple;
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.Mapper;
@@ -54,9 +55,10 @@ public class TestSQLKit
 		String sql = "select * from staf where comp_id = ?comp? and (dept_id, staf_id) in (?ids?)";
 
 		JSON param = new JSON().attr("ids", new JSAN().addAll(0, //
+				new JSAN().addAll(0, "13", "a22"), //
 				new JSAN().addAll(0, "11", "a12"), //
-				new JSAN().addAll(0, "12", "a22"), //
-				new JSAN().addAll(0, "13", "a22"))) //
+				Tuple.of("12", "a22")//
+		)) //
 				.attr("comp", "1");
 
 		Tools.debug(kit.execute(sql, param).getRows(new JSAN(), JSON.class));
@@ -66,7 +68,7 @@ public class TestSQLKit
 		param1.put("comp", "1");
 		param1.put("ids", new Object[] { //
 				new String[] { "11", "a12" }, //
-				new String[] { "11", "a11" } //
+				Tuple.of("11", "a11") //
 		});
 
 		Tools.debug(kit.execute(sql, param1).getRows(new JSAN(), JSON.class));
