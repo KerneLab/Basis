@@ -4889,7 +4889,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				{
 					val = CastToString(obj).charAt(0);
 				}
-				catch (StringIndexOutOfBoundsException ex)
+				catch (Exception ex)
 				{
 				}
 			}
