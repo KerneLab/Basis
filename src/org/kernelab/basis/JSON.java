@@ -5117,6 +5117,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						val = String.valueOf(((java.util.Calendar) obj).getTimeInMillis());
 					}
+					else if (obj instanceof java.sql.Clob)
+					{
+						val = Tools.readerToStringBuilder(((java.sql.Clob) obj).getCharacterStream()).toString();
+					}
 					else
 					{
 						val = obj.toString();
