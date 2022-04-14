@@ -2536,6 +2536,12 @@ public class Canal<U, D> implements Iterable<D>
 
 		public abstract Object get(int i);
 
+		@Override
+		public int hashCode()
+		{
+			return 1;
+		}
+
 		public Iterator<Object> iterator()
 		{
 			return new TupleIterator();
@@ -2570,6 +2576,12 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			ensureIndex(i);
 			return _1;
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return 31 * super.hashCode() + ((_1 == null) ? 0 : _1.hashCode());
 		}
 
 		@Override
@@ -2623,6 +2635,12 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
+		public int hashCode()
+		{
+			return 31 * super.hashCode() + ((_2 == null) ? 0 : _2.hashCode());
+		}
+
+		@Override
 		public int size()
 		{
 			return 2;
@@ -2670,6 +2688,12 @@ public class Canal<U, D> implements Iterable<D>
 			{
 				return super.get(i);
 			}
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return 31 * super.hashCode() + ((_3 == null) ? 0 : _3.hashCode());
 		}
 
 		@Override
