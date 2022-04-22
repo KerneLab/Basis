@@ -2779,6 +2779,16 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
+	public static class UnitMapper<D, E> implements Mapper<D, E>
+	{
+		@SuppressWarnings("unchecked")
+		@Override
+		public E map(D el)
+		{
+			return (E) el;
+		}
+	}
+
 	protected static abstract class Wheel<I, O> extends AbstractPond<I, O>
 	{
 		/**
@@ -2843,7 +2853,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
-	protected static class ZipWithIndexOp<E> implements Converter<E, Tuple2<E, Long>>
+	protected static class ZipWithIndexLongOp<E> implements Converter<E, Tuple2<E, Long>>
 	{
 		@Override
 		public Pond<E, Tuple2<E, Long>> newPond()
@@ -2854,6 +2864,22 @@ public class Canal<U, D> implements Iterable<D>
 				public Tuple2<E, Long> next()
 				{
 					return Tuple.of(upstream().next(), index++);
+				}
+			};
+		}
+	}
+
+	protected static class ZipWithIndexOp<E> implements Converter<E, Tuple2<E, Integer>>
+	{
+		@Override
+		public Pond<E, Tuple2<E, Integer>> newPond()
+		{
+			return new Wheel<E, Tuple2<E, Integer>>()
+			{
+				@Override
+				public Tuple2<E, Integer> next()
+				{
+					return Tuple.of(upstream().next(), (int) index++);
 				}
 			};
 		}
@@ -3897,12 +3923,23 @@ public class Canal<U, D> implements Iterable<D>
 
 	/**
 	 * Zip each element in this Canal with its index number as a
+	 * {@code Tuple2<D,Integer>}.
+	 * 
+	 * @return
+	 */
+	public PairCanal<D, D, Integer> zipWithIndex()
+	{
+		return this.follow(new ZipWithIndexOp<D>()).toPair();
+	}
+
+	/**
+	 * Zip each element in this Canal with its index number as a
 	 * {@code Tuple2<D,Long>}.
 	 * 
 	 * @return
 	 */
-	public PairCanal<D, D, Long> zipWithIndex()
+	public PairCanal<D, D, Long> zipWithIndexLong()
 	{
-		return this.follow(new ZipWithIndexOp<D>()).toPair();
+		return this.follow(new ZipWithIndexLongOp<D>()).toPair();
 	}
 }
