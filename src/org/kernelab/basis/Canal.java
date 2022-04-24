@@ -186,6 +186,16 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
+	public static class CastMapper<F, T> implements Mapper<F, T>
+	{
+		@SuppressWarnings("unchecked")
+		@Override
+		public T map(F el)
+		{
+			return (T) el;
+		}
+	}
+
 	protected static class CollectAsMapOp<E, K, V> implements Evaluator<E, Map<K, V>>
 	{
 		protected final Map<K, V>		result;
@@ -2776,16 +2786,6 @@ public class Canal<U, D> implements Iterable<D>
 			{
 				return that.next();
 			}
-		}
-	}
-
-	public static class UnitMapper<D, E> implements Mapper<D, E>
-	{
-		@SuppressWarnings("unchecked")
-		@Override
-		public E map(D el)
-		{
-			return (E) el;
 		}
 	}
 
