@@ -2,11 +2,11 @@ package org.kernelab.basis.demo;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.kernelab.basis.Canal;
 import org.kernelab.basis.Canal.Tuple;
 import org.kernelab.basis.Canal.Tuple2;
-import org.kernelab.basis.JSON;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 
@@ -15,7 +15,7 @@ public class DemoCanal
 
 	public static void main(String[] args)
 	{
-		Map<Tuple2<String, String>, Canal<?, JSON>> m = Canal.of(new Integer[] { 0, 1, 2, 3, 4 })
+		Map<Tuple2<String, String>, Canal<?, Integer>> m = Canal.of(new Integer[] { 0, 1, 2, 3, 4 })
 				.keyBy(new Mapper<Integer, Tuple2<String, String>>()
 				{
 					@Override
@@ -30,9 +30,14 @@ public class DemoCanal
 					{
 						Tools.debug(el);
 					}
-				}).collectAsMap(new HashMap<Tuple2<String, String>, Canal<?, JSON>>());
+				}).collectAsMap(new HashMap<Tuple2<String, String>, Canal<?, Integer>>());
 
-		Tools.debug(m);
+		for (Entry<Tuple2<String, String>, Canal<?, Integer>> e : m.entrySet())
+		{
+			Canal<?, Integer> o = e.getValue();
+
+			Tools.debug(o);
+		}
 	}
 
 }
