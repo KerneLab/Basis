@@ -7032,9 +7032,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		object(new LinkedHashMap<String, Object>());
 	}
 
-	public Iterable<?> asIterable()
+	public Iterable<Object> asIterable()
 	{
-		return (Iterable<?>) this;
+		return (Iterable<Object>) this;
 	}
 
 	public JSON asJSON()
