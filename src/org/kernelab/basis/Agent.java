@@ -59,7 +59,7 @@ public class Agent implements InvocationHandler
 		this.real = real;
 	}
 
-	protected Method find(Class<?> real, Method method, Object[] args) throws Throwable
+	protected Method find(Class<?> real, Method method) throws Throwable
 	{
 		return real.getMethod(method.getName(), method.getParameterTypes());
 	}
@@ -67,6 +67,6 @@ public class Agent implements InvocationHandler
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
 	{
-		return find(this.real.getClass(), method, args).invoke(this.real, args);
+		return find(this.real.getClass(), method).invoke(this.real, args);
 	}
 }

@@ -14,6 +14,6 @@ public class DemoAgent extends Agent
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
 	{
-		return find(this.real.getClass(), method, args).invoke(this.real, args);
+		return find(this.real.getClass(), method).invoke(this.real, args);
 	}
 }
