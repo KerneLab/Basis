@@ -171,7 +171,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			@Override
 			protected void readFinished()
 			{
-
 			}
 
 			@Override
@@ -4717,20 +4716,17 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static <T> T CastAs(Object obj, Class<T> cls)
 	{
-		T val = null;
-
 		if (obj != null && cls != null)
 		{
 			try
 			{
-				val = cls.cast(obj);
+				return cls.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	@SuppressWarnings("unused")
@@ -4784,185 +4780,162 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static BigDecimal CastToBigDecimal(Object obj)
 	{
-		BigDecimal val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = BigDecimal.class.cast(obj);
+				return BigDecimal.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = new BigDecimal(CastToString(obj));
+					return new BigDecimal(CastToString(obj));
 				}
 				catch (NumberFormatException ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Boolean CastToBoolean(Object obj)
 	{
-		Boolean val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = Boolean.class.cast(obj);
+				return Boolean.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				String str = CastToString(obj);
 				if (TRUE_STRING.equals(str) || FALSE_STRING.equals(str))
 				{
-					val = Boolean.valueOf(str);
+					return Boolean.valueOf(str);
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Byte CastToByte(Object obj)
 	{
-		Byte val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = Byte.class.cast(obj);
+				return Byte.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = Byte.valueOf(CastToString(obj));
+					return Byte.valueOf(CastToString(obj));
 				}
 				catch (NumberFormatException ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Calendar CastToCalendar(Object obj)
 	{
-		Calendar val = null;
-
 		if (obj != null)
 		{
 			Long lon = CastToLong(obj);
 
 			if (lon != null)
 			{
-				val = new GregorianCalendar();
+				Calendar val = new GregorianCalendar();
 				val.setTimeInMillis(lon);
+				return val;
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Character CastToCharacter(Object obj)
 	{
-		Character val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = Character.class.cast(obj);
+				return Character.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = CastToString(obj).charAt(0);
+					return CastToString(obj).charAt(0);
 				}
 				catch (Exception ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Date CastToDate(Object obj)
 	{
-		Date val = null;
-
 		if (obj != null)
 		{
 			Long lon = CastToLong(obj);
 
 			if (lon != null)
 			{
-				val = new Date(lon);
+				return new Date(lon);
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Double CastToDouble(Object obj)
 	{
-		Double val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = Double.class.cast(obj);
+				return Double.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = Double.valueOf(CastToString(obj));
+					return Double.valueOf(CastToString(obj));
 				}
 				catch (NumberFormatException ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Float CastToFloat(Object obj)
 	{
-		Float val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = Float.class.cast(obj);
+				return Float.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = Float.valueOf(CastToString(obj));
+					return Float.valueOf(CastToString(obj));
 				}
 				catch (NumberFormatException ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Function CastToFunction(Object obj)
@@ -4972,138 +4945,121 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static Integer CastToInteger(Object obj)
 	{
-		Integer val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = Integer.class.cast(obj);
+				return Integer.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = Integer.valueOf(CastToString(obj));
+					return Integer.valueOf(CastToString(obj));
 				}
 				catch (NumberFormatException ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static JSAN CastToJSAN(Object obj)
 	{
-		JSAN val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = JSAN.class.cast(obj);
+				return JSAN.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = (JSAN) JSAN.Parse(CastToString(obj));
+					return (JSAN) JSAN.Parse(CastToString(obj));
 				}
 				catch (Exception ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static JSON CastToJSON(Object obj)
 	{
-		JSON val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = JSON.class.cast(obj);
+				return JSON.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = JSON.Parse(CastToString(obj));
+					return JSON.Parse(CastToString(obj));
 				}
 				catch (Exception ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Long CastToLong(Object obj)
 	{
-		Long val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = Long.class.cast(obj);
+				return Long.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = Long.valueOf(CastToString(obj));
+					return Long.valueOf(CastToString(obj));
 				}
 				catch (NumberFormatException ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Short CastToShort(Object obj)
 	{
-		Short val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = Short.class.cast(obj);
+				return Short.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
 				try
 				{
-					val = Short.valueOf(CastToString(obj));
+					return Short.valueOf(CastToString(obj));
 				}
 				catch (NumberFormatException ex)
 				{
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static String CastToString(Object obj)
 	{
-		String val = null;
-
 		if (obj != null)
 		{
 			try
 			{
-				val = String.class.cast(obj);
+				return String.class.cast(obj);
 			}
 			catch (ClassCastException e)
 			{
@@ -5111,19 +5067,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				{
 					if (obj instanceof java.util.Date)
 					{
-						val = String.valueOf(((java.util.Date) obj).getTime());
+						return String.valueOf(((java.util.Date) obj).getTime());
 					}
 					else if (obj instanceof java.util.Calendar)
 					{
-						val = String.valueOf(((java.util.Calendar) obj).getTimeInMillis());
+						return String.valueOf(((java.util.Calendar) obj).getTimeInMillis());
 					}
 					else if (obj instanceof java.sql.Clob)
 					{
-						val = Tools.readerToStringBuilder(((java.sql.Clob) obj).getCharacterStream()).toString();
+						return Tools.readerToStringBuilder(((java.sql.Clob) obj).getCharacterStream()).toString();
 					}
 					else
 					{
-						val = obj.toString();
+						return obj.toString();
 					}
 				}
 				catch (Exception ex)
@@ -5131,42 +5087,35 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Time CastToTime(Object obj)
 	{
-		Time val = null;
-
 		if (obj != null)
 		{
 			Long lon = CastToLong(obj);
 
 			if (lon != null)
 			{
-				val = new Time(lon);
+				return new Time(lon);
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static Timestamp CastToTimestamp(Object obj)
 	{
-		Timestamp val = null;
-
 		if (obj != null)
 		{
 			Long lon = CastToLong(obj);
 
 			if (lon != null)
 			{
-				val = new Timestamp(lon);
+				return new Timestamp(lon);
 			}
 		}
-
-		return val;
+		return null;
 	}
 
 	public static int CheckNext(CharSequence source, int now, int next)
@@ -5782,62 +5731,63 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static Object ParseValueOf(String string)
 	{
-		string = string.trim();
+		if (string == null)
+		{
+			return NOT_A_VALUE;
+		}
 
-		Object value = null;
+		string = string.trim();
 
 		try
 		{
-			if (string == null || string.length() == 0)
+			if (string.length() == 0)
 			{
-				value = NOT_A_VALUE;
+				return NOT_A_VALUE;
 			}
 			else if (string.startsWith(QUOTE_MARK) && string.endsWith(QUOTE_MARK))
 			{
-				value = RestoreString(string);
+				return RestoreString(string);
 			}
 			else if (Variable.isIntegerNumber(string))
 			{
 				try
 				{
-					value = Integer.valueOf(string);
+					return Integer.valueOf(string);
 				}
 				catch (NumberFormatException e)
 				{
-					value = Long.valueOf(string);
+					return Long.valueOf(string);
 				}
 			}
 			else if (Variable.isFloatNumber(string))
 			{
-				value = Double.parseDouble(string);
+				return Double.parseDouble(string);
 			}
 			else if (TRUE_STRING.equals(string) || FALSE_STRING.equals(string))
 			{
-				value = Boolean.parseBoolean(string);
+				return Boolean.parseBoolean(string);
 			}
 			else if (NULL_STRING.equals(string))
 			{
-				value = null;
+				return null;
 			}
 			else if (string.startsWith(Function.DEFINE_MARK))
 			{
-				value = new Function(string);
+				return new Function(string);
 			}
 			else if (!string.startsWith(OBJECT_BEGIN_MARK) && !string.startsWith(ARRAY_BEGIN_MARK))
 			{
-				value = new Quotation(string);
+				return new Quotation(string);
 			}
 			else
 			{
-				value = NOT_A_VALUE;
+				return NOT_A_VALUE;
 			}
 		}
 		catch (NumberFormatException e)
 		{
-			value = NOT_A_VALUE;
+			return NOT_A_VALUE;
 		}
-
-		return value;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -6799,16 +6749,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return buffer;
 	}
 
-	public static Writer Serialize(JSON json, Writer writer, int indents) throws IOException
+	public static Writer Serialize(JSON json, Writer out, int indents) throws IOException
 	{
-		return Serialize(json, writer, indents, null);
+		return Serialize(json, out, indents, null);
 	}
 
-	public static Writer Serialize(JSON json, Writer writer, int indents, String indent) throws IOException
+	public static Writer Serialize(JSON json, Writer out, int indents, String indent) throws IOException
 	{
-		if (writer == null)
+		if (out == null)
 		{
-			writer = new StringWriter();
+			out = new StringWriter();
 		}
 
 		indent = indent == null ? DEFAULT_LINE_INDENT : indent;
@@ -6820,11 +6770,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			if (isJSAN)
 			{
-				writer.write(ARRAY_BEGIN_CHAR);
+				out.write(ARRAY_BEGIN_CHAR);
 			}
 			else
 			{
-				writer.write(OBJECT_BEGIN_CHAR);
+				out.write(OBJECT_BEGIN_CHAR);
 			}
 		}
 
@@ -6854,12 +6804,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else
 				{
-					writer.append(PAIR_CHAR);
+					out.append(PAIR_CHAR);
 				}
 				if (indents > -1)
 				{
-					writer.append(LINE_WRAP);
-					Tools.repeat(writer, indent, indents + 1);
+					out.append(LINE_WRAP);
+					Tools.repeat(out, indent, indents + 1);
 				}
 			}
 
@@ -6867,69 +6817,53 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (key == null)
 				{
-					writer.append(NULL_STRING);
+					out.append(NULL_STRING);
 				}
 				else
 				{
 					if (JSON.IsContext(json))
 					{
-						writer.append(Context.VAR_DEFINE_MARK);
-						writer.append(' ');
+						out.append(Context.VAR_DEFINE_MARK);
+						out.append(' ');
 					}
 					else
 					{
-						writer.append(QUOTE_CHAR);
+						out.append(QUOTE_CHAR);
 					}
 
-					writer.append(EscapeString(entry.getKey()));
+					out.append(EscapeString(entry.getKey()));
 
 					if (JSON.IsContext(json))
 					{
-						writer.append(Context.VAR_ASSIGN_CHAR);
+						out.append(Context.VAR_ASSIGN_CHAR);
 					}
 					else
 					{
-						writer.append(QUOTE_CHAR);
-						writer.append(ATTR_CHAR);
+						out.append(QUOTE_CHAR);
+						out.append(ATTR_CHAR);
 					}
 				}
 			}
 
-			if (object == null)
+			if (IsJSON(object))
 			{
-				value = NULL_STRING;
-			}
-			else if (IsJSON(object))
-			{
-				Serialize((JSON) object, writer, inner, indent);
+				Serialize((JSON) object, out, inner, indent);
 				value = null;
-			}
-			else if (object instanceof CharSequence || object instanceof Character)
-			{
-				value = QUOTE_CHAR + EscapeString(object.toString()) + QUOTE_CHAR;
-			}
-			else if (object instanceof java.util.Date)
-			{
-				value = String.valueOf(((java.util.Date) object).getTime());
-			}
-			else if (object instanceof java.util.Calendar)
-			{
-				value = String.valueOf(((java.util.Calendar) object).getTimeInMillis());
 			}
 			else
 			{
-				value = object.toString();
+				value = SerializeValueOf(object);
 			}
 
 			if (value != null)
 			{
-				writer.append(value);
+				out.append(value);
 			}
 
 			if (JSON.IsContext(json))
 			{
-				writer.append(Context.VAR_END_CHAR);
-				writer.append(LINE_WRAP);
+				out.append(Context.VAR_END_CHAR);
+				out.append(LINE_WRAP);
 			}
 		}
 
@@ -6939,23 +6873,47 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (indents > -1)
 				{
-					writer.append(LINE_WRAP);
-					Tools.repeat(writer, indent, indents);
+					out.append(LINE_WRAP);
+					Tools.repeat(out, indent, indents);
 				}
-				writer.append(ARRAY_END_CHAR);
+				out.append(ARRAY_END_CHAR);
 			}
 			else
 			{
 				if (indents > -1)
 				{
-					writer.append(LINE_WRAP);
-					Tools.repeat(writer, indent, indents);
+					out.append(LINE_WRAP);
+					Tools.repeat(out, indent, indents);
 				}
-				writer.append(OBJECT_END_CHAR);
+				out.append(OBJECT_END_CHAR);
 			}
 		}
 
-		return writer;
+		return out;
+	}
+
+	public static String SerializeValueOf(Object value)
+	{
+		if (value == null)
+		{
+			return NULL_STRING;
+		}
+		else if (value instanceof CharSequence || value instanceof Character)
+		{
+			return QUOTE_CHAR + EscapeString(value.toString()) + QUOTE_CHAR;
+		}
+		else if (value instanceof java.util.Date)
+		{
+			return String.valueOf(((java.util.Date) value).getTime());
+		}
+		else if (value instanceof java.util.Calendar)
+		{
+			return String.valueOf(((java.util.Calendar) value).getTimeInMillis());
+		}
+		else
+		{
+			return value.toString();
+		}
 	}
 
 	public static Object ValueOf(Object object)
@@ -6965,17 +6923,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static Object ValueOf(Object object, Map<Class<?>, Object> reflects)
 	{
-		Object result = null;
-
 		if (ReflectOf(object, reflects) != null)
 		{
 			if (IsArray(object) || (object instanceof Iterable && !IsPlainJSON(object)))
 			{
-				result = JSAN.Reflect(reflects, object);
+				return JSAN.Reflect(reflects, object);
 			}
 			else
 			{
-				result = JSON.Reflect(reflects, object);
+				return JSON.Reflect(reflects, object);
 			}
 		}
 		else
@@ -6985,17 +6941,17 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					|| object instanceof Quotation || object instanceof BigDecimal || object instanceof java.util.Date
 					|| object instanceof java.util.Calendar)
 			{
-				result = object;
+				return object;
 			}
 			else if (object instanceof CharSequence)
 			{
-				result = object.toString();
+				return object.toString();
 			}
 			else if (object instanceof java.sql.Clob)
 			{
 				try
 				{
-					result = Tools.readerToStringBuilder(((java.sql.Clob) object).getCharacterStream()).toString();
+					return Tools.readerToStringBuilder(((java.sql.Clob) object).getCharacterStream()).toString();
 				}
 				catch (Exception e)
 				{
@@ -7003,14 +6959,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			else if (IsArray(object) || object instanceof Iterable)
 			{
-				result = JSAN.Reflect(reflects, object);
+				return JSAN.Reflect(reflects, object);
 			}
 			else
 			{
-				result = JSON.Reflect(reflects, object);
+				return JSON.Reflect(reflects, object);
 			}
 		}
-		return result;
+		return null;
 	}
 
 	private Map<String, Object>					object;
