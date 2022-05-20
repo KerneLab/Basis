@@ -14,10 +14,12 @@ import org.kernelab.basis.sql.Sequel;
 
 public class DemoSequel
 {
+
 	/**
 	 * @param args
 	 * @throws SQLException
 	 */
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws SQLException
 	{
 		DataBase db = new OracleClient("orcl", "TEST", "TEST");
@@ -94,6 +96,22 @@ public class DemoSequel
 			cs.registerOutParameter(1, Types.VARCHAR);
 			seq = kit.execute(cs, data);
 			Tools.debug(seq.getValueString(1));
+
+			kit.setBoundary("?");
+
+			// 将结果映射为对象，使用JSON作为字段到属性的映射
+			for (ResultSet rs : seq = kit.execute("select ID, NAME from jdl_test_obj where id=?i?",
+					new JSON().attr("i", 1)))
+			{
+				Tools.debug(seq.getRow(DemoObject.class, new JSON().attr("id", "ID").attr("name", "NAME")));
+			}
+
+			// 直接使用字段别名作为对象的属性名
+			for (ResultSet rs : seq = kit.execute("select ID \"id\", NAME \"name\" from jdl_test_obj where id=?i?",
+					new JSON().attr("i", 1)))
+			{
+				Tools.debug(seq.getRow(DemoObject.class));
+			}
 		}
 		catch (SQLException e)
 		{
@@ -102,6 +120,39 @@ public class DemoSequel
 		finally
 		{
 			kit.close();
+		}
+	}
+
+	public static class DemoObject
+	{
+		private int		id;
+
+		private String	name;
+
+		public int getId()
+		{
+			return id;
+		}
+
+		public String getName()
+		{
+			return name;
+		}
+
+		public void setId(int id)
+		{
+			this.id = id;
+		}
+
+		public void setName(String name)
+		{
+			this.name = name;
+		}
+
+		@Override
+		public String toString()
+		{
+			return "id=" + id + ", name=" + name;
 		}
 	}
 }

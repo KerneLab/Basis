@@ -2042,33 +2042,14 @@ public class SQLKit
 
 			if (statement == null)
 			{
-				try
-				{
-					statement = this.getConnection().prepareCall(call, resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().prepareCall(call);
-				}
-				statements.put(statement, call);
+				statement = prepareCallRaw(call, resultSetType, resultSetConcurrency, resultSetHoldability);
 				sentences.put(call, statement);
 			}
 		}
 		else
 		{
-			try
-			{
-				statement = this.getConnection().prepareCall(call, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().prepareCall(call);
-			}
-			statements.put(statement, call);
+			statement = prepareCallRaw(call, resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
-
 		return (CallableStatement) statement;
 	}
 
@@ -2091,45 +2072,20 @@ public class SQLKit
 	public CallableStatement prepareCall(String call, Iterable<String> params, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(call, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(call);
 
 			if (statement == null)
 			{
-				try
-				{
-					statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().prepareCall(q);
-				}
-
-				this.registerParameters(call, q, params);
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareCallRaw(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+				sentences.put(call, statement);
 			}
 		}
 		else
 		{
-			try
-			{
-				statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().prepareCall(q);
-			}
-
-			this.registerParameters(call, q, params);
-			statements.put(statement, q);
+			statement = prepareCallRaw(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
-
 		return (CallableStatement) statement;
 	}
 
@@ -2152,43 +2108,20 @@ public class SQLKit
 	public CallableStatement prepareCall(String call, JSON params, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(call, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(call);
 
 			if (statement == null)
 			{
-				try
-				{
-					statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().prepareCall(q);
-				}
-				this.registerParameters(call, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareCallRaw(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+				sentences.put(call, statement);
 			}
 		}
 		else
 		{
-			try
-			{
-				statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().prepareCall(q);
-			}
-			this.registerParameters(call, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareCallRaw(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
-
 		return (CallableStatement) statement;
 	}
 
@@ -2211,44 +2144,105 @@ public class SQLKit
 	public CallableStatement prepareCall(String call, Map<String, ?> params, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(call, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(call);
 
 			if (statement == null)
 			{
-				try
-				{
-					statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().prepareCall(q);
-				}
-				this.registerParameters(call, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareCallRaw(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+				sentences.put(call, statement);
 			}
 		}
 		else
 		{
-			try
-			{
-				statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().prepareCall(q);
-			}
-			this.registerParameters(call, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareCallRaw(call, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
 
 		return (CallableStatement) statement;
+	}
+
+	protected CallableStatement prepareCallRaw(String call, int resultSetType, int resultSetConcurrency,
+			int resultSetHoldability) throws SQLException
+	{
+		CallableStatement statement = null;
+
+		try
+		{
+			statement = this.getConnection().prepareCall(call, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareCall(call);
+		}
+
+		statements.put(statement, call);
+
+		return statement;
+	}
+
+	protected CallableStatement prepareCallRaw(String call, Iterable<String> params, int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	{
+		CallableStatement statement = null;
+
+		String q = replaceParameters(call, getBoundary(), params);
+		try
+		{
+			statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency, resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareCall(q);
+		}
+
+		this.registerParameters(call, params);
+		statements.put(statement, call);
+
+		return statement;
+	}
+
+	protected CallableStatement prepareCallRaw(String call, JSON params, int resultSetType, int resultSetConcurrency,
+			int resultSetHoldability) throws SQLException
+	{
+		CallableStatement statement = null;
+
+		String q = replaceParameters(call, getBoundary(), params);
+		try
+		{
+			statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency, resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareCall(q);
+		}
+
+		this.registerParameters(call, params.keySet());
+		statements.put(statement, call);
+
+		return statement;
+	}
+
+	protected CallableStatement prepareCallRaw(String call, Map<String, ?> params, int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	{
+		CallableStatement statement = null;
+
+		String q = replaceParameters(call, getBoundary(), params);
+		try
+		{
+			statement = this.getConnection().prepareCall(q, resultSetType, resultSetConcurrency, resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareCall(q);
+		}
+
+		this.registerParameters(call, params.keySet());
+		statements.put(statement, call);
+
+		return statement;
 	}
 
 	/**
@@ -2273,19 +2267,14 @@ public class SQLKit
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(sql,
-						autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-				statements.put(statement, sql);
+				statement = prepareStatementRaw(sql, autoGeneratedKeys);
 				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(sql,
-					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-			statements.put(statement, sql);
+			statement = prepareStatementRaw(sql, autoGeneratedKeys);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2309,33 +2298,14 @@ public class SQLKit
 
 			if (statement == null)
 			{
-				try
-				{
-					statement = this.getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().prepareStatement(sql);
-				}
-				statements.put(statement, sql);
+				statement = prepareStatementRaw(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			try
-			{
-				statement = this.getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().prepareStatement(sql);
-			}
-			statements.put(statement, sql);
+			statement = prepareStatementRaw(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2347,17 +2317,14 @@ public class SQLKit
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(sql, columnIndexes);
-				statements.put(statement, sql);
+				statement = prepareStatementRaw(sql, columnIndexes);
 				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(sql, columnIndexes);
-			statements.put(statement, sql);
+			statement = prepareStatementRaw(sql, columnIndexes);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2369,29 +2336,20 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, boolean autoGeneratedKeys)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q,
-						autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-				this.registerParameters(sql, q, params);
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, autoGeneratedKeys);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q,
-					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-			this.registerParameters(sql, q, params);
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, autoGeneratedKeys);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2410,97 +2368,60 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				try
-				{
-					statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().prepareStatement(q);
-				}
-				this.registerParameters(sql, q, params);
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			try
-			{
-				statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().prepareStatement(q);
-			}
-			this.registerParameters(sql, q, params);
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, int[] columnIndexes)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q, columnIndexes);
-				this.registerParameters(sql, q, params);
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, columnIndexes);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q, columnIndexes);
-			this.registerParameters(sql, q, params);
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, columnIndexes);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Iterable<String> params, String[] columnNames)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q, columnNames);
-				this.registerParameters(sql, q, params);
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, columnNames);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q, columnNames);
-			this.registerParameters(sql, q, params);
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, columnNames);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2511,29 +2432,20 @@ public class SQLKit
 
 	public PreparedStatement prepareStatement(String sql, JSON params, boolean autoGeneratedKeys) throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q,
-						autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-				this.registerParameters(sql, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, autoGeneratedKeys);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q,
-					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-			this.registerParameters(sql, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, autoGeneratedKeys);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2551,95 +2463,58 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, JSON params, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				try
-				{
-					statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().prepareStatement(q);
-				}
-				this.registerParameters(sql, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			try
-			{
-				statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().prepareStatement(q);
-			}
-			this.registerParameters(sql, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, JSON params, int[] columnIndexes) throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q, columnIndexes);
-				this.registerParameters(sql, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, columnIndexes);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q, columnIndexes);
-			this.registerParameters(sql, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, columnIndexes);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, JSON params, String[] columnNames) throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q, columnNames);
-				this.registerParameters(sql, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, columnNames);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q, columnNames);
-			this.registerParameters(sql, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, columnNames);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2651,29 +2526,20 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, boolean autoGeneratedKeys)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q,
-						autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-				this.registerParameters(sql, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, autoGeneratedKeys);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q,
-					autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
-			this.registerParameters(sql, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, autoGeneratedKeys);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2691,97 +2557,60 @@ public class SQLKit
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability) throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				try
-				{
-					statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().prepareStatement(q);
-				}
-				this.registerParameters(sql, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			try
-			{
-				statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().prepareStatement(q);
-			}
-			this.registerParameters(sql, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, int[] columnIndexes)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q, columnIndexes);
-				this.registerParameters(sql, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, columnIndexes);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q, columnIndexes);
-			this.registerParameters(sql, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, columnIndexes);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, Map<String, ?> params, String[] columnNames)
 			throws SQLException
 	{
-		String q = replaceParameters(sql, getBoundary(), params);
-
 		if (isReuseStatements())
 		{
-			statement = sentences.get(q);
+			statement = sentences.get(sql);
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(q, columnNames);
-				this.registerParameters(sql, q, params.keySet());
-				statements.put(statement, q);
-				sentences.put(q, statement);
+				statement = prepareStatementRaw(sql, params, columnNames);
+				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(q, columnNames);
-			this.registerParameters(sql, q, params.keySet());
-			statements.put(statement, q);
+			statement = prepareStatementRaw(sql, params, columnNames);
 		}
-
 		return (PreparedStatement) statement;
 	}
 
@@ -2793,18 +2622,213 @@ public class SQLKit
 
 			if (statement == null)
 			{
-				statement = this.getConnection().prepareStatement(sql, columnNames);
-				statements.put(statement, sql);
+				statement = prepareStatementRaw(sql, columnNames);
 				sentences.put(sql, statement);
 			}
 		}
 		else
 		{
-			statement = this.getConnection().prepareStatement(sql, columnNames);
-			statements.put(statement, sql);
+			statement = prepareStatementRaw(sql, columnNames);
+		}
+		return (PreparedStatement) statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, boolean autoGeneratedKeys) throws SQLException
+	{
+		PreparedStatement statement = this.getConnection().prepareStatement(sql,
+				autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, int resultSetType, int resultSetConcurrency,
+			int resultSetHoldability) throws SQLException
+	{
+		PreparedStatement statement = null;
+		try
+		{
+			statement = this.getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareStatement(sql);
 		}
 
-		return (PreparedStatement) statement;
+		statements.put(statement, sql);
+
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, int[] columnIndexes) throws SQLException
+	{
+		PreparedStatement statement = this.getConnection().prepareStatement(sql, columnIndexes);
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, Iterable<String> params, boolean autoGeneratedKeys)
+			throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q,
+				autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+		this.registerParameters(sql, params);
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, Iterable<String> params, int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+
+		PreparedStatement statement = null;
+		try
+		{
+			statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareStatement(q);
+		}
+
+		this.registerParameters(sql, params);
+		statements.put(statement, sql);
+
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, Iterable<String> params, int[] columnIndexes)
+			throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q, columnIndexes);
+		this.registerParameters(sql, params);
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, Iterable<String> params, String[] columnNames)
+			throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q, columnNames);
+		this.registerParameters(sql, params);
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, JSON params, boolean autoGeneratedKeys)
+			throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q,
+				autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+		this.registerParameters(sql, params.keySet());
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, JSON params, int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+
+		PreparedStatement statement = null;
+		try
+		{
+			statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareStatement(q);
+		}
+
+		this.registerParameters(sql, params.keySet());
+		statements.put(statement, sql);
+
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, JSON params, int[] columnIndexes) throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q, columnIndexes);
+		this.registerParameters(sql, params.keySet());
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, JSON params, String[] columnNames) throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q, columnNames);
+		this.registerParameters(sql, params.keySet());
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, Map<String, ?> params, boolean autoGeneratedKeys)
+			throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q,
+				autoGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+		this.registerParameters(sql, params.keySet());
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, Map<String, ?> params, int resultSetType,
+			int resultSetConcurrency, int resultSetHoldability) throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+
+		PreparedStatement statement = null;
+		try
+		{
+			statement = this.getConnection().prepareStatement(q, resultSetType, resultSetConcurrency,
+					resultSetHoldability);
+		}
+		catch (SQLException e)
+		{
+			statement = this.getConnection().prepareStatement(q);
+		}
+
+		this.registerParameters(sql, params.keySet());
+		statements.put(statement, sql);
+
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, Map<String, ?> params, int[] columnIndexes)
+			throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q, columnIndexes);
+		this.registerParameters(sql, params.keySet());
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, Map<String, ?> params, String[] columnNames)
+			throws SQLException
+	{
+		String q = replaceParameters(sql, getBoundary(), params);
+		PreparedStatement statement = this.getConnection().prepareStatement(q, columnNames);
+		this.registerParameters(sql, params.keySet());
+		statements.put(statement, sql);
+		return statement;
+	}
+
+	protected PreparedStatement prepareStatementRaw(String sql, String[] columnNames) throws SQLException
+	{
+		PreparedStatement statement = this.getConnection().prepareStatement(sql, columnNames);
+		statements.put(statement, sql);
+		return statement;
 	}
 
 	public ResultSet query(PreparedStatement statement, Iterable<?> params) throws SQLException
@@ -2963,11 +2987,11 @@ public class SQLKit
 		return registerOutParameter((CallableStatement) this.getStatement(), name, type, typeName);
 	}
 
-	protected SQLKit registerParameters(String sql, String q, Iterable<String> params)
+	protected SQLKit registerParameters(String sql, Iterable<String> params)
 	{
-		if (!parameters.containsKey(q))
+		if (!parameters.containsKey(sql))
 		{
-			parameters.put(q, Collections.unmodifiableList( //
+			parameters.put(sql, Collections.unmodifiableList( //
 					new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values())));
 		}
 		return this;
