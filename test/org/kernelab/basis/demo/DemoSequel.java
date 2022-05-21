@@ -5,7 +5,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.kernelab.basis.Canal.Action;
+import org.kernelab.basis.Filter;
 import org.kernelab.basis.JSON;
+import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.sql.DataBase;
 import org.kernelab.basis.sql.DataBase.OracleClient;
@@ -14,7 +17,6 @@ import org.kernelab.basis.sql.Sequel;
 
 public class DemoSequel
 {
-
 	/**
 	 * @param args
 	 * @throws SQLException
@@ -112,6 +114,40 @@ public class DemoSequel
 			{
 				Tools.debug(seq.getRow(DemoObject.class));
 			}
+
+			// 使用Canal做后续处理
+			kit.execute("select ID, NAME from jdl_test_obj").canal() //
+					.skip(1).limit(3) //
+					.map(new Mapper<ResultSet, DemoObject>()
+					{
+						@Override
+						public DemoObject map(ResultSet el)
+						{
+							return SQLKit.mapResultRow(el, DemoObject.class,
+									new JSON().attr("id", "ID").attr("name", "NAME"));
+						}
+					}).filter(new Filter<DemoObject>()
+					{
+						@Override
+						public boolean filter(DemoObject el)
+						{
+							return el.getName() != null;
+						}
+					}).map(new Mapper<DemoObject, String>()
+					{
+						@Override
+						public String map(DemoObject el)
+						{
+							return el.getId() + "," + el.getName();
+						}
+					}).foreach(new Action<String>()
+					{
+						@Override
+						public void action(String el)
+						{
+							Tools.debug(el);
+						}
+					});
 		}
 		catch (SQLException e)
 		{
