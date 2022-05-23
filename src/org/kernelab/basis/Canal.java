@@ -3057,6 +3057,49 @@ public class Canal<U, D> implements Iterable<D>
 		return value != null ? some(value) : Canal.<E> none();
 	}
 
+	public static Iterable<Integer> range(int begin, int until)
+	{
+		return range(begin, until, 1);
+	}
+
+	public static Iterable<Integer> range(final int begin, final int until, final int step)
+	{
+		return new Iterable<Integer>()
+		{
+			@Override
+			public Iterator<Integer> iterator()
+			{
+				return new Iterator<Integer>()
+				{
+					private int index = begin - step;
+
+					@Override
+					public boolean hasNext()
+					{
+						if (begin < until)
+						{
+							return step > 0 && index + step < until;
+						}
+						else if (begin > until)
+						{
+							return step < 0 && index + step > until;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					@Override
+					public Integer next()
+					{
+						return index += step;
+					}
+				};
+			}
+		};
+	}
+
 	public static <E> Some<E> some(E value)
 	{
 		return new Some<E>(value);
