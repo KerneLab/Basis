@@ -3,6 +3,7 @@ package org.kernelab.basis;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -345,6 +346,25 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	public boolean isTerminated()
 	{
 		return executorService.isTerminated();
+	}
+
+	/**
+	 * Waiting until all the tasks currently in this pool were end.
+	 * 
+	 * @throws ExecutionException
+	 */
+	public void join() throws ExecutionException
+	{
+		while (!this.isEmpty() && !this.isTerminated())
+		{
+			try
+			{
+				this.take().get();
+			}
+			catch (InterruptedException e)
+			{
+			}
+		}
 	}
 
 	public Future<V> poll()
