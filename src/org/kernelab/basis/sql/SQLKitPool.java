@@ -77,6 +77,7 @@ public class SQLKitPool extends AbstractPool<SQLKit> implements ConnectionManage
 	@Override
 	protected void resetElement(SQLKit kit) throws SQLException
 	{
+		kit.rollback();
 		kit.reset();
 	}
 
