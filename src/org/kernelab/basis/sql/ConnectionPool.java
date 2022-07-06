@@ -115,12 +115,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 	@Override
 	protected void resetElement(Connection conn) throws SQLException
 	{
-		if (!conn.getAutoCommit())
-		{
-			conn.setAutoCommit(true);
-		}
-		conn.setReadOnly(false);
-		conn.setTransactionIsolation(conn.getMetaData().getDefaultTransactionIsolation());
+		SQLKit.reset(conn);
 	}
 
 	@Override

@@ -1338,6 +1338,17 @@ public class SQLKit
 		return filler.toString();
 	}
 
+	public static Connection reset(Connection conn) throws SQLException
+	{
+		if (!conn.getAutoCommit())
+		{
+			conn.setAutoCommit(true);
+		}
+		conn.setReadOnly(false);
+		conn.setTransactionIsolation(conn.getMetaData().getDefaultTransactionIsolation());
+		return conn;
+	}
+
 	private ConnectionManager			manager;
 
 	private Connection					connection;
@@ -1534,24 +1545,16 @@ public class SQLKit
 
 	public void close()
 	{
-		clean();
-		sentences = null;
-		statements = null;
-		parameters = null;
-		if (manager != null)
+		ConnectionManager manager = this.getManager();
+
+		if (manager instanceof SQLKitPool)
 		{
-			try
-			{
-				manager.recycleConnection(connection);
-			}
-			catch (SQLException e)
-			{
-			}
-			manager = null;
+			((SQLKitPool) manager).recycle(this);
 		}
-		connection = null;
-		unwrap = null;
-		real = null;
+		else
+		{
+			this.destroy();
+		}
 	}
 
 	public SQLKit closeStatement() throws SQLException
@@ -1648,6 +1651,28 @@ public class SQLKit
 		}
 
 		return statement;
+	}
+
+	protected void destroy()
+	{
+		clean();
+		this.sentences = null;
+		this.statements = null;
+		this.parameters = null;
+		if (this.manager != null)
+		{
+			try
+			{
+				this.manager.recycleConnection(this.connection);
+			}
+			catch (SQLException e)
+			{
+			}
+			this.manager = null;
+		}
+		this.connection = null;
+		this.unwrap = null;
+		this.real = null;
 	}
 
 	public Sequel execute(CallableStatement statement, Iterable<?> params) throws SQLException
@@ -3000,6 +3025,20 @@ public class SQLKit
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException
 	{
 		this.getConnection().releaseSavepoint(savepoint);
+	}
+
+	/**
+	 * Reset the parameters of this SQLKit to default.
+	 * 
+	 * @return The SQLKit itself.
+	 * @throws SQLException
+	 */
+	public SQLKit reset() throws SQLException
+	{
+		SQLKit.reset(this.getConnection());
+		return this.optimizingAs(SQLKit.OPTIMIZING_AS_DEFAULT) //
+				.setBoundary(TextFiller.DEFAULT_BOUNDARY) //
+				.setReuseStatements(true);
 	}
 
 	public int resultSetConcurrency()

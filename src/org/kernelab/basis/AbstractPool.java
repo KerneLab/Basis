@@ -1,13 +1,16 @@
 package org.kernelab.basis;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public abstract class AbstractPool<E> implements Pool<E>
 {
 	public static final int	DEFAULT_INTERVAL	= 100;
 
-	private Queue<E>		elements;
+	private List<E>			elements			= new LinkedList<E>();
+
+	private Queue<E>		queue;
 
 	private int				trace;
 
@@ -29,7 +32,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	protected AbstractPool(Queue<E> pool, int limit, int init)
 	{
-		this.setClosed(false).setElements(pool).setTrace(0).setLimit(limit).setInit(init);
+		this.setClosed(false).setQueue(pool).setTrace(0).setLimit(limit).setInit(init);
 	}
 
 	/**
@@ -38,11 +41,11 @@ public abstract class AbstractPool<E> implements Pool<E>
 	 */
 	public void close()
 	{
-		synchronized (elements)
+		synchronized (queue)
 		{
+			this.getElements().clear();
 			this.setClosed(true);
-
-			elements.notifyAll();
+			queue.notifyAll();
 		}
 	}
 
@@ -50,7 +53,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 	{
 		if (element != null)
 		{
-			synchronized (elements)
+			synchronized (queue)
 			{
 				if (trace > 0)
 				{
@@ -65,7 +68,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return (this.getTrace() - this.getRemain()) * 1f / this.getLimit();
 	}
 
-	protected Queue<E> getElements()
+	protected List<E> getElements()
 	{
 		return elements;
 	}
@@ -80,9 +83,14 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return limit;
 	}
 
+	protected Queue<E> getQueue()
+	{
+		return queue;
+	}
+
 	public int getRemain()
 	{
-		return elements.size();
+		return queue.size();
 	}
 
 	public int getTrace()
@@ -118,11 +126,11 @@ public abstract class AbstractPool<E> implements Pool<E>
 	{
 		E element = null;
 
-		synchronized (elements)
+		synchronized (queue)
 		{
 			do
 			{
-				while (elements.isEmpty() && !isClosed())
+				while (queue.isEmpty() && !isClosed())
 				{
 					if (trace < limit)
 					{
@@ -134,15 +142,15 @@ public abstract class AbstractPool<E> implements Pool<E>
 						{
 							if (timeout > 0)
 							{
-								elements.wait(timeout);
+								queue.wait(timeout);
 							}
 							else if (timeout == 0)
 							{
-								elements.wait(DEFAULT_INTERVAL);
+								queue.wait(DEFAULT_INTERVAL);
 							}
 							else
 							{
-								elements.wait(-timeout);
+								queue.wait(-timeout);
 							}
 						}
 						catch (InterruptedException e)
@@ -156,7 +164,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 					}
 				}
 
-				element = elements.poll();
+				element = queue.poll();
 
 				if (element == null && timeout > 0)
 				{
@@ -185,15 +193,15 @@ public abstract class AbstractPool<E> implements Pool<E>
 	{
 		if (element != null)
 		{
-			synchronized (elements)
+			synchronized (queue)
 			{
 				if (trace <= limit && isValid(element))
 				{
 					try
 					{
 						resetElement(element);
-						elements.add(element);
-						elements.notifyAll();
+						queue.add(element);
+						queue.notifyAll();
 					}
 					catch (Exception e)
 					{
@@ -223,12 +231,6 @@ public abstract class AbstractPool<E> implements Pool<E>
 	private AbstractPool<E> setClosed(boolean closed)
 	{
 		this.closed = closed;
-		return Tools.cast(this);
-	}
-
-	private AbstractPool<E> setElements(Queue<E> elements)
-	{
-		this.elements = elements;
 		return Tools.cast(this);
 	}
 
@@ -268,7 +270,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	public AbstractPool<E> setLimit(int limit)
 	{
-		synchronized (elements)
+		synchronized (queue)
 		{
 			limit = Math.max(limit, 0);
 
@@ -276,15 +278,21 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 			if (delta > 0)
 			{
-				for (int i = 0; i < delta && !elements.isEmpty(); i++)
+				for (int i = 0; i < delta && !queue.isEmpty(); i++)
 				{
-					discard(elements.poll());
+					discard(queue.poll());
 				}
 			}
 
 			this.limit = limit;
 		}
 
+		return Tools.cast(this);
+	}
+
+	private AbstractPool<E> setQueue(Queue<E> queue)
+	{
+		this.queue = queue;
 		return Tools.cast(this);
 	}
 
@@ -299,9 +307,10 @@ public abstract class AbstractPool<E> implements Pool<E>
 		E element = newElement(timeout);
 		if (element != null)
 		{
-			synchronized (elements)
+			synchronized (queue)
 			{
 				elements.add(element);
+				queue.add(element);
 				trace++;
 			}
 		}
@@ -309,9 +318,9 @@ public abstract class AbstractPool<E> implements Pool<E>
 
 	public AbstractPool<E> wakeUp()
 	{
-		synchronized (elements)
+		synchronized (queue)
 		{
-			elements.notifyAll();
+			queue.notifyAll();
 		}
 		return Tools.cast(this);
 	}
