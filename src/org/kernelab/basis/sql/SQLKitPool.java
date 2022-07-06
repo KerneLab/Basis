@@ -24,6 +24,7 @@ public class SQLKitPool extends AbstractPool<SQLKit> implements ConnectionManage
 	protected SQLKitPool(ConnectionManager manager, Queue<SQLKit> pool, int limit, int init)
 	{
 		super(pool, limit, init);
+		this.setManager(manager);
 	}
 
 	@Override

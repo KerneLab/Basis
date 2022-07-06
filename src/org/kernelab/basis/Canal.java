@@ -214,8 +214,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Map<K, V>> newPond()
 		{
-			return new AbstractTerminal<E, Map<K, V>>()
-			{
+			return new AbstractTerminal<E, Map<K, V>>() {
 				@Override
 				public void begin()
 				{
@@ -261,8 +260,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>()
-			{
+			return new Desilter<E>() {
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -300,8 +298,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Map<K, Integer>> newPond()
 		{
-			return new AbstractTerminal<E, Map<K, Integer>>()
-			{
+			return new AbstractTerminal<E, Map<K, Integer>>() {
 				@Override
 				public void begin()
 				{
@@ -354,8 +351,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Map<E, Integer>> newPond()
 		{
-			return new AbstractTerminal<E, Map<E, Integer>>()
-			{
+			return new AbstractTerminal<E, Map<E, Integer>>() {
 				@Override
 				public void begin()
 				{
@@ -535,8 +531,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>()
-			{
+			return new Heaper<E>() {
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -596,8 +591,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Creek<E, E>()
-			{
+			return new Creek<E, E>() {
 				private E next;
 
 				@Override
@@ -635,8 +629,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Option<E>> newPond()
 		{
-			return new AbstractTerminal<E, Option<E>>()
-			{
+			return new AbstractTerminal<E, Option<E>>() {
 				private boolean	found	= false;
 
 				private E		result;
@@ -688,8 +681,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Creek<I, O>()
-			{
+			return new Creek<I, O>() {
 				private Iterator<O> iter;
 
 				@Override
@@ -734,8 +726,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, R> newPond()
 		{
-			return new AbstractTerminal<E, R>()
-			{
+			return new AbstractTerminal<E, R>() {
 				@Override
 				public void begin()
 				{
@@ -1234,8 +1225,7 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		public <W> Canal<Tuple2<K, Tuple2<L, R>>, W> mapJoint(final JointMapper<L, R, K, W> mapper)
 		{
-			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, W>()
-			{
+			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, W>() {
 				@Override
 				public W map(Tuple2<K, Tuple2<L, R>> el)
 				{
@@ -1526,8 +1516,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>()
-			{
+			return new Wheel<E, E>() {
 				@Override
 				public boolean hasNext()
 				{
@@ -1556,8 +1545,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Creek<I, O>()
-			{
+			return new Creek<I, O>() {
 				@Override
 				public O next()
 				{
@@ -1681,8 +1669,7 @@ public class Canal<U, D> implements Iterable<D>
 		public <W> PairCanal<Tuple2<K, Canal<?, V>>, K, W> foldByKey(final Producer<W> initiator,
 				final Reducer<V, W> folder)
 		{
-			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, W>()
-			{
+			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, W>() {
 				@Override
 				public W map(Canal<?, V> el)
 				{
@@ -1722,8 +1709,7 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		public PairCanal<Tuple2<K, V>, K, V> having(final Filter<V> pred)
 		{
-			return this.filter(new Filter<Tuple2<K, V>>()
-			{
+			return this.filter(new Filter<Tuple2<K, V>>() {
 				@Override
 				public boolean filter(Tuple2<K, V> el)
 				{
@@ -1774,8 +1760,7 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		public <W> PairCanal<Tuple2<K, V>, K, W> mapValues(final Mapper<V, W> mapper)
 		{
-			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>()
-			{
+			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>() {
 				@Override
 				public Tuple2<K, W> map(Tuple2<K, V> el)
 				{
@@ -1792,8 +1777,7 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		public PairCanal<Tuple2<K, Canal<?, V>>, K, V> reduceByKey(final Reducer<V, V> reducer)
 		{
-			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, V>()
-			{
+			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, V>() {
 				@Override
 				public V map(Canal<?, V> el)
 				{
@@ -1819,8 +1803,7 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			return (JoinCanal<Tuple2<K, V>, K, L, R>) new JoinCanal<Tuple2<K, V>, K, L, R>().setUpstream(this)
 					.setOperator(new MapOp<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>(
-							new Mapper<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>()
-							{
+							new Mapper<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>() {
 								@Override
 								public Tuple2<K, Tuple2<L, R>> map(Tuple2<K, V> el)
 								{
@@ -1852,8 +1835,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Creek<E, E>()
-			{
+			return new Creek<E, E>() {
 				@Override
 				public E next()
 				{
@@ -1895,8 +1877,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Option<E>> newPond()
 		{
-			return new AbstractTerminal<E, Option<E>>()
-			{
+			return new AbstractTerminal<E, Option<E>>() {
 				private boolean	empty	= true;
 
 				private E		result;
@@ -1947,8 +1928,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>()
-			{
+			return new Heaper<E>() {
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -2055,8 +2035,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>()
-			{
+			return new Wheel<E, E>() {
 				@Override
 				public void begin()
 				{
@@ -2134,8 +2113,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>()
-			{
+			return new Heaper<E>() {
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -2167,8 +2145,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>()
-			{
+			return new Heaper<E>() {
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -2299,8 +2276,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, String> newPond()
 		{
-			return new AbstractTerminal<E, String>()
-			{
+			return new AbstractTerminal<E, String>() {
 				private StringBuilder	buff	= new StringBuilder();
 
 				private boolean			empty	= true;
@@ -2431,8 +2407,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>()
-			{
+			return new Desilter<E>() {
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -2497,6 +2472,11 @@ public class Canal<U, D> implements Iterable<D>
 			public Object next()
 			{
 				return get(index++);
+			}
+
+			@Override
+			public void remove()
+			{
 			}
 		}
 
@@ -2858,8 +2838,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, Tuple2<E, Long>> newPond()
 		{
-			return new Wheel<E, Tuple2<E, Long>>()
-			{
+			return new Wheel<E, Tuple2<E, Long>>() {
 				@Override
 				public Tuple2<E, Long> next()
 				{
@@ -2874,8 +2853,7 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, Tuple2<E, Integer>> newPond()
 		{
-			return new Wheel<E, Tuple2<E, Integer>>()
-			{
+			return new Wheel<E, Tuple2<E, Integer>>() {
 				@Override
 				public Tuple2<E, Integer> next()
 				{
@@ -3023,8 +3001,7 @@ public class Canal<U, D> implements Iterable<D>
 	{
 		return new Canal<JSON.Pair, JSON.Pair>() //
 				.setOperator(new IterableSourcer<JSON.Pair>(json.pairs())) //
-				.map(new Mapper<JSON.Pair, Tuple2<String, Object>>()
-				{
+				.map(new Mapper<JSON.Pair, Tuple2<String, Object>>() {
 					@Override
 					public Tuple2<String, Object> map(Pair el)
 					{
@@ -3037,8 +3014,7 @@ public class Canal<U, D> implements Iterable<D>
 	{
 		return new Canal<Entry<K, V>, Entry<K, V>>() //
 				.setOperator(new IterableSourcer<Entry<K, V>>(map.entrySet())) //
-				.map(new Mapper<Entry<K, V>, Tuple2<K, V>>()
-				{
+				.map(new Mapper<Entry<K, V>, Tuple2<K, V>>() {
 					@Override
 					public Tuple2<K, V> map(Entry<K, V> el)
 					{
@@ -3064,13 +3040,11 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static Iterable<Integer> range(final int begin, final int until, final int step)
 	{
-		return new Iterable<Integer>()
-		{
+		return new Iterable<Integer>() {
 			@Override
 			public Iterator<Integer> iterator()
 			{
-				return new Iterator<Integer>()
-				{
+				return new Iterator<Integer>() {
 					private int index = begin - step;
 
 					@Override
@@ -3094,6 +3068,11 @@ public class Canal<U, D> implements Iterable<D>
 					public Integer next()
 					{
 						return index += step;
+					}
+
+					@Override
+					public void remove()
+					{
 					}
 				};
 			}
@@ -3326,8 +3305,7 @@ public class Canal<U, D> implements Iterable<D>
 	 */
 	public Option<D> first()
 	{
-		return first(new Filter<D>()
-		{
+		return first(new Filter<D>() {
 			@Override
 			public boolean filter(D element)
 			{
@@ -3541,8 +3519,7 @@ public class Canal<U, D> implements Iterable<D>
 	 */
 	public <K> PairCanal<D, K, D> keyBy(final Mapper<D, K> kop)
 	{
-		return this.map(new Mapper<D, Tuple2<K, D>>()
-		{
+		return this.map(new Mapper<D, Tuple2<K, D>>() {
 			@Override
 			public Tuple2<K, D> map(D key)
 			{
@@ -3953,8 +3930,8 @@ public class Canal<U, D> implements Iterable<D>
 	}
 
 	/**
-	 * Zip each element with element in another Canal into a
-	 * {@code Tuple2<D,E>}.
+	 * Zip each element with element in another Canal into a {@code Tuple2<D,E>}
+	 * .
 	 * 
 	 * @param that
 	 * @return
@@ -3965,8 +3942,8 @@ public class Canal<U, D> implements Iterable<D>
 	}
 
 	/**
-	 * Zip each element in this Canal with its index number as a
-	 * {@code Tuple2<D,Integer>}.
+	 * Zip each element in this Canal with its index number as a {@code Tuple2
+	 * <D,Integer>}.
 	 * 
 	 * @return
 	 */
@@ -3976,8 +3953,8 @@ public class Canal<U, D> implements Iterable<D>
 	}
 
 	/**
-	 * Zip each element in this Canal with its index number as a
-	 * {@code Tuple2<D,Long>}.
+	 * Zip each element in this Canal with its index number as a {@code Tuple2
+	 * <D,Long>}.
 	 * 
 	 * @return
 	 */
