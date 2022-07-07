@@ -60,7 +60,7 @@ public class SQLKitPool extends AbstractPool<SQLKit> implements ConnectionManage
 	@Override
 	protected SQLKit newElement(long timeout) throws Exception
 	{
-		return new SQLKit(this.getManager(), timeout);
+		return new SQLKit(this, timeout);
 	}
 
 	@Override

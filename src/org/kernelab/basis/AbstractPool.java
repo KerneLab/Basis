@@ -1,14 +1,14 @@
 package org.kernelab.basis;
 
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 public abstract class AbstractPool<E> implements Pool<E>
 {
 	public static final int	DEFAULT_INTERVAL	= 100;
 
-	private List<E>			elements			= new LinkedList<E>();
+	private Collection<E>	elements			= new LinkedList<E>();
 
 	private Queue<E>		queue;
 
@@ -55,6 +55,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 		{
 			synchronized (queue)
 			{
+				this.getElements().remove(element);
 				if (trace > 0)
 				{
 					trace--;
@@ -68,7 +69,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return (this.getTrace() - this.getRemain()) * 1f / this.getLimit();
 	}
 
-	protected List<E> getElements()
+	protected Collection<E> getElements()
 	{
 		return elements;
 	}
