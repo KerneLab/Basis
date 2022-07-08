@@ -51,6 +51,8 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 
 	private Variable<Integer>		tasks				= new Variable<Integer>(0);
 
+	private Integer					cores				= null;
+
 	private Integer					limit				= null;
 
 	private int						fakes				= 0;
@@ -71,21 +73,36 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		this(limit, limit);
 	}
 
-	public ThreadExecutorPool(int limit, int init)
+	public ThreadExecutorPool(int limit, int cores)
 	{
-		this(limit, init, Executors.defaultThreadFactory());
+		this(limit, cores, Executors.defaultThreadFactory());
 	}
 
-	public ThreadExecutorPool(int limit, int init, ThreadFactory factory)
+	public ThreadExecutorPool(int limit, int cores, long keepAliveMillis, ThreadFactory factory)
 	{
-		this(new ThreadPoolExecutor(init, limit, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
-				factory));
+		this(new ThreadPoolExecutor(cores, limit, keepAliveMillis, TimeUnit.MILLISECONDS,
+				new LinkedBlockingQueue<Runnable>(), factory));
 		this.limit = limit;
+		this.cores = cores;
+		if (keepAliveMillis > 0 && limit == cores && this.getExecutorService() instanceof ThreadPoolExecutor)
+		{
+			((ThreadPoolExecutor) this.getExecutorService()).allowCoreThreadTimeOut(true);
+		}
 	}
 
-	public ThreadExecutorPool(int limit, int init, ThreadGroup group)
+	public ThreadExecutorPool(int limit, int cores, long keepAliveMillis, ThreadGroup group)
 	{
-		this(limit, init, new GroupThreadFactory(group));
+		this(limit, cores, keepAliveMillis, new GroupThreadFactory(group));
+	}
+
+	public ThreadExecutorPool(int limit, int cores, ThreadFactory factory)
+	{
+		this(limit, cores, 0L, factory);
+	}
+
+	public ThreadExecutorPool(int limit, int cores, ThreadGroup group)
+	{
+		this(limit, cores, 0L, group);
 	}
 
 	private void addTask()
@@ -176,6 +193,24 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	public CompletionService<V> getCompletionService()
 	{
 		return completionService;
+	}
+
+	public Integer getCores()
+	{
+		lock.readLock().lock();
+		try
+		{
+			return this.getCoresUnsafe();
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
+	}
+
+	protected Integer getCoresUnsafe()
+	{
+		return cores;
 	}
 
 	public ExecutorService getExecutorService()
@@ -279,6 +314,18 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	protected Integer getTasksUnsafe()
 	{
 		return tasks.value;
+	}
+
+	protected ThreadPoolExecutor getThreadPoolExecutor()
+	{
+		if (executorService instanceof ThreadPoolExecutor)
+		{
+			return (ThreadPoolExecutor) executorService;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -391,9 +438,45 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		return future;
 	}
 
+	public void setAllowCoresTimeout(boolean allow)
+	{
+		ThreadPoolExecutor pool = this.getThreadPoolExecutor();
+		if (pool != null)
+		{
+			pool.allowCoreThreadTimeOut(allow);
+		}
+	}
+
 	protected void setCompletionService(CompletionService<V> completionService)
 	{
 		this.completionService = completionService;
+	}
+
+	public ThreadExecutorPool<V> setCores(int cores)
+	{
+		if (cores >= 0)
+		{
+			ThreadPoolExecutor pool = this.getThreadPoolExecutor();
+			if (pool != null)
+			{
+				lock.writeLock().lock();
+				try
+				{
+					pool.setCorePoolSize(cores);
+					this.cores = cores;
+					if (cores > this.getLimitUnsafe())
+					{
+						pool.setMaximumPoolSize(cores);
+						this.limit = cores;
+					}
+				}
+				finally
+				{
+					lock.writeLock().unlock();
+				}
+			}
+		}
+		return this;
 	}
 
 	protected void setExecutorService(ExecutorService executorService)
@@ -406,21 +489,23 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 		}
 	}
 
-	public void setLimit(int limit)
+	public ThreadExecutorPool<V> setLimit(int limit)
 	{
 		if (limit >= 0)
 		{
-			if (executorService instanceof ThreadPoolExecutor)
+			ThreadPoolExecutor pool = this.getThreadPoolExecutor();
+			if (pool != null)
 			{
 				lock.writeLock().lock();
 				try
 				{
-					ThreadPoolExecutor service = (ThreadPoolExecutor) executorService;
-
-					service.setCorePoolSize(limit);
-					service.setMaximumPoolSize(limit);
-
+					pool.setMaximumPoolSize(limit);
 					this.limit = limit;
+					if (limit < this.getCoresUnsafe())
+					{
+						pool.setCorePoolSize(limit);
+						this.cores = limit;
+					}
 				}
 				finally
 				{
@@ -428,6 +513,7 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 				}
 			}
 		}
+		return this;
 	}
 
 	public void shutdown()
