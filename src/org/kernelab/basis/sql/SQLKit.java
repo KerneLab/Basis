@@ -1106,7 +1106,14 @@ public class SQLKit
 	{
 		if (rs != null && mapper != null)
 		{
-			return mapper.map(rs);
+			try
+			{
+				return mapper.map(rs);
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 		else
 		{
@@ -1130,10 +1137,17 @@ public class SQLKit
 				rows = new LinkedList<E>();
 			}
 			int count = 0;
-			while ((limit < 0 || count < limit) && rs.next())
+			try
 			{
-				rows.add(mapper == null ? null : mapper.map(rs));
-				count++;
+				while ((limit < 0 || count < limit) && rs.next())
+				{
+					rows.add(mapper == null ? null : mapper.map(rs));
+					count++;
+				}
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
 			}
 		}
 		return rows;

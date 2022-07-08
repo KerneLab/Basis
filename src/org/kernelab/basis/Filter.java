@@ -36,5 +36,5 @@ public interface Filter<E>
 	 *             {@link Terminator#SIGNAL} is recommended.
 	 * @see Tools#filter(Iterable, Filter, Collection)
 	 */
-	public boolean filter(E el);
+	public boolean filter(E el) throws Exception;
 }

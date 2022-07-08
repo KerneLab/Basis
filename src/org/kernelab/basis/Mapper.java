@@ -26,5 +26,5 @@ public interface Mapper<K, V>
 	 *             is recommended.
 	 * @see Tools#map(Iterable, Mapper, Collection)
 	 */
-	public V map(K el);
+	public V map(K el) throws Exception;
 }

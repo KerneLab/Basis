@@ -73,7 +73,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static interface Action<E>
 	{
-		void action(E el);
+		public void action(E el) throws Exception;
 	}
 
 	protected static class ArraySource<E> extends Source<E>
@@ -214,9 +214,10 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Map<K, V>> newPond()
 		{
-			return new AbstractTerminal<E, Map<K, V>>() {
+			return new AbstractTerminal<E, Map<K, V>>()
+			{
 				@Override
-				public void begin()
+				public void begin() throws Exception
 				{
 					try
 					{
@@ -260,7 +261,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>() {
+			return new Desilter<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -298,9 +300,10 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Map<K, Integer>> newPond()
 		{
-			return new AbstractTerminal<E, Map<K, Integer>>() {
+			return new AbstractTerminal<E, Map<K, Integer>>()
+			{
 				@Override
-				public void begin()
+				public void begin() throws Exception
 				{
 					try
 					{
@@ -351,7 +354,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Map<E, Integer>> newPond()
 		{
-			return new AbstractTerminal<E, Map<E, Integer>>() {
+			return new AbstractTerminal<E, Map<E, Integer>>()
+			{
 				@Override
 				public void begin()
 				{
@@ -531,7 +535,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>() {
+			return new Heaper<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -591,21 +596,29 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Creek<E, E>() {
+			return new Creek<E, E>()
+			{
 				private E next;
 
 				@Override
 				public boolean hasNext()
 				{
-					while (upstream().hasNext())
+					try
 					{
-						next = upstream().next();
-						if (filter.filter(next))
+						while (upstream().hasNext())
 						{
-							return true;
+							next = upstream().next();
+							if (filter.filter(next))
+							{
+								return true;
+							}
 						}
+						return false;
 					}
-					return false;
+					catch (Exception e)
+					{
+						throw new RuntimeException(e);
+					}
 				}
 
 				@Override
@@ -629,13 +642,14 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Option<E>> newPond()
 		{
-			return new AbstractTerminal<E, Option<E>>() {
+			return new AbstractTerminal<E, Option<E>>()
+			{
 				private boolean	found	= false;
 
 				private E		result;
 
 				@Override
-				public void begin()
+				public void begin() throws Exception
 				{
 					try
 					{
@@ -681,7 +695,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Creek<I, O>() {
+			return new Creek<I, O>()
+			{
 				private Iterator<O> iter;
 
 				@Override
@@ -691,15 +706,22 @@ public class Canal<U, D> implements Iterable<D>
 					{
 						return true;
 					}
-					while (upstream().hasNext())
+					try
 					{
-						iter = mapper.map(upstream().next()).iterator();
-						if (iter.hasNext())
+						while (upstream().hasNext())
 						{
-							return true;
+							iter = mapper.map(upstream().next()).iterator();
+							if (iter.hasNext())
+							{
+								return true;
+							}
 						}
+						return false;
 					}
-					return false;
+					catch (Exception e)
+					{
+						throw new RuntimeException(e);
+					}
 				}
 
 				@Override
@@ -726,9 +748,10 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, R> newPond()
 		{
-			return new AbstractTerminal<E, R>() {
+			return new AbstractTerminal<E, R>()
+			{
 				@Override
-				public void begin()
+				public void begin() throws Exception
 				{
 					try
 					{
@@ -784,7 +807,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public void begin()
+		public void begin() throws Exception
 		{
 			try
 			{
@@ -905,7 +928,14 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public E next()
 		{
-			return generator.produce();
+			try
+			{
+				return generator.produce();
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
@@ -962,7 +992,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public void begin()
+		public void begin() throws Exception
 		{
 			E el = null;
 			K key = null;
@@ -1225,7 +1255,8 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		public <W> Canal<Tuple2<K, Tuple2<L, R>>, W> mapJoint(final JointMapper<L, R, K, W> mapper)
 		{
-			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, W>() {
+			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, W>()
+			{
 				@Override
 				public W map(Tuple2<K, Tuple2<L, R>> el)
 				{
@@ -1297,7 +1328,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public void begin()
+		public void begin() throws Exception
 		{
 			this.here = group(this.upstream(), this.kol, this.vol);
 			this.there = group(that.build(), this.kor, this.vor);
@@ -1516,7 +1547,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>() {
+			return new Wheel<E, E>()
+			{
 				@Override
 				public boolean hasNext()
 				{
@@ -1545,11 +1577,19 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<I, O> newPond()
 		{
-			return new Creek<I, O>() {
+			return new Creek<I, O>()
+			{
 				@Override
 				public O next()
 				{
-					return mapper.map(upstream().next());
+					try
+					{
+						return mapper.map(upstream().next());
+					}
+					catch (Exception e)
+					{
+						throw new RuntimeException(e);
+					}
 				}
 			};
 		}
@@ -1567,7 +1607,14 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public int compare(O o1, O o2)
 		{
-			return mapper.map(o1).compareTo(mapper.map(o2));
+			try
+			{
+				return mapper.map(o1).compareTo(mapper.map(o2));
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
@@ -1669,9 +1716,10 @@ public class Canal<U, D> implements Iterable<D>
 		public <W> PairCanal<Tuple2<K, Canal<?, V>>, K, W> foldByKey(final Producer<W> initiator,
 				final Reducer<V, W> folder)
 		{
-			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, W>() {
+			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, W>()
+			{
 				@Override
-				public W map(Canal<?, V> el)
+				public W map(Canal<?, V> el) throws Exception
 				{
 					return el.fold(initiator.produce(), folder);
 				}
@@ -1709,9 +1757,10 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		public PairCanal<Tuple2<K, V>, K, V> having(final Filter<V> pred)
 		{
-			return this.filter(new Filter<Tuple2<K, V>>() {
+			return this.filter(new Filter<Tuple2<K, V>>()
+			{
 				@Override
-				public boolean filter(Tuple2<K, V> el)
+				public boolean filter(Tuple2<K, V> el) throws Exception
 				{
 					return pred.filter(el._2);
 				}
@@ -1760,9 +1809,10 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		public <W> PairCanal<Tuple2<K, V>, K, W> mapValues(final Mapper<V, W> mapper)
 		{
-			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>() {
+			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>()
+			{
 				@Override
-				public Tuple2<K, W> map(Tuple2<K, V> el)
+				public Tuple2<K, W> map(Tuple2<K, V> el) throws Exception
 				{
 					return Tuple.of(el._1, mapper.map(el._2));
 				}
@@ -1777,7 +1827,8 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		public PairCanal<Tuple2<K, Canal<?, V>>, K, V> reduceByKey(final Reducer<V, V> reducer)
 		{
-			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, V>() {
+			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, V>()
+			{
 				@Override
 				public V map(Canal<?, V> el)
 				{
@@ -1803,7 +1854,8 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			return (JoinCanal<Tuple2<K, V>, K, L, R>) new JoinCanal<Tuple2<K, V>, K, L, R>().setUpstream(this)
 					.setOperator(new MapOp<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>(
-							new Mapper<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>() {
+							new Mapper<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>()
+							{
 								@Override
 								public Tuple2<K, Tuple2<L, R>> map(Tuple2<K, V> el)
 								{
@@ -1835,12 +1887,20 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Creek<E, E>() {
+			return new Creek<E, E>()
+			{
 				@Override
 				public E next()
 				{
 					E el = upstream().next();
-					action.action(el);
+					try
+					{
+						action.action(el);
+					}
+					catch (Exception e)
+					{
+						throw new RuntimeException(e);
+					}
 					return el;
 				}
 			};
@@ -1862,7 +1922,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static interface Producer<E>
 	{
-		E produce();
+		E produce() throws Exception;
 	}
 
 	protected static class ReduceOp<E> implements Evaluator<E, Option<E>>
@@ -1877,13 +1937,14 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Option<E>> newPond()
 		{
-			return new AbstractTerminal<E, Option<E>>() {
+			return new AbstractTerminal<E, Option<E>>()
+			{
 				private boolean	empty	= true;
 
 				private E		result;
 
 				@Override
-				public void begin()
+				public void begin() throws Exception
 				{
 					try
 					{
@@ -1928,7 +1989,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>() {
+			return new Heaper<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -2035,7 +2097,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Wheel<E, E>() {
+			return new Wheel<E, E>()
+			{
 				@Override
 				public void begin()
 				{
@@ -2113,7 +2176,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>() {
+			return new Heaper<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -2145,7 +2209,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new Heaper<E>() {
+			return new Heaper<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -2276,7 +2341,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, String> newPond()
 		{
-			return new AbstractTerminal<E, String>() {
+			return new AbstractTerminal<E, String>()
+			{
 				private StringBuilder	buff	= new StringBuilder();
 
 				private boolean			empty	= true;
@@ -2407,7 +2473,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Terminal<E, Collection<E>> newPond()
 		{
-			return new Desilter<E>() {
+			return new Desilter<E>()
+			{
 				@Override
 				protected Collection<E> newSediment()
 				{
@@ -2838,7 +2905,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, Tuple2<E, Long>> newPond()
 		{
-			return new Wheel<E, Tuple2<E, Long>>() {
+			return new Wheel<E, Tuple2<E, Long>>()
+			{
 				@Override
 				public Tuple2<E, Long> next()
 				{
@@ -2853,7 +2921,8 @@ public class Canal<U, D> implements Iterable<D>
 		@Override
 		public Pond<E, Tuple2<E, Integer>> newPond()
 		{
-			return new Wheel<E, Tuple2<E, Integer>>() {
+			return new Wheel<E, Tuple2<E, Integer>>()
+			{
 				@Override
 				public Tuple2<E, Integer> next()
 				{
@@ -2936,7 +3005,7 @@ public class Canal<U, D> implements Iterable<D>
 		return list;
 	}
 
-	public static <E, K, V> Map<K, List<V>> group(Iterator<E> iter, Mapper<E, K> kop, Mapper<E, V> vop)
+	public static <E, K, V> Map<K, List<V>> group(Iterator<E> iter, Mapper<E, K> kop, Mapper<E, V> vop) throws Exception
 	{
 		Map<K, List<V>> map = new LinkedHashMap<K, List<V>>();
 		E el;
@@ -3001,7 +3070,8 @@ public class Canal<U, D> implements Iterable<D>
 	{
 		return new Canal<JSON.Pair, JSON.Pair>() //
 				.setOperator(new IterableSourcer<JSON.Pair>(json.pairs())) //
-				.map(new Mapper<JSON.Pair, Tuple2<String, Object>>() {
+				.map(new Mapper<JSON.Pair, Tuple2<String, Object>>()
+				{
 					@Override
 					public Tuple2<String, Object> map(Pair el)
 					{
@@ -3014,7 +3084,8 @@ public class Canal<U, D> implements Iterable<D>
 	{
 		return new Canal<Entry<K, V>, Entry<K, V>>() //
 				.setOperator(new IterableSourcer<Entry<K, V>>(map.entrySet())) //
-				.map(new Mapper<Entry<K, V>, Tuple2<K, V>>() {
+				.map(new Mapper<Entry<K, V>, Tuple2<K, V>>()
+				{
 					@Override
 					public Tuple2<K, V> map(Entry<K, V> el)
 					{
@@ -3040,11 +3111,13 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static Iterable<Integer> range(final int begin, final int until, final int step)
 	{
-		return new Iterable<Integer>() {
+		return new Iterable<Integer>()
+		{
 			@Override
 			public Iterator<Integer> iterator()
 			{
-				return new Iterator<Integer>() {
+				return new Iterator<Integer>()
+				{
 					private int index = begin - step;
 
 					@Override
@@ -3305,7 +3378,8 @@ public class Canal<U, D> implements Iterable<D>
 	 */
 	public Option<D> first()
 	{
-		return first(new Filter<D>() {
+		return first(new Filter<D>()
+		{
 			@Override
 			public boolean filter(D element)
 			{
@@ -3519,9 +3593,10 @@ public class Canal<U, D> implements Iterable<D>
 	 */
 	public <K> PairCanal<D, K, D> keyBy(final Mapper<D, K> kop)
 	{
-		return this.map(new Mapper<D, Tuple2<K, D>>() {
+		return this.map(new Mapper<D, Tuple2<K, D>>()
+		{
 			@Override
-			public Tuple2<K, D> map(D key)
+			public Tuple2<K, D> map(D key) throws Exception
 			{
 				return Tuple.of(kop.map(key), key);
 			}

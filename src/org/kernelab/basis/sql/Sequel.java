@@ -211,7 +211,14 @@ public class Sequel implements Iterable<ResultSet>
 		{
 			if (mapper() != null)
 			{
-				return mapper().map(rs);
+				try
+				{
+					return mapper().map(rs);
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
 			}
 			else
 			{

@@ -2736,6 +2736,10 @@ public class Tools
 		catch (Terminator t)
 		{
 		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
 		return result;
 	}
 
@@ -4933,6 +4937,10 @@ public class Tools
 		catch (Terminator t)
 		{
 		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
 		return result;
 	}
 
@@ -6304,6 +6312,10 @@ public class Tools
 		}
 		catch (Terminator t)
 		{
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
 		}
 		return result;
 	}
