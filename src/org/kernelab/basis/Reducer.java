@@ -29,5 +29,5 @@ public interface Reducer<E, R>
 	 *             {@link Terminator#SIGNAL} is recommended.
 	 * @see Tools#reduce(Iterable, Reducer)
 	 */
-	public R reduce(R res, E el);
+	public R reduce(R res, E el) throws Exception;
 }
