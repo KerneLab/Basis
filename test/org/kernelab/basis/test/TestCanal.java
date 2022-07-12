@@ -40,8 +40,12 @@ public class TestCanal
 
 	public static void main(String[] args)
 	{
-		Tuple2<Integer, String> t = Tuple.of(1, "a");
-		Tools.debug(t.<Tuple2<String, Integer>> reverse().toString());
+		Tuple2<Integer, String> t1 = Tuple.of(1, "b");
+		Tuple2<Integer, String> t2 = Tuple.of(2, "a");
+		Tools.debug(t1.reverse().toString());
+		Tools.debug(t1.compareTo(t2));
+		Tools.debug(t1);
+		Tools.debug(t1.hashCode() + " " + t2.hashCode());
 		Tools.debug("============");
 
 		Tools.debug(Canal.of(new Integer[] { 1 }));

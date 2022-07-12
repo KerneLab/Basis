@@ -1,6 +1,7 @@
 package org.kernelab.basis;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -2527,12 +2528,12 @@ public class Canal<U, D> implements Iterable<D>
 
 		protected class TupleIterator implements Iterator<Object>
 		{
-			private int index = 0;
+			private int index = 1;
 
 			@Override
 			public boolean hasNext()
 			{
-				return index < size();
+				return index <= size();
 			}
 
 			@Override
@@ -2552,6 +2553,26 @@ public class Canal<U, D> implements Iterable<D>
 		 */
 		private static final long serialVersionUID = 1796022544991162056L;
 
+		@SuppressWarnings("unchecked")
+		public static int compare(Tuple t1, Tuple t2)
+		{
+			if (t1.size() != t2.size())
+			{
+				return t1.size() - t2.size();
+			}
+
+			int c = 0;
+			for (int i = 1; i <= t1.size(); i++)
+			{
+				if ((c = ((Comparable<Object>) t1.get(i)).compareTo(t2.get(i))) != 0)
+				{
+					return c;
+				}
+			}
+
+			return 0;
+		}
+
 		public static <E1> Tuple1<E1> of(E1 _1)
 		{
 			return new Tuple1<E1>(_1);
@@ -2567,9 +2588,15 @@ public class Canal<U, D> implements Iterable<D>
 			return new Tuple3<E1, E2, E3>(_1, _2, _3);
 		}
 
+		@Override
+		public int compareTo(Object o)
+		{
+			return compare(this, (Tuple) o);
+		}
+
 		protected void ensureIndex(int index)
 		{
-			if (index < 0 || index >= size())
+			if (index <= 0 || index > size())
 			{
 				throw new TupleIndexOutOfBoundsException(index);
 			}
@@ -2591,14 +2618,47 @@ public class Canal<U, D> implements Iterable<D>
 			return this.compareTo(o) == 0;
 		}
 
-		public abstract Object get(int i);
+		protected Field field(int i)
+		{
+			try
+			{
+				return this.getClass().getDeclaredField("_" + i);
+			}
+			catch (Exception e)
+			{
+				return null;
+			}
+		}
+
+		protected Object get(int i)
+		{
+			ensureIndex(i);
+			try
+			{
+				return field(i).get(this);
+			}
+			catch (Exception e)
+			{
+				return null;
+			}
+		}
 
 		@Override
 		public int hashCode()
 		{
-			return 1;
+			int hash = 1;
+			Object v = null;
+
+			for (int i = 1; i <= size(); i++)
+			{
+				v = get(i);
+				hash = 31 * hash + ((v == null) ? 0 : v.hashCode());
+			}
+
+			return hash;
 		}
 
+		@Override
 		public Iterator<Object> iterator()
 		{
 			return new TupleIterator();
@@ -2607,6 +2667,23 @@ public class Canal<U, D> implements Iterable<D>
 		public abstract <T extends Tuple> T reverse();
 
 		public abstract int size();
+
+		@Override
+		public String toString()
+		{
+			String s = "(";
+
+			for (int i = 1; i <= size(); i++)
+			{
+				if (i > 1)
+				{
+					s += ", ";
+				}
+				s += get(i);
+			}
+
+			return s + ")";
+		}
 	}
 
 	public static class Tuple1<E1> extends Tuple
@@ -2625,26 +2702,6 @@ public class Canal<U, D> implements Iterable<D>
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public int compareTo(Object o)
-		{
-			return Tools.compare(this._1, ((Tuple1<E1>) o)._1);
-		}
-
-		@Override
-		public Object get(int i)
-		{
-			ensureIndex(i);
-			return _1;
-		}
-
-		@Override
-		public int hashCode()
-		{
-			return 31 * super.hashCode() + ((_1 == null) ? 0 : _1.hashCode());
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
 		public <T extends Tuple> T reverse()
 		{
 			return (T) this;
@@ -2655,62 +2712,30 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			return 1;
 		}
-
-		@Override
-		public String toString()
-		{
-			return "(" + _1 + ")";
-		}
 	}
 
-	public static class Tuple2<E1, E2> extends Tuple1<E1>
+	public static class Tuple2<E1, E2> extends Tuple
 	{
 		/**
 		 * 
 		 */
 		private static final long	serialVersionUID	= -4920340973710779812L;
 
+		public final E1				_1;
+
 		public final E2				_2;
 
 		public Tuple2(E1 _1, E2 _2)
 		{
-			super(_1);
+			this._1 = _1;
 			this._2 = _2;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public int compareTo(Object o)
+		public Tuple2<E2, E1> reverse()
 		{
-			Tuple2<E1, E2> t = ((Tuple2<E1, E2>) o);
-			return Tools.compare(this._1, t._1, this._2, t._2);
-		}
-
-		@Override
-		public Object get(int i)
-		{
-			ensureIndex(i);
-			if (i == size() - 1)
-			{
-				return _2;
-			}
-			else
-			{
-				return super.get(i);
-			}
-		}
-
-		@Override
-		public int hashCode()
-		{
-			return 31 * super.hashCode() + ((_2 == null) ? 0 : _2.hashCode());
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Tuple> T reverse()
-		{
-			return (T) Tuple.of(_2, _1);
+			return Tuple.of(_2, _1);
 		}
 
 		@Override
@@ -2718,74 +2743,39 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			return 2;
 		}
-
-		@Override
-		public String toString()
-		{
-			return "(" + _1 + ", " + _2 + ")";
-		}
 	}
 
-	public static class Tuple3<E1, E2, E3> extends Tuple2<E1, E2>
+	public static class Tuple3<E1, E2, E3> extends Tuple
 	{
 		/**
 		 * 
 		 */
 		private static final long	serialVersionUID	= 2128204413194342750L;
 
+		public final E1				_1;
+
+		public final E2				_2;
+
 		public final E3				_3;
 
 		public Tuple3(E1 _1, E2 _2, E3 _3)
 		{
-			super(_1, _2);
+			this._1 = _1;
+			this._2 = _2;
 			this._3 = _3;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public int compareTo(Object o)
+		public Tuple3<E3, E2, E1> reverse()
 		{
-			Tuple3<E1, E2, E3> t = ((Tuple3<E1, E2, E3>) o);
-			return Tools.compare(this._1, t._1, this._2, t._2, this._3, t._3);
-		}
-
-		@Override
-		public Object get(int i)
-		{
-			ensureIndex(i);
-			if (i == size() - 1)
-			{
-				return _3;
-			}
-			else
-			{
-				return super.get(i);
-			}
-		}
-
-		@Override
-		public int hashCode()
-		{
-			return 31 * super.hashCode() + ((_3 == null) ? 0 : _3.hashCode());
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends Tuple> T reverse()
-		{
-			return (T) Tuple.of(_3, _2, _1);
+			return Tuple.of(_3, _2, _1);
 		}
 
 		@Override
 		public int size()
 		{
 			return 3;
-		}
-
-		@Override
-		public String toString()
-		{
-			return "(" + _1 + ", " + _2 + ", " + _3 + ")";
 		}
 	}
 
