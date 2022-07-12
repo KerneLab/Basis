@@ -2604,6 +2604,8 @@ public class Canal<U, D> implements Iterable<D>
 			return new TupleIterator();
 		}
 
+		public abstract <T extends Tuple> T reverse();
+
 		public abstract int size();
 	}
 
@@ -2639,6 +2641,13 @@ public class Canal<U, D> implements Iterable<D>
 		public int hashCode()
 		{
 			return 31 * super.hashCode() + ((_1 == null) ? 0 : _1.hashCode());
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T extends Tuple> T reverse()
+		{
+			return (T) this;
 		}
 
 		@Override
@@ -2697,6 +2706,13 @@ public class Canal<U, D> implements Iterable<D>
 			return 31 * super.hashCode() + ((_2 == null) ? 0 : _2.hashCode());
 		}
 
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T extends Tuple> T reverse()
+		{
+			return (T) Tuple.of(_2, _1);
+		}
+
 		@Override
 		public int size()
 		{
@@ -2751,6 +2767,13 @@ public class Canal<U, D> implements Iterable<D>
 		public int hashCode()
 		{
 			return 31 * super.hashCode() + ((_3 == null) ? 0 : _3.hashCode());
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T extends Tuple> T reverse()
+		{
+			return (T) Tuple.of(_3, _2, _1);
 		}
 
 		@Override

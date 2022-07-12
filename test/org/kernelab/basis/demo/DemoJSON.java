@@ -3,6 +3,7 @@ package org.kernelab.basis.demo;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.text.ParseException;
 
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
@@ -10,7 +11,7 @@ import org.kernelab.basis.Tools;
 
 public class DemoJSON
 {
-	public static void main(String[] args) throws IOException
+	public static void main(String[] args) throws IOException, ParseException
 	{
 		JSON jsonA = new JSON() //
 				.attr("a", "On\ne") //
@@ -22,12 +23,15 @@ public class DemoJSON
 						.attr("r", 1.5) //
 						.attr("s", "Sss") //
 						.attr("t", true) //
-				);
+				).attr("g", "2022-07-12T12:15:07.077Z");
 		Tools.debug(jsonA.valDouble("d"));
 		Tools.debug(jsonA.toString(0));
 		Tools.debug(jsonA.values());
 		Tools.debug(jsonA.entrySet());
 		Tools.debug(jsonA.keySet());
+
+		Tools.debug(jsonA.valTimestamp("g"));
+		Tools.debug(jsonA.valCalendar("g"));
 
 		JSON jsonB = new JSON();
 		jsonB.attrAll(jsonA);

@@ -2611,6 +2611,18 @@ public class Tools
 	}
 
 	/**
+	 * Get escaped string content according to java language.
+	 * 
+	 * @param str
+	 *            the string.
+	 * @return the escaped string content.
+	 */
+	public static String escape(String str)
+	{
+		return JSON.EscapeString(str).replace("\\/", "/");
+	}
+
+	/**
 	 * Get the excerpt of a string with certain length.
 	 * 
 	 * <pre>
@@ -2848,6 +2860,55 @@ public class Tools
 
 	/**
 	 * Get the Calendar object according to the datetime String which is
+	 * formatted by format.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param format
+	 *            The datetime format, such as "yyyy-MM-dd HH:mm:ss"
+	 * @return The Calendar object.
+	 */
+	public static Calendar getCalendar(String datetime, DateFormat format)
+	{
+		return getCalendar(datetime, format, null);
+	}
+
+	/**
+	 * Get the Calendar object according to the datetime String which is
+	 * formatted by format.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param format
+	 *            The datetime format, such as "yyyy-MM-dd HH:mm:ss"
+	 * @param calendar
+	 *            The Calendar object which holds the result. If null, a new
+	 *            GregorianCalendar object would be created.
+	 * @return The Calendar object.
+	 */
+	public static Calendar getCalendar(String datetime, DateFormat format, Calendar calendar)
+	{
+		try
+		{
+			long ts = format.parse(datetime).getTime();
+
+			if (calendar == null)
+			{
+				calendar = new GregorianCalendar();
+			}
+
+			calendar.setTimeInMillis(ts);
+
+			return calendar;
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Get the Calendar object according to the datetime String which is
 	 * formatted by format String.
 	 * 
 	 * @param datetime
@@ -2876,73 +2937,7 @@ public class Tools
 	 */
 	public static Calendar getCalendar(String datetime, String format, Calendar calendar)
 	{
-		format = format.replaceAll("\'", "");
-
-		int length = datetime.length();
-
-		if (calendar == null)
-		{
-			calendar = new GregorianCalendar();
-		}
-
-		calendar.clear();
-
-		Map<Integer, String> map = new LinkedHashMap<Integer, String>();
-		map.put(Calendar.YEAR, "y");
-		map.put(Calendar.MONTH, "M");
-		map.put(Calendar.DAY_OF_MONTH, "d");
-		map.put(Calendar.HOUR_OF_DAY, "H");
-		map.put(Calendar.MINUTE, "m");
-		map.put(Calendar.SECOND, "s");
-		map.put(Calendar.MILLISECOND, "S");
-		map.put(Calendar.ZONE_OFFSET, "Z");
-
-		for (Entry<Integer, String> entry : map.entrySet())
-		{
-			int field = entry.getKey();
-			String holder = entry.getValue();
-			int value = 0;
-
-			Matcher matcher = Pattern.compile(holder + "+").matcher(format);
-
-			if (matcher.find())
-			{
-				int start = matcher.start();
-				int end = matcher.end();
-
-				if (field == Calendar.ZONE_OFFSET)
-				{
-					end += 4;
-				}
-
-				end = Math.min(end, length);
-
-				String content = datetime.substring(start, end);
-
-				if (field == Calendar.ZONE_OFFSET)
-				{
-					content = paddingString(content, "0", -5);
-					content = content.replaceAll("\\+0+", "");
-				}
-
-				value = Integer.parseInt(content);
-
-				switch (field)
-				{
-					case Calendar.MONTH:
-						value--;
-						break;
-
-					case Calendar.ZONE_OFFSET:
-						value = value / 100 * 3600000 + value % 100 * 60000;
-						break;
-				}
-
-				calendar.set(field, value);
-			}
-		}
-
-		return calendar;
+		return getCalendar(datetime, new SimpleDateFormat(format), calendar);
 	}
 
 	/**
@@ -3031,6 +3026,53 @@ public class Tools
 
 	/**
 	 * Get the Date object according to the datetime String which is formatted
+	 * by format.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param format
+	 *            The datetime format, such as "yyyy-MM-dd HH:mm:ss".
+	 * @return The Data object.
+	 */
+	public static Date getDate(String datetime, DateFormat format)
+	{
+		return getDate(datetime, format, null);
+	}
+
+	/**
+	 * Get the Date object according to the datetime String which is formatted
+	 * by format.
+	 * 
+	 * @param datetime
+	 *            The datetime String, such as "2012-04-13 12:41:39".
+	 * @param format
+	 *            The datetime format, such as "yyyy-MM-dd HH:mm:ss".
+	 * @param date
+	 *            The Date object which would hold the date time. If null then a
+	 *            new Date object would be created.
+	 * @return The Data object.
+	 */
+	public static Date getDate(String datetime, DateFormat format, Date date)
+	{
+		Calendar c = getCalendar(datetime, format);
+
+		if (c == null)
+		{
+			return null;
+		}
+
+		if (date == null)
+		{
+			date = new Date();
+		}
+
+		date.setTime(c.getTimeInMillis());
+
+		return date;
+	}
+
+	/**
+	 * Get the Date object according to the datetime String which is formatted
 	 * by format String.
 	 * 
 	 * @param datetime
@@ -3059,12 +3101,19 @@ public class Tools
 	 */
 	public static Date getDate(String datetime, String format, Date date)
 	{
+		Calendar c = getCalendar(datetime, format);
+
+		if (c == null)
+		{
+			return null;
+		}
+
 		if (date == null)
 		{
 			date = new Date();
 		}
 
-		date.setTime(getCalendar(datetime, format).getTimeInMillis());
+		date.setTime(c.getTimeInMillis());
 
 		return date;
 	}

@@ -23,6 +23,8 @@ import java.nio.charset.Charset;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Calendar;
@@ -39,6 +41,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -4583,6 +4586,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static final Map<Character, String>		ESCAPED_CHAR			= new HashMap<Character, String>();
 
+	public static final String						DEFAULT_DATETIME_FORMAT	= "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+
+	public static final String						DEFAULT_DATETIME_REGEX	= "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$";
+
+	protected static final DateFormat				DEFAULT_DATE_FORMAT		= getDefaultDateFormat();
+
 	public static String							DEFAULT_LINE_INDENT		= "\t";
 
 	public static String							LINE_WRAP				= "\n";
@@ -4846,12 +4855,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		if (obj != null)
 		{
-			Long lon = CastToLong(obj);
+			Long millis = CastToTimeInMillis(obj);
 
-			if (lon != null)
+			if (millis != null)
 			{
 				Calendar val = new GregorianCalendar();
-				val.setTimeInMillis(lon);
+				val.setTimeInMillis(millis);
 				return val;
 			}
 		}
@@ -4884,11 +4893,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		if (obj != null)
 		{
-			Long lon = CastToLong(obj);
+			Long millis = CastToTimeInMillis(obj);
 
-			if (lon != null)
+			if (millis != null)
 			{
-				return new Date(lon);
+				return new Date(millis);
 			}
 		}
 		return null;
@@ -5094,13 +5103,41 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		if (obj != null)
 		{
-			Long lon = CastToLong(obj);
+			Long millis = CastToTimeInMillis(obj);
 
-			if (lon != null)
+			if (millis != null)
 			{
-				return new Time(lon);
+				return new Time(millis);
 			}
 		}
+		return null;
+	}
+
+	public static Long CastToTimeInMillis(Object obj)
+	{
+		if (obj == null)
+		{
+			return null;
+		}
+
+		Long l = CastToLong(obj);
+		if (l != null)
+		{
+			return l;
+		}
+
+		String ts = obj.toString();
+		if (ts != null && ts.matches(DEFAULT_DATETIME_REGEX))
+		{
+			try
+			{
+				return Tools.getCalendar(obj.toString(), DEFAULT_DATE_FORMAT).getTimeInMillis();
+			}
+			catch (NumberFormatException e)
+			{
+			}
+		}
+
 		return null;
 	}
 
@@ -5108,11 +5145,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		if (obj != null)
 		{
-			Long lon = CastToLong(obj);
+			Long millis = CastToTimeInMillis(obj);
 
-			if (lon != null)
+			if (millis != null)
 			{
-				return new Timestamp(lon);
+				return new Timestamp(millis);
 			}
 		}
 		return null;
@@ -5492,6 +5529,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		return index;
+	}
+
+	public static DateFormat getDefaultDateFormat()
+	{
+		DateFormat format = new SimpleDateFormat(DEFAULT_DATETIME_FORMAT);
+		format.setTimeZone(TimeZone.getTimeZone("UTC"));
+		return format;
 	}
 
 	public static final boolean IsArray(Object o)
