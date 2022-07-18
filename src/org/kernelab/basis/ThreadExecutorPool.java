@@ -2,6 +2,7 @@ package org.kernelab.basis;
 
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
@@ -413,15 +414,29 @@ public class ThreadExecutorPool<V> implements CompletionService<V>
 	 */
 	public void join() throws ExecutionException
 	{
+		ExecutionException ex = null;
+
 		while (!this.isEmpty() && !this.isTerminated())
 		{
 			try
 			{
 				this.take().get();
 			}
+			catch (CancellationException e)
+			{
+			}
 			catch (InterruptedException e)
 			{
 			}
+			catch (ExecutionException e)
+			{
+				ex = e;
+			}
+		}
+
+		if (ex != null)
+		{
+			throw ex;
 		}
 	}
 
