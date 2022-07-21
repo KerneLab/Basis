@@ -23,7 +23,9 @@ public class DemoJSON
 						.attr("r", 1.5) //
 						.attr("s", "Sss") //
 						.attr("t", true) //
-				).attr("g", "2022-07-12T12:15:07.077Z");
+				) //
+				.attr("g", "2022-07-12T12:15:07.077Z") //
+				.attr("h", new Object[] { 1, 2.1, "3", true });
 		Tools.debug(jsonA.valDouble("d"));
 		Tools.debug(jsonA.toString(0));
 		Tools.debug(jsonA.values());
@@ -32,6 +34,7 @@ public class DemoJSON
 
 		Tools.debug(jsonA.valTimestamp("g"));
 		Tools.debug(jsonA.valCalendar("g"));
+		Tools.debug(jsonA.val("h"));
 
 		JSON jsonB = new JSON();
 		jsonB.attrAll(jsonA);

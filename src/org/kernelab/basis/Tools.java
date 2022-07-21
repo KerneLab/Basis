@@ -4322,6 +4322,18 @@ public class Tools
 	}
 
 	/**
+	 * Get Iterable object of Array.
+	 * 
+	 * @param values
+	 *            the Array.
+	 * @return the Iterable object.
+	 */
+	public static <T> Iterable<T> iterable(T... values)
+	{
+		return Canal.of(values);
+	}
+
+	/**
 	 * Joint each CharSequence to a String.
 	 * 
 	 * @param delimiter
