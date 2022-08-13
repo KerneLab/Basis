@@ -6550,6 +6550,16 @@ public class Tools
 	 */
 	public static String repeat(CharSequence s, int n, CharSequence delimiter)
 	{
+		if (n == 1)
+		{
+			return String.valueOf(s);
+		}
+
+		if (n < 1)
+		{
+			return "";
+		}
+
 		StringBuilder buffer = new StringBuilder();
 
 		for (int i = 0; i < n; i++)
@@ -6680,7 +6690,6 @@ public class Tools
 			}
 			b.append(s);
 		}
-
 		return b;
 	}
 
@@ -6800,7 +6809,6 @@ public class Tools
 			}
 			b.append(s);
 		}
-
 		return b;
 	}
 
@@ -6926,7 +6934,6 @@ public class Tools
 			}
 			w.append(s);
 		}
-
 		return w;
 	}
 
