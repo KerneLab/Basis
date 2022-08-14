@@ -1645,6 +1645,12 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
+		public Option<E> orElse(Option<E> opt)
+		{
+			return opt;
+		}
+
+		@Override
 		public E orNull()
 		{
 			return null;
@@ -1677,6 +1683,8 @@ public class Canal<U, D> implements Iterable<D>
 		public abstract boolean given();
 
 		public abstract E or(E defaultValue);
+
+		public abstract Option<E> orElse(Option<E> opt);
 
 		public abstract E orNull();
 	}
@@ -2150,6 +2158,12 @@ public class Canal<U, D> implements Iterable<D>
 		public E or(E defaultValue)
 		{
 			return value;
+		}
+
+		@Override
+		public Option<E> orElse(Option<E> opt)
+		{
+			return this;
 		}
 
 		@Override
