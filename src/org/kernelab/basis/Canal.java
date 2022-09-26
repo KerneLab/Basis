@@ -2126,6 +2126,42 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
+	protected static class SliceOp<E> implements Converter<E, Iterable<E>>
+	{
+		protected final int size;
+
+		public SliceOp(int size)
+		{
+			this.size = size;
+		}
+
+		@Override
+		public Pond<E, Iterable<E>> newPond()
+		{
+			return new Wheel<E, Iterable<E>>()
+			{
+				@Override
+				public boolean hasNext()
+				{
+					return size > 0 && upstream().hasNext();
+				}
+
+				@Override
+				public Iterable<E> next()
+				{
+					Collection<E> sediment = new LinkedList<E>();
+
+					while (sediment.size() < size && upstream().hasNext())
+					{
+						sediment.add(upstream().next());
+					}
+
+					return sediment;
+				}
+			};
+		}
+	}
+
 	public static class Some<E> extends Option<E>
 	{
 		private static <E> E[] makeArray(E... es)
@@ -3800,6 +3836,18 @@ public class Canal<U, D> implements Iterable<D>
 	public Canal<D, D> skip(int skip)
 	{
 		return this.follow(new SkipOp<D>(skip));
+	}
+
+	/**
+	 * Slice elements into several sections, the size of each section will not
+	 * beyond the given size.
+	 * 
+	 * @param size
+	 * @return
+	 */
+	public Canal<D, Iterable<D>> slice(int size)
+	{
+		return this.follow(new SliceOp<D>(size));
 	}
 
 	/**

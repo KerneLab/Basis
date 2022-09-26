@@ -295,6 +295,29 @@ public class TestCanal
 			}
 		}).limit(3).skip(1));
 
+		Tools.debug("============slice");
+		Canal.of(new Producer<Integer>()
+		{
+			int i = 0;
+
+			@Override
+			public Integer produce()
+			{
+				return i++;
+			}
+		}).limit(10).slice(4).foreach(new Action<Iterable<Integer>>()
+		{
+			@Override
+			public void action(Iterable<Integer> el) throws Exception
+			{
+				for (Integer l : el)
+				{
+					Tools.debug(l);
+				}
+				Tools.debug("---------");
+			}
+		});
+
 		Tools.debug("============intersection");
 		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).intersection(Canal.of(new Integer[] { 2, 4 })));
 
