@@ -2433,6 +2433,22 @@ public class Sequel implements Iterable<ResultSet>
 		return this;
 	}
 
+	public <E> E mapRow(Map<String, Object> map, E object)
+	{
+		if (this.preparedResultSet())
+		{
+			if (map == null)
+			{
+				map = this.getMetaMapName();
+			}
+			return SQLKit.mapResultRow(this.getResultSet(), map, object);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
 	public boolean nextResult()
 	{
 		return nextResult(Statement.CLOSE_CURRENT_RESULT);

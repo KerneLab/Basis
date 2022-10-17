@@ -95,12 +95,25 @@ public class SQLKit
 
 		private Map<String, Object>		map;
 
+		private E						obj;
+
 		private Map<String, Accessor>	acs;
 
 		public ProjectMapper(Class<E> cls, Map<String, Object> map)
 		{
 			this.cls = cls;
 			this.map = map;
+		}
+
+		public ProjectMapper(Map<String, Object> map, E obj)
+		{
+			this.map = map;
+			this.obj = obj;
+		}
+
+		protected E getInstance() throws Exception
+		{
+			return this.obj != null ? this.obj : this.cls.newInstance();
 		}
 
 		public E map(ResultSet rs)
@@ -120,7 +133,11 @@ public class SQLKit
 					finding = true;
 				}
 
-				E obj = this.cls.newInstance();
+				E obj = this.getInstance();
+				if (obj == null)
+				{
+					return null;
+				}
 
 				Accessor acs = null;
 				String key = null;
@@ -135,7 +152,7 @@ public class SQLKit
 					{
 						if (finding)
 						{
-							acs = Accessor.Of(Tools.fieldOf(this.cls, key));
+							acs = Accessor.Of(Tools.fieldOf(obj.getClass(), key));
 						}
 						else
 						{
@@ -1139,6 +1156,11 @@ public class SQLKit
 	public static <E> E mapResultRow(ResultSet rs, Class<E> cls, Map<String, Object> map)
 	{
 		return mapResultRow(rs, new ProjectMapper<E>(cls, map));
+	}
+
+	public static <E> E mapResultRow(ResultSet rs, Map<String, Object> map, E object)
+	{
+		return mapResultRow(rs, new ProjectMapper<E>(map, object));
 	}
 
 	public static <E> E mapResultRow(ResultSet rs, Mapper<ResultSet, E> mapper)
