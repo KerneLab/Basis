@@ -595,6 +595,18 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
+	public <E> E getRow(Mapper<ResultSet, E> mapper)
+	{
+		if (this.preparedResultSet())
+		{
+			return SQLKit.mapResultRow(this.getResultSet(), mapper);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
 	public JSAN getRowAsJSAN()
 	{
 		return getRowAsJSAN(null);
