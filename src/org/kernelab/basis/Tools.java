@@ -61,6 +61,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -2937,7 +2938,7 @@ public class Tools
 	 */
 	public static Calendar getCalendar(String datetime, String format, Calendar calendar)
 	{
-		return getCalendar(datetime, new SimpleDateFormat(format), calendar);
+		return getCalendar(datetime, getDateFormat(format), calendar);
 	}
 
 	/**
@@ -3119,6 +3120,40 @@ public class Tools
 	}
 
 	/**
+	 * Get the DateFormat object according to the given pattern string with
+	 * default locale.<br />
+	 * The time zone would be set to UTC if the pattern ended with {@code 'Z'}.
+	 * 
+	 * @param pattern
+	 * @return
+	 */
+	public static DateFormat getDateFormat(String pattern)
+	{
+		return getDateFormat(pattern, null);
+	}
+
+	/**
+	 * Get the DateFormat object according to the given pattern string with
+	 * specified locale.<br />
+	 * The time zone would be set to UTC if the pattern ended with {@code 'Z'}.
+	 * <br />
+	 * Default locale would be used if the locale argument was null.
+	 * 
+	 * @param pattern
+	 * @param locale
+	 * @return
+	 */
+	public static DateFormat getDateFormat(String pattern, Locale locale)
+	{
+		DateFormat format = locale == null ? new SimpleDateFormat(pattern) : new SimpleDateFormat(pattern, locale);
+		if (pattern.endsWith("'Z'"))
+		{
+			format.setTimeZone(TimeZone.getTimeZone("UTC"));
+		}
+		return format;
+	}
+
+	/**
 	 * Get the String of a current time form as "yyyy-MM-dd HH:mm:ss".
 	 * 
 	 * @return The String of the long type variable.
@@ -3241,7 +3276,7 @@ public class Tools
 	 */
 	public static String getDateTimeString(Date date, String format, Locale locale)
 	{
-		return getDateTimeString(date, new SimpleDateFormat(format, locale));
+		return getDateTimeString(date, getDateFormat(format, locale));
 	}
 
 	/**

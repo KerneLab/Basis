@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -24,7 +23,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Calendar;
@@ -41,7 +39,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -3492,37 +3489,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		 */
 		public static int		DEFAULT_READER_BUFFER	= 1000;
 
-		public static void main(String[] args) throws Exception
-		{
-			File file = new File("./dat/test.json");
-
-			BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-
-			JSON j = null;
-
-			Parser p = new Parser();
-
-			OutputStreamWriter w = new OutputStreamWriter(System.out);
-
-			do
-			{
-				j = p.parse(r, false).result();
-
-				if (j != null)
-				{
-					JSON.Serialize(j, w, 0);
-				}
-
-				w.flush();
-
-			}
-			while (j != null);
-
-			w.close();
-
-			r.close();
-		}
-
 		private StringBuilder	buffer;
 
 		private JSON			object;
@@ -3535,15 +3501,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		private int				status;
 
-		private int				curr	= 0;
+		private int				curr					= 0;
 
-		private int				nail	= NOT_FOUND;
+		private int				nail					= NOT_FOUND;
 
-		private int				tail	= NOT_FOUND;
+		private int				tail					= NOT_FOUND;
 
-		private int				jail	= NOT_FOUND;
+		private int				jail					= NOT_FOUND;
 
-		private Parser			sub		= null;
+		private Parser			sub						= null;
 
 		protected Parser commit(StringBuilder buffer)
 		{
@@ -4533,68 +4499,73 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	/**
 	 * 
 	 */
-	private static final long						serialVersionUID		= 6090747632739206720L;
+	private static final long						serialVersionUID			= 6090747632739206720L;
 
-	public static final char						OBJECT_BEGIN_CHAR		= '{';
-	public static final String						OBJECT_BEGIN_MARK		= String.valueOf(OBJECT_BEGIN_CHAR);
+	public static final char						OBJECT_BEGIN_CHAR			= '{';
+	public static final String						OBJECT_BEGIN_MARK			= String.valueOf(OBJECT_BEGIN_CHAR);
 
-	public static final char						OBJECT_END_CHAR			= '}';
-	public static final String						OBJECT_END_MARK			= String.valueOf(OBJECT_END_CHAR);
+	public static final char						OBJECT_END_CHAR				= '}';
+	public static final String						OBJECT_END_MARK				= String.valueOf(OBJECT_END_CHAR);
 
-	public static final char						ARRAY_BEGIN_CHAR		= '[';
-	public static final String						ARRAY_BEGIN_MARK		= String.valueOf(ARRAY_BEGIN_CHAR);
+	public static final char						ARRAY_BEGIN_CHAR			= '[';
+	public static final String						ARRAY_BEGIN_MARK			= String.valueOf(ARRAY_BEGIN_CHAR);
 
-	public static final char						ARRAY_END_CHAR			= ']';
-	public static final String						ARRAY_END_MARK			= String.valueOf(ARRAY_END_CHAR);
+	public static final char						ARRAY_END_CHAR				= ']';
+	public static final String						ARRAY_END_MARK				= String.valueOf(ARRAY_END_CHAR);
 
-	public static final char						PAIR_CHAR				= ',';
-	public static final String						PAIR_MARK				= String.valueOf(PAIR_CHAR);
+	public static final char						PAIR_CHAR					= ',';
+	public static final String						PAIR_MARK					= String.valueOf(PAIR_CHAR);
 
-	public static final char						ATTR_CHAR				= ':';
-	public static final String						ATTR_MARK				= String.valueOf(ATTR_CHAR);
+	public static final char						ATTR_CHAR					= ':';
+	public static final String						ATTR_MARK					= String.valueOf(ATTR_CHAR);
 
-	public static final char						QUOTE_CHAR				= '"';
-	public static final String						QUOTE_MARK				= String.valueOf(QUOTE_CHAR);
+	public static final char						QUOTE_CHAR					= '"';
+	public static final String						QUOTE_MARK					= String.valueOf(QUOTE_CHAR);
 
-	public static final char						ESCAPE_CHAR				= '\\';
-	public static final String						ESCAPE_MARK				= String.valueOf(ESCAPE_CHAR);
+	public static final char						ESCAPE_CHAR					= '\\';
+	public static final String						ESCAPE_MARK					= String.valueOf(ESCAPE_CHAR);
 
-	public static final char						COMMENT_CHAR			= '/';
-	public static final char						LINE_COMMENT_CHAR		= COMMENT_CHAR;
+	public static final char						COMMENT_CHAR				= '/';
+	public static final char						LINE_COMMENT_CHAR			= COMMENT_CHAR;
 
-	public static final char						BLOCK_COMMENT_CHAR		= '*';
+	public static final char						BLOCK_COMMENT_CHAR			= '*';
 
-	public static final String						BLOCK_COMMENT_END		= BLOCK_COMMENT_CHAR + "" + COMMENT_CHAR;
+	public static final String						BLOCK_COMMENT_END			= BLOCK_COMMENT_CHAR + ""
+			+ COMMENT_CHAR;
 
-	public static final int							NOT_FOUND				= -1;
+	public static final int							NOT_FOUND					= -1;
 
-	public static final Object						NOT_A_VALUE				= new String("NOT A VALUE");
+	public static final Object						NOT_A_VALUE					= new String("NOT A VALUE");
 
-	public static final String						NULL_STRING				= "null";
+	public static final String						NULL_STRING					= "null";
 
-	public static final String						TRUE_STRING				= "true";
+	public static final String						TRUE_STRING					= "true";
 
-	public static final String						FALSE_STRING			= "false";
+	public static final String						FALSE_STRING				= "false";
 
-	public static final char						UNICODE_ESCAPING_CHAR	= 'u';
+	public static final char						UNICODE_ESCAPING_CHAR		= 'u';
 
-	public static final int							UNICODE_ESCAPED_LENGTH	= 4;
+	public static final int							UNICODE_ESCAPED_LENGTH		= 4;
 
-	public static final int							UNICODE_ESCAPE_RADIX	= 16;
+	public static final int							UNICODE_ESCAPE_RADIX		= 16;
 
-	public static final Map<Character, Character>	ESCAPING_CHAR			= new HashMap<Character, Character>();
+	public static final Map<Character, Character>	ESCAPING_CHAR				= new HashMap<Character, Character>();
 
-	public static final Map<Character, String>		ESCAPED_CHAR			= new HashMap<Character, String>();
+	public static final Map<Character, String>		ESCAPED_CHAR				= new HashMap<Character, String>();
 
-	public static final String						DEFAULT_DATETIME_FORMAT	= "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+	public static final String						DEFAULT_DATETIME_FORMAT		= "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
-	public static final String						DEFAULT_DATETIME_REGEX	= "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$";
+	public static final String						DEFAULT_DATETIME_REGEX		= "^\\d{4}-\\d{2}-\\d{2}((T| )\\d{2}:\\d{2}(?::(\\d{2})(?:\\.(\\d{3}|\\d{6}||\\d{9}))?)?)?(Z|[+-]\\d{2}(?::?\\d{2})?)?$";
 
-	protected static final DateFormat				DEFAULT_DATE_FORMAT		= getDefaultDateFormat();
+	public static final Pattern						DEFAULT_DATETIME_PATTERN	= Pattern
+			.compile(DEFAULT_DATETIME_REGEX);
 
-	public static String							DEFAULT_LINE_INDENT		= "\t";
+	protected static final DateFormat				DEFAULT_DATE_FORMAT			= Tools
+			.getDateFormat(DEFAULT_DATETIME_FORMAT);
 
-	public static String							LINE_WRAP				= "\n";
+	public static String							DEFAULT_LINE_INDENT			= "\t";
+
+	public static String							LINE_WRAP					= "\n";
 
 	static
 	{
@@ -5127,18 +5098,18 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		String ts = obj.toString();
-		if (ts != null && ts.matches(DEFAULT_DATETIME_REGEX))
+		if (ts == null)
 		{
-			try
-			{
-				return Tools.getCalendar(obj.toString(), DEFAULT_DATE_FORMAT).getTimeInMillis();
-			}
-			catch (NumberFormatException e)
-			{
-			}
+			return null;
 		}
 
-		return null;
+		String format = FindDatetimePattern(ts);
+		if (format == null)
+		{
+			return null;
+		}
+
+		return Tools.getCalendar(ts, format).getTimeInMillis();
 	}
 
 	public static Timestamp CastToTimestamp(Object obj)
@@ -5499,6 +5470,60 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
+	/**
+	 * Find a date time string pattern based on default date time pattern.
+	 * 
+	 * @param datetime
+	 * @return
+	 */
+	public static String FindDatetimePattern(String datetime)
+	{
+		Matcher m = DEFAULT_DATETIME_PATTERN.matcher(datetime);
+		if (!m.matches())
+		{
+			return null;
+		}
+
+		String format = DEFAULT_DATETIME_FORMAT;
+
+		if (m.group(1) == null)
+		{
+			format = format.replaceFirst("'T'.+SSS", "");
+		}
+		else
+		{
+			if (" ".equals(m.group(2)))
+			{
+				format = format.replace("'T'", " ");
+			}
+
+			if (m.group(3) == null)
+			{
+				format = format.replace(":ss", "");
+			}
+
+			if (m.group(4) == null)
+			{
+				format = format.replace(".SSS", "");
+			}
+			else
+			{
+				format = format.replace(".SSS", "." + Tools.repeat('S', m.group(4).length()));
+			}
+		}
+
+		if (m.group(5) == null)
+		{
+			format = format.replace("'Z'", "");
+		}
+		else if (!"Z".equals(m.group(5)))
+		{
+			format = format.replace("'Z'", "X");
+		}
+
+		return format;
+	}
+
 	public static final int FirstNonWhitespaceIndex(CharSequence seq, int from)
 	{
 		int index = NOT_FOUND;
@@ -5529,13 +5554,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		return index;
-	}
-
-	public static DateFormat getDefaultDateFormat()
-	{
-		DateFormat format = new SimpleDateFormat(DEFAULT_DATETIME_FORMAT);
-		format.setTimeZone(TimeZone.getTimeZone("UTC"));
-		return format;
 	}
 
 	public static final boolean IsArray(Object o)
@@ -5682,11 +5700,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	 */
 	public static void main(String[] args)
 	{
-		String s = "{\"k\":1}";
-
-		JSON j = Parse(s);
-
-		Tools.debug(j);
+		Tools.debug(JSON.FindDatetimePattern("2022-10-23T22:06+08:00"));
 	}
 
 	public static boolean NeedToEscape(char c)
