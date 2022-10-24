@@ -362,23 +362,25 @@ public class Sequel implements Iterable<ResultSet>
 		return new ResultSetIterator(rs);
 	}
 
-	private SQLKit				kit;
+	private SQLKit									kit;
 
-	private Statement			statement;
+	private Statement								statement;
 
-	private ResultSet			resultSet;
+	private ResultSet								resultSet;
 
-	private int					updateCount		= N_A;
+	private int										updateCount		= N_A;
 
-	private boolean				closed			= false;
+	private boolean									closed			= false;
 
-	private boolean				closing			= true;
+	private boolean									closing			= true;
 
-	private boolean				iterating		= false;
+	private boolean									iterating		= false;
 
-	private Map<String, Object>	metaMapIndex	= null;
+	private Map<String, Object>						metaMapIndex	= null;
 
-	private Map<String, Object>	metaMapName		= null;
+	private Map<String, Object>						metaMapName		= null;
+
+	private Map<Class<?>, Mapper<Object, Object>>	typeMap			= null;
 
 	public Sequel(ResultSet rs)
 	{
@@ -433,6 +435,7 @@ public class Sequel implements Iterable<ResultSet>
 			kit = null;
 			metaMapIndex = null;
 			metaMapName = null;
+			typeMap = null;
 			closed = true;
 		}
 
@@ -576,10 +579,15 @@ public class Sequel implements Iterable<ResultSet>
 
 	public <E> E getRow(Class<E> cls)
 	{
-		return getRow(cls, null);
+		return this.getRow(cls, null);
 	}
 
 	public <E> E getRow(Class<E> cls, Map<String, Object> map)
+	{
+		return this.getRow(cls, map, this.getTypeMap());
+	}
+
+	public <E> E getRow(Class<E> cls, Map<String, Object> map, Map<Class<?>, Mapper<Object, Object>> typeMap)
 	{
 		if (this.preparedResultSet())
 		{
@@ -587,7 +595,7 @@ public class Sequel implements Iterable<ResultSet>
 			{
 				map = this.getMetaMapName();
 			}
-			return SQLKit.mapResultRow(this.getResultSet(), cls, map);
+			return SQLKit.mapResultRow(this.getResultSet(), cls, map, typeMap);
 		}
 		else
 		{
@@ -609,7 +617,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public JSAN getRowAsJSAN()
 	{
-		return getRowAsJSAN(null);
+		return this.getRowAsJSAN(null);
 	}
 
 	public JSAN getRowAsJSAN(Map<String, Object> map)
@@ -633,7 +641,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public JSON getRowAsJSON()
 	{
-		return getRowAsJSON(null);
+		return this.getRowAsJSON(null);
 	}
 
 	public JSON getRowAsJSON(Map<String, Object> map)
@@ -682,29 +690,41 @@ public class Sequel implements Iterable<ResultSet>
 
 	public <E> Canal<?, E> getRows(Class<E> cls, Map<String, Object> map) throws SQLException
 	{
-		return SQLKit.mapResultSet(this.getKit(), this.getResultSet(), cls, map);
+		return this.getRows(cls, map, this.getTypeMap());
+	}
+
+	public <E> Canal<?, E> getRows(Class<E> cls, Map<String, Object> map, Map<Class<?>, Mapper<Object, Object>> typeMap)
+			throws SQLException
+	{
+		return SQLKit.mapResultSet(this.getKit(), this.getResultSet(), cls, map, typeMap);
 	}
 
 	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls)
 	{
-		return getRows(rows, cls, -1);
+		return this.getRows(rows, cls, -1);
 	}
 
 	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, int limit)
 	{
-		return getRows(rows, cls, null, limit);
+		return this.getRows(rows, cls, null, limit);
 	}
 
 	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map)
 	{
-		return getRows(rows, cls, map, -1);
+		return this.getRows(rows, cls, map, -1);
 	}
 
 	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map, int limit)
 	{
+		return this.getRows(rows, cls, map, this.getTypeMap(), limit);
+	}
+
+	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map,
+			Map<Class<?>, Mapper<Object, Object>> typeMap, int limit)
+	{
 		try
 		{
-			rows = SQLKit.mapResultSet(this.getResultSet(), rows, cls, map, limit);
+			rows = SQLKit.mapResultSet(this.getResultSet(), rows, cls, map, typeMap, limit);
 		}
 		catch (SQLException e)
 		{
@@ -718,7 +738,7 @@ public class Sequel implements Iterable<ResultSet>
 
 	public <E> Collection<E> getRows(Collection<E> rows, Mapper<ResultSet, E> mapper)
 	{
-		return getRows(rows, mapper, -1);
+		return this.getRows(rows, mapper, -1);
 	}
 
 	public <E> Collection<E> getRows(Collection<E> rows, Mapper<ResultSet, E> mapper, int limit)
@@ -739,17 +759,17 @@ public class Sequel implements Iterable<ResultSet>
 
 	public JSAN getRows(JSAN rows, Class<? extends JSON> cls)
 	{
-		return getRows(rows, null, cls);
+		return this.getRows(rows, null, cls);
 	}
 
 	public JSAN getRows(JSAN rows, Class<? extends JSON> cls, int limit)
 	{
-		return getRows(rows, null, cls, limit);
+		return this.getRows(rows, null, cls, limit);
 	}
 
 	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls)
 	{
-		return getRows(rows, map, cls, -1);
+		return this.getRows(rows, map, cls, -1);
 	}
 
 	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls, int limit)
@@ -786,6 +806,11 @@ public class Sequel implements Iterable<ResultSet>
 	public Statement getStatement()
 	{
 		return statement;
+	}
+
+	public Map<Class<?>, Mapper<Object, Object>> getTypeMap()
+	{
+		return typeMap;
 	}
 
 	public int getUpdateCount()
@@ -2453,7 +2478,7 @@ public class Sequel implements Iterable<ResultSet>
 			{
 				map = this.getMetaMapName();
 			}
-			return SQLKit.mapResultRow(this.getResultSet(), map, object);
+			return SQLKit.mapResultRow(this.getResultSet(), map, this.getTypeMap(), object);
 		}
 		else
 		{
@@ -2592,6 +2617,12 @@ public class Sequel implements Iterable<ResultSet>
 	private Sequel setStatement(Statement statement)
 	{
 		this.statement = statement;
+		return this;
+	}
+
+	public Sequel setTypeMap(Map<Class<?>, Mapper<Object, Object>> typeMap)
+	{
+		this.typeMap = typeMap;
 		return this;
 	}
 

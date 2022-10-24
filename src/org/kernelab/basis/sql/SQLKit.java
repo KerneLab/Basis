@@ -87,42 +87,53 @@ import org.kernelab.basis.Tools;
  */
 public class SQLKit
 {
-	public static class ProjectMapper<E> implements Mapper<ResultSet, E>, Serializable
+	public static abstract class ProjectMapper<S, T> implements Mapper<S, T>, Serializable
 	{
-		private static final long		serialVersionUID	= -6021148228942835875L;
+		private static final long						serialVersionUID	= -6021148228942835875L;
 
-		private Class<E>				cls;
+		private Class<T>								cls;
 
-		private Map<String, Object>		map;
+		private Map<String, Object>						map;
 
-		private E						obj;
+		private T										obj;
 
-		private Map<String, Accessor>	acs;
+		private Map<String, Accessor>					acs;
 
-		public ProjectMapper(Class<E> cls, Map<String, Object> map)
+		private Map<Class<?>, Mapper<Object, Object>>	typeMap;
+
+		public ProjectMapper(Class<T> cls, Map<String, Object> map)
 		{
 			this.cls = cls;
 			this.map = map;
 		}
 
-		public ProjectMapper(Map<String, Object> map, E obj)
+		public ProjectMapper(Map<String, Object> map, T obj)
 		{
 			this.map = map;
 			this.obj = obj;
 		}
 
-		protected E getInstance() throws Exception
+		protected abstract Map<String, Object> dict(S src) throws Exception;
+
+		protected abstract Object get(S src, Object key) throws Exception;
+
+		protected T getInstance() throws Exception
 		{
 			return this.obj != null ? this.obj : this.cls.newInstance();
 		}
 
-		public E map(ResultSet rs)
+		public Map<Class<?>, Mapper<Object, Object>> getTypeMap()
+		{
+			return typeMap;
+		}
+
+		public T map(S src)
 		{
 			try
 			{
 				if (this.map == null)
 				{
-					this.map = mapNameOfMetaData(rs.getMetaData());
+					this.map = dict(src);
 				}
 
 				boolean finding = false;
@@ -133,7 +144,7 @@ public class SQLKit
 					finding = true;
 				}
 
-				E obj = this.getInstance();
+				T obj = this.getInstance();
 				if (obj == null)
 				{
 					return null;
@@ -141,7 +152,7 @@ public class SQLKit
 
 				Accessor acs = null;
 				String key = null;
-				Object col = null, val = null;
+				Object col = null, dat = null;
 
 				for (Entry<String, Object> entry : this.map.entrySet())
 				{
@@ -161,11 +172,9 @@ public class SQLKit
 
 						if (acs != null)
 						{
-							val = col instanceof Integer //
-									? rs.getObject((Integer) col) //
-									: rs.getObject(col.toString());
+							dat = get(src, col);
 
-							acs.set(obj, JSON.ProjectTo(val, acs.getField().getType(), val, null));
+							set(obj, acs, dat);
 
 							if (finding)
 							{
@@ -181,6 +190,65 @@ public class SQLKit
 			{
 				throw new RuntimeException(e);
 			}
+		}
+
+		protected void set(T obj, Accessor acs, Object dat) throws Exception
+		{
+			Object val = null;
+
+			if (dat != null)
+			{
+				Mapper<Object, Object> cas = this.getTypeMap() == null ? null
+						: this.getTypeMap().get(acs.getField().getType());
+				val = cas != null ? cas.map(dat) : JSON.ProjectTo(dat, acs.getField().getType(), dat, null);
+			}
+
+			acs.set(obj, val != null ? val : dat);
+		}
+
+		public ProjectMapper<S, T> setTypeMap(Map<Class<?>, Mapper<Object, Object>> typeMap)
+		{
+			this.typeMap = typeMap;
+			return this;
+		}
+	}
+
+	public static class ResultSetMapper<E> extends ProjectMapper<ResultSet, E>
+	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5643973407094832255L;
+
+		public ResultSetMapper(Class<E> cls, Map<String, Object> map)
+		{
+			super(cls, map);
+		}
+
+		public ResultSetMapper(Map<String, Object> map, E obj)
+		{
+			super(map, obj);
+		}
+
+		@Override
+		protected Map<String, Object> dict(ResultSet rs) throws SQLException
+		{
+			return mapNameOfMetaData(rs.getMetaData());
+		}
+
+		@Override
+		protected Object get(ResultSet rs, Object key) throws SQLException
+		{
+			return key instanceof Integer //
+					? rs.getObject((Integer) key) //
+					: rs.getObject(key.toString());
+		}
+
+		@Override
+		public ResultSetMapper<E> setTypeMap(Map<Class<?>, Mapper<Object, Object>> typeMap)
+		{
+			super.setTypeMap(typeMap);
+			return this;
 		}
 	}
 
@@ -1155,12 +1223,24 @@ public class SQLKit
 
 	public static <E> E mapResultRow(ResultSet rs, Class<E> cls, Map<String, Object> map)
 	{
-		return mapResultRow(rs, new ProjectMapper<E>(cls, map));
+		return mapResultRow(rs, cls, map, null);
+	}
+
+	public static <E> E mapResultRow(ResultSet rs, Class<E> cls, Map<String, Object> map,
+			Map<Class<?>, Mapper<Object, Object>> typeMap)
+	{
+		return mapResultRow(rs, new ResultSetMapper<E>(cls, map).setTypeMap(typeMap));
 	}
 
 	public static <E> E mapResultRow(ResultSet rs, Map<String, Object> map, E object)
 	{
-		return mapResultRow(rs, new ProjectMapper<E>(map, object));
+		return mapResultRow(rs, map, null, object);
+	}
+
+	public static <E> E mapResultRow(ResultSet rs, Map<String, Object> map,
+			Map<Class<?>, Mapper<Object, Object>> typeMap, E object)
+	{
+		return mapResultRow(rs, new ResultSetMapper<E>(map, object).setTypeMap(typeMap));
 	}
 
 	public static <E> E mapResultRow(ResultSet rs, Mapper<ResultSet, E> mapper)
@@ -1185,7 +1265,13 @@ public class SQLKit
 	public static <E> Collection<E> mapResultSet(ResultSet rs, Collection<E> rows, Class<E> cls,
 			Map<String, Object> map, int limit) throws SQLException
 	{
-		return mapResultSet(rs, rows, new ProjectMapper<E>(cls, map), limit);
+		return mapResultSet(rs, rows, cls, map, null, limit);
+	}
+
+	public static <E> Collection<E> mapResultSet(ResultSet rs, Collection<E> rows, Class<E> cls,
+			Map<String, Object> map, Map<Class<?>, Mapper<Object, Object>> typeMap, int limit) throws SQLException
+	{
+		return mapResultSet(rs, rows, new ResultSetMapper<E>(cls, map).setTypeMap(typeMap), limit);
 	}
 
 	public static <E> Collection<E> mapResultSet(ResultSet rs, Collection<E> rows, Mapper<ResultSet, E> mapper,
@@ -1217,7 +1303,13 @@ public class SQLKit
 	public static <E> Canal<?, E> mapResultSet(SQLKit kit, ResultSet rs, Class<E> cls, Map<String, Object> map)
 			throws SQLException
 	{
-		return mapResultSet(kit, rs, new ProjectMapper<E>(cls, map));
+		return mapResultSet(kit, rs, cls, map, null);
+	}
+
+	public static <E> Canal<?, E> mapResultSet(SQLKit kit, ResultSet rs, Class<E> cls, Map<String, Object> map,
+			Map<Class<?>, Mapper<Object, Object>> typeMap) throws SQLException
+	{
+		return mapResultSet(kit, rs, new ResultSetMapper<E>(cls, map).setTypeMap(typeMap));
 	}
 
 	public static <E> Canal<?, E> mapResultSet(SQLKit kit, ResultSet rs, Mapper<ResultSet, E> mapper)
@@ -1424,31 +1516,33 @@ public class SQLKit
 		return conn;
 	}
 
-	private ConnectionManager			manager;
+	private ConnectionManager						manager;
 
-	private Connection					connection;
+	private Connection								connection;
 
-	private Class<? extends Connection>	unwrap;
+	private Class<? extends Connection>				unwrap;
 
-	private Connection					real;
+	private Connection								real;
 
-	private Statement					statement;
+	private Statement								statement;
 
-	private Map<String, Statement>		sentences;
+	private Map<String, Statement>					sentences;
 
-	private Map<Statement, String>		statements;
+	private Map<Statement, String>					statements;
 
-	private Map<String, List<String>>	parameters;
+	private Map<String, List<String>>				parameters;
 
-	private String						boundary;
+	private String									boundary;
 
-	private boolean						reuseStatements			= true;
+	private boolean									reuseStatements			= true;
 
-	private int							resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
+	private int										resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
 
-	private int							resultSetConcurrency	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][1];
+	private int										resultSetConcurrency	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][1];
 
-	private int							resultSetHoldability	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][2];
+	private int										resultSetHoldability	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][2];
+
+	private Map<Class<?>, Mapper<Object, Object>>	typeMap;
 
 	public SQLKit(ConnectionManager manager) throws SQLException
 	{
@@ -1731,6 +1825,7 @@ public class SQLKit
 	protected void destroy()
 	{
 		clean();
+		this.typeMap = null;
 		this.sentences = null;
 		this.statements = null;
 		this.parameters = null;
@@ -1752,7 +1847,7 @@ public class SQLKit
 
 	public Sequel execute(CallableStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(this, statement, bindParameters(statement, params).execute());
+		return new Sequel(this, statement, bindParameters(statement, params).execute()).setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(CallableStatement statement, JSAN params) throws SQLException
@@ -1772,12 +1867,12 @@ public class SQLKit
 
 	public Sequel execute(CallableStatement statement, Object... params) throws SQLException
 	{
-		return new Sequel(this, statement, bindParameters(statement, params).execute());
+		return new Sequel(this, statement, bindParameters(statement, params).execute()).setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(this, statement, bindParameters(statement, params).execute());
+		return new Sequel(this, statement, bindParameters(statement, params).execute()).setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(PreparedStatement statement, JSAN params) throws SQLException
@@ -1797,12 +1892,12 @@ public class SQLKit
 
 	public Sequel execute(PreparedStatement statement, Object... params) throws SQLException
 	{
-		return new Sequel(this, statement, bindParameters(statement, params).execute());
+		return new Sequel(this, statement, bindParameters(statement, params).execute()).setTypeMap(this.getTypeMap());
 	}
 
 	protected Sequel execute(Statement statement, String sql) throws SQLException
 	{
-		return new Sequel(this, statement, statement.execute(sql));
+		return new Sequel(this, statement, statement.execute(sql)).setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(String sql) throws SQLException
@@ -2015,6 +2110,11 @@ public class SQLKit
 	protected Map<Statement, String> getStatements()
 	{
 		return statements;
+	}
+
+	public Map<Class<?>, Mapper<Object, Object>> getTypeMap()
+	{
+		return typeMap;
 	}
 
 	public int getUpdateCount()
@@ -3229,6 +3329,12 @@ public class SQLKit
 	protected SQLKit setStatements(Map<Statement, String> statements)
 	{
 		this.statements = statements;
+		return this;
+	}
+
+	public SQLKit setTypeMap(Map<Class<?>, Mapper<Object, Object>> typeMap)
+	{
+		this.typeMap = typeMap;
 		return this;
 	}
 
