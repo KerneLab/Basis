@@ -142,6 +142,11 @@ public class Record implements Serializable
 		this.data = data;
 	}
 
+	public Object[] toArray()
+	{
+		return this.get().values().toArray();
+	}
+
 	@Override
 	public String toString()
 	{
