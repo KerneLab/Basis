@@ -161,24 +161,31 @@ public class SQLKit
 
 					if (key != null && col != null)
 					{
-						if (finding)
+						dat = get(src, col);
+
+						if (obj instanceof Record || obj instanceof Map || obj instanceof Collection)
 						{
-							acs = Accessor.Of(Tools.fieldOf(obj.getClass(), key));
+							set(obj, key, dat);
 						}
 						else
 						{
-							acs = this.acs.get(key);
-						}
-
-						if (acs != null)
-						{
-							dat = get(src, col);
-
-							set(obj, acs, dat);
-
 							if (finding)
 							{
-								this.acs.put(key, acs);
+								acs = Accessor.Of(Tools.fieldOf(obj.getClass(), key));
+							}
+							else
+							{
+								acs = this.acs.get(key);
+							}
+
+							if (acs != null)
+							{
+								set(obj, acs, dat);
+
+								if (finding)
+								{
+									this.acs.put(key, acs);
+								}
 							}
 						}
 					}
@@ -204,6 +211,27 @@ public class SQLKit
 			}
 
 			acs.set(obj, val != null ? val : dat);
+		}
+
+		@SuppressWarnings("unchecked")
+		protected void set(T obj, String key, Object dat)
+		{
+			if (obj instanceof Record)
+			{
+				((Record) obj).set(key, dat);
+			}
+			else if (obj instanceof JSON)
+			{
+				((JSON) obj).attr(key, dat);
+			}
+			else if (obj instanceof Map)
+			{
+				((Map<String, Object>) obj).put(key, dat);
+			}
+			else if (obj instanceof Collection)
+			{
+				((Collection<Object>) obj).add(dat);
+			}
 		}
 
 		public ProjectMapper<S, T> setTypeMap(Map<Class<?>, Mapper<Object, Object>> typeMap)
