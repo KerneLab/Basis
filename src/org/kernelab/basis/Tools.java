@@ -3410,6 +3410,11 @@ public class Tools
 			fields = new LinkedHashMap<String, Field>();
 		}
 
+		if (Object.class == cls)
+		{
+			return fields;
+		}
+
 		fields = getFieldsHierarchy(cls.getSuperclass(), fields);
 
 		for (Field field : cls.getDeclaredFields())

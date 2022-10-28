@@ -5389,6 +5389,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				fields = new LinkedHashMap<String, Field>();
 			}
 
+			if (Object.class == cls)
+			{
+				return fields;
+			}
+
 			fields = FieldsOf(cls.getSuperclass(), fields);
 
 			for (Field field : cls.getDeclaredFields())
@@ -5399,20 +5404,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 		}
-
 		return fields;
 	}
 
 	public static <T> Map<String, Field> FieldsOf(T object)
 	{
-		Map<String, Field> fields = null;
-
-		if (object != null)
+		if (object == null)
 		{
-			fields = FieldsOf(object.getClass(), fields);
+			return null;
 		}
-
-		return fields;
+		else
+		{
+			return FieldsOf(object.getClass(), null);
+		}
 	}
 
 	public static boolean FilterComments(StringBuilder buffer, CharSequence seq, int from)

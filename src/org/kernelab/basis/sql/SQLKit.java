@@ -163,7 +163,7 @@ public class SQLKit
 					{
 						dat = get(src, col);
 
-						if (obj instanceof Record || obj instanceof Map || obj instanceof Collection)
+						if (obj instanceof Row || obj instanceof Map || obj instanceof Collection)
 						{
 							set(obj, key, dat);
 						}
@@ -216,9 +216,9 @@ public class SQLKit
 		@SuppressWarnings("unchecked")
 		protected void set(T obj, String key, Object dat)
 		{
-			if (obj instanceof Record)
+			if (obj instanceof Row)
 			{
-				((Record) obj).set(key, dat);
+				((Row) obj).set(key, dat);
 			}
 			else if (obj instanceof JSON)
 			{
