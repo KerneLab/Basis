@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.Pair;
+import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 
 public class Row implements Serializable
@@ -94,6 +95,61 @@ public class Row implements Serializable
 	{
 		this();
 		this.set(record.get());
+	}
+
+	protected Object cast(Object value)
+	{
+		if (value == null)
+		{
+			return null;
+		}
+
+		Mapper<Object, Object> cast = null;
+		Map<Class<?>, Mapper<Object, Object>> map = this.castMap();
+		if (map != null)
+		{
+			for (Entry<Class<?>, Mapper<Object, Object>> entry : map.entrySet())
+			{
+				if (entry.getKey().isInstance(value))
+				{
+					cast = entry.getValue();
+					break;
+				}
+			}
+		}
+
+		if (cast != null)
+		{
+			try
+			{
+				return cast.map(value);
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+
+		// Default Cast
+
+		if (value instanceof java.sql.Clob)
+		{
+			try
+			{
+				return Tools.readerToStringBuilder(((java.sql.Clob) value).getCharacterStream()).toString();
+			}
+			catch (SQLException e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+
+		return value;
+	}
+
+	protected Map<Class<?>, Mapper<Object, Object>> castMap()
+	{
+		return null;
 	}
 
 	public Row clean()
@@ -235,7 +291,10 @@ public class Row implements Serializable
 		this.resetCols();
 		if (data != null)
 		{
-			this.data.putAll(data);
+			for (Entry<String, Object> entry : data.entrySet())
+			{
+				this.set(entry.getKey(), entry.getValue());
+			}
 		}
 		return this;
 	}
@@ -258,7 +317,7 @@ public class Row implements Serializable
 	public Row set(String key, Object value)
 	{
 		this.resetCols();
-		this.get().put(key, value);
+		this.get().put(key, this.cast(value));
 		return this;
 	}
 
