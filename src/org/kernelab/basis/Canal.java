@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
 
 public class Canal<U, D> implements Iterable<D>
@@ -3307,6 +3308,16 @@ public class Canal<U, D> implements Iterable<D>
 	public Collection<D> collect(Collection<D> result)
 	{
 		return this.follow(new CollectOp<D>(result)).evaluate();
+	}
+
+	public JSAN collectAsJSAN()
+	{
+		return this.collectAsJSAN(new JSAN());
+	}
+
+	public JSAN collectAsJSAN(final JSAN jsan)
+	{
+		return jsan.addAll(this);
 	}
 
 	/**

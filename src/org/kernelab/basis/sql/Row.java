@@ -201,7 +201,18 @@ public class Row implements Serializable
 		return this.cols()[index];
 	}
 
-	public Row get(Iterable<String> keys)
+	public Object get(String key)
+	{
+		return this.get().get(key);
+	}
+
+	public Object get(String key, Object deft)
+	{
+		Object value = this.get(key);
+		return value != null ? value : deft;
+	}
+
+	public Row gets(Iterable<String> keys)
 	{
 		Row r = new Row();
 		for (String key : keys)
@@ -211,7 +222,7 @@ public class Row implements Serializable
 		return r;
 	}
 
-	public Row get(JSON map)
+	public Row gets(JSON map)
 	{
 		Row r = new Row();
 		for (Pair pair : map.pairs())
@@ -221,7 +232,7 @@ public class Row implements Serializable
 		return r;
 	}
 
-	public Row get(Map<String, Object> map)
+	public Row gets(Map<String, Object> map)
 	{
 		Row r = new Row();
 		Object i = null;
@@ -240,12 +251,7 @@ public class Row implements Serializable
 		return r;
 	}
 
-	public Object get(String key)
-	{
-		return this.get().get(key);
-	}
-
-	public Row get(String... keys)
+	public Row gets(String... keys)
 	{
 		Row r = new Row();
 		for (String key : keys)
@@ -253,12 +259,6 @@ public class Row implements Serializable
 			r.set(key, this.get(key));
 		}
 		return r;
-	}
-
-	public Object get(String key, Object deft)
-	{
-		Object value = this.get(key);
-		return value != null ? value : deft;
 	}
 
 	@Override

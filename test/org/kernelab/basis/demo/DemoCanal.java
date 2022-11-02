@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 import org.kernelab.basis.Canal;
 import org.kernelab.basis.Canal.Tuple;
 import org.kernelab.basis.Canal.Tuple2;
+import org.kernelab.basis.Filter;
+import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 
@@ -38,6 +40,16 @@ public class DemoCanal
 
 			Tools.debug(o);
 		}
+
+		JSAN jsan = Canal.of(new Integer[] { 1, 2, 3 }).filter(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer el) throws Exception
+			{
+				return el > 1;
+			}
+		}).collectAsJSAN();
+		Tools.debug(jsan);
 	}
 
 }
