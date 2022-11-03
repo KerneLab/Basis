@@ -5,16 +5,17 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.Pair;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 
-public class Row implements Serializable
+public class Row implements Map<String, Object>, Serializable
 {
 	/**
 	 * 
@@ -29,11 +30,7 @@ public class Row implements Serializable
 			return null;
 		}
 
-		if (obj instanceof Row)
-		{
-			((Row) obj).set(map);
-		}
-		else if (obj instanceof JSON)
+		if (obj instanceof JSON)
 		{
 			((JSON) obj).attrAll(map);
 		}
@@ -72,6 +69,8 @@ public class Row implements Serializable
 
 	private Map<String, Object>	data;
 
+	protected String[]			heads;
+
 	protected Object[]			cols;
 
 	public Row()
@@ -82,19 +81,13 @@ public class Row implements Serializable
 	public Row(Map<String, Object> data)
 	{
 		this();
-		this.set(data);
+		this.putAll(data);
 	}
 
 	public Row(ResultSet rs) throws SQLException
 	{
 		this();
 		this.set(rs);
-	}
-
-	public Row(Row record)
-	{
-		this();
-		this.set(record.get());
 	}
 
 	protected Object cast(Object value)
@@ -158,19 +151,38 @@ public class Row implements Serializable
 		return this;
 	}
 
+	@Override
 	public void clear()
 	{
-		this.get().clear();
 		this.resetCols();
+		this.getData().clear();
 	}
 
 	public Object[] cols()
 	{
 		if (this.cols == null)
 		{
-			this.cols = this.get().values().toArray();
+			this.cols = this.getData().values().toArray();
 		}
 		return this.cols;
+	}
+
+	@Override
+	public boolean containsKey(Object key)
+	{
+		return this.getData().containsKey(key);
+	}
+
+	@Override
+	public boolean containsValue(Object value)
+	{
+		return this.getData().containsValue(value);
+	}
+
+	@Override
+	public Set<java.util.Map.Entry<String, Object>> entrySet()
+	{
+		return this.getData().entrySet();
 	}
 
 	@Override
@@ -188,12 +200,7 @@ public class Row implements Serializable
 		{
 			return false;
 		}
-		return Tools.equals(this.get(), ((Row) obj).get());
-	}
-
-	public Map<String, Object> get()
-	{
-		return data;
+		return Tools.equals(this, (Row) obj);
 	}
 
 	public Object get(int index)
@@ -201,15 +208,26 @@ public class Row implements Serializable
 		return this.cols()[index];
 	}
 
+	@Override
+	public Object get(Object key)
+	{
+		return this.getData().get(key);
+	}
+
 	public Object get(String key)
 	{
-		return this.get().get(key);
+		return this.getData().get(key);
 	}
 
 	public Object get(String key, Object deft)
 	{
 		Object value = this.get(key);
 		return value != null ? value : deft;
+	}
+
+	protected Map<String, Object> getData()
+	{
+		return data;
 	}
 
 	public Row gets(Iterable<String> keys)
@@ -266,36 +284,82 @@ public class Row implements Serializable
 	{
 		final int prime = 31;
 		int result = 1;
-		for (Object v : this.get().values())
+		for (Object v : this.getData().values())
 		{
 			result = prime * result + (v == null ? 0 : v.hashCode());
 		}
 		return result;
 	}
 
+	public String[] heads()
+	{
+		if (this.heads == null)
+		{
+			this.heads = this.getData().keySet().toArray(new String[0]);
+		}
+		return this.heads;
+	}
+
 	protected void init()
 	{
-		if (this.get() == null)
+		if (this.getData() == null)
 		{
 			this.setData(new LinkedHashMap<String, Object>());
 		}
 	}
 
-	protected void resetCols()
+	@Override
+	public boolean isEmpty()
 	{
+		return this.getData().isEmpty();
+	}
+
+	@Override
+	public Set<String> keySet()
+	{
+		return this.getData().keySet();
+	}
+
+	@Override
+	public Object put(String key, Object value)
+	{
+		return this.resetCols().putting(key, value);
+	}
+
+	@Override
+	public void putAll(Map<? extends String, ? extends Object> m)
+	{
+		this.resetCols();
+		if (m != null)
+		{
+			for (Entry<?, ?> entry : m.entrySet())
+			{
+				this.putting(entry.getKey() != null ? entry.getKey().toString() : null, entry.getValue());
+			}
+		}
+	}
+
+	protected Object putting(String key, Object value)
+	{
+		return this.getData().put(key, this.cast(value));
+	}
+
+	@Override
+	public Object remove(Object key)
+	{
+		return this.resetCols().getData().remove(key);
+	}
+
+	protected Row resetCols()
+	{
+		this.heads = null;
 		this.cols = null;
+		return this;
 	}
 
 	public Row set(Map<String, Object> data)
 	{
-		this.resetCols();
-		if (data != null)
-		{
-			for (Entry<String, Object> entry : data.entrySet())
-			{
-				this.set(entry.getKey(), entry.getValue());
-			}
-		}
+		this.putAll(data);
 		return this;
 	}
 
@@ -308,7 +372,7 @@ public class Row implements Serializable
 			int count = meta.getColumnCount();
 			for (int i = 1; i <= count; i++)
 			{
-				this.set(meta.getColumnLabel(i), rs.getObject(i));
+				this.putting(meta.getColumnLabel(i), rs.getObject(i));
 			}
 		}
 		return this;
@@ -316,14 +380,20 @@ public class Row implements Serializable
 
 	public Row set(String key, Object value)
 	{
-		this.resetCols();
-		this.get().put(key, this.cast(value));
+		this.put(key, value);
 		return this;
 	}
 
 	protected void setData(Map<String, Object> data)
 	{
 		this.data = data;
+		this.resetCols();
+	}
+
+	@Override
+	public int size()
+	{
+		return this.getData().size();
 	}
 
 	public <T> T to(Class<T> cls)
@@ -342,7 +412,7 @@ public class Row implements Serializable
 	{
 		try
 		{
-			return project(object, this.get());
+			return project(object, this.getData());
 		}
 		catch (Exception e)
 		{
@@ -354,5 +424,11 @@ public class Row implements Serializable
 	public String toString()
 	{
 		return this.to(JSON.class).toString();
+	}
+
+	@Override
+	public Collection<Object> values()
+	{
+		return this.getData().values();
 	}
 }
