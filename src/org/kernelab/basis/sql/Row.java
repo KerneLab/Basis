@@ -158,7 +158,7 @@ public class Row implements Map<String, Object>, Serializable
 		this.getData().clear();
 	}
 
-	public Object[] cols()
+	public Object[] columns()
 	{
 		if (this.cols == null)
 		{
@@ -205,7 +205,7 @@ public class Row implements Map<String, Object>, Serializable
 
 	public Object get(int index)
 	{
-		return this.cols()[index];
+		return this.columns()[index];
 	}
 
 	@Override
@@ -291,7 +291,7 @@ public class Row implements Map<String, Object>, Serializable
 		return result;
 	}
 
-	public String[] heads()
+	public String[] headers()
 	{
 		if (this.heads == null)
 		{
