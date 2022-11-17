@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -47,6 +48,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
@@ -60,6 +62,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.RandomAccess;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.Vector;
@@ -6326,6 +6329,194 @@ public class Tools
 		}
 
 		return buffer;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T project(T target, Object source, Map<String, Object> dict)
+	{
+		if (target == null || source == null)
+		{
+			return target;
+		}
+
+		if (dict == null)
+		{
+			dict = new LinkedHashMap<String, Object>();
+			for (String key : JSON.FieldsOf(target).keySet())
+			{
+				dict.put(key, key);
+			}
+		}
+
+		List<Object> list = null;
+		if (source.getClass().isArray())
+		{
+			int len = Array.getLength(source);
+			list = new ArrayList<Object>(len);
+			for (int i = 0; i < len; i++)
+			{
+				list.add(Array.get(source, i));
+			}
+		}
+		else if (source instanceof JSAN)
+		{
+			list = new ArrayList<Object>(((JSAN) source).length());
+			((JSAN) source).addTo(list);
+		}
+		else if (source instanceof List && source instanceof RandomAccess)
+		{
+			list = (List<Object>) source;
+		}
+		else if (source instanceof Iterable)
+		{
+			list = new LinkedList<Object>();
+			for (Object o : ((Iterable<?>) source))
+			{
+				list.add(o);
+			}
+			list = new ArrayList<Object>(list);
+		}
+
+		String key = null;
+		Object src = null, val = null;
+		Integer idx = null;
+		for (Entry<String, Object> entry : dict.entrySet())
+		{
+			key = entry.getKey();
+			if (key == null)
+			{
+				continue;
+			}
+
+			src = entry.getValue();
+			if (src == null)
+			{
+				val = null;
+			}
+			else if (list != null)
+			{
+				if (src instanceof Integer)
+				{
+					idx = (Integer) src;
+				}
+				else
+				{
+					idx = Variable.asInteger(src.toString());
+				}
+
+				if (val != null)
+				{
+					try
+					{
+						val = list.get(idx);
+					}
+					catch (Exception e)
+					{
+						val = null;
+					}
+				}
+				else
+				{
+					val = null;
+				}
+			}
+			else if (source instanceof JSON)
+			{
+				val = ((JSON) source).attrObject(src.toString());
+			}
+			else if (source instanceof Map)
+			{
+				val = ((Map<?, ?>) source).get(src);
+			}
+			else
+			{
+				try
+				{
+					val = Tools.access(source, src.toString(), null);
+				}
+				catch (Exception e)
+				{
+					val = null;
+				}
+			}
+
+			if (target.getClass().isArray())
+			{
+				try
+				{
+					Array.set(target, Variable.asInteger(key), val);
+				}
+				catch (Exception e)
+				{
+				}
+			}
+			else if (target instanceof JSON)
+			{
+				if (target instanceof JSAN && (idx = Variable.asInteger(key)) != null)
+				{
+					((JSAN) target).attr(idx, val);
+				}
+				else
+				{
+					((JSON) target).attr(key, val);
+				}
+			}
+			else if (target instanceof Map)
+			{
+				((Map<Object, Object>) target).put(key, val);
+			}
+			else if (target instanceof List)
+			{
+				if ((idx = Variable.asInteger(key)) != null)
+				{
+					List<Object> l = (List<Object>) target;
+					for (int i = l.size(); i <= idx; i++)
+					{
+						l.add(null);
+					}
+					try
+					{
+						l.set(idx, val);
+					}
+					catch (Exception e)
+					{
+					}
+				}
+			}
+			else
+			{
+				try
+				{
+					Tools.access(target, key, null, val);
+				}
+				catch (Exception e)
+				{
+				}
+			}
+		}
+
+		return target;
+	}
+
+	public static <T> T project(T target, Object source, String... keys)
+	{
+		if (target == null || source == null)
+		{
+			return target;
+		}
+
+		Map<String, Object> dict = null;
+
+		if (keys != null && keys.length > 0)
+		{
+			dict = new LinkedHashMap<String, Object>();
+			for (String key : keys)
+			{
+				dict.put(key, key);
+			}
+		}
+
+		return project(target, source, dict);
 	}
 
 	/**

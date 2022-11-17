@@ -38,6 +38,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -550,7 +551,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	 * @author Dilly King
 	 * 
 	 */
-	public static class JSAN extends JSON
+	public static class JSAN extends JSON implements RandomAccess
 	{
 		private static class ArrayIndexComparator implements Comparator<String>, Serializable
 		{
@@ -7171,6 +7172,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	@Override
 	public void clear()
 	{
 		rescind();
@@ -7208,16 +7210,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return (T) this;
 	}
 
+	@Override
 	public boolean containsKey(Object key)
 	{
 		return object().containsKey(key);
 	}
 
+	@Override
 	public boolean containsValue(Object value)
 	{
 		return object().containsValue(value);
 	}
 
+	@Override
 	public Context context()
 	{
 		JSON outer = this;
@@ -7235,17 +7240,20 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return AsContext(outer);
 	}
 
+	@Override
 	public String entry()
 	{
 		return entry;
 	}
 
+	@Override
 	public JSON entry(String entry)
 	{
 		this.entry = entry;
 		return this;
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public Set<Map.Entry<String, Object>> entrySet()
 	{
@@ -7317,6 +7325,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return res;
 	}
 
+	@Override
 	public Object get(Object key)
 	{
 		return object().get(key);
@@ -7373,11 +7382,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return has;
 	}
 
+	@Override
 	public boolean isEmpty()
 	{
 		return object().isEmpty();
 	}
 
+	@Override
 	public ValueIterator<Object> iterator()
 	{
 		return new ValueIterator<Object>();
@@ -7422,6 +7433,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return new ValueIterator<T>(tran);
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public Set<String> keySet()
 	{
@@ -7442,11 +7454,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	@Override
 	public JSON outer()
 	{
 		return outer;
 	}
 
+	@Override
 	public JSON outer(JSON outer)
 	{
 		this.outer = outer;
@@ -7710,6 +7724,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	@Override
 	public Object put(String key, Object value)
 	{
 		Object old = null;
@@ -7761,6 +7776,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return old;
 	}
 
+	@Override
 	public void putAll(Map<? extends String, ? extends Object> map)
 	{
 		for (Map.Entry<?, ?> entry : map.entrySet())
@@ -8185,6 +8201,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	@Override
 	public Object remove(Object key)
 	{
 		Object value = object().remove(key);
@@ -8246,6 +8263,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	@Override
 	public int size()
 	{
 		return object().size();
@@ -8655,6 +8673,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return val == null ? new Timestamp(defaultValue) : val;
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public Collection<Object> values()
 	{
