@@ -6339,10 +6339,12 @@ public class Tools
 			return target;
 		}
 
+		Map<String, Field> fields = JSON.FieldsOf(target);
+
 		if (dict == null)
 		{
 			dict = new LinkedHashMap<String, Object>();
-			for (String key : JSON.FieldsOf(target).keySet())
+			for (String key : fields.keySet())
 			{
 				dict.put(key, key);
 			}
@@ -6378,7 +6380,8 @@ public class Tools
 		}
 
 		String key = null;
-		Object src = null, val = null;
+		Field field = null;
+		Object src = null, dat = null, val = null;
 		Integer idx = null;
 		for (Entry<String, Object> entry : dict.entrySet())
 		{
@@ -6391,7 +6394,7 @@ public class Tools
 			src = entry.getValue();
 			if (src == null)
 			{
-				val = null;
+				dat = null;
 			}
 			else if (list != null)
 			{
@@ -6404,40 +6407,55 @@ public class Tools
 					idx = Variable.asInteger(src.toString());
 				}
 
-				if (val != null)
+				if (dat != null)
 				{
 					try
 					{
-						val = list.get(idx);
+						dat = list.get(idx);
 					}
 					catch (Exception e)
 					{
-						val = null;
+						dat = null;
 					}
 				}
 				else
 				{
-					val = null;
+					dat = null;
 				}
 			}
 			else if (source instanceof JSON)
 			{
-				val = ((JSON) source).attrObject(src.toString());
+				dat = ((JSON) source).attrObject(src.toString());
 			}
 			else if (source instanceof Map)
 			{
-				val = ((Map<?, ?>) source).get(src);
+				dat = ((Map<?, ?>) source).get(src);
 			}
 			else
 			{
 				try
 				{
-					val = Tools.access(source, src.toString(), null);
+					dat = Tools.access(source, src.toString(), null);
 				}
 				catch (Exception e)
 				{
-					val = null;
+					dat = null;
 				}
+			}
+
+			field = fields.get(key);
+			if (field != null && dat != null)
+			{
+				val = Tools.castTo(dat, field.getType());
+			}
+			else
+			{
+				val = dat;
+			}
+
+			if (val == null)
+			{
+				val = dat;
 			}
 
 			if (target.getClass().isArray())
