@@ -6339,17 +6339,6 @@ public class Tools
 			return target;
 		}
 
-		Map<String, Field> fields = JSON.FieldsOf(target);
-
-		if (dict == null)
-		{
-			dict = new LinkedHashMap<String, Object>();
-			for (String key : fields.keySet())
-			{
-				dict.put(key, key);
-			}
-		}
-
 		List<Object> list = null;
 		if (source.getClass().isArray())
 		{
@@ -6360,10 +6349,13 @@ public class Tools
 				list.add(Array.get(source, i));
 			}
 		}
-		else if (source instanceof JSAN)
+		else if (source instanceof JSON)
 		{
-			list = new ArrayList<Object>(((JSAN) source).length());
-			((JSAN) source).addTo(list);
+			if (source instanceof JSAN)
+			{
+				list = new ArrayList<Object>(((JSAN) source).length());
+				((JSAN) source).addTo(list);
+			}
 		}
 		else if (source instanceof List && source instanceof RandomAccess)
 		{
@@ -6372,11 +6364,63 @@ public class Tools
 		else if (source instanceof Iterable)
 		{
 			list = new LinkedList<Object>();
-			for (Object o : ((Iterable<?>) source))
+			for (Object o : (Iterable<?>) source)
 			{
 				list.add(o);
 			}
 			list = new ArrayList<Object>(list);
+		}
+
+		Map<String, Field> fields = JSON.FieldsOf(target);
+
+		if (dict == null)
+		{
+			dict = new LinkedHashMap<String, Object>();
+
+			if (target.getClass().isArray())
+			{
+				fields.clear();
+				int len = Array.getLength(target);
+				for (int i = 0; i < len; i++)
+				{
+					dict.put(String.valueOf(i), i);
+				}
+			}
+			else if (target instanceof Map || target instanceof Collection)
+			{
+				fields.clear();
+				if (list != null)
+				{
+					for (int i = 0; i < list.size(); i++)
+					{
+						dict.put(String.valueOf(i), i);
+					}
+				}
+				else if (source instanceof Map)
+				{
+					for (Object key : ((Map<Object, Object>) source).keySet())
+					{
+						if (key != null)
+						{
+							dict.put(key.toString(), key);
+						}
+					}
+				}
+				else
+				{
+					for (String key : JSON.FieldsOf(source).keySet())
+					{
+						dict.put(key, key);
+					}
+				}
+			}
+			else
+			{
+				for (String key : fields.keySet())
+				{
+					dict.put(key, key);
+				}
+			}
 		}
 
 		String key = null;
@@ -6407,7 +6451,7 @@ public class Tools
 					idx = Variable.asInteger(src.toString());
 				}
 
-				if (dat != null)
+				if (idx != null)
 				{
 					try
 					{
@@ -6501,11 +6545,15 @@ public class Tools
 					}
 				}
 			}
+			else if (target instanceof Collection)
+			{
+				((Collection<Object>) target).add(val);
+			}
 			else
 			{
 				try
 				{
-					Tools.access(target, key, null, val);
+					Tools.access(target, key, field, val);
 				}
 				catch (Exception e)
 				{
