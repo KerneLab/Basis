@@ -151,12 +151,10 @@ public class Entrance
 
 	protected static final DateFormat	VERSION_FORMAT		= new SimpleDateFormat("yyyy.MM.dd");
 
-	public static final char			PARAMETER_PREFIX	= '-';
-
 	public static final char			DISPLAY_SEPARATOR	= ' ';
 
 	public static final byte[]			CLASS_MAGIC_NUMBER	= new byte[] { (byte) 0xCA, (byte) 0xFE, (byte) 0xBA,
-			(byte) 0xBE									};
+			(byte) 0xBE };
 
 	public static JarFile BelongingJarFile(Class<?> cls)
 	{
@@ -358,7 +356,8 @@ public class Entrance
 
 					p = q;
 
-				} while (true);
+				}
+				while (true);
 			}
 		}
 
@@ -395,6 +394,8 @@ public class Entrance
 			return param.get(param.size() - 1);
 		}
 	}
+
+	private String						prefix		= "-";
 
 	private String[]					arguments;
 
@@ -530,9 +531,9 @@ public class Entrance
 			{
 				if (arg != null)
 				{
-					if (arg.length() > 1 && arg.charAt(0) == PARAMETER_PREFIX)
+					if (arg.length() >= prefix().length() && arg.startsWith(prefix()))
 					{
-						key = arg.substring(1);
+						key = arg.substring(prefix().length());
 						values = new ArrayList<String>(1);
 						parameters.put(key, values);
 					}
@@ -549,8 +550,8 @@ public class Entrance
 
 	/**
 	 * To handle different form of arguments. If the first argument is start
-	 * with '-' then the gather(String...) method would be used, otherwise,
-	 * assign(String...) would be used.
+	 * with prefix (default '-') then the gather(String...) method would be
+	 * used, otherwise, assign(String...) would be used.
 	 * 
 	 * @param args
 	 * @return
@@ -563,7 +564,7 @@ public class Entrance
 
 			if (param != null)
 			{
-				if (param.length() > 1 && param.charAt(0) == PARAMETER_PREFIX)
+				if (param.length() >= prefix().length() && param.startsWith(prefix()))
 				{
 					this.gather(args);
 				}
@@ -651,6 +652,17 @@ public class Entrance
 		}
 
 		return values;
+	}
+
+	public String prefix()
+	{
+		return prefix;
+	}
+
+	public Entrance prefix(String prefix)
+	{
+		this.prefix = prefix == null ? "" : prefix;
+		return this;
 	}
 
 	public Entrance present()
