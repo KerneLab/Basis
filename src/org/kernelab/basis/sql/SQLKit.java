@@ -1562,6 +1562,8 @@ public class SQLKit
 
 	private String									boundary;
 
+	private int										queryTimeout			= -1;
+
 	private boolean									reuseStatements			= true;
 
 	private int										resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
@@ -1875,7 +1877,8 @@ public class SQLKit
 
 	public Sequel execute(CallableStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(this, statement, bindParameters(statement, params).execute()).setTypeMap(this.getTypeMap());
+		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
+				.setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(CallableStatement statement, JSAN params) throws SQLException
@@ -1895,12 +1898,14 @@ public class SQLKit
 
 	public Sequel execute(CallableStatement statement, Object... params) throws SQLException
 	{
-		return new Sequel(this, statement, bindParameters(statement, params).execute()).setTypeMap(this.getTypeMap());
+		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
+				.setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(this, statement, bindParameters(statement, params).execute()).setTypeMap(this.getTypeMap());
+		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
+				.setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(PreparedStatement statement, JSAN params) throws SQLException
@@ -1920,12 +1925,13 @@ public class SQLKit
 
 	public Sequel execute(PreparedStatement statement, Object... params) throws SQLException
 	{
-		return new Sequel(this, statement, bindParameters(statement, params).execute()).setTypeMap(this.getTypeMap());
+		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
+				.setTypeMap(this.getTypeMap());
 	}
 
 	protected Sequel execute(Statement statement, String sql) throws SQLException
 	{
-		return new Sequel(this, statement, statement.execute(sql)).setTypeMap(this.getTypeMap());
+		return new Sequel(this, statement, executeStatement(statement, sql)).setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(String sql) throws SQLException
@@ -2047,7 +2053,65 @@ public class SQLKit
 
 	public int[] executeBatch(Statement statement) throws SQLException
 	{
+		if (this.getQueryTimeout() >= 0)
+		{
+			statement.setQueryTimeout(this.getQueryTimeout());
+		}
 		return statement.executeBatch();
+	}
+
+	protected ResultSet executeQuery(PreparedStatement statement) throws SQLException
+	{
+		if (this.getQueryTimeout() >= 0)
+		{
+			statement.setQueryTimeout(this.getQueryTimeout());
+		}
+		return statement.executeQuery();
+	}
+
+	protected ResultSet executeQuery(Statement statement, String sql) throws SQLException
+	{
+		if (this.getQueryTimeout() >= 0)
+		{
+			statement.setQueryTimeout(this.getQueryTimeout());
+		}
+		return statement.executeQuery(sql);
+	}
+
+	protected boolean executeStatement(PreparedStatement statement) throws SQLException
+	{
+		if (this.getQueryTimeout() >= 0)
+		{
+			statement.setQueryTimeout(this.getQueryTimeout());
+		}
+		return statement.execute();
+	}
+
+	protected boolean executeStatement(Statement statement, String sql) throws SQLException
+	{
+		if (this.getQueryTimeout() >= 0)
+		{
+			statement.setQueryTimeout(this.getQueryTimeout());
+		}
+		return statement.execute(sql);
+	}
+
+	protected int executeUpdate(PreparedStatement statement) throws SQLException
+	{
+		if (this.getQueryTimeout() >= 0)
+		{
+			statement.setQueryTimeout(this.getQueryTimeout());
+		}
+		return statement.executeUpdate();
+	}
+
+	protected int executeUpdate(Statement statement, String sql) throws SQLException
+	{
+		if (this.getQueryTimeout() >= 0)
+		{
+			statement.setQueryTimeout(this.getQueryTimeout());
+		}
+		return statement.executeUpdate(sql);
 	}
 
 	@Override
@@ -2100,6 +2164,11 @@ public class SQLKit
 	protected Map<String, List<String>> getParameters()
 	{
 		return parameters;
+	}
+
+	public int getQueryTimeout()
+	{
+		return queryTimeout;
 	}
 
 	public ResultSet getResultSet()
@@ -3066,7 +3135,7 @@ public class SQLKit
 
 	public ResultSet query(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return bindParameters(statement, params).executeQuery();
+		return executeQuery(bindParameters(statement, params));
 	}
 
 	public ResultSet query(PreparedStatement statement, JSAN params) throws SQLException
@@ -3086,12 +3155,12 @@ public class SQLKit
 
 	public ResultSet query(PreparedStatement statement, Object... params) throws SQLException
 	{
-		return bindParameters(statement, params).executeQuery();
+		return executeQuery(bindParameters(statement, params));
 	}
 
 	protected ResultSet query(Statement statement, String sql) throws SQLException
 	{
-		return statement.executeQuery(sql);
+		return executeQuery(statement, sql);
 	}
 
 	public ResultSet query(String sql) throws SQLException
@@ -3336,6 +3405,12 @@ public class SQLKit
 		return this;
 	}
 
+	public SQLKit setQueryTimeout(int seconds)
+	{
+		this.queryTimeout = seconds;
+		return this;
+	}
+
 	public SQLKit setReuseStatements(boolean reuseStatements)
 	{
 		this.reuseStatements = reuseStatements;
@@ -3380,7 +3455,7 @@ public class SQLKit
 
 	public int update(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return bindParameters(statement, params).executeUpdate();
+		return executeUpdate(bindParameters(statement, params));
 	}
 
 	public int update(PreparedStatement statement, JSAN params) throws SQLException
@@ -3413,12 +3488,12 @@ public class SQLKit
 	 */
 	public int update(PreparedStatement statement, Object... params) throws SQLException
 	{
-		return bindParameters(statement, params).executeUpdate();
+		return executeUpdate(bindParameters(statement, params));
 	}
 
 	protected int update(Statement statement, String sql) throws SQLException
 	{
-		return statement.executeUpdate(sql);
+		return executeUpdate(statement, sql);
 	}
 
 	public int update(String sql) throws SQLException
