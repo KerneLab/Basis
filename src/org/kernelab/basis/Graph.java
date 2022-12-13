@@ -371,6 +371,8 @@ public class Graph<N, E>
 
 	private Set<N>						nodes;
 
+	private Map<N, N>					nodeMap;
+
 	private Map<N, Set<Link<N, E>>>		inLinks;
 
 	private Map<N, Set<Link<N, E>>>		outLinks;
@@ -390,6 +392,14 @@ public class Graph<N, E>
 	{
 		this.getNodes().add(link.source);
 		this.getNodes().add(link.target);
+		if (!this.getNodeMap().containsKey(link.source))
+		{
+			this.getNodeMap().put(link.source, link.source);
+		}
+		if (!this.getNodeMap().containsKey(link.target))
+		{
+			this.getNodeMap().put(link.target, link.target);
+		}
 		this.getMap().put(link.toTrace(), link);
 		this.getLinks().add(link);
 		this.getInLinks(link.target).add(link);
@@ -430,6 +440,7 @@ public class Graph<N, E>
 	public Graph<N, E> clear()
 	{
 		this.getNodes().clear();
+		this.getNodeMap().clear();
 		this.getMap().clear();
 		this.getLinks().clear();
 		this.getInLinks().clear();
@@ -546,6 +557,16 @@ public class Graph<N, E>
 		return this.getInNeighbors(node).union(this.getOutNeighbors(node)).distinct();
 	}
 
+	public N getNode(N node)
+	{
+		return this.getNodeMap().get(node);
+	}
+
+	protected Map<N, N> getNodeMap()
+	{
+		return nodeMap;
+	}
+
 	public Set<N> getNodes()
 	{
 		return nodes;
@@ -600,6 +621,7 @@ public class Graph<N, E>
 		this.setMap(new HashMap<Trace<N>, Link<N, E>>());
 		this.setLinks(new HashSet<Link<N, E>>());
 		this.setNodes(new HashSet<N>());
+		this.setNodeMap(new HashMap<N, N>());
 		this.setInLinks(new HashMap<N, Set<Link<N, E>>>());
 		this.setOutLinks(new HashMap<N, Set<Link<N, E>>>());
 	}
@@ -627,6 +649,8 @@ public class Graph<N, E>
 		{
 			return false;
 		}
+
+		this.getNodeMap().remove(node);
 
 		Set<Link<N, E>> inLinks = this.getInLinks().remove(node);
 
@@ -707,6 +731,11 @@ public class Graph<N, E>
 	protected void setMap(Map<Trace<N>, Link<N, E>> map)
 	{
 		this.map = map;
+	}
+
+	protected void setNodeMap(Map<N, N> nodeMap)
+	{
+		this.nodeMap = nodeMap;
 	}
 
 	protected void setNodes(Set<N> nodes)
