@@ -121,7 +121,7 @@ public class DemoSequel
 					.map(new Mapper<ResultSet, DemoObject>()
 					{
 						@Override
-						public DemoObject map(ResultSet el)
+						public DemoObject map(ResultSet el) throws SQLException
 						{
 							return SQLKit.mapResultRow(el, DemoObject.class,
 									new JSON().attr("id", "ID").attr("name", "NAME"));

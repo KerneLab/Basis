@@ -46,6 +46,7 @@ public class Sequel implements Iterable<ResultSet>
 			this.closing = true;
 		}
 
+		@Override
 		public void close()
 		{
 			if (rs != null)
@@ -97,6 +98,7 @@ public class Sequel implements Iterable<ResultSet>
 			return this;
 		}
 
+		@Override
 		public boolean hasNext()
 		{
 			if (rs != null)
@@ -132,6 +134,7 @@ public class Sequel implements Iterable<ResultSet>
 			}
 		}
 
+		@Override
 		public Iterator<T> iterator()
 		{
 			return this;
@@ -148,6 +151,7 @@ public class Sequel implements Iterable<ResultSet>
 			return this;
 		}
 
+		@Override
 		public T next()
 		{
 			try
@@ -207,6 +211,7 @@ public class Sequel implements Iterable<ResultSet>
 			return this;
 		}
 
+		@Override
 		protected T next(ResultSet rs)
 		{
 			if (mapper() != null)
@@ -248,6 +253,7 @@ public class Sequel implements Iterable<ResultSet>
 			return this;
 		}
 
+		@Override
 		protected ResultSet next(ResultSet rs)
 		{
 			return rs;
@@ -272,12 +278,14 @@ public class Sequel implements Iterable<ResultSet>
 			this.current = current;
 		}
 
+		@Override
 		public void close()
 		{
 			setIterating(false);
 			Sequel.this.close();
 		}
 
+		@Override
 		public boolean hasNext()
 		{
 			if (Sequel.this.isClosed())
@@ -296,7 +304,14 @@ public class Sequel implements Iterable<ResultSet>
 			}
 			else
 			{
-				Sequel.this.nextResult(current);
+				try
+				{
+					Sequel.this.nextResult(current);
+				}
+				catch (SQLException e)
+				{
+					throw new RuntimeException(e);
+				}
 			}
 
 			if (Sequel.this.hasResult())
@@ -312,11 +327,13 @@ public class Sequel implements Iterable<ResultSet>
 			}
 		}
 
+		@Override
 		public Iterator<Sequel> iterator()
 		{
 			return this;
 		}
 
+		@Override
 		public Sequel next()
 		{
 			try
@@ -387,9 +404,11 @@ public class Sequel implements Iterable<ResultSet>
 		this.setResultSet(rs);
 	}
 
-	public Sequel(SQLKit kit, Statement statement, boolean hasResultSet)
+	public Sequel(SQLKit kit, Statement statement, boolean hasResultSet) throws SQLException
 	{
-		this.setKit(kit).setStatement(statement).hasResultSetObject(hasResultSet).refreshUpdateCount();
+		this.setKit(kit).setStatement(statement) //
+				.hasResultSetObject(hasResultSet) //
+				.refreshUpdateCount();
 	}
 
 	public Canal<?, ResultSet> canal()
@@ -486,16 +505,9 @@ public class Sequel implements Iterable<ResultSet>
 		return this.isCallResult() ? (CallableStatement) this.getStatement() : null;
 	}
 
-	public Sequel getGeneratedKeys()
+	public Sequel getGeneratedKeys() throws SQLException
 	{
-		try
-		{
-			return new Sequel(this.getStatement().getGeneratedKeys());
-		}
-		catch (SQLException e)
-		{
-			return null;
-		}
+		return new Sequel(this.getStatement().getGeneratedKeys());
 	}
 
 	protected SQLKit getKit()
@@ -503,18 +515,11 @@ public class Sequel implements Iterable<ResultSet>
 		return kit;
 	}
 
-	public ResultSetMetaData getMetaData()
+	public ResultSetMetaData getMetaData() throws SQLException
 	{
 		if (this.isResultSet())
 		{
-			try
-			{
-				return this.getResultSet().getMetaData();
-			}
-			catch (SQLException e)
-			{
-				return null;
-			}
+			return this.getResultSet().getMetaData();
 		}
 		else
 		{
@@ -522,32 +527,20 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	public Map<String, Object> getMetaMapIndex()
+	public Map<String, Object> getMetaMapIndex() throws SQLException
 	{
 		if (metaMapIndex == null)
 		{
-			try
-			{
-				metaMapIndex = SQLKit.mapIndexOfMetaData(this.getResultSet().getMetaData());
-			}
-			catch (SQLException e)
-			{
-			}
+			metaMapIndex = SQLKit.mapIndexOfMetaData(this.getResultSet().getMetaData());
 		}
 		return metaMapIndex;
 	}
 
-	public Map<String, Object> getMetaMapName()
+	public Map<String, Object> getMetaMapName() throws SQLException
 	{
 		if (metaMapName == null)
 		{
-			try
-			{
-				metaMapName = SQLKit.mapNameOfMetaData(this.getResultSet().getMetaData());
-			}
-			catch (SQLException e)
-			{
-			}
+			metaMapName = SQLKit.mapNameOfMetaData(this.getResultSet().getMetaData());
 		}
 		return metaMapName;
 	}
@@ -577,17 +570,18 @@ public class Sequel implements Iterable<ResultSet>
 		return type;
 	}
 
-	public <E> E getRow(Class<E> cls)
+	public <E> E getRow(Class<E> cls) throws SQLException
 	{
 		return this.getRow(cls, null);
 	}
 
-	public <E> E getRow(Class<E> cls, Map<String, Object> map)
+	public <E> E getRow(Class<E> cls, Map<String, Object> map) throws SQLException
 	{
 		return this.getRow(cls, map, this.getTypeMap());
 	}
 
 	public <E> E getRow(Class<E> cls, Map<String, Object> map, Map<Class<?>, Mapper<Object, Object>> typeMap)
+			throws SQLException
 	{
 		if (this.preparedResultSet())
 		{
@@ -603,7 +597,7 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	public <E> E getRow(Mapper<ResultSet, E> mapper)
+	public <E> E getRow(Mapper<ResultSet, E> mapper) throws SQLException
 	{
 		if (this.preparedResultSet())
 		{
@@ -615,52 +609,40 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	public JSAN getRowAsJSAN()
+	public JSAN getRowAsJSAN() throws SQLException
 	{
 		return this.getRowAsJSAN(null);
 	}
 
-	public JSAN getRowAsJSAN(Map<String, Object> map)
+	public JSAN getRowAsJSAN(Map<String, Object> map) throws SQLException
 	{
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (map == null)
 			{
-				if (map == null)
-				{
-					map = this.getMetaMapIndex();
-				}
-				return SQLKit.jsanOfResultRow(this.getResultSet(), map);
+				map = this.getMetaMapIndex();
 			}
-		}
-		catch (Exception e)
-		{
+			return SQLKit.jsanOfResultRow(this.getResultSet(), map);
 		}
 		return null;
 	}
 
-	public JSON getRowAsJSON()
+	public JSON getRowAsJSON() throws SQLException
 	{
 		return this.getRowAsJSON(null);
 	}
 
-	public JSON getRowAsJSON(Map<String, Object> map)
+	public JSON getRowAsJSON(Map<String, Object> map) throws SQLException
 	{
 		JSON json = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (map == null)
 			{
-				if (map == null)
-				{
-					map = this.getMetaMapName();
-				}
-				json = SQLKit.jsonOfResultRow(this.getResultSet(), map);
+				map = this.getMetaMapName();
 			}
-		}
-		catch (Exception e)
-		{
+			json = SQLKit.jsonOfResultRow(this.getResultSet(), map);
 		}
 
 		return json;
@@ -699,36 +681,34 @@ public class Sequel implements Iterable<ResultSet>
 		return SQLKit.mapResultSet(this.getKit(), this.getResultSet(), cls, map, typeMap);
 	}
 
-	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls)
+	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls) throws SQLException
 	{
 		return this.getRows(rows, cls, -1);
 	}
 
-	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, int limit)
+	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, int limit) throws SQLException
 	{
 		return this.getRows(rows, cls, null, limit);
 	}
 
-	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map)
+	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map) throws SQLException
 	{
 		return this.getRows(rows, cls, map, -1);
 	}
 
 	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map, int limit)
+			throws SQLException
 	{
 		return this.getRows(rows, cls, map, this.getTypeMap(), limit);
 	}
 
 	public <E> Collection<E> getRows(Collection<E> rows, Class<E> cls, Map<String, Object> map,
-			Map<Class<?>, Mapper<Object, Object>> typeMap, int limit)
+			Map<Class<?>, Mapper<Object, Object>> typeMap, int limit) throws SQLException
 	{
 		try
 		{
 			rows = SQLKit.mapResultSet(this.getResultSet(), rows, cls, map, typeMap, limit);
 		}
-		catch (SQLException e)
-		{
-		}
 		finally
 		{
 			this.close();
@@ -736,20 +716,17 @@ public class Sequel implements Iterable<ResultSet>
 		return rows;
 	}
 
-	public <E> Collection<E> getRows(Collection<E> rows, Mapper<ResultSet, E> mapper)
+	public <E> Collection<E> getRows(Collection<E> rows, Mapper<ResultSet, E> mapper) throws SQLException
 	{
 		return this.getRows(rows, mapper, -1);
 	}
 
-	public <E> Collection<E> getRows(Collection<E> rows, Mapper<ResultSet, E> mapper, int limit)
+	public <E> Collection<E> getRows(Collection<E> rows, Mapper<ResultSet, E> mapper, int limit) throws SQLException
 	{
 		try
 		{
 			rows = SQLKit.mapResultSet(this.getResultSet(), rows, mapper, limit);
 		}
-		catch (SQLException e)
-		{
-		}
 		finally
 		{
 			this.close();
@@ -757,29 +734,26 @@ public class Sequel implements Iterable<ResultSet>
 		return rows;
 	}
 
-	public JSAN getRows(JSAN rows, Class<? extends JSON> cls)
+	public JSAN getRows(JSAN rows, Class<? extends JSON> cls) throws SQLException
 	{
 		return this.getRows(rows, null, cls);
 	}
 
-	public JSAN getRows(JSAN rows, Class<? extends JSON> cls, int limit)
+	public JSAN getRows(JSAN rows, Class<? extends JSON> cls, int limit) throws SQLException
 	{
 		return this.getRows(rows, null, cls, limit);
 	}
 
-	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls)
+	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls) throws SQLException
 	{
 		return this.getRows(rows, map, cls, -1);
 	}
 
-	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls, int limit)
+	public JSAN getRows(JSAN rows, Map<String, Object> map, Class<? extends JSON> cls, int limit) throws SQLException
 	{
 		try
 		{
 			rows = SQLKit.jsanOfResultSet(this.getResultSet(), rows, map, cls, limit);
-		}
-		catch (SQLException e)
-		{
 		}
 		finally
 		{
@@ -818,1517 +792,1205 @@ public class Sequel implements Iterable<ResultSet>
 		return updateCount;
 	}
 
-	public Array getValueArray(int column)
+	public Array getValueArray(int column) throws SQLException
 	{
 		Array value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getArray(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getArray(column);
-			}
+			value = this.getResultSet().getArray(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getArray(column);
 		}
 
 		return value;
 	}
 
-	public Array getValueArray(int column, Array defaultValue)
+	public Array getValueArray(int column, Array defaultValue) throws SQLException
 	{
 		Array value = getValueArray(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Array getValueArray(String column)
+	public Array getValueArray(String column) throws SQLException
 	{
 		Array value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getArray(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getArray(column);
-			}
+			value = this.getResultSet().getArray(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getArray(column);
 		}
 
 		return value;
 	}
 
-	public Array getValueArray(String column, Array defaultValue)
+	public Array getValueArray(String column, Array defaultValue) throws SQLException
 	{
 		Array value = getValueArray(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public InputStream getValueAsciiStream(int column)
+	public InputStream getValueAsciiStream(int column) throws SQLException
 	{
 		InputStream value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getAsciiStream(column);
-			}
-		}
-		catch (SQLException e)
-		{
+			value = this.getResultSet().getAsciiStream(column);
 		}
 
 		return value;
 	}
 
-	public InputStream getValueAsciiStream(int column, InputStream defaultValue)
+	public InputStream getValueAsciiStream(int column, InputStream defaultValue) throws SQLException
 	{
 		InputStream value = getValueAsciiStream(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public InputStream getValueAsciiStream(String column)
+	public InputStream getValueAsciiStream(String column) throws SQLException
 	{
 		InputStream value = null;
 
 		if (this.preparedResultSet())
 		{
-			try
-			{
-				value = this.getResultSet().getAsciiStream(column);
-			}
-			catch (SQLException e)
-			{
-			}
+			value = this.getResultSet().getAsciiStream(column);
 		}
 
 		return value;
 	}
 
-	public InputStream getValueAsciiStream(String column, InputStream defaultValue)
+	public InputStream getValueAsciiStream(String column, InputStream defaultValue) throws SQLException
 	{
 		InputStream value = getValueAsciiStream(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public BigDecimal getValueBigDecimal(int column)
+	public BigDecimal getValueBigDecimal(int column) throws SQLException
 	{
 		BigDecimal value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getBigDecimal(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getBigDecimal(column);
-			}
+			value = this.getResultSet().getBigDecimal(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getBigDecimal(column);
 		}
 
 		return value;
 	}
 
-	public BigDecimal getValueBigDecimal(int column, BigDecimal defaultValue)
+	public BigDecimal getValueBigDecimal(int column, BigDecimal defaultValue) throws SQLException
 	{
 		BigDecimal value = getValueBigDecimal(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public BigDecimal getValueBigDecimal(String column)
+	public BigDecimal getValueBigDecimal(String column) throws SQLException
 	{
 		BigDecimal value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getBigDecimal(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getBigDecimal(column);
-			}
+			value = this.getResultSet().getBigDecimal(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getBigDecimal(column);
 		}
 
 		return value;
 	}
 
-	public BigDecimal getValueBigDecimal(String column, BigDecimal defaultValue)
+	public BigDecimal getValueBigDecimal(String column, BigDecimal defaultValue) throws SQLException
 	{
 		BigDecimal value = getValueBigDecimal(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public InputStream getValueBinaryStream(int column)
+	public InputStream getValueBinaryStream(int column) throws SQLException
 	{
 		InputStream value = null;
 
 		if (this.preparedResultSet())
 		{
-			try
-			{
-				value = this.getResultSet().getBinaryStream(column);
-			}
-			catch (SQLException e)
-			{
-			}
+			value = this.getResultSet().getBinaryStream(column);
 		}
 
 		return value;
 	}
 
-	public InputStream getValueBinaryStream(int column, InputStream defaultValue)
+	public InputStream getValueBinaryStream(int column, InputStream defaultValue) throws SQLException
 	{
 		InputStream value = getValueBinaryStream(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public InputStream getValueBinaryStream(String column)
+	public InputStream getValueBinaryStream(String column) throws SQLException
 	{
 		InputStream value = null;
 
 		if (this.preparedResultSet())
 		{
-			try
-			{
-				value = this.getResultSet().getBinaryStream(column);
-			}
-			catch (SQLException e)
-			{
-			}
+			value = this.getResultSet().getBinaryStream(column);
 		}
 
 		return value;
 	}
 
-	public InputStream getValueBinaryStream(String column, InputStream defaultValue)
+	public InputStream getValueBinaryStream(String column, InputStream defaultValue) throws SQLException
 	{
 		InputStream value = getValueBinaryStream(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Blob getValueBlob(int column)
+	public Blob getValueBlob(int column) throws SQLException
 	{
 		Blob value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getBlob(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getBlob(column);
-			}
+			value = this.getResultSet().getBlob(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getBlob(column);
 		}
 
 		return value;
 	}
 
-	public Blob getValueBlob(int column, Blob defaultValue)
+	public Blob getValueBlob(int column, Blob defaultValue) throws SQLException
 	{
 		Blob value = getValueBlob(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Blob getValueBlob(String column)
+	public Blob getValueBlob(String column) throws SQLException
 	{
 		Blob value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getBlob(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getBlob(column);
-			}
+			value = this.getResultSet().getBlob(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getBlob(column);
 		}
 
 		return value;
 	}
 
-	public Blob getValueBlob(String column, Blob defaultValue)
+	public Blob getValueBlob(String column, Blob defaultValue) throws SQLException
 	{
 		Blob value = getValueBlob(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Boolean getValueBoolean(int column)
+	public Boolean getValueBoolean(int column) throws SQLException
 	{
 		Boolean value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getBoolean(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getBoolean(column);
-				}
+				value = this.getResultSet().getBoolean(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getBoolean(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Boolean getValueBoolean(int column, Boolean defaultValue)
+	public Boolean getValueBoolean(int column, Boolean defaultValue) throws SQLException
 	{
 		Boolean value = getValueBoolean(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Boolean getValueBoolean(String column)
+	public Boolean getValueBoolean(String column) throws SQLException
 	{
 		Boolean value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getBoolean(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getBoolean(column);
-				}
+				value = this.getResultSet().getBoolean(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getBoolean(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Boolean getValueBoolean(String column, Boolean defaultValue)
+	public Boolean getValueBoolean(String column, Boolean defaultValue) throws SQLException
 	{
 		Boolean value = getValueBoolean(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Byte getValueByte(int column)
+	public Byte getValueByte(int column) throws SQLException
 	{
 		Byte value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getByte(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getByte(column);
-				}
+				value = this.getResultSet().getByte(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getByte(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Byte getValueByte(int column, Byte defaultValue)
+	public Byte getValueByte(int column, Byte defaultValue) throws SQLException
 	{
 		Byte value = getValueByte(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Byte getValueByte(String column)
+	public Byte getValueByte(String column) throws SQLException
 	{
 		Byte value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getByte(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getByte(column);
-				}
+				value = this.getResultSet().getByte(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getByte(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Byte getValueByte(String column, Byte defaultValue)
+	public Byte getValueByte(String column, Byte defaultValue) throws SQLException
 	{
 		Byte value = getValueByte(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public byte[] getValueBytes(int column)
+	public byte[] getValueBytes(int column) throws SQLException
 	{
 		byte[] value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getBytes(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getBytes(column);
-			}
+			value = this.getResultSet().getBytes(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getBytes(column);
 		}
 
 		return value;
 	}
 
-	public byte[] getValueBytes(int column, byte[] defaultValue)
+	public byte[] getValueBytes(int column, byte[] defaultValue) throws SQLException
 	{
 		byte[] value = getValueBytes(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public byte[] getValueBytes(String column)
+	public byte[] getValueBytes(String column) throws SQLException
 	{
 		byte[] value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getBytes(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getBytes(column);
-			}
+			value = this.getResultSet().getBytes(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getBytes(column);
 		}
 
 		return value;
 	}
 
-	public byte[] getValueBytes(String column, byte[] defaultValue)
+	public byte[] getValueBytes(String column, byte[] defaultValue) throws SQLException
 	{
 		byte[] value = getValueBytes(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Reader getValueCharacterStream(int column)
+	public Reader getValueCharacterStream(int column) throws SQLException
 	{
 		Reader value = null;
 
 		if (this.preparedResultSet())
 		{
-			try
-			{
-				value = this.getResultSet().getCharacterStream(column);
-			}
-			catch (SQLException e)
-			{
-			}
+			value = this.getResultSet().getCharacterStream(column);
 		}
 
 		return value;
 	}
 
-	public Reader getValueCharacterStream(int column, Reader defaultValue)
+	public Reader getValueCharacterStream(int column, Reader defaultValue) throws SQLException
 	{
 		Reader value = getValueCharacterStream(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Reader getValueCharacterStream(String column)
+	public Reader getValueCharacterStream(String column) throws SQLException
 	{
 		Reader value = null;
 
 		if (this.preparedResultSet())
 		{
-			try
-			{
-				value = this.getResultSet().getCharacterStream(column);
-			}
-			catch (SQLException e)
-			{
-			}
+			value = this.getResultSet().getCharacterStream(column);
 		}
 
 		return value;
 	}
 
-	public Reader getValueCharacterStream(String column, Reader defaultValue)
+	public Reader getValueCharacterStream(String column, Reader defaultValue) throws SQLException
 	{
 		Reader value = getValueCharacterStream(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Clob getValueClob(int column)
+	public Clob getValueClob(int column) throws SQLException
 	{
 		Clob value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getClob(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getClob(column);
-			}
+			value = this.getResultSet().getClob(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getClob(column);
 		}
 
 		return value;
 	}
 
-	public Clob getValueClob(int column, Clob defaultValue)
+	public Clob getValueClob(int column, Clob defaultValue) throws SQLException
 	{
 		Clob value = getValueClob(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Clob getValueClob(String column)
+	public Clob getValueClob(String column) throws SQLException
 	{
 		Clob value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getClob(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getClob(column);
-			}
+			value = this.getResultSet().getClob(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getClob(column);
 		}
 
 		return value;
 	}
 
-	public Clob getValueClob(String column, Clob defaultValue)
+	public Clob getValueClob(String column, Clob defaultValue) throws SQLException
 	{
 		Clob value = getValueClob(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Date getValueDate(int column)
+	public Date getValueDate(int column) throws SQLException
 	{
 		Date value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getDate(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getDate(column);
-			}
+			value = this.getResultSet().getDate(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getDate(column);
 		}
 
 		return value;
 	}
 
-	public Date getValueDate(int column, Calendar calendar)
+	public Date getValueDate(int column, Calendar calendar) throws SQLException
 	{
 		Date value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getDate(column, calendar);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getDate(column, calendar);
-			}
+			value = this.getResultSet().getDate(column, calendar);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getDate(column, calendar);
 		}
 
 		return value;
 	}
 
-	public Date getValueDate(int column, Calendar calendar, Date defaultValue)
+	public Date getValueDate(int column, Calendar calendar, Date defaultValue) throws SQLException
 	{
 		Date value = getValueDate(column, calendar);
 		return value == null ? defaultValue : value;
 	}
 
-	public Date getValueDate(int column, Date defaultValue)
+	public Date getValueDate(int column, Date defaultValue) throws SQLException
 	{
 		Date value = getValueDate(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Date getValueDate(String column)
+	public Date getValueDate(String column) throws SQLException
 	{
 		Date value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getDate(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getDate(column);
-			}
+			value = this.getResultSet().getDate(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getDate(column);
 		}
 
 		return value;
 	}
 
-	public Date getValueDate(String column, Calendar calendar)
+	public Date getValueDate(String column, Calendar calendar) throws SQLException
 	{
 		Date value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getDate(column, calendar);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getDate(column, calendar);
-			}
+			value = this.getResultSet().getDate(column, calendar);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getDate(column, calendar);
 		}
 
 		return value;
 	}
 
-	public Date getValueDate(String column, Calendar calendar, Date defaultValue)
+	public Date getValueDate(String column, Calendar calendar, Date defaultValue) throws SQLException
 	{
 		Date value = getValueDate(column, calendar);
 		return value == null ? defaultValue : value;
 	}
 
-	public Date getValueDate(String column, Date defaultValue)
+	public Date getValueDate(String column, Date defaultValue) throws SQLException
 	{
 		Date value = getValueDate(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Double getValueDouble(int column)
+	public Double getValueDouble(int column) throws SQLException
 	{
 		Double value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getDouble(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getDouble(column);
-				}
+				value = this.getResultSet().getDouble(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getDouble(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Double getValueDouble(int column, Double defaultValue)
+	public Double getValueDouble(int column, Double defaultValue) throws SQLException
 	{
 		Double value = getValueDouble(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Double getValueDouble(String column)
+	public Double getValueDouble(String column) throws SQLException
 	{
 		Double value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getDouble(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getDouble(column);
-				}
+				value = this.getResultSet().getDouble(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getDouble(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Double getValueDouble(String column, Double defaultValue)
+	public Double getValueDouble(String column, Double defaultValue) throws SQLException
 	{
 		Double value = getValueDouble(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Float getValueFloat(int column)
+	public Float getValueFloat(int column) throws SQLException
 	{
 		Float value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getFloat(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getFloat(column);
-				}
+				value = this.getResultSet().getFloat(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getFloat(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Float getValueFloat(int column, Float defaultValue)
+	public Float getValueFloat(int column, Float defaultValue) throws SQLException
 	{
 		Float value = getValueFloat(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Float getValueFloat(String column)
+	public Float getValueFloat(String column) throws SQLException
 	{
 		Float value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getFloat(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getFloat(column);
-				}
+				value = this.getResultSet().getFloat(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getFloat(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Float getValueFloat(String column, Float defaultValue)
+	public Float getValueFloat(String column, Float defaultValue) throws SQLException
 	{
 		Float value = getValueFloat(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Integer getValueInteger(int column)
+	public Integer getValueInteger(int column) throws SQLException
 	{
 		Integer value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getInt(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getInt(column);
-				}
+				value = this.getResultSet().getInt(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getInt(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Integer getValueInteger(int column, Integer defaultValue)
+	public Integer getValueInteger(int column, Integer defaultValue) throws SQLException
 	{
 		Integer value = getValueInteger(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Integer getValueInteger(String column)
+	public Integer getValueInteger(String column) throws SQLException
 	{
 		Integer value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getInt(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getInt(column);
-				}
+				value = this.getResultSet().getInt(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getInt(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Integer getValueInteger(String column, Integer defaultValue)
+	public Integer getValueInteger(String column, Integer defaultValue) throws SQLException
 	{
 		Integer value = getValueInteger(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Long getValueLong(int column)
+	public Long getValueLong(int column) throws SQLException
 	{
 		Long value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getLong(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getLong(column);
-				}
+				value = this.getResultSet().getLong(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getLong(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Long getValueLong(int column, Long defaultValue)
+	public Long getValueLong(int column, Long defaultValue) throws SQLException
 	{
 		Long value = getValueLong(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Long getValueLong(String column)
+	public Long getValueLong(String column) throws SQLException
 	{
 		Long value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getLong(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getLong(column);
-				}
+				value = this.getResultSet().getLong(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getLong(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Long getValueLong(String column, Long defaultValue)
+	public Long getValueLong(String column, Long defaultValue) throws SQLException
 	{
 		Long value = getValueLong(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Object getValueObject(int column)
+	public Object getValueObject(int column) throws SQLException
 	{
 		Object value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getObject(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getObject(column);
-			}
+			value = this.getResultSet().getObject(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getObject(column);
 		}
 
 		return value;
 	}
 
-	public Object getValueObject(int column, Map<String, Class<?>> map)
+	public Object getValueObject(int column, Map<String, Class<?>> map) throws SQLException
 	{
 		Object value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getObject(column, map);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getObject(column, map);
-			}
+			value = this.getResultSet().getObject(column, map);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getObject(column, map);
 		}
 
 		return value;
 	}
 
-	public Object getValueObject(int column, Map<String, Class<?>> map, Object defaultValue)
+	public Object getValueObject(int column, Map<String, Class<?>> map, Object defaultValue) throws SQLException
 	{
 		Object value = getValueObject(column, map);
 		return value == null ? defaultValue : value;
 	}
 
-	public Object getValueObject(int column, Object defaultValue)
+	public Object getValueObject(int column, Object defaultValue) throws SQLException
 	{
 		Object value = getValueObject(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Object getValueObject(String column)
+	public Object getValueObject(String column) throws SQLException
 	{
 		Object value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getObject(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getObject(column);
-			}
+			value = this.getResultSet().getObject(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getObject(column);
 		}
 
 		return value;
 	}
 
-	public Object getValueObject(String column, Map<String, Class<?>> map)
+	public Object getValueObject(String column, Map<String, Class<?>> map) throws SQLException
 	{
 		Object value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getObject(column, map);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getObject(column, map);
-			}
+			value = this.getResultSet().getObject(column, map);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getObject(column, map);
 		}
 
 		return value;
 	}
 
-	public Object getValueObject(String column, Map<String, Class<?>> map, Object defaultValue)
+	public Object getValueObject(String column, Map<String, Class<?>> map, Object defaultValue) throws SQLException
 	{
 		Object value = getValueObject(column, map);
 		return value == null ? defaultValue : value;
 	}
 
-	public Object getValueObject(String column, Object defaultValue)
+	public Object getValueObject(String column, Object defaultValue) throws SQLException
 	{
 		Object value = getValueObject(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Ref getValueRef(int column)
+	public Ref getValueRef(int column) throws SQLException
 	{
 		Ref value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getRef(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getRef(column);
-			}
+			value = this.getResultSet().getRef(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getRef(column);
 		}
 
 		return value;
 	}
 
-	public Ref getValueRef(int column, Ref defaultValue)
+	public Ref getValueRef(int column, Ref defaultValue) throws SQLException
 	{
 		Ref value = getValueRef(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Ref getValueRef(String column)
+	public Ref getValueRef(String column) throws SQLException
 	{
 		Ref value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getRef(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getRef(column);
-			}
+			value = this.getResultSet().getRef(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getRef(column);
 		}
 
 		return value;
 	}
 
-	public Ref getValueRef(String column, Ref defaultValue)
+	public Ref getValueRef(String column, Ref defaultValue) throws SQLException
 	{
 		Ref value = getValueRef(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Short getValueShort(int column)
+	public Short getValueShort(int column) throws SQLException
 	{
 		Short value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getShort(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getShort(column);
-				}
+				value = this.getResultSet().getShort(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getShort(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Short getValueShort(int column, Short defaultValue)
+	public Short getValueShort(int column, Short defaultValue) throws SQLException
 	{
 		Short value = getValueShort(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Short getValueShort(String column)
+	public Short getValueShort(String column) throws SQLException
 	{
 		Short value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
+			if (this.getResultSet().getObject(column) != null)
 			{
-				if (this.getResultSet().getObject(column) != null)
-				{
-					value = this.getResultSet().getShort(column);
-				}
-			}
-			else if (this.isCallResult())
-			{
-				if (this.getCallableStatement().getObject(column) != null)
-				{
-					value = this.getCallableStatement().getShort(column);
-				}
+				value = this.getResultSet().getShort(column);
 			}
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			if (this.getCallableStatement().getObject(column) != null)
+			{
+				value = this.getCallableStatement().getShort(column);
+			}
 		}
 
 		return value;
 	}
 
-	public Short getValueShort(String column, Short defaultValue)
+	public Short getValueShort(String column, Short defaultValue) throws SQLException
 	{
 		Short value = getValueShort(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public String getValueString(int column)
+	public String getValueString(int column) throws SQLException
 	{
 		String value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getString(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getString(column);
-			}
+			value = this.getResultSet().getString(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getString(column);
 		}
 
 		return value;
 	}
 
-	public String getValueString(int column, String defaultValue)
+	public String getValueString(int column, String defaultValue) throws SQLException
 	{
 		String value = getValueString(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public String getValueString(String column)
+	public String getValueString(String column) throws SQLException
 	{
 		String value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getString(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getString(column);
-			}
+			value = this.getResultSet().getString(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getString(column);
 		}
 
 		return value;
 	}
 
-	public String getValueString(String column, String defaultValue)
+	public String getValueString(String column, String defaultValue) throws SQLException
 	{
 		String value = getValueString(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Time getValueTime(int column)
+	public Time getValueTime(int column) throws SQLException
 	{
 		Time value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getTime(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getTime(column);
-			}
+			value = this.getResultSet().getTime(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getTime(column);
 		}
 
 		return value;
 	}
 
-	public Time getValueTime(int column, Calendar calendar)
+	public Time getValueTime(int column, Calendar calendar) throws SQLException
 	{
 		Time value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getTime(column, calendar);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getTime(column, calendar);
-			}
+			value = this.getResultSet().getTime(column, calendar);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getTime(column, calendar);
 		}
 
 		return value;
 	}
 
-	public Time getValueTime(int column, Calendar calendar, Time defaultValue)
+	public Time getValueTime(int column, Calendar calendar, Time defaultValue) throws SQLException
 	{
 		Time value = getValueTime(column, calendar);
 		return value == null ? defaultValue : value;
 	}
 
-	public Time getValueTime(int column, Time defaultValue)
+	public Time getValueTime(int column, Time defaultValue) throws SQLException
 	{
 		Time value = getValueTime(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Time getValueTime(String column)
+	public Time getValueTime(String column) throws SQLException
 	{
 		Time value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getTime(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getTime(column);
-			}
+			value = this.getResultSet().getTime(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getTime(column);
 		}
 
 		return value;
 	}
 
-	public Time getValueTime(String column, Calendar calendar)
+	public Time getValueTime(String column, Calendar calendar) throws SQLException
 	{
 		Time value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getTime(column, calendar);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getTime(column, calendar);
-			}
+			value = this.getResultSet().getTime(column, calendar);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getTime(column, calendar);
 		}
 
 		return value;
 	}
 
-	public Time getValueTime(String column, Calendar calendar, Time defaultValue)
+	public Time getValueTime(String column, Calendar calendar, Time defaultValue) throws SQLException
 	{
 		Time value = getValueTime(column, calendar);
 		return value == null ? defaultValue : value;
 	}
 
-	public Time getValueTime(String column, Time defaultValue)
+	public Time getValueTime(String column, Time defaultValue) throws SQLException
 	{
 		Time value = getValueTime(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Timestamp getValueTimestamp(int column)
+	public Timestamp getValueTimestamp(int column) throws SQLException
 	{
 		Timestamp value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getTimestamp(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getTimestamp(column);
-			}
+			value = this.getResultSet().getTimestamp(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getTimestamp(column);
 		}
 
 		return value;
 	}
 
-	public Timestamp getValueTimestamp(int column, Calendar calendar)
+	public Timestamp getValueTimestamp(int column, Calendar calendar) throws SQLException
 	{
 		Timestamp value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getTimestamp(column, calendar);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getTimestamp(column, calendar);
-			}
+			value = this.getResultSet().getTimestamp(column, calendar);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getTimestamp(column, calendar);
 		}
 
 		return value;
 	}
 
-	public Timestamp getValueTimestamp(int column, Calendar calendar, Timestamp defaultValue)
+	public Timestamp getValueTimestamp(int column, Calendar calendar, Timestamp defaultValue) throws SQLException
 	{
 		Timestamp value = getValueTimestamp(column, calendar);
 		return value == null ? defaultValue : value;
 	}
 
-	public Timestamp getValueTimestamp(int column, Timestamp defaultValue)
+	public Timestamp getValueTimestamp(int column, Timestamp defaultValue) throws SQLException
 	{
 		Timestamp value = getValueTimestamp(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public Timestamp getValueTimestamp(String column)
+	public Timestamp getValueTimestamp(String column) throws SQLException
 	{
 		Timestamp value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getTimestamp(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getTimestamp(column);
-			}
+			value = this.getResultSet().getTimestamp(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getTimestamp(column);
 		}
 
 		return value;
 	}
 
-	public Timestamp getValueTimestamp(String column, Calendar calendar)
+	public Timestamp getValueTimestamp(String column, Calendar calendar) throws SQLException
 	{
 		Timestamp value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getTimestamp(column, calendar);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getTimestamp(column, calendar);
-			}
+			value = this.getResultSet().getTimestamp(column, calendar);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getTimestamp(column, calendar);
 		}
 
 		return value;
 	}
 
-	public Timestamp getValueTimestamp(String column, Calendar calendar, Timestamp defaultValue)
+	public Timestamp getValueTimestamp(String column, Calendar calendar, Timestamp defaultValue) throws SQLException
 	{
 		Timestamp value = getValueTimestamp(column, calendar);
 		return value == null ? defaultValue : value;
 	}
 
-	public Timestamp getValueTimestamp(String column, Timestamp defaultValue)
+	public Timestamp getValueTimestamp(String column, Timestamp defaultValue) throws SQLException
 	{
 		Timestamp value = getValueTimestamp(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public URL getValueURL(int column)
+	public URL getValueURL(int column) throws SQLException
 	{
 		URL value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getURL(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getURL(column);
-			}
+			value = this.getResultSet().getURL(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getURL(column);
 		}
 
 		return value;
 	}
 
-	public URL getValueURL(int column, URL defaultValue)
+	public URL getValueURL(int column, URL defaultValue) throws SQLException
 	{
 		URL value = getValueURL(column);
 		return value == null ? defaultValue : value;
 	}
 
-	public URL getValueURL(String column)
+	public URL getValueURL(String column) throws SQLException
 	{
 		URL value = null;
 
-		try
+		if (this.preparedResultSet())
 		{
-			if (this.preparedResultSet())
-			{
-				value = this.getResultSet().getURL(column);
-			}
-			else if (this.isCallResult())
-			{
-				value = this.getCallableStatement().getURL(column);
-			}
+			value = this.getResultSet().getURL(column);
 		}
-		catch (SQLException e)
+		else if (this.isCallResult())
 		{
+			value = this.getCallableStatement().getURL(column);
 		}
 
 		return value;
 	}
 
-	public URL getValueURL(String column, URL defaultValue)
+	public URL getValueURL(String column, URL defaultValue) throws SQLException
 	{
 		URL value = getValueURL(column);
 		return value == null ? defaultValue : value;
@@ -2339,25 +2001,16 @@ public class Sequel implements Iterable<ResultSet>
 		return this.isResultSet() || this.getUpdateCount() != N_A;
 	}
 
-	private Sequel hasResultSetObject(boolean resultSetObject)
+	private Sequel hasResultSetObject(boolean resultSetObject) throws SQLException
 	{
 		if (resultSetObject)
 		{
-			try
-			{
-				this.setResultSet(statement.getResultSet());
-			}
-			catch (SQLException e)
-			{
-				this.setResultSet(null);
-			}
+			return this.setResultSet(this.getStatement().getResultSet());
 		}
 		else
 		{
-			this.setResultSet(null);
+			return this.setResultSet(null);
 		}
-
-		return this;
 	}
 
 	/**
@@ -2417,6 +2070,7 @@ public class Sequel implements Iterable<ResultSet>
 		return new SequelIterator(current);
 	}
 
+	@Override
 	public ResultSetIterator iterator()
 	{
 		return iterator(this.isClosing());
@@ -2470,7 +2124,7 @@ public class Sequel implements Iterable<ResultSet>
 		return this;
 	}
 
-	public <E> E mapRow(Map<String, Object> map, E object)
+	public <E> E mapRow(Map<String, Object> map, E object) throws SQLException
 	{
 		if (this.preparedResultSet())
 		{
@@ -2486,37 +2140,26 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	public boolean nextResult()
+	public boolean nextResult() throws SQLException
 	{
 		return nextResult(Statement.CLOSE_CURRENT_RESULT);
 	}
 
-	public boolean nextResult(int current)
+	public boolean nextResult(int current) throws SQLException
 	{
-		try
+		this.hasResultSetObject(false);
+
+		if (this.getStatement().getMoreResults(current))
 		{
-			if (this.getStatement().getMoreResults(current))
+			this.hasResultSetObject(true);
+
+			if (this.isResultSet())
 			{
-				this.hasResultSetObject(true);
-				if (this.isResultSet())
-				{
-					return true;
-				}
+				return true;
 			}
 		}
-		catch (SQLException e)
-		{
-			this.hasResultSetObject(false);
-		}
 
-		if (this.refreshUpdateCount())
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return this.refreshUpdateCount();
 	}
 
 	public boolean nextRow()
@@ -2531,27 +2174,21 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	private boolean preparedResultSet()
+	private boolean preparedResultSet() throws SQLException
 	{
 		boolean ok = false;
 
-		try
+		if (this.isResultSet())
 		{
-			if (this.isResultSet())
+			if (this.getResultSet().isBeforeFirst())
 			{
-				if (this.getResultSet().isBeforeFirst())
-				{
-					ok = this.getResultSet().next();
-				}
-
-				if (!ok)
-				{
-					ok = this.getResultSet().getRow() != 0;
-				}
+				ok = this.getResultSet().next();
 			}
-		}
-		catch (Exception e)
-		{
+
+			if (!ok)
+			{
+				ok = this.getResultSet().getRow() != 0;
+			}
 		}
 
 		return ok;
@@ -2569,16 +2206,9 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	private boolean refreshUpdateCount()
+	private boolean refreshUpdateCount() throws SQLException
 	{
-		try
-		{
-			this.updateCount = statement.getUpdateCount();
-		}
-		catch (SQLException e)
-		{
-			this.updateCount = N_A;
-		}
+		this.updateCount = statement.getUpdateCount();
 		return this.updateCount != N_A;
 	}
 

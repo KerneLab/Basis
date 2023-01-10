@@ -2,6 +2,7 @@ package org.kernelab.basis.test;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.sql.DataBase;
-import org.kernelab.basis.sql.DataBase.OracleClient;
+import org.kernelab.basis.sql.DataBase.MariaDB;
 import org.kernelab.basis.sql.SQLKit;
 import org.kernelab.basis.sql.Sequel;
 
@@ -21,13 +22,15 @@ public class TestSQLKit
 
 	public static void main(String[] args)
 	{
-		DataBase db = new OracleClient("orcl", "test", "TEST");
+		// DataBase db = new OracleClient("orcl", "test", "TEST");
+		DataBase db = new MariaDB("localhost", 3306, "demo", "test", "test");
 
 		try
 		{
 			SQLKit kit = db.getSQLKit();
 
-			testInScope(kit);
+			// testInScope(kit);
+			testTimestamp(kit);
 		}
 		catch (SQLException e)
 		{
@@ -81,23 +84,15 @@ public class TestSQLKit
 		kit.execute(sql).canals().flatMap(new Mapper<Sequel, Iterable<JSON>>()
 		{
 			@Override
-			public Iterable<JSON> map(Sequel el)
+			public Iterable<JSON> map(Sequel el) throws Exception
 			{
 				final Map<String, Object> meta = el.getMetaMapName();
 				return el.canal().map(new Mapper<ResultSet, JSON>()
 				{
 					@Override
-					public JSON map(ResultSet rs)
+					public JSON map(ResultSet rs) throws SQLException
 					{
-						try
-						{
-							return SQLKit.jsonOfResultRow(rs, meta);
-						}
-						catch (SQLException e)
-						{
-							e.printStackTrace();
-							return null;
-						}
+						return SQLKit.jsonOfResultRow(rs, meta);
 					}
 				});
 			}
@@ -153,6 +148,16 @@ public class TestSQLKit
 			}
 		});
 
+	}
+
+	public static void testTimestamp(SQLKit kit) throws SQLException
+	{
+		String sql = "insert into jdl_test_ts (ts) values (?ts?)";
+
+		JSON param = new JSON().attr("ts",
+				new Timestamp(Tools.getDate("2022-12-31 14:35:43", "yyyy-MM-dd HH:mm:ss").getTime()));
+
+		kit.update(sql, param);
 	}
 
 }

@@ -1249,29 +1249,29 @@ public class SQLKit
 		return map;
 	}
 
-	public static <E> E mapResultRow(ResultSet rs, Class<E> cls, Map<String, Object> map)
+	public static <E> E mapResultRow(ResultSet rs, Class<E> cls, Map<String, Object> map) throws SQLException
 	{
 		return mapResultRow(rs, cls, map, null);
 	}
 
 	public static <E> E mapResultRow(ResultSet rs, Class<E> cls, Map<String, Object> map,
-			Map<Class<?>, Mapper<Object, Object>> typeMap)
+			Map<Class<?>, Mapper<Object, Object>> typeMap) throws SQLException
 	{
 		return mapResultRow(rs, new ResultSetMapper<E>(cls, map).setTypeMap(typeMap));
 	}
 
-	public static <E> E mapResultRow(ResultSet rs, Map<String, Object> map, E object)
+	public static <E> E mapResultRow(ResultSet rs, Map<String, Object> map, E object) throws SQLException
 	{
 		return mapResultRow(rs, map, null, object);
 	}
 
 	public static <E> E mapResultRow(ResultSet rs, Map<String, Object> map,
-			Map<Class<?>, Mapper<Object, Object>> typeMap, E object)
+			Map<Class<?>, Mapper<Object, Object>> typeMap, E object) throws SQLException
 	{
 		return mapResultRow(rs, new ResultSetMapper<E>(map, object).setTypeMap(typeMap));
 	}
 
-	public static <E> E mapResultRow(ResultSet rs, Mapper<ResultSet, E> mapper)
+	public static <E> E mapResultRow(ResultSet rs, Mapper<ResultSet, E> mapper) throws SQLException
 	{
 		if (rs != null && mapper != null)
 		{
@@ -1281,7 +1281,7 @@ public class SQLKit
 			}
 			catch (Exception e)
 			{
-				throw new RuntimeException(e);
+				throw new SQLException(e);
 			}
 		}
 		else
