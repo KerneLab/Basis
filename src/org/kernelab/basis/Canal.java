@@ -2,6 +2,7 @@ package org.kernelab.basis;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -2127,13 +2128,16 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
-	protected static class SliceOp<E> implements Converter<E, Iterable<E>>
+	protected static class SlidingOp<E> implements Converter<E, Iterable<E>>
 	{
-		protected final int size;
+		protected final int	size;
 
-		public SliceOp(int size)
+		protected final int	step;
+
+		public SlidingOp(int size, int step)
 		{
 			this.size = size;
+			this.step = step;
 		}
 
 		@Override
@@ -2141,23 +2145,70 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			return new Wheel<E, Iterable<E>>()
 			{
+				LinkedList<E>	window	= null;
+
+				Collection<E>	next	= null;
+
 				@Override
 				public boolean hasNext()
 				{
-					return size > 0 && upstream().hasNext();
+					if (size <= 0 || step <= 0)
+					{
+						return false;
+					}
+
+					if (next != null)
+					{
+						return true;
+					}
+
+					if (window == null)
+					{
+						window = new LinkedList<E>();
+					}
+					else
+					{
+						int gap = step - size;
+						while (gap > 0 && upstream().hasNext())
+						{
+							gap--;
+							upstream().next();
+						}
+					}
+
+					boolean add = false;
+					while (window.size() < size && upstream().hasNext())
+					{
+						window.add(upstream().next());
+						add = true;
+					}
+
+					if (!add)
+					{
+						return false;
+					}
+
+					next = new ArrayList<E>(window);
+
+					for (int i = 0; i < step && !window.isEmpty(); i++)
+					{
+						window.removeFirst();
+					}
+
+					return true;
 				}
 
 				@Override
 				public Iterable<E> next()
 				{
-					Collection<E> sediment = new LinkedList<E>();
-
-					while (sediment.size() < size && upstream().hasNext())
+					try
 					{
-						sediment.add(upstream().next());
+						return next;
 					}
-
-					return sediment;
+					finally
+					{
+						next = null;
+					}
 				}
 			};
 		}
@@ -3850,15 +3901,31 @@ public class Canal<U, D> implements Iterable<D>
 	}
 
 	/**
-	 * Slice elements into several sections, the size of each section will not
-	 * beyond the given size.
+	 * Make window to hold data from upstream, pass each window to downstream
+	 * and slide the window as the size of window.
 	 * 
 	 * @param size
+	 *            The max size of the window to hold data.
 	 * @return
 	 */
-	public Canal<D, Iterable<D>> slice(int size)
+	public Canal<D, Iterable<D>> sliding(int size)
 	{
-		return this.follow(new SliceOp<D>(size));
+		return this.follow(new SlidingOp<D>(size, size));
+	}
+
+	/**
+	 * Make window to hold data from upstream, pass each window to downstream
+	 * and slide the window by step.
+	 * 
+	 * @param size
+	 *            The max size of the window to hold data.
+	 * @param step
+	 *            Sliding step length.
+	 * @return
+	 */
+	public Canal<D, Iterable<D>> sliding(int size, int step)
+	{
+		return this.follow(new SlidingOp<D>(size, step));
 	}
 
 	/**

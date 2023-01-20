@@ -295,7 +295,7 @@ public class TestCanal
 			}
 		}).limit(3).skip(1));
 
-		Tools.debug("============slice");
+		Tools.debug("============sliding");
 		Canal.of(new Producer<Integer>()
 		{
 			int i = 0;
@@ -305,7 +305,7 @@ public class TestCanal
 			{
 				return i++;
 			}
-		}).limit(10).slice(4).foreach(new Action<Iterable<Integer>>()
+		}).limit(11).sliding(3, 2).foreach(new Action<Iterable<Integer>>()
 		{
 			@Override
 			public void action(Iterable<Integer> el) throws Exception
