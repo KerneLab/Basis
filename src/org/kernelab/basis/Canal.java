@@ -2190,9 +2190,27 @@ public class Canal<U, D> implements Iterable<D>
 
 					next = new ArrayList<E>(window);
 
-					for (int i = 0; i < step && !window.isEmpty(); i++)
+					if (step >= size)
 					{
-						window.removeFirst();
+						window.clear();
+					}
+					else if (step <= size / 2)
+					{
+						for (int i = 0; i < step && !window.isEmpty(); i++)
+						{
+							window.removeFirst();
+						}
+					}
+					else
+					{
+						LinkedList<E> last = window;
+						window = new LinkedList<E>();
+						int rest = size - step;
+						for (int i = 0; i < rest && !last.isEmpty(); i++)
+						{
+							window.addFirst(last.removeLast());
+						}
+						last.clear();
 					}
 
 					return true;

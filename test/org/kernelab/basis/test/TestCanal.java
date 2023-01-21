@@ -305,7 +305,7 @@ public class TestCanal
 			{
 				return i++;
 			}
-		}).limit(11).sliding(3, 2).foreach(new Action<Iterable<Integer>>()
+		}).limit(11).sliding(3, 3).foreach(new Action<Iterable<Integer>>()
 		{
 			@Override
 			public void action(Iterable<Integer> el) throws Exception
