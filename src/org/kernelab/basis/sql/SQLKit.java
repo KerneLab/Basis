@@ -1773,7 +1773,7 @@ public class SQLKit
 
 	public void commit() throws SQLException
 	{
-		if (!this.isAutoCommit())
+		if (Boolean.FALSE.equals(this.isAutoCommit()))
 		{
 			this.getConnection().commit();
 		}
@@ -2258,17 +2258,14 @@ public class SQLKit
 
 	public Boolean isAutoCommit()
 	{
-		Boolean is = null;
-
 		try
 		{
-			is = this.getConnection().getAutoCommit();
+			return this.getConnection().getAutoCommit();
 		}
 		catch (Exception e)
 		{
 		}
-
-		return is;
+		return null;
 	}
 
 	public boolean isClosed()
