@@ -1,6 +1,7 @@
 package org.kernelab.basis.sql;
 
 import java.io.File;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -26,13 +27,23 @@ import org.kernelab.basis.io.DataReader;
  * 
  * @author Dilly King
  */
-public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
+public abstract class DataBase implements ConnectionManager, Copieable<DataBase>, Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8808042042128847652L;
+
 	public static class DB2 extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "com.ibm.db2.jdbc.app.DB2Driver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -7737031800085843658L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 5000;
+		public static String		DRIVER_CLASS_NAME	= "com.ibm.db2.jdbc.app.DB2Driver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 5000;
 
 		public DB2()
 		{
@@ -80,9 +91,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class Derby extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "org.apache.derby.jdbc.ClientDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 3143841343691282911L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 1527;
+		public static String		DRIVER_CLASS_NAME	= "org.apache.derby.jdbc.ClientDriver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 1527;
 
 		public Derby()
 		{
@@ -131,7 +147,12 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class EmbeddeDerby extends DataBase
 	{
-		public static String DRIVER_CLASS_NAME = "org.apache.derby.jdbc.EmbeddedDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -866510537450297341L;
+
+		public static String		DRIVER_CLASS_NAME	= "org.apache.derby.jdbc.EmbeddedDriver";
 
 		public EmbeddeDerby()
 		{
@@ -179,9 +200,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class GeneralDataBase extends DataBase
 	{
-		private String	driver;
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 8548346864478230621L;
 
-		private String	url;
+		private String				driver;
+
+		private String				url;
 
 		public GeneralDataBase(String url, String userName, String passWord)
 		{
@@ -220,11 +246,16 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class Hive extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME		= "org.apache.hadoop.hive.jdbc.HiveDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID		= 6628723864276072140L;
 
-		public static int		DEFAULT_PORT_NUMBER		= 10000;
+		public static String		DRIVER_CLASS_NAME		= "org.apache.hadoop.hive.jdbc.HiveDriver";
 
-		public static String	DEFAULT_DATABASE_NAME	= "default";
+		public static int			DEFAULT_PORT_NUMBER		= 10000;
+
+		public static String		DEFAULT_DATABASE_NAME	= "default";
 
 		public Hive()
 		{
@@ -281,11 +312,16 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class Hive2 extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME		= "org.apache.hive.jdbc.HiveDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID		= 5795910477383404476L;
 
-		public static int		DEFAULT_PORT_NUMBER		= 10000;
+		public static String		DRIVER_CLASS_NAME		= "org.apache.hive.jdbc.HiveDriver";
 
-		public static String	DEFAULT_DATABASE_NAME	= "default";
+		public static int			DEFAULT_PORT_NUMBER		= 10000;
+
+		public static String		DEFAULT_DATABASE_NAME	= "default";
 
 		public Hive2()
 		{
@@ -342,9 +378,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class Informix extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "com.informix.jdbc.IfxDriver	";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -5675273518252027590L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 1533;
+		public static String		DRIVER_CLASS_NAME	= "com.informix.jdbc.IfxDriver	";
+
+		public static int			DEFAULT_PORT_NUMBER	= 1533;
 
 		public Informix()
 		{
@@ -405,9 +446,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class MariaDB extends MySQL
 	{
-		public static String	DRIVER_CLASS_NAME	= "org.mariadb.jdbc.Driver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 2661239762825578672L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 3306;
+		public static String		DRIVER_CLASS_NAME	= "org.mariadb.jdbc.Driver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 3306;
 
 		public MariaDB()
 		{
@@ -455,9 +501,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class MySQL extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "com.mysql.jdbc.Driver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 5200081819692267869L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 3306;
+		public static String		DRIVER_CLASS_NAME	= "com.mysql.jdbc.Driver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 3306;
 
 		public MySQL()
 		{
@@ -509,7 +560,12 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class ODBC extends DataBase
 	{
-		public static String DRIVER_CLASS_NAME = "sun.jdbc.odbc.JdbcOdbcDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -9025097030914320784L;
+
+		public static String		DRIVER_CLASS_NAME	= "sun.jdbc.odbc.JdbcOdbcDriver";
 
 		public ODBC()
 		{
@@ -556,11 +612,16 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class Oracle extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -542986293505391307L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 1521;
+		public static String		DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
 
-		private boolean			connectBySID		= false;
+		public static int			DEFAULT_PORT_NUMBER	= 1521;
+
+		private boolean				connectBySID		= false;
 
 		public Oracle()
 		{
@@ -644,6 +705,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class OracleClient extends DataBase
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7770707452053077382L;
+
 		public static class TNSNamesReader extends DataReader
 		{
 			private static final char	COMMENT	= '#';
@@ -950,9 +1016,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class PostgreSQL extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "org.postgresql.Driver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -1954383925216785154L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 5432;
+		public static String		DRIVER_CLASS_NAME	= "org.postgresql.Driver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 5432;
 
 		public PostgreSQL()
 		{
@@ -1000,9 +1071,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class SqlServer2000 extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "com.microsoft.jdbc.sqlserver.SQLServerDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -8464868804848231144L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 1433;
+		public static String		DRIVER_CLASS_NAME	= "com.microsoft.jdbc.sqlserver.SQLServerDriver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 1433;
 
 		public SqlServer2000()
 		{
@@ -1050,9 +1126,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class SqlServer2005 extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -8423943199474104592L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 1433;
+		public static String		DRIVER_CLASS_NAME	= "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 1433;
 
 		public SqlServer2005()
 		{
@@ -1100,9 +1181,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class Sybase extends DataBase
 	{
-		public static String	DRIVER_CLASS_NAME	= "com.sybase.jdbc.SybDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= 2102846000128894027L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 5007;
+		public static String		DRIVER_CLASS_NAME	= "com.sybase.jdbc.SybDriver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 5007;
 
 		public Sybase()
 		{
@@ -1279,7 +1365,13 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	@Override
 	public DataBase clone()
 	{
-		return new DataBase(this) {
+		return new DataBase(this)
+		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -5318516890897003323L;
+
 			@Override
 			public String getDriverName()
 			{

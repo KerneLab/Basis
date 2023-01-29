@@ -1,26 +1,30 @@
 package org.kernelab.basis;
 
+import java.io.Serializable;
 import java.util.Map.Entry;
 
 /**
  * The class to describe the relation between key and value.
  * 
  * @author Dilly King
- * @version 1.3.3
- * @update 2011-01-14
+ * @version 1.3.4
+ * @update 2023-01-29
  * 
  * @param <K>
  *            The generic type of key.
  * @param <V>
  *            The generic type of value.
  */
-public class Relation<K, V> implements VectorAccessible, Entry<K, V>,
-		Copieable<Relation<K, V>>
+public class Relation<K, V> implements VectorAccessible, Entry<K, V>, Copieable<Relation<K, V>>, Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long	serialVersionUID	= 4746739684247172938L;
 
-	private K	key;
+	private K					key;
 
-	private V	value;
+	private V					value;
 
 	public Relation()
 	{
@@ -55,12 +59,15 @@ public class Relation<K, V> implements VectorAccessible, Entry<K, V>,
 	{
 		boolean is = false;
 
-		if (o != null) {
-			if (o instanceof Relation<?, ?>) {
+		if (o != null)
+		{
+			if (o instanceof Relation<?, ?>)
+			{
 
 				Relation<?, ?> r = (Relation<?, ?>) o;
 
-				if (this.key.equals(r.key) && this.value.equals(r.value)) {
+				if (this.key.equals(r.key) && this.value.equals(r.value))
+				{
 					is = true;
 				}
 			}
@@ -69,11 +76,13 @@ public class Relation<K, V> implements VectorAccessible, Entry<K, V>,
 		return is;
 	}
 
+	@Override
 	public K getKey()
 	{
 		return key;
 	}
 
+	@Override
 	public V getValue()
 	{
 		return value;
@@ -82,8 +91,7 @@ public class Relation<K, V> implements VectorAccessible, Entry<K, V>,
 	@Override
 	public int hashCode()
 	{
-		return ((key == null ? 0 : key.hashCode()) + "_" + (value == null ? 0 : value
-				.hashCode())).hashCode();
+		return ((key == null ? 0 : key.hashCode()) + "_" + (value == null ? 0 : value.hashCode())).hashCode();
 	}
 
 	public void set(K key, V value)
@@ -98,6 +106,7 @@ public class Relation<K, V> implements VectorAccessible, Entry<K, V>,
 		return key;
 	}
 
+	@Override
 	public V setValue(V value)
 	{
 		this.set(key, value);
@@ -110,11 +119,13 @@ public class Relation<K, V> implements VectorAccessible, Entry<K, V>,
 		return key.toString() + " |-> " + value.toString();
 	}
 
+	@Override
 	public int vectorAccess()
 	{
 		return 2;
 	}
 
+	@Override
 	public Object vectorAccess(int index)
 	{
 		Object value = null;
@@ -134,6 +145,7 @@ public class Relation<K, V> implements VectorAccessible, Entry<K, V>,
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public void vectorAccess(int index, Object element)
 	{
 		switch (index)
@@ -147,5 +159,4 @@ public class Relation<K, V> implements VectorAccessible, Entry<K, V>,
 				break;
 		}
 	}
-
 }
