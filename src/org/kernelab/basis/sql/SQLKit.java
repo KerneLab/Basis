@@ -2114,6 +2114,88 @@ public class SQLKit
 		return statement.executeUpdate(sql);
 	}
 
+	public boolean exists(PreparedStatement statement, Iterable<?> params) throws SQLException
+	{
+		return exists(executeQuery(bindParameters(statement, params)));
+	}
+
+	public boolean exists(PreparedStatement statement, JSAN params) throws SQLException
+	{
+		return exists(statement, (Iterable<?>) params);
+	}
+
+	public boolean exists(PreparedStatement statement, JSON params) throws SQLException
+	{
+		return exists(statement, fillParameters(getParameter(statement), params));
+	}
+
+	public boolean exists(PreparedStatement statement, Map<String, ?> params) throws SQLException
+	{
+		return exists(statement, fillParameters(getParameter(statement), params));
+	}
+
+	public boolean exists(PreparedStatement statement, Object... params) throws SQLException
+	{
+		return exists(executeQuery(bindParameters(statement, params)));
+	}
+
+	protected boolean exists(ResultSet rs) throws SQLException
+	{
+		try
+		{
+			return rs.next();
+		}
+		finally
+		{
+			if (rs != null)
+			{
+				try
+				{
+					rs.close();
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	protected boolean exists(Statement statement, String sql) throws SQLException
+	{
+		return exists(executeQuery(statement, sql));
+	}
+
+	public boolean exists(String sql) throws SQLException
+	{
+		return exists(createStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), sql);
+	}
+
+	public boolean exists(String sql, Iterable<?> params) throws SQLException
+	{
+		return exists(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+	}
+
+	public boolean exists(String sql, JSAN params) throws SQLException
+	{
+		return exists(sql, (Iterable<?>) params);
+	}
+
+	public boolean exists(String sql, JSON params) throws SQLException
+	{
+		return exists(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+	}
+
+	public boolean exists(String sql, Map<String, ?> params) throws SQLException
+	{
+		return exists(prepareStatement(sql, params, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+	}
+
+	public boolean exists(String sql, Object... params) throws SQLException
+	{
+		return exists(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
+	}
+
 	@Override
 	protected void finalize() throws Throwable
 	{
