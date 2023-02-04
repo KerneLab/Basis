@@ -30,7 +30,8 @@ public class TestSQLKit
 			SQLKit kit = db.getSQLKit();
 
 			// testInScope(kit);
-			testTimestamp(kit);
+			// testTimestamp(kit);
+			testExists(kit);
 		}
 		catch (SQLException e)
 		{
@@ -160,4 +161,10 @@ public class TestSQLKit
 		kit.update(sql, param);
 	}
 
+	public static void testExists(SQLKit kit) throws SQLException
+	{
+		String sql = "select 1 from jdl_test_a where id=?";
+
+		Tools.debug(kit.exists(sql, 2));
+	}
 }
