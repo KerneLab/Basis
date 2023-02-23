@@ -14,10 +14,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1566,6 +1568,8 @@ public class SQLKit
 
 	private boolean									reuseStatements			= true;
 
+	private Set<Statement>							batchStatements			= new LinkedHashSet<Statement>();
+
 	private int										resultSetType			= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][0];
 
 	private int										resultSetConcurrency	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][1];
@@ -1618,6 +1622,7 @@ public class SQLKit
 	{
 		bindParameters(statement, params);
 		statement.addBatch();
+		getBatchStatements().add(statement);
 	}
 
 	public void addBatch(PreparedStatement statement, JSAN params) throws SQLException
@@ -1629,23 +1634,52 @@ public class SQLKit
 	{
 		bindParameters(statement, fillParameters(getParameter(statement), params));
 		statement.addBatch();
+		getBatchStatements().add(statement);
 	}
 
 	public void addBatch(PreparedStatement statement, Map<String, ?> params) throws SQLException
 	{
 		bindParameters(statement, fillParameters(getParameter(statement), params));
 		statement.addBatch();
+		getBatchStatements().add(statement);
 	}
 
 	public void addBatch(PreparedStatement statement, Object... params) throws SQLException
 	{
 		bindParameters(statement, params);
 		statement.addBatch();
+		getBatchStatements().add(statement);
 	}
 
 	public void addBatch(String sql) throws SQLException
 	{
 		statement.addBatch(sql);
+		getBatchStatements().add(statement);
+	}
+
+	public void addBatch(String sql, Iterable<?> params) throws SQLException
+	{
+		addBatch(this.prepareStatement(sql), params);
+	}
+
+	public void addBatch(String sql, JSAN params) throws SQLException
+	{
+		addBatch(this.prepareStatement(sql), params);
+	}
+
+	public void addBatch(String sql, JSON params) throws SQLException
+	{
+		addBatch(this.prepareStatement(sql, params), params);
+	}
+
+	public void addBatch(String sql, Map<String, ?> params) throws SQLException
+	{
+		addBatch(this.prepareStatement(sql, params), params);
+	}
+
+	public void addBatch(String sql, Object... params) throws SQLException
+	{
+		addBatch(this.prepareStatement(sql), params);
 	}
 
 	public PreparedStatement bindParameters(int offset, Iterable<?> params) throws SQLException
@@ -1739,7 +1773,22 @@ public class SQLKit
 		if (statement != null)
 		{
 			statement.clearBatch();
+			this.getBatchStatements().remove(statement);
 		}
+	}
+
+	public void clearBatches() throws SQLException
+	{
+		Set<Statement> batches = new LinkedHashSet<Statement>(this.getBatchStatements());
+
+		for (Statement s : batches)
+		{
+			clearBatch(s);
+		}
+
+		batches.clear();
+
+		this.getBatchStatements().clear();
 	}
 
 	public void close()
@@ -1796,6 +1845,13 @@ public class SQLKit
 		this.executeBatch(statement);
 		this.commit();
 		this.clearBatch(statement);
+	}
+
+	public void commitBatches() throws SQLException
+	{
+		this.executeBatches();
+		this.commit();
+		this.clearBatches();
 	}
 
 	public Statement createStatement(String sql) throws SQLException
@@ -2060,6 +2116,18 @@ public class SQLKit
 		return statement.executeBatch();
 	}
 
+	public Map<Statement, int[]> executeBatches() throws SQLException
+	{
+		Map<Statement, int[]> res = new LinkedHashMap<Statement, int[]>();
+
+		for (Statement s : this.getBatchStatements())
+		{
+			res.put(s, this.executeBatch(s));
+		}
+
+		return res;
+	}
+
 	protected ResultSet executeQuery(PreparedStatement statement) throws SQLException
 	{
 		if (this.getQueryTimeout() >= 0)
@@ -2203,6 +2271,11 @@ public class SQLKit
 		super.finalize();
 	}
 
+	protected Set<Statement> getBatchStatements()
+	{
+		return batchStatements;
+	}
+
 	public String getBoundary()
 	{
 		return boundary;
@@ -2276,6 +2349,11 @@ public class SQLKit
 		return rs;
 	}
 
+	public String getSentence(Statement statement)
+	{
+		return this.getStatements().get(statement);
+	}
+
 	protected Map<String, Statement> getSentences()
 	{
 		return sentences;
@@ -2284,6 +2362,11 @@ public class SQLKit
 	public Statement getStatement()
 	{
 		return statement;
+	}
+
+	public Statement getStatement(String sql)
+	{
+		return this.getSentences().get(sql);
 	}
 
 	protected Map<Statement, String> getStatements()

@@ -31,13 +31,51 @@ public class TestSQLKit
 
 			// testInScope(kit);
 			// testTimestamp(kit);
-			testExists(kit);
+			// testExists(kit);
+			testBatches(kit);
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
 		}
 
+	}
+
+	public static void testBatches(SQLKit kit) throws SQLException
+	{
+		kit.setAutoCommit(false);
+
+		String s1 = "insert into jdl_test_batch1 (id,name) values (?id?, ?v1?)";
+		String s2 = "insert into jdl_test_batch2 (id,name) values (?id?, ?v2?)";
+
+		int j = 0;
+		for (int i = 0; i < 10000; i++)
+		{
+			if (j >= 500)
+			{
+				kit.commitBatches();
+				j = 0;
+			}
+
+			Map<String, Object> p = new HashMap<String, Object>();
+			p.put("id", i);
+			p.put("v1", "aa" + i);
+			p.put("v2", "bb" + j);
+
+			kit.addBatch(s1, p);
+			kit.addBatch(s2, p);
+
+			j++;
+		}
+
+		kit.commitBatches();
+	}
+
+	public static void testExists(SQLKit kit) throws SQLException
+	{
+		String sql = "select 1 from jdl_test_a where id=?";
+
+		Tools.debug(kit.exists(sql, 2));
 	}
 
 	public static void testGenerateKeys(SQLKit kit) throws SQLException
@@ -159,12 +197,5 @@ public class TestSQLKit
 				new Timestamp(Tools.getDate("2022-12-31 14:35:43", "yyyy-MM-dd HH:mm:ss").getTime()));
 
 		kit.update(sql, param);
-	}
-
-	public static void testExists(SQLKit kit) throws SQLException
-	{
-		String sql = "select 1 from jdl_test_a where id=?";
-
-		Tools.debug(kit.exists(sql, 2));
 	}
 }
