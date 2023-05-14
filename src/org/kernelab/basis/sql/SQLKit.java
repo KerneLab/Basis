@@ -129,6 +129,7 @@ public class SQLKit
 			return typeMap;
 		}
 
+		@Override
 		public T map(S src)
 		{
 			try

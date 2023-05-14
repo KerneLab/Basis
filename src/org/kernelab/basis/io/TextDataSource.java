@@ -40,6 +40,7 @@ public class TextDataSource implements Iterable<String>
 			this.line = this.readLine();
 		}
 
+		@Override
 		public void close()
 		{
 			try
@@ -64,11 +65,13 @@ public class TextDataSource implements Iterable<String>
 			return true;
 		}
 
+		@Override
 		public boolean hasNext()
 		{
 			return this.line != null;
 		}
 
+		@Override
 		public String next()
 		{
 			try

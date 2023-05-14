@@ -5,7 +5,9 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -29,11 +31,6 @@ import org.kernelab.basis.io.DataReader;
  */
 public abstract class DataBase implements ConnectionManager, Copieable<DataBase>, Serializable
 {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8808042042128847652L;
-
 	public static class DB2 extends DataBase
 	{
 		/**
@@ -203,11 +200,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		/**
 		 * 
 		 */
-		private static final long	serialVersionUID	= 8548346864478230621L;
+		private static final long	serialVersionUID	= -1547413391132395255L;
 
-		private String				driver;
+		protected String			driver;
 
-		private String				url;
+		protected String			url;
 
 		public GeneralDataBase(String url, String userName, String passWord)
 		{
@@ -217,8 +214,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		public GeneralDataBase(String driver, String url, String userName, String passWord)
 		{
 			super(userName, passWord);
-			this.setDriverName(driver);
-			this.setURL(url);
+			this.setDriverName(driver).setURL(url);
 		}
 
 		@Override
@@ -233,14 +229,16 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			return url;
 		}
 
-		protected void setDriverName(String driver)
+		public GeneralDataBase setDriverName(String driver)
 		{
 			this.driver = driver;
+			return this;
 		}
 
-		protected void setURL(String url)
+		public GeneralDataBase setURL(String url)
 		{
 			this.url = url;
+			return this;
 		}
 	}
 
@@ -705,11 +703,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static class OracleClient extends DataBase
 	{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -7770707452053077382L;
-
 		public static class TNSNamesReader extends DataReader
 		{
 			private static final char	COMMENT	= '#';
@@ -772,9 +765,14 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 			}
 		}
 
-		public static String	DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
+		/**
+		 * 
+		 */
+		private static final long	serialVersionUID	= -7770707452053077382L;
 
-		public static int		DEFAULT_PORT_NUMBER	= 1521;
+		public static String		DRIVER_CLASS_NAME	= "oracle.jdbc.driver.OracleDriver";
+
+		public static int			DEFAULT_PORT_NUMBER	= 1521;
 
 		public static String getDefaultOracleTNS()
 		{
@@ -1235,6 +1233,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	}
 
 	/**
+	 * 
+	 */
+	private static final long	serialVersionUID			= -8808042042128847652L;
+
+	/**
 	 * The maximum time in milliseconds to wait for validating a connection.
 	 */
 	public static final String	KEY_VALIDATE_TIMEOUT		= "jdbc.conn.validate.timeout";
@@ -1242,6 +1245,10 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	public static final int		DEFAULT_VALIDATE_TIMEOUT	= 3;
 
 	public static final int		DEFAULT_PORT_NUMBER			= 0;
+
+	public static final String	MULTI_NODE_URL_REGEX		= "^(.+?)://((?:[^,/]+?)(?:,[^,/]+?)+)(/(.*)$|$)";
+
+	public static final Pattern	MULTI_NODE_URL_PATTERN		= Pattern.compile(MULTI_NODE_URL_REGEX);
 
 	public static final String	USER						= "user";
 
@@ -1304,6 +1311,50 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		Properties p = new Properties();
 		p.putAll(map);
 		return p;
+	}
+
+	public static String randomPickone(String url)
+	{
+		Matcher m = MULTI_NODE_URL_PATTERN.matcher(url);
+
+		if (!m.matches())
+		{
+			return url;
+		}
+
+		String[] nodes = m.group(2).split(",");
+
+		return m.group(1) + "://" + nodes[(int) (Math.random() * nodes.length)] + m.group(3);
+	}
+
+	public static String randomRearrange(String url)
+	{
+		Matcher m = MULTI_NODE_URL_PATTERN.matcher(url);
+
+		if (!m.matches())
+		{
+			return url;
+		}
+
+		List<String> nodes = new ArrayList<String>();
+		for (String node : m.group(2).split(","))
+		{
+			nodes.add(node);
+		}
+
+		StringBuilder buf = new StringBuilder();
+		while (!nodes.isEmpty())
+		{
+			if (buf.length() > 0)
+			{
+				buf.append(',');
+			}
+			buf.append(nodes.remove((int) (Math.random() * nodes.size())));
+		}
+
+		buf.insert(0, m.group(1) + "://");
+		buf.append(m.group(3));
+		return buf.toString();
 	}
 
 	protected String			serverName;
