@@ -1500,10 +1500,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 				throw new SQLException(e);
 			}
 		}
-		synchronized (DriverManager.class)
-		{
-			return DriverManager.getConnection(this.getURL(), PropertiesOfMap(this.getInformation()));
-		}
+		return DriverManager.getConnection(this.getURL(), PropertiesOfMap(this.getInformation()));
 	}
 
 	@Override
