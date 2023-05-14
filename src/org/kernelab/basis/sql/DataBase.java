@@ -1481,32 +1481,38 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return userName;
 	}
 
+	@Override
 	public boolean isValid(Connection conn)
 	{
 		return IsValid(conn);
 	}
 
-	public Connection newConnection() throws ClassNotFoundException, SQLException
+	public Connection newConnection() throws SQLException
 	{
 		if (this.getDriverName() != null)
 		{ // No need for JDBC4.0 with Java6.0s
-			Extensions.forName(this.getDriverName());
+			try
+			{
+				Extensions.forName(this.getDriverName());
+			}
+			catch (ClassNotFoundException e)
+			{
+				throw new SQLException(e);
+			}
 		}
-		return DriverManager.getConnection(this.getURL(), PropertiesOfMap(this.getInformation()));
+		synchronized (DriverManager.class)
+		{
+			return DriverManager.getConnection(this.getURL(), PropertiesOfMap(this.getInformation()));
+		}
 	}
 
+	@Override
 	public Connection provideConnection(long timeout) throws SQLException
 	{
-		try
-		{
-			return this.newConnection();
-		}
-		catch (ClassNotFoundException e)
-		{
-			throw new SQLException(e.getLocalizedMessage());
-		}
+		return this.newConnection();
 	}
 
+	@Override
 	public void recycleConnection(Connection c) throws SQLException
 	{
 		if (c != null)
