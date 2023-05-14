@@ -1246,9 +1246,9 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static final int		DEFAULT_PORT_NUMBER			= 0;
 
-	public static final String	MULTI_NODE_URL_REGEX		= "^(.+?)://((?:[^,/]+?)(?:,[^,/]+?)+)(/(.*)$|$)";
+	public static final String	MULTI_NODES_URL_REGEX		= "^(.+?)://((?:[^,/]+?)(?:,[^,/]+?)+)(/(.*)$|$)";
 
-	public static final Pattern	MULTI_NODE_URL_PATTERN		= Pattern.compile(MULTI_NODE_URL_REGEX);
+	public static final Pattern	MULTI_NODES_URL_PATTERN		= Pattern.compile(MULTI_NODES_URL_REGEX);
 
 	public static final String	USER						= "user";
 
@@ -1315,7 +1315,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static String randomPickone(String url)
 	{
-		Matcher m = MULTI_NODE_URL_PATTERN.matcher(url);
+		Matcher m = MULTI_NODES_URL_PATTERN.matcher(url);
 
 		if (!m.matches())
 		{
@@ -1329,7 +1329,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 
 	public static String randomRearrange(String url)
 	{
-		Matcher m = MULTI_NODE_URL_PATTERN.matcher(url);
+		Matcher m = MULTI_NODES_URL_PATTERN.matcher(url);
 
 		if (!m.matches())
 		{
