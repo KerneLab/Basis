@@ -2289,7 +2289,7 @@ public class SQLKit
 
 	protected final Connection getConnectionOrigin()
 	{
-		return this.connection;
+		return connection;
 	}
 
 	public ResultSet getGeneratedKeys() throws SQLException
@@ -2459,6 +2459,23 @@ public class SQLKit
 	public boolean isReuseStatements()
 	{
 		return reuseStatements;
+	}
+
+	public boolean isValid()
+	{
+		return this.isValid(0);
+	}
+
+	public boolean isValid(int timeout)
+	{
+		try
+		{
+			return connection != null && connection.isValid(Math.max(timeout, 0));
+		}
+		catch (SQLException e)
+		{
+			return false;
+		}
 	}
 
 	public SQLKit optimizingAs(byte i)
