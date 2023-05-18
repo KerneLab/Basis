@@ -1742,13 +1742,6 @@ public class SQLKit
 	{
 		if (statement != null)
 		{
-			try
-			{
-				clearBatch(statement);
-			}
-			catch (Exception e)
-			{
-			}
 			statement = null;
 		}
 		if (sentences != null)
@@ -1769,6 +1762,10 @@ public class SQLKit
 			}
 			statements.clear();
 		}
+		if (batchStatements != null)
+		{
+			batchStatements.clear();
+		}
 		return this;
 	}
 
@@ -1781,8 +1778,14 @@ public class SQLKit
 	{
 		if (statement != null)
 		{
-			statement.clearBatch();
-			this.getBatchStatements().remove(statement);
+			try
+			{
+				statement.clearBatch();
+			}
+			finally
+			{
+				this.getBatchStatements().remove(statement);
+			}
 		}
 	}
 
