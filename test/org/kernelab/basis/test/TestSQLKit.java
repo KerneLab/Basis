@@ -38,7 +38,6 @@ public class TestSQLKit
 		{
 			e.printStackTrace();
 		}
-
 	}
 
 	public static void testBatches(SQLKit kit) throws SQLException

@@ -1728,6 +1728,18 @@ public class SQLKit
 
 	public SQLKit clean()
 	{
+		this.cleanStatements();
+
+		if (parameters != null)
+		{
+			parameters.clear();
+		}
+
+		return this;
+	}
+
+	public SQLKit cleanStatements()
+	{
 		if (statement != null)
 		{
 			try
@@ -1756,10 +1768,6 @@ public class SQLKit
 				}
 			}
 			statements.clear();
-		}
-		if (parameters != null)
-		{
-			parameters.clear();
 		}
 		return this;
 	}
