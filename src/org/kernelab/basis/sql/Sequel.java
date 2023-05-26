@@ -2005,7 +2005,7 @@ public class Sequel implements Iterable<ResultSet>
 	{
 		if (resultSetObject)
 		{
-			return this.setResultSet(this.getStatement().getResultSet());
+			return this.setResultSet(this.getKit().record(this.getStatement().getResultSet()));
 		}
 		else
 		{

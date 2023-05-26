@@ -1563,6 +1563,8 @@ public class SQLKit
 
 	private Map<String, List<String>>				parameters;
 
+	private Set<ResultSet>							resultSets;
+
 	private String									boundary;
 
 	private int										queryTimeout			= -1;
@@ -1597,6 +1599,7 @@ public class SQLKit
 		this.setSentences(new HashMap<String, Statement>());
 		this.setStatements(new HashMap<Statement, String>());
 		this.setParameters(new HashMap<String, List<String>>());
+		this.setResultSets(new LinkedHashSet<ResultSet>());
 	}
 
 	public void addBatch(Iterable<?> params) throws SQLException
@@ -1728,12 +1731,32 @@ public class SQLKit
 
 	public SQLKit clean()
 	{
+		this.cleanResultSets();
+
 		this.cleanStatements();
 
 		if (parameters != null)
 		{
 			parameters.clear();
 		}
+
+		return this;
+	}
+
+	public SQLKit cleanResultSets()
+	{
+		for (ResultSet rs : this.getResultSets())
+		{
+			try
+			{
+				rs.close();
+			}
+			catch (Exception e)
+			{
+			}
+		}
+
+		this.getResultSets().clear();
 
 		return this;
 	}
@@ -2146,7 +2169,7 @@ public class SQLKit
 		{
 			statement.setQueryTimeout(this.getQueryTimeout());
 		}
-		return statement.executeQuery();
+		return record(statement.executeQuery());
 	}
 
 	protected ResultSet executeQuery(Statement statement, String sql) throws SQLException
@@ -2155,7 +2178,7 @@ public class SQLKit
 		{
 			statement.setQueryTimeout(this.getQueryTimeout());
 		}
-		return statement.executeQuery(sql);
+		return record(statement.executeQuery(sql));
 	}
 
 	protected boolean executeStatement(PreparedStatement statement) throws SQLException
@@ -2310,7 +2333,7 @@ public class SQLKit
 
 	public ResultSet getGeneratedKeys(Statement statement) throws SQLException
 	{
-		return statement.getGeneratedKeys();
+		return record(statement.getGeneratedKeys());
 	}
 
 	public ConnectionManager getManager()
@@ -2338,27 +2361,9 @@ public class SQLKit
 		return queryTimeout;
 	}
 
-	public ResultSet getResultSet()
+	protected Set<ResultSet> getResultSets()
 	{
-		return getResultSet(statement);
-	}
-
-	public ResultSet getResultSet(Statement statement)
-	{
-		ResultSet rs = null;
-
-		if (statement != null)
-		{
-			try
-			{
-				rs = statement.getResultSet();
-			}
-			catch (SQLException e)
-			{
-			}
-		}
-
-		return rs;
+		return resultSets;
 	}
 
 	public String getSentence(Statement statement)
@@ -3384,6 +3389,15 @@ public class SQLKit
 		return query(prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability), params);
 	}
 
+	protected ResultSet record(ResultSet rs)
+	{
+		if (rs != null)
+		{
+			this.getResultSets().add(rs);
+		}
+		return rs;
+	}
+
 	public SQLKit registerOutParameter(CallableStatement cs, int index, int type) throws SQLException
 	{
 		cs.registerOutParameter(index, type);
@@ -3599,6 +3613,12 @@ public class SQLKit
 	public SQLKit setQueryTimeout(int seconds)
 	{
 		this.queryTimeout = seconds;
+		return this;
+	}
+
+	protected SQLKit setResultSets(Set<ResultSet> resultSets)
+	{
+		this.resultSets = resultSets;
 		return this;
 	}
 

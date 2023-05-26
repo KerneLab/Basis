@@ -70,6 +70,16 @@ public class SQLKitPool extends AbstractPool<SQLKit> implements ConnectionManage
 	}
 
 	@Override
+	public void recycle(SQLKit kit)
+	{
+		if (kit != null)
+		{
+			kit.cleanResultSets();
+		}
+		super.recycle(kit);
+	}
+
+	@Override
 	public void recycleConnection(Connection c) throws SQLException
 	{
 		this.getManager().recycleConnection(c);
