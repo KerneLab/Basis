@@ -1563,7 +1563,7 @@ public class SQLKit
 
 	private Map<String, List<String>>				parameters;
 
-	private Set<ResultSet>							resultSets;
+	private Collection<ResultSet>					resultSets;
 
 	private String									boundary;
 
@@ -2361,7 +2361,7 @@ public class SQLKit
 		return queryTimeout;
 	}
 
-	protected Set<ResultSet> getResultSets()
+	protected Collection<ResultSet> getResultSets()
 	{
 		return resultSets;
 	}
@@ -3616,7 +3616,7 @@ public class SQLKit
 		return this;
 	}
 
-	protected SQLKit setResultSets(Set<ResultSet> resultSets)
+	protected SQLKit setResultSets(Collection<ResultSet> resultSets)
 	{
 		this.resultSets = resultSets;
 		return this;
