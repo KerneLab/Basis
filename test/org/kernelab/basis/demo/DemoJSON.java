@@ -53,5 +53,10 @@ public class DemoJSON
 
 		JSON jsonD = new JSON().pairs("a", jsonA, "AA", jsanA);
 		Tools.debug(jsonD.flatten().toString(0));
+
+		JSAN table = new JSAN();
+		table.add(new JSAN().addAll(0, "a", 1, true, null)) //
+				.add(new JSAN().addAll(0, "b", 2, false, new JSON().attr("a", 1)));
+		JSON.Output(new PrintWriter(System.out, true), table, 0, "  ");
 	}
 }

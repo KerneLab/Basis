@@ -872,6 +872,31 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
+		public static boolean IsTable(JSAN jsan)
+		{
+			int columns = -1;
+			for (Object r : jsan)
+			{
+				if (r == null)
+				{
+					continue;
+				}
+				else if (!(r instanceof JSAN))
+				{
+					return false;
+				}
+				if (columns == -1)
+				{
+					columns = ((JSAN) r).size();
+				}
+				else if (columns != ((JSAN) r).size())
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
 		public static JSAN Reflect(JSAN jsan, Map<Class<?>, Object> reflects, Object object)
 		{
 			if (object != null)
@@ -5628,6 +5653,18 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return index;
 	}
 
+	protected static boolean IsAllPrimaryData(JSON json)
+	{
+		for (Object value : json.values())
+		{
+			if (value instanceof JSON)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public static final boolean IsArray(Object o)
 	{
 		return o != null && o.getClass().isArray();
@@ -5778,6 +5815,94 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public static boolean NeedToEscape(char c)
 	{
 		return ESCAPED_CHAR.containsKey(c) || Character.isISOControl(c);
+	}
+
+	public static void Output(Writer out, Object object, int indents, String indent)
+	{
+		if (out == null)
+		{
+			return;
+		}
+
+		try
+		{
+			String newLine = System.getProperty("line.separator", "\n");
+
+			if (!(object instanceof JSON))
+			{
+				Tools.repeat(out, indent, indents);
+				out.write(JSON.SerializeValueOf(object));
+				return;
+			}
+
+			JSON json = (JSON) object;
+			if (json instanceof JSAN)
+			{
+				if (IsAllPrimaryData(json))
+				{
+					Tools.repeat(out, indent, indents);
+					JSON.Serialize(json, out, -1);
+				}
+				else
+				{
+					Tools.repeat(out, indent, indents);
+					boolean first = true;
+					out.write('[' + newLine);
+					for (Object value : json)
+					{
+						if (first)
+						{
+							first = false;
+						}
+						else
+						{
+							out.write(',' + newLine);
+						}
+						Output(out, value, indents + 1, indent);
+					}
+					out.write(newLine);
+					Tools.repeat(out, indent, indents);
+					out.write(']');
+				}
+			}
+			else
+			{
+				Tools.repeat(out, indent, indents);
+				boolean first = true;
+				out.write('{' + newLine);
+				for (Pair pair : json.pairs())
+				{
+					if (first)
+					{
+						first = false;
+					}
+					else
+					{
+						out.write(',' + newLine);
+					}
+					Tools.repeat(out, indent, indents + 1);
+					out.write(JSON.SerializeValueOf(pair.getKey()));
+					out.write(':');
+					Output(out, pair.getValue(), 0, "  ");
+				}
+				out.write(newLine);
+				Tools.repeat(out, indent, indents);
+				out.write('}');
+			}
+		}
+		catch (Exception e)
+		{
+		}
+		finally
+		{
+			try
+			{
+				out.flush();
+			}
+			catch (Exception e)
+			{
+			}
+		}
 	}
 
 	public static JSON Parse(CharSequence source)
