@@ -7,125 +7,35 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class WrappedHashSet<E> implements Set<E>, Serializable
+public class WrappedHashSet<E> extends WrappedContainer<E> implements Set<E>, Serializable
 {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -1848904484643612918L;
-
-	public static interface Hasher<T>
-	{
-		public boolean equals(T a, T b);
-
-		public int hashCode(T value);
-	}
-
-	protected class WrappedIterator implements Iterator<E>
-	{
-		protected final Iterator<Wrapper> iter;
-
-		public WrappedIterator(Iterator<Wrapper> iter)
-		{
-			this.iter = iter;
-		}
-
-		@Override
-		public boolean hasNext()
-		{
-			return iter.hasNext();
-		}
-
-		@Override
-		public E next()
-		{
-			return iter.next().value;
-		}
-
-		@Override
-		public void remove()
-		{
-			iter.remove();
-		}
-	}
-
-	protected class Wrapper
-	{
-		protected final E value;
-
-		public Wrapper(E value)
-		{
-			this.value = value;
-		}
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (this == obj)
-			{
-				return true;
-			}
-
-			if (obj == null)
-			{
-				return false;
-			}
-
-			if (!(obj instanceof WrappedHashSet.Wrapper))
-			{
-				return false;
-			}
-
-			@SuppressWarnings("unchecked")
-			Wrapper other = (WrappedHashSet<E>.Wrapper) obj;
-
-			if (value == other.value)
-			{
-				return true;
-			}
-
-			if (value == null || other.value == null)
-			{
-				return false;
-			}
-
-			return hasher.equals(value, other.value);
-		}
-
-		@Override
-		public int hashCode()
-		{
-			return value == null ? 0 : hasher.hashCode(value);
-		}
-	}
-
-	protected static final int			DEFAULT_CAPACITY	= 16;
-
-	protected static final float		DEFAULT_LOAD_FACTOR	= 0.75f;
-
-	protected final Hasher<E>			hasher;
+	private static final long			serialVersionUID	= -7304948358489956579L;
 
 	protected final HashSet<Wrapper>	set;
 
-	public WrappedHashSet(Hasher<E> hasher)
+	public WrappedHashSet(HashedEquality<E> equal)
 	{
-		this(hasher, DEFAULT_CAPACITY);
+		this(equal, WrappedHashMap.DEFAULT_CAPACITY);
 	}
 
-	public WrappedHashSet(Hasher<E> hasher, Collection<? extends E> c)
+	public WrappedHashSet(HashedEquality<E> equal, Collection<? extends E> c)
 	{
-		this(hasher, Math.max((int) (c.size() / DEFAULT_LOAD_FACTOR) + 1, DEFAULT_CAPACITY));
+		this(equal, Math.max((int) (c.size() / WrappedHashMap.DEFAULT_LOAD_FACTOR) + 1, //
+				WrappedHashMap.DEFAULT_CAPACITY));
 		addAll(c);
 	}
 
-	public WrappedHashSet(Hasher<E> hasher, int initialCapacity)
+	public WrappedHashSet(HashedEquality<E> equal, int initialCapacity)
 	{
-		this(hasher, initialCapacity, DEFAULT_LOAD_FACTOR);
+		this(equal, initialCapacity, WrappedHashMap.DEFAULT_LOAD_FACTOR);
 	}
 
-	public WrappedHashSet(Hasher<E> hasher, int initialCapacity, float loadFactor)
+	public WrappedHashSet(HashedEquality<E> equal, int initialCapacity, float loadFactor)
 	{
-		this.hasher = hasher;
+		super(equal);
 		this.set = newHashSet(initialCapacity, loadFactor);
 	}
 
@@ -147,19 +57,6 @@ public class WrappedHashSet<E> implements Set<E>, Serializable
 			}
 		}
 		return mod;
-	}
-
-	@SuppressWarnings("unchecked")
-	protected E cast(Object e)
-	{
-		try
-		{
-			return (E) e;
-		}
-		catch (Exception ex)
-		{
-			return null;
-		}
 	}
 
 	@Override
@@ -300,10 +197,5 @@ public class WrappedHashSet<E> implements Set<E>, Serializable
 		}
 
 		return dst;
-	}
-
-	protected Wrapper wrap(E e)
-	{
-		return new Wrapper(e);
 	}
 }
