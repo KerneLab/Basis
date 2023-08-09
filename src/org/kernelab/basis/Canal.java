@@ -562,18 +562,7 @@ public class Canal<U, D> implements Iterable<D>
 					}
 					else if (eql != null)
 					{
-						return new WrappedHashSet<E>(eql)
-						{
-							/**
-							 * 
-							 */
-							private static final long serialVersionUID = 1L;
-
-							protected HashSet<Wrapper> newHashSet(int initialCapacity, float loadFactor)
-							{
-								return new LinkedHashSet<Wrapper>(initialCapacity, loadFactor);
-							}
-						};
+						return new WrappedLinkedHashSet<E>(eql);
 					}
 					else
 					{
