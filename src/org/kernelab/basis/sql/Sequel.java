@@ -2176,22 +2176,21 @@ public class Sequel implements Iterable<ResultSet>
 
 	private boolean preparedResultSet() throws SQLException
 	{
-		boolean ok = false;
-
 		if (this.isResultSet())
 		{
 			if (this.getResultSet().isBeforeFirst())
 			{
-				ok = this.getResultSet().next();
+				return this.getResultSet().next();
 			}
-
-			if (!ok)
+			else
 			{
-				ok = this.getResultSet().getRow() != 0;
+				return true;
 			}
 		}
-
-		return ok;
+		else
+		{
+			return false;
+		}
 	}
 
 	public boolean prevRow()
