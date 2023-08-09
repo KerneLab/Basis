@@ -26,6 +26,7 @@ public class Canal<U, D> implements Iterable<D>
 	{
 		private Pond<?, U> up;
 
+		@Override
 		public void close() throws Exception
 		{
 			if (upstream() != null)
@@ -34,11 +35,13 @@ public class Canal<U, D> implements Iterable<D>
 			}
 		}
 
+		@Override
 		public void end() throws Exception
 		{
 			this.close();
 		}
 
+		@Override
 		public abstract boolean hasNext();
 
 		public abstract D next();
@@ -48,6 +51,7 @@ public class Canal<U, D> implements Iterable<D>
 		{
 		}
 
+		@Override
 		public Pond<?, U> upstream()
 		{
 			return up;
@@ -528,11 +532,20 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class DistinctOp<E> implements Converter<E, E>
 	{
-		protected final Comparator<E> cmp;
+		protected final Comparator<E>		cmp;
+
+		protected final HashedEquality<E>	eql;
 
 		public DistinctOp(Comparator<E> cmp)
 		{
 			this.cmp = cmp;
+			this.eql = null;
+		}
+
+		public DistinctOp(HashedEquality<E> eql)
+		{
+			this.cmp = null;
+			this.eql = eql;
 		}
 
 		@Override
@@ -543,7 +556,29 @@ public class Canal<U, D> implements Iterable<D>
 				@Override
 				protected Collection<E> newSediment()
 				{
-					return cmp == null ? new LinkedHashSet<E>() : new TreeSet<E>(cmp);
+					if (cmp != null)
+					{
+						return new TreeSet<E>(cmp);
+					}
+					else if (eql != null)
+					{
+						return new WrappedHashSet<E>(eql)
+						{
+							/**
+							 * 
+							 */
+							private static final long serialVersionUID = 1L;
+
+							protected HashSet<Wrapper> newHashSet(int initialCapacity, float loadFactor)
+							{
+								return new LinkedHashSet<Wrapper>(initialCapacity, loadFactor);
+							}
+						};
+					}
+					else
+					{
+						return new LinkedHashSet<E>();
+					}
 				}
 
 				@Override
@@ -1647,6 +1682,19 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
+		public E or(Producer<E> defaultProducer)
+		{
+			try
+			{
+				return defaultProducer.produce();
+			}
+			catch (Exception e)
+			{
+				return null;
+			}
+		}
+
+		@Override
 		public Option<E> orElse(Option<E> opt)
 		{
 			return opt;
@@ -1680,11 +1728,31 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static abstract class Option<E> extends Canal<E, E>
 	{
+		public static <T> T or(T value, Producer<T> deft)
+		{
+			try
+			{
+				return value != null ? value : deft.produce();
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				return null;
+			}
+		}
+
+		public static <T> T or(T value, T deft)
+		{
+			return value != null ? value : deft;
+		}
+
 		public abstract E get();
 
 		public abstract boolean given();
 
 		public abstract E or(E defaultValue);
+
+		public abstract E or(Producer<E> defaultProducer);
 
 		public abstract Option<E> orElse(Option<E> opt);
 
@@ -2262,6 +2330,12 @@ public class Canal<U, D> implements Iterable<D>
 
 		@Override
 		public E or(E defaultValue)
+		{
+			return value;
+		}
+
+		@Override
+		public E or(Producer<E> defaultProducer)
 		{
 			return value;
 		}
@@ -3481,7 +3555,7 @@ public class Canal<U, D> implements Iterable<D>
 	 */
 	public Canal<D, D> distinct()
 	{
-		return this.distinct(null);
+		return this.distinct((Comparator<D>) null);
 	}
 
 	/**
@@ -3493,6 +3567,17 @@ public class Canal<U, D> implements Iterable<D>
 	public Canal<D, D> distinct(Comparator<D> cmp)
 	{
 		return this.follow(new DistinctOp<D>(cmp));
+	}
+
+	/**
+	 * Remove duplicate elements with a given {@link HashedEquality}.
+	 * 
+	 * @param eql
+	 * @return
+	 */
+	public Canal<D, D> distinct(HashedEquality<D> eql)
+	{
+		return this.follow(new DistinctOp<D>(eql));
 	}
 
 	@SuppressWarnings("unchecked")
