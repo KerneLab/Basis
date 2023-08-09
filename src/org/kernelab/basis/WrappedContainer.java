@@ -25,6 +25,12 @@ public abstract class WrappedContainer<E>
 		{
 			return iter.next().data;
 		}
+
+		@Override
+		public void remove()
+		{
+			iter.remove();
+		}
 	}
 
 	protected class Wrapper implements Serializable

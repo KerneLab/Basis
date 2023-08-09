@@ -30,6 +30,12 @@ public class WrappedHashMap<K, V> extends WrappedContainer<K> implements Map<K, 
 		{
 			return new WrappedEntry(iter.next());
 		}
+
+		@Override
+		public void remove()
+		{
+			iter.remove();
+		}
 	}
 
 	protected class EntrySet extends AbstractSet<Entry<K, V>>
