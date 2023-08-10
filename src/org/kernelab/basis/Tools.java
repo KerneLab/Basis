@@ -5885,6 +5885,29 @@ public class Tools
 	}
 
 	/**
+	 * If all elements in array are not null then return the array, otherwise
+	 * return null.
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public static <T> T[] noNulls(T... array)
+	{
+		if (array == null)
+		{
+			return null;
+		}
+		for (T t : array)
+		{
+			if (t == null)
+			{
+				return null;
+			}
+		}
+		return array;
+	}
+
+	/**
 	 * To determine whether all of the objects are not null.
 	 * 
 	 * @param objects
