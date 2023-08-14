@@ -385,6 +385,8 @@ public class Sequel implements Iterable<ResultSet>
 
 	private ResultSet								resultSet;
 
+	private Boolean									initNext		= null;
+
 	private int										updateCount		= N_A;
 
 	private boolean									closed			= false;
@@ -2178,14 +2180,11 @@ public class Sequel implements Iterable<ResultSet>
 	{
 		if (this.isResultSet())
 		{
-			if (this.getResultSet().isBeforeFirst())
+			if (this.initNext == null)
 			{
-				return this.getResultSet().next();
+				this.initNext = this.getResultSet().next();
 			}
-			else
-			{
-				return true;
-			}
+			return this.initNext;
 		}
 		else
 		{
@@ -2238,6 +2237,7 @@ public class Sequel implements Iterable<ResultSet>
 	private Sequel setResultSet(ResultSet resultSet)
 	{
 		this.resultSet = resultSet;
+		this.initNext = null;
 		this.metaMapIndex = null;
 		this.metaMapName = null;
 		return this;
