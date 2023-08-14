@@ -20,7 +20,7 @@ public class Row implements Map<String, Object>, Serializable
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -3208170451974323745L;
+	private static final long serialVersionUID = -2122286242651721856L;
 
 	@SuppressWarnings("unchecked")
 	public static <T> T project(T obj, Map<String, Object> map)
@@ -179,6 +179,12 @@ public class Row implements Map<String, Object>, Serializable
 		return this.getData().containsValue(value);
 	}
 
+	public Row delete(String key)
+	{
+		this.remove(key);
+		return this;
+	}
+
 	@Override
 	public Set<java.util.Map.Entry<String, Object>> entrySet()
 	{
@@ -201,6 +207,30 @@ public class Row implements Map<String, Object>, Serializable
 			return false;
 		}
 		return Tools.equals(this, (Row) obj);
+	}
+
+	public Row exclude(Set<String> keys)
+	{
+		if (keys != null && !keys.isEmpty())
+		{
+			for (String key : keys)
+			{
+				this.remove(key);
+			}
+		}
+		return this;
+	}
+
+	public Row exclude(String... keys)
+	{
+		if (keys != null && keys.length > 0)
+		{
+			for (String key : keys)
+			{
+				this.remove(key);
+			}
+		}
+		return this;
 	}
 
 	public Object get(int index)
