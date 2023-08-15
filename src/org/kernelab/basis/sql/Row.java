@@ -15,12 +15,12 @@ import org.kernelab.basis.JSON.Pair;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 
-public class Row implements Map<String, Object>, Serializable
+public class Row implements Map<String, Object>, Serializable, Cloneable
 {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 6802746033078046902L;
+	private static final long serialVersionUID = -4523492269850284428L;
 
 	@SuppressWarnings("unchecked")
 	public static <T> T project(T obj, Map<String, Object> map)
