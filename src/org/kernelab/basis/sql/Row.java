@@ -20,7 +20,7 @@ public class Row implements Map<String, Object>, Serializable
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -2122286242651721856L;
+	private static final long serialVersionUID = 6802746033078046902L;
 
 	@SuppressWarnings("unchecked")
 	public static <T> T project(T obj, Map<String, Object> map)
@@ -156,6 +156,25 @@ public class Row implements Map<String, Object>, Serializable
 	{
 		this.resetCols();
 		this.getData().clear();
+	}
+
+	@Override
+	public Row clone()
+	{
+		Row row = null;
+		try
+		{
+			row = this.getClass().newInstance();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			row = new Row();
+		}
+		row.putAll(this);
+		row.cols = this.cols;
+		row.heads = this.heads;
+		return row;
 	}
 
 	public Object[] columns()
