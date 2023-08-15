@@ -3026,6 +3026,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return CastToCalendar(this.attr(index));
 		}
 
+		public Calendar valCalendar(int index, Calendar defaultValue)
+		{
+			Calendar val = valCalendar(index);
+			return val == null ? defaultValue : val;
+		}
+
 		public Calendar valCalendar(int index, long defaultValue)
 		{
 			Calendar val = valCalendar(index);
@@ -3064,6 +3070,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public Date valDate(int index)
 		{
 			return CastToDate(this.attr(index));
+		}
+
+		public Date valDate(int index, Date defaultValue)
+		{
+			Date val = valDate(index);
+			return val == null ? defaultValue : val;
 		}
 
 		public Date valDate(int index, long defaultValue)
@@ -3211,6 +3223,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return val == null ? new Time(defaultValue) : val;
 		}
 
+		public Time valTime(int index, Time defaultValue)
+		{
+			Time val = valTime(index);
+			return val == null ? defaultValue : val;
+		}
+
 		public Timestamp valTimestamp(int index)
 		{
 			return CastToTimestamp(this.attr(index));
@@ -3220,6 +3238,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			Timestamp val = valTimestamp(index);
 			return val == null ? new Timestamp(defaultValue) : val;
+		}
+
+		public Timestamp valTimestamp(int index, Timestamp defaultValue)
+		{
+			Timestamp val = valTimestamp(index);
+			return val == null ? defaultValue : val;
 		}
 
 		@SuppressWarnings("unchecked")
@@ -8653,6 +8677,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return CastToCalendar(this.attr(key));
 	}
 
+	public Calendar valCalendar(String key, Calendar defaultValue)
+	{
+		Calendar val = valCalendar(key);
+		return val == null ? defaultValue : val;
+	}
+
 	public Calendar valCalendar(String key, long defaultValue)
 	{
 		Calendar val = valCalendar(key);
@@ -8691,6 +8721,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public Date valDate(String key)
 	{
 		return CastToDate(this.attr(key));
+	}
+
+	public Date valDate(String key, Date defaultValue)
+	{
+		Date val = valDate(key);
+		return val == null ? defaultValue : val;
 	}
 
 	public Date valDate(String key, long defaultValue)
@@ -8858,6 +8894,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return val == null ? new Time(defaultValue) : val;
 	}
 
+	public Time valTime(String key, Time defaultValue)
+	{
+		Time val = valTime(key);
+		return val == null ? defaultValue : val;
+	}
+
 	public Timestamp valTimestamp(String key)
 	{
 		return CastToTimestamp(this.attr(key));
@@ -8867,6 +8909,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Timestamp val = valTimestamp(key);
 		return val == null ? new Timestamp(defaultValue) : val;
+	}
+
+	public Timestamp valTimestamp(String key, Timestamp defaultValue)
+	{
+		Timestamp val = valTimestamp(key);
+		return val == null ? defaultValue : val;
 	}
 
 	@Override
