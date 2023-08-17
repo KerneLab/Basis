@@ -29,6 +29,22 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	 */
 	private static final long serialVersionUID = -225186284768405125L;
 
+	public static Row of(Map<String, ?> map)
+	{
+		if (map == null)
+		{
+			return null;
+		}
+		else if (map instanceof Row)
+		{
+			return (Row) map;
+		}
+		else
+		{
+			return new Row().set(map);
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	public static <T> T project(T obj, Map<String, Object> map)
 	{
@@ -85,7 +101,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		this.init();
 	}
 
-	public Row(Map<String, Object> data)
+	public Row(Map<String, ?> data)
 	{
 		this();
 		this.putAll(data);
@@ -808,11 +824,11 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return r;
 	}
 
-	public Row newRow(Map<String, Object> map)
+	public Row newRow(Map<String, ?> map)
 	{
 		Row r = newInstance();
 		Object i = null;
-		for (Entry<String, Object> entry : map.entrySet())
+		for (Entry<String, ?> entry : map.entrySet())
 		{
 			i = entry.getValue();
 			if (i instanceof Integer)
@@ -844,7 +860,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	}
 
 	@Override
-	public void putAll(Map<? extends String, ? extends Object> m)
+	public void putAll(Map<? extends String, ?> m)
 	{
 		this.resetCols();
 		if (m != null)
@@ -874,7 +890,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return this;
 	}
 
-	public Row set(Map<String, Object> data)
+	public Row set(Map<String, ?> data)
 	{
 		this.putAll(data);
 		return this;
