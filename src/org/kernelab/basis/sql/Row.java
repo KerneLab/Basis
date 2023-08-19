@@ -27,7 +27,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -225186284768405125L;
+	private static final long serialVersionUID = 2300871853782173357L;
 
 	public static Row of(Map<String, ?> map)
 	{

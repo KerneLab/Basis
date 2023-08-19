@@ -897,6 +897,34 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return true;
 		}
 
+		public static JSAN Of(Iterable<?> itr)
+		{
+			if (itr == null)
+			{
+				return null;
+			}
+			else if (itr instanceof JSAN)
+			{
+				return (JSAN) itr;
+			}
+			else
+			{
+				return new JSAN().addAll(itr);
+			}
+		}
+
+		public static <T> JSAN Of(T[] arr)
+		{
+			if (arr == null)
+			{
+				return null;
+			}
+			else
+			{
+				return new JSAN().addAll(arr);
+			}
+		}
+
 		public static JSAN Reflect(JSAN jsan, Map<Class<?>, Object> reflects, Object object)
 		{
 			if (object != null)
@@ -5839,6 +5867,22 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public static boolean NeedToEscape(char c)
 	{
 		return ESCAPED_CHAR.containsKey(c) || Character.isISOControl(c);
+	}
+
+	public static JSON Of(Map<String, ?> map)
+	{
+		if (map == null)
+		{
+			return null;
+		}
+		else if (map instanceof JSON)
+		{
+			return (JSON) map;
+		}
+		else
+		{
+			return new JSON().attrAll(map);
+		}
 	}
 
 	public static void Output(Writer out, Object object, int indents, String indent)
