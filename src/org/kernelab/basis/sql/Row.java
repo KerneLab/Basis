@@ -21,9 +21,45 @@ import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
+import org.kernelab.basis.sql.SQLKit.ProjectMapper;
 
 public class Row implements Map<String, Object>, Serializable, Cloneable
 {
+	public static class RowProjector<E> extends ProjectMapper<Row, E>
+	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1813680091310716510L;
+
+		public RowProjector(Class<E> cls, Map<String, Object> map)
+		{
+			super(cls, map);
+		}
+
+		public RowProjector(Map<String, Object> map, E obj)
+		{
+			super(map, obj);
+		}
+
+		@Override
+		protected Map<String, Object> dict(Row src) throws Exception
+		{
+			Map<String, Object> dict = new LinkedHashMap<String, Object>();
+			for (String c : src.keySet())
+			{
+				dict.put(c, c);
+			}
+			return dict;
+		}
+
+		@Override
+		protected Object get(Row src, Object key) throws Exception
+		{
+			return src.get(key);
+		}
+	}
+
 	/**
 	 * 
 	 */

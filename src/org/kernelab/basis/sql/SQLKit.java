@@ -283,41 +283,6 @@ public class SQLKit
 		}
 	}
 
-	public static class RowMapper<E> extends ProjectMapper<Row, E>
-	{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -8300488369089511571L;
-
-		public RowMapper(Class<E> cls, Map<String, Object> map)
-		{
-			super(cls, map);
-		}
-
-		public RowMapper(Map<String, Object> map, E obj)
-		{
-			super(map, obj);
-		}
-
-		@Override
-		protected Map<String, Object> dict(Row src) throws Exception
-		{
-			Map<String, Object> dict = new LinkedHashMap<String, Object>();
-			for (String c : src.keySet())
-			{
-				dict.put(c, c);
-			}
-			return dict;
-		}
-
-		@Override
-		protected Object get(Row src, Object key) throws Exception
-		{
-			return src.get(key);
-		}
-	}
-
 	public static final char		VALUE_HOLDER_CHAR			= '?';
 
 	public static final String		VALUE_HOLDER_MARK			= "?";
