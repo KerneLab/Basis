@@ -8,7 +8,6 @@ import org.kernelab.basis.sql.Row;
 
 public class TestWindowFunction
 {
-
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args)
 	{
@@ -44,5 +43,4 @@ public class TestWindowFunction
 
 		Tools.debug(j.toString().replace(",{", ",\n{"));
 	}
-
 }

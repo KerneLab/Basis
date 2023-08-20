@@ -62,6 +62,25 @@ public class Canal<U, D> implements Iterable<D>
 			return this;
 		}
 
+		@SuppressWarnings("unchecked")
+		@Override
+		public O express(int pos, Object gather, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		{
+			return (O) gather;
+		}
+
+		@Override
+		public Object gather(Object acc, Map<String, Object>[] rows, int levelFrom, int levelTo) throws Exception
+		{
+			return acc;
+		}
+
+		@Override
+		public Object initial() throws Exception
+		{
+			return null;
+		}
+
 		@Override
 		public boolean isByRow()
 		{
@@ -106,6 +125,12 @@ public class Canal<U, D> implements Iterable<D>
 		{
 			this.byRows = true;
 			return this;
+		}
+
+		@Override
+		public Object update(Object gather, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		{
+			return gather;
 		}
 	}
 
@@ -170,15 +195,26 @@ public class Canal<U, D> implements Iterable<D>
 		public void action(E el) throws Exception;
 	}
 
+	/**
+	 * initial -> gather -> update -> express
+	 * 
+	 * @author 6715698
+	 *
+	 * @param <O>
+	 */
 	public static interface Aggregator<O> extends Window
 	{
-		public O aggregate(int pos, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception;
-
 		public String as();
 
 		public Aggregator<O> as(String alias);
 
 		public Aggregator<O> between(Item<Double> a, Item<Double> b);
+
+		public O express(int pos, Object gather, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception;
+
+		public Object gather(Object buf, Map<String, Object>[] rows, int levelFrom, int levelTo) throws Exception;
+
+		public Object initial() throws Exception;
 
 		public Aggregator<O> orderBy(Item<?>... keys);
 
@@ -187,6 +223,8 @@ public class Canal<U, D> implements Iterable<D>
 		public Aggregator<O> range();
 
 		public Aggregator<O> rows();
+
+		public Object update(Object gather, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception;
 	}
 
 	protected static class ArraySource<E> extends Source<E>
@@ -408,7 +446,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public Integer aggregate(int pos, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		public Integer update(Object gather, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
 		{
 			int count = 0;
 			for (int i = winFrom; i < winTo; i++)
@@ -630,6 +668,27 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
+	protected static class DENSE_RANK extends AbstractAggregator<Integer>
+	{
+		@Override
+		public Item<Double>[] between()
+		{
+			return null;
+		}
+
+		@Override
+		public Object gather(Object acc, Map<String, Object>[] rows, int levelFrom, int levelTo) throws Exception
+		{
+			return ((Integer) acc) + 1;
+		}
+
+		@Override
+		public Integer initial()
+		{
+			return 0;
+		}
+	}
+
 	protected static abstract class Desilter<E> extends Heaper<E> implements Terminal<E, Collection<E>>
 	{
 		public Collection<E> get()
@@ -804,7 +863,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public T aggregate(int pos, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		public T update(Object gather, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
 		{
 			T d = null;
 			for (int i = winFrom; i < winTo; i++)
@@ -1720,16 +1779,16 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public T aggregate(int pos, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
-		{
-			int index = pos - offset;
-			return index < 0 ? deft : vop.map(rows[index]);
-		}
-
-		@Override
 		public Item<Double>[] between()
 		{
 			return null;
+		}
+
+		@Override
+		public T express(int pos, Object acc, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		{
+			int index = pos - offset;
+			return index < 0 ? deft : vop.map(rows[index]);
 		}
 	}
 
@@ -1746,7 +1805,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public T aggregate(int pos, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		public T update(Object acc, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
 		{
 			T d = null;
 			for (int i = winTo - 1; i >= winFrom; i--)
@@ -1776,16 +1835,16 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public T aggregate(int pos, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
-		{
-			int index = pos + offset;
-			return index >= rows.length ? deft : vop.map(rows[index]);
-		}
-
-		@Override
 		public Item<Double>[] between()
 		{
 			return null;
+		}
+
+		@Override
+		public T express(int pos, Object acc, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		{
+			int index = pos + offset;
+			return index >= rows.length ? deft : vop.map(rows[index]);
 		}
 	}
 
@@ -1934,6 +1993,60 @@ public class Canal<U, D> implements Iterable<D>
 			{
 				throw new RuntimeException(e);
 			}
+		}
+	}
+
+	protected static class MAX<T extends Comparable<T>> extends AbstractAggregator<T>
+	{
+		protected final Expr<T> vop;
+
+		public MAX(Expr<T> vop)
+		{
+			this.vop = vop;
+		}
+
+		@Override
+		public T update(Object acc, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		{
+			T m = null, o = null;
+			for (int i = winFrom; i < winTo; i++)
+			{
+				if ((o = vop.map(rows[i])) != null)
+				{
+					if (m == null || o.compareTo(m) > 0)
+					{
+						m = o;
+					}
+				}
+			}
+			return m;
+		}
+	}
+
+	protected static class MIN<T extends Comparable<T>> extends AbstractAggregator<T>
+	{
+		protected final Expr<T> vop;
+
+		public MIN(Expr<T> vop)
+		{
+			this.vop = vop;
+		}
+
+		@Override
+		public T update(Object acc, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		{
+			T m = null, o = null;
+			for (int i = winFrom; i < winTo; i++)
+			{
+				if ((o = vop.map(rows[i])) != null)
+				{
+					if (m == null || o.compareTo(m) < 0)
+					{
+						m = o;
+					}
+				}
+			}
+			return m;
 		}
 	}
 
@@ -2285,6 +2398,27 @@ public class Canal<U, D> implements Iterable<D>
 		E produce() throws Exception;
 	}
 
+	protected static class RANK extends AbstractAggregator<Integer>
+	{
+		@Override
+		public Item<Double>[] between()
+		{
+			return null;
+		}
+
+		@Override
+		public Object gather(Object acc, Map<String, Object>[] rows, int levelFrom, int levelTo) throws Exception
+		{
+			return levelFrom + 1;
+		}
+
+		@Override
+		public Integer initial()
+		{
+			return 0;
+		}
+	}
+
 	protected static class ReduceOp<E> implements Evaluator<E, Option<E>>
 	{
 		protected final Reducer<E, E> reducer;
@@ -2439,15 +2573,15 @@ public class Canal<U, D> implements Iterable<D>
 	protected static class ROW_NUMBER extends AbstractAggregator<Integer>
 	{
 		@Override
-		public Integer aggregate(int pos, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
-		{
-			return pos + 1;
-		}
-
-		@Override
 		public Item<Double>[] between()
 		{
 			return null;
+		}
+
+		@Override
+		public Integer express(int pos, Object acc, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		{
+			return pos + 1;
 		}
 	}
 
@@ -2579,6 +2713,7 @@ public class Canal<U, D> implements Iterable<D>
 
 						int from = 0, to = 0, levelFrom = 0, levelTo = 0, i = 0;
 						int[] range = new int[] { 0, 0 };
+						Object gather = aggr.initial(), update = null;
 
 						for (List<R> level : ordered)
 						{
@@ -2594,10 +2729,14 @@ public class Canal<U, D> implements Iterable<D>
 								// Find range only once in each step
 								ranger.range(range, rows, from, levelFrom, levelTo);
 
+								gather = aggr.gather(gather, rows, levelFrom, levelTo);
+
+								update = aggr.update(gather, rows, range[0], range[1]);
+
 								for (i = from; i < to && i < levelTo; i++)
 								{
-									rows[i].put(aggr.as(),
-											range[0] >= range[1] ? null : aggr.aggregate(i, rows, range[0], range[1]));
+									rows[i].put(aggr.as(), range[0] >= range[1] ? null
+											: aggr.express(i, update, rows, range[0], range[1]));
 								}
 
 								from = to;
@@ -2817,11 +2956,12 @@ public class Canal<U, D> implements Iterable<D>
 
 		protected final Item<Double>	b;
 
+		@SuppressWarnings("unchecked")
 		public SlidingRangeWindowRanger(Item<?> item, Item<Double>[] between)
 		{
 			this.item = item;
-			this.a = between[0] == null ? NULL : between[0];
-			this.b = between[1] == null ? NULL : between[1];
+			this.a = (Item<Double>) (between[0] == null ? NULL : between[0]);
+			this.b = (Item<Double>) (between[1] == null ? NULL : between[1]);
 		}
 
 		@Override
@@ -3274,7 +3414,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public Double aggregate(int pos, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
+		public Double update(Object acc, Map<String, Object>[] rows, int winFrom, int winTo) throws Exception
 		{
 			double sum = 0;
 
@@ -3819,7 +3959,16 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
-	public static final Item<Double>	NULL		= new Item<Double>()
+	public static final Filter<?>		NOT_NULL	= new Filter<Object>()
+													{
+														@Override
+														public boolean filter(Object el) throws Exception
+														{
+															return el != null;
+														}
+													};
+
+	public static final Item<?>			NULL		= new Item<Double>()
 													{
 														@Override
 														public Double map(Map<String, Object> el) throws Exception
@@ -3896,7 +4045,11 @@ public class Canal<U, D> implements Iterable<D>
 
 		for (Object o : orders)
 		{
-			if (o instanceof Mapper<?, ?>)
+			if (o instanceof Item<?>)
+			{
+				cmp = (Comparator<E>) new RowCanal.ItemComparator((Item<?>) o);
+			}
+			else if (o instanceof Mapper<?, ?>)
 			{
 				if (cmp != null)
 				{
@@ -3926,6 +4079,11 @@ public class Canal<U, D> implements Iterable<D>
 	public static Aggregator<Integer> COUNT(Expr<?> vop)
 	{
 		return new COUNT(vop);
+	}
+
+	public static Aggregator<Integer> DENSE_RANK()
+	{
+		return new DENSE_RANK();
 	}
 
 	public static <T> Aggregator<T> FIRST_VALUE(Expr<T> vop)
@@ -4028,6 +4186,16 @@ public class Canal<U, D> implements Iterable<D>
 	public static <T> Aggregator<T> LEAD(Expr<T> vop, int offset, T deft)
 	{
 		return new LEAD<T>(vop, offset, deft);
+	}
+
+	public static <T extends Comparable<T>> Aggregator<T> MAX(Item<T> vop)
+	{
+		return new MAX<T>(vop);
+	}
+
+	public static <T extends Comparable<T>> Aggregator<T> MIN(Item<T> vop)
+	{
+		return new MIN<T>(vop);
 	}
 
 	/**
@@ -4159,6 +4327,11 @@ public class Canal<U, D> implements Iterable<D>
 				};
 			}
 		};
+	}
+
+	public static Aggregator<Integer> RANK()
+	{
+		return new RANK();
 	}
 
 	public static Aggregator<Integer> ROW_NUMBER()
