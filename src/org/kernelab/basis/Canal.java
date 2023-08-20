@@ -4030,41 +4030,6 @@ public class Canal<U, D> implements Iterable<D>
 		return new LEAD<T>(vop, offset, deft);
 	}
 
-	@SuppressWarnings("unchecked")
-	public static void main(String[] args)
-	{
-		Row[] data = new Row[] { //
-				new Row().set("id", 1).set("name", "mike").set("gender", 1).set("age", 28).set("income", 1261.54), //
-				new Row().set("id", 2).set("name", "rose").set("gender", 2).set("age", 32).set("income", 3324.55), //
-				new Row().set("id", 3).set("name", "tom").set("gender", 1).set("age", 28).set("income", 7531.43), //
-				new Row().set("id", 4).set("name", "hellen").set("gender", 2).set("age", 30).set("income", 4483.12), //
-				new Row().set("id", 5).set("name", "jack").set("gender", 1).set("age", 31).set("income", 5331.50), //
-		};
-
-		// Tools.debug(Canal.of(data).toRows().stratifyBy(Canal.$("gender")).collectAsJSAN().toString(0));
-
-		JSAN j = Canal.of(data).toRows(Row.class).window(COUNT(item(1)).partBy($("gender")).as("cnt"), //
-				ROW_NUMBER().partBy($("gender")).orderBy($("age")).as("rn"), //
-				LEAD($("name")).partBy($("gender")).orderBy($("age")).as("lea2"), //
-				LAG($("name")).partBy($("gender")).orderBy($("age")).as("lag2"), //
-				SUM((Item<Double>) $("income")).partBy($("gender")).orderBy($("age")).as("sum2"), //
-				SUM((Item<Double>) $("income")).partBy($("gender")).orderBy($("age")).rows()
-						.between(CURRENT_ROW, following(1)).as("sum3"), //
-				SUM((Item<Double>) $("income")).partBy($("gender")).orderBy($("age")).range()
-						.between(CURRENT_ROW, following(1)).as("sum4"), //
-				SUM((Item<Double>) $("income")).partBy($("gender")).orderBy($("age")).range()
-						.between(preceding(1), item(0.0)).as("sum5"), //
-				SUM((Item<Double>) $("income")).partBy($("gender")).orderBy($("age").asc()).range()
-						.between(preceding(3), preceding(1)).as("sum6"), //
-				LAST_VALUE($("name")).partBy($("gender")).as("las1"), //
-				LAST_VALUE($("name")).partBy($("gender")).orderBy($("age")).as("las2"), //
-				LAST_VALUE($("name")).partBy($("gender")).orderBy($("age")).rows().between(CURRENT_ROW, following(1.0))
-						.as("las3") //
-		).collectAsJSAN();
-
-		Tools.debug(j.toString().replace(",{", ",\n{"));
-	}
-
 	/**
 	 * Make a None object.<br />
 	 * Call like {@code Canal.<Type>none()}
