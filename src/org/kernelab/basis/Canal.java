@@ -5077,8 +5077,16 @@ public class Canal<U, D> implements Iterable<D>
 		return rows;
 	}
 
+	/**
+	 * Convert this Canal to RowCanal.<br />
+	 * Only the elements' type of {@code Map<String,Object>} will be converted
+	 * to the target class and taken into the downstream.
+	 * 
+	 * @param cls
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
-	public <R extends Map<String, ?>> RowCanal<R> toRows(final Class<R> cls)
+	public <R extends Map<String, Object>> RowCanal<R> toRows(final Class<R> cls)
 	{
 		Canal<?, R> canal = this.map(new Mapper<D, R>()
 		{
@@ -5087,24 +5095,35 @@ public class Canal<U, D> implements Iterable<D>
 			{
 				if (el instanceof Map<?, ?>)
 				{
-					if (cls == Row.class)
+					try
 					{
-						return (R) Row.of((Map<String, ?>) el);
-					}
-					else if (cls == JSON.class)
-					{
-						return (R) JSON.Of((Map<String, ?>) el);
-					}
-					else
-					{
-						try
+						Map<String, Object> m = (Map<String, Object>) el;
+						if (cls == Map.class)
 						{
-							return (R) el;
+							return (R) m;
 						}
-						catch (Exception e)
+						else if (cls.isInstance(m))
 						{
-							return null;
+							return (R) m;
 						}
+						else if (cls == Row.class)
+						{
+							return (R) Row.of(m);
+						}
+						else if (cls == JSON.class)
+						{
+							return (R) JSON.Of(m);
+						}
+						else
+						{
+							R r = cls.newInstance();
+							r.putAll(m);
+							return r;
+						}
+					}
+					catch (Exception e)
+					{
+						return null;
 					}
 				}
 				else

@@ -913,7 +913,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
-		public static <T> JSAN Of(T[] arr)
+		public static <T> JSAN Of(T... arr)
 		{
 			if (arr == null)
 			{
