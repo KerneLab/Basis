@@ -3556,20 +3556,22 @@ public class SQLKit
 		return this;
 	}
 
-	public void rollback() throws SQLException
+	public SQLKit rollback() throws SQLException
 	{
 		if (!this.getConnection().getAutoCommit())
 		{
 			this.getConnection().rollback();
 		}
+		return this;
 	}
 
-	public void rollback(Savepoint savepoint) throws SQLException
+	public SQLKit rollback(Savepoint savepoint) throws SQLException
 	{
 		if (!this.getConnection().getAutoCommit())
 		{
 			this.getConnection().rollback(savepoint);
 		}
+		return this;
 	}
 
 	public Savepoint savepoint() throws SQLException
