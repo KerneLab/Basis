@@ -40,6 +40,16 @@ public class SQLKitPool extends AbstractPool<SQLKit> implements ConnectionManage
 		}
 	}
 
+	@Override
+	public void discard(SQLKit kit)
+	{
+		super.discard(kit);
+		if (kit != null)
+		{
+			kit.close();
+		}
+	}
+
 	public ConnectionManager getManager()
 	{
 		return manager;
