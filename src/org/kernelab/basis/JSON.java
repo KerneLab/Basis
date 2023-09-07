@@ -18,6 +18,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.sql.Date;
 import java.sql.Time;
@@ -1771,6 +1772,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return attrCast(index, BigDecimal.class);
 		}
 
+		public BigInteger attrBigInteger(int index)
+		{
+			return attrCast(index, BigInteger.class);
+		}
+
 		public Boolean attrBoolean(int index)
 		{
 			return attrCast(index, Boolean.class);
@@ -1781,6 +1787,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return attrCast(index, Byte.class);
 		}
 
+		public Calendar attrCalendar(int index)
+		{
+			return attrCast(index, Calendar.class);
+		}
+
 		public <E> E attrCast(int index, Class<E> cls)
 		{
 			return CastAs(this.attr(index), cls);
@@ -1789,6 +1800,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public Character attrCharacter(int index)
 		{
 			return attrCast(index, Character.class);
+		}
+
+		public Date attrDate(int index)
+		{
+			return attrCast(index, Date.class);
 		}
 
 		public Double attrDouble(int index)
@@ -1839,6 +1855,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public String attrString(int index)
 		{
 			return attrCast(index, String.class);
+		}
+
+		public Time attrTime(int index)
+		{
+			return attrCast(index, Time.class);
+		}
+
+		public Timestamp attrTimestamp(int index)
+		{
+			return attrCast(index, Timestamp.class);
 		}
 
 		protected int bound(int index)
@@ -3025,6 +3051,23 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			BigDecimal val = valBigDecimal(index);
 			return val == null ? new BigDecimal(defaultValue) : val;
+		}
+
+		public BigInteger valBigInteger(int index)
+		{
+			return CastToBigInteger(this.attr(index));
+		}
+
+		public BigInteger valBigInteger(int index, long defaultValue)
+		{
+			BigInteger val = valBigInteger(index);
+			return val == null ? new BigInteger(String.valueOf(defaultValue)) : val;
+		}
+
+		public BigInteger valBigInteger(int index, String defaultValue)
+		{
+			BigInteger val = valBigInteger(index);
+			return val == null ? new BigInteger(defaultValue) : val;
 		}
 
 		public Boolean valBoolean(int index)
@@ -4916,6 +4959,28 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				try
 				{
 					return new BigDecimal(CastToString(obj));
+				}
+				catch (NumberFormatException ex)
+				{
+				}
+			}
+		}
+		return null;
+	}
+
+	public static BigInteger CastToBigInteger(Object obj)
+	{
+		if (obj != null)
+		{
+			try
+			{
+				return BigInteger.class.cast(obj);
+			}
+			catch (ClassCastException e)
+			{
+				try
+				{
+					return new BigInteger(CastToString(obj));
 				}
 				catch (NumberFormatException ex)
 				{
@@ -7258,10 +7323,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 		else
 		{
-			if (object == null || object instanceof String || object instanceof Boolean || object instanceof Number
-					|| object instanceof Character || object instanceof JSON || object instanceof Function
-					|| object instanceof Quotation || object instanceof BigDecimal || object instanceof java.util.Date
-					|| object instanceof java.util.Calendar)
+			if (object == null //
+					|| object instanceof String || object instanceof Boolean || object instanceof Number //
+					|| object instanceof JSON || object instanceof java.util.Date || object instanceof Calendar //
+					|| object instanceof Character || object instanceof Function || object instanceof Quotation)
 			{
 				return object;
 			}
@@ -7355,6 +7420,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return attrCast(key, BigDecimal.class);
 	}
 
+	public BigInteger attrBigInteger(String key)
+	{
+		return attrCast(key, BigInteger.class);
+	}
+
 	public Boolean attrBoolean(String key)
 	{
 		return attrCast(key, Boolean.class);
@@ -7365,6 +7435,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return attrCast(key, Byte.class);
 	}
 
+	public Calendar attrCalendar(String key)
+	{
+		return attrCast(key, Calendar.class);
+	}
+
 	public <E> E attrCast(String key, Class<E> cls)
 	{
 		return CastAs(this.valObject(key), cls);
@@ -7373,6 +7448,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public Character attrCharacter(String key)
 	{
 		return attrCast(key, Character.class);
+	}
+
+	public Date attrDate(String key)
+	{
+		return attrCast(key, Date.class);
 	}
 
 	public Double attrDouble(String key)
@@ -7423,6 +7503,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public String attrString(String key)
 	{
 		return attrCast(key, String.class);
+	}
+
+	public Time attrTime(String key)
+	{
+		return attrCast(key, Time.class);
+	}
+
+	public Timestamp attrTimestamp(String key)
+	{
+		return attrCast(key, Timestamp.class);
 	}
 
 	public JSON clean()
@@ -8692,6 +8782,23 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		BigDecimal val = valBigDecimal(key);
 		return val == null ? new BigDecimal(defaultValue) : val;
+	}
+
+	public BigInteger valBigInteger(String key)
+	{
+		return CastToBigInteger(this.attr(key));
+	}
+
+	public BigInteger valBigInteger(String key, long defaultValue)
+	{
+		BigInteger val = valBigInteger(key);
+		return val == null ? new BigInteger(String.valueOf(defaultValue)) : val;
+	}
+
+	public BigInteger valBigInteger(String key, String defaultValue)
+	{
+		BigInteger val = valBigInteger(key);
+		return val == null ? new BigInteger(defaultValue) : val;
 	}
 
 	public Boolean valBoolean(String key)
