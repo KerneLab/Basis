@@ -2182,7 +2182,21 @@ public class Sequel implements Iterable<ResultSet>
 		{
 			if (this.initNext == null)
 			{
-				this.initNext = this.getResultSet().next();
+				if (this.getResultSet().isBeforeFirst())
+				{
+					this.initNext = this.getResultSet().next();
+				}
+				else
+				{
+					try
+					{
+						this.initNext = this.getResultSet().getRow() != 0;
+					}
+					catch (SQLException e)
+					{
+						this.initNext = !this.getResultSet().isAfterLast();
+					}
+				}
 			}
 			return this.initNext;
 		}
