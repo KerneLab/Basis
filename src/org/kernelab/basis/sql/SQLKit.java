@@ -32,6 +32,8 @@ import org.kernelab.basis.JSON.Pair;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.TextFiller;
 import org.kernelab.basis.Tools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * It is known that one Connection produces a series of Statement and one
@@ -340,6 +342,8 @@ public class SQLKit
 	 * would be thrown with this message.
 	 */
 	public static final String		ERR_NO_DB_CONN				= "No available database connection.";
+
+	private static final Logger		log							= LoggerFactory.getLogger(SQLKit.class);
 
 	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, Iterable<?> params)
 			throws SQLException
@@ -1604,38 +1608,39 @@ public class SQLKit
 
 	public void addBatch(Iterable<?> params) throws SQLException
 	{
-		this.addBatch((PreparedStatement) statement, params);
+		addBatch((PreparedStatement) statement, params);
 	}
 
 	public void addBatch(JSON params) throws SQLException
 	{
-		this.addBatch((PreparedStatement) statement, params);
+		addBatch((PreparedStatement) statement, params);
 	}
 
 	public void addBatch(Map<String, ?> params) throws SQLException
 	{
-		this.addBatch((PreparedStatement) statement, params);
+		addBatch((PreparedStatement) statement, params);
 	}
 
 	public void addBatch(Object... params) throws SQLException
 	{
-		this.addBatch((PreparedStatement) statement, params);
+		addBatch((PreparedStatement) statement, params);
 	}
 
 	public void addBatch(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		bindParameters(statement, params);
-		statement.addBatch();
-		getBatchStatements().add(statement);
+		log.debug("{} {}", statements.get(statement), params);
+		addBatchRaw(statement, params);
 	}
 
 	public void addBatch(PreparedStatement statement, JSAN params) throws SQLException
 	{
-		addBatch(statement, (Iterable<?>) params);
+		log.debug("{} {}", statements.get(statement), params);
+		addBatchRaw(statement, (Iterable<?>) params);
 	}
 
 	public void addBatch(PreparedStatement statement, JSON params) throws SQLException
 	{
+		log.debug("{} {}", statements.get(statement), params);
 		bindParameters(statement, fillParameters(getParameter(statement), params));
 		statement.addBatch();
 		getBatchStatements().add(statement);
@@ -1643,6 +1648,7 @@ public class SQLKit
 
 	public void addBatch(PreparedStatement statement, Map<String, ?> params) throws SQLException
 	{
+		log.debug("{} {}", statements.get(statement), params);
 		bindParameters(statement, fillParameters(getParameter(statement), params));
 		statement.addBatch();
 		getBatchStatements().add(statement);
@@ -1650,6 +1656,7 @@ public class SQLKit
 
 	public void addBatch(PreparedStatement statement, Object... params) throws SQLException
 	{
+		log.debug("{} {}", statements.get(statement), params);
 		bindParameters(statement, params);
 		statement.addBatch();
 		getBatchStatements().add(statement);
@@ -1657,33 +1664,41 @@ public class SQLKit
 
 	public void addBatch(String sql) throws SQLException
 	{
+		log.debug("{}", sql);
 		statement.addBatch(sql);
 		getBatchStatements().add(statement);
 	}
 
 	public void addBatch(String sql, Iterable<?> params) throws SQLException
 	{
-		addBatch(this.prepareStatement(sql), params);
+		addBatch(prepareStatement(sql), params);
 	}
 
 	public void addBatch(String sql, JSAN params) throws SQLException
 	{
-		addBatch(this.prepareStatement(sql), params);
+		addBatch(prepareStatement(sql), params);
 	}
 
 	public void addBatch(String sql, JSON params) throws SQLException
 	{
-		addBatch(this.prepareStatement(sql, params), params);
+		addBatch(prepareStatement(sql, params), params);
 	}
 
 	public void addBatch(String sql, Map<String, ?> params) throws SQLException
 	{
-		addBatch(this.prepareStatement(sql, params), params);
+		addBatch(prepareStatement(sql, params), params);
 	}
 
 	public void addBatch(String sql, Object... params) throws SQLException
 	{
-		addBatch(this.prepareStatement(sql), params);
+		addBatch(prepareStatement(sql), params);
+	}
+
+	protected void addBatchRaw(PreparedStatement statement, Iterable<?> params) throws SQLException
+	{
+		bindParameters(statement, params);
+		statement.addBatch();
+		getBatchStatements().add(statement);
 	}
 
 	public PreparedStatement bindParameters(int offset, Iterable<?> params) throws SQLException
@@ -1968,60 +1983,69 @@ public class SQLKit
 
 	public Sequel execute(CallableStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
-				.setTypeMap(this.getTypeMap());
+		log.debug("{} {}", statements.get(statement), params);
+		return executeRaw(statement, params);
 	}
 
 	public Sequel execute(CallableStatement statement, JSAN params) throws SQLException
 	{
-		return execute(statement, (Iterable<?>) params);
+		log.debug("{} {}", statements.get(statement), params);
+		return executeRaw(statement, (Iterable<?>) params);
 	}
 
 	public Sequel execute(CallableStatement statement, JSON params) throws SQLException
 	{
-		return execute(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeRaw(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public Sequel execute(CallableStatement statement, Map<String, ?> params) throws SQLException
 	{
-		return execute(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeRaw(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public Sequel execute(CallableStatement statement, Object... params) throws SQLException
 	{
+		log.debug("{} {}", statements.get(statement), params);
 		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
 				.setTypeMap(this.getTypeMap());
 	}
 
 	public Sequel execute(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
-				.setTypeMap(this.getTypeMap());
+		log.debug("{} {}", statements.get(statement), params);
+		return executeRaw(statement, params);
 	}
 
 	public Sequel execute(PreparedStatement statement, JSAN params) throws SQLException
 	{
-		return execute(statement, (Iterable<?>) params);
+		log.debug("{} {}", statements.get(statement), params);
+		return executeRaw(statement, (Iterable<?>) params);
 	}
 
 	public Sequel execute(PreparedStatement statement, JSON params) throws SQLException
 	{
-		return execute(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeRaw(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public Sequel execute(PreparedStatement statement, Map<String, ?> params) throws SQLException
 	{
-		return execute(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeRaw(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public Sequel execute(PreparedStatement statement, Object... params) throws SQLException
 	{
+		log.debug("{} {}", statements.get(statement), params);
 		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
 				.setTypeMap(this.getTypeMap());
 	}
 
 	protected Sequel execute(Statement statement, String sql) throws SQLException
 	{
+		log.debug("{}", sql);
 		return new Sequel(this, statement, executeStatement(statement, sql)).setTypeMap(this.getTypeMap());
 	}
 
@@ -2163,6 +2187,11 @@ public class SQLKit
 		return res;
 	}
 
+	protected boolean executeExists(PreparedStatement statement, Iterable<?> params) throws SQLException
+	{
+		return exists(executeQuery(bindParameters(statement, params)));
+	}
+
 	protected ResultSet executeQuery(PreparedStatement statement) throws SQLException
 	{
 		if (this.getQueryTimeout() >= 0)
@@ -2172,6 +2201,11 @@ public class SQLKit
 		return record(statement.executeQuery());
 	}
 
+	protected ResultSet executeQuery(PreparedStatement statement, Iterable<?> params) throws SQLException
+	{
+		return executeQuery(bindParameters(statement, params));
+	}
+
 	protected ResultSet executeQuery(Statement statement, String sql) throws SQLException
 	{
 		if (this.getQueryTimeout() >= 0)
@@ -2179,6 +2213,18 @@ public class SQLKit
 			statement.setQueryTimeout(this.getQueryTimeout());
 		}
 		return record(statement.executeQuery(sql));
+	}
+
+	protected Sequel executeRaw(CallableStatement statement, Iterable<?> params) throws SQLException
+	{
+		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
+				.setTypeMap(this.getTypeMap());
+	}
+
+	protected Sequel executeRaw(PreparedStatement statement, Iterable<?> params) throws SQLException
+	{
+		return new Sequel(this, statement, executeStatement(bindParameters(statement, params)))
+				.setTypeMap(this.getTypeMap());
 	}
 
 	protected boolean executeStatement(PreparedStatement statement) throws SQLException
@@ -2208,6 +2254,11 @@ public class SQLKit
 		return statement.executeUpdate();
 	}
 
+	protected int executeUpdate(PreparedStatement statement, Iterable<?> params) throws SQLException
+	{
+		return executeUpdate(bindParameters(statement, params));
+	}
+
 	protected int executeUpdate(Statement statement, String sql) throws SQLException
 	{
 		if (this.getQueryTimeout() >= 0)
@@ -2219,26 +2270,31 @@ public class SQLKit
 
 	public boolean exists(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return exists(executeQuery(bindParameters(statement, params)));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeExists(statement, params);
 	}
 
 	public boolean exists(PreparedStatement statement, JSAN params) throws SQLException
 	{
-		return exists(statement, (Iterable<?>) params);
+		log.debug("{} {}", statements.get(statement), params);
+		return executeExists(statement, (Iterable<?>) params);
 	}
 
 	public boolean exists(PreparedStatement statement, JSON params) throws SQLException
 	{
-		return exists(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeExists(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public boolean exists(PreparedStatement statement, Map<String, ?> params) throws SQLException
 	{
-		return exists(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeExists(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public boolean exists(PreparedStatement statement, Object... params) throws SQLException
 	{
+		log.debug("{} {}", statements.get(statement), params);
 		return exists(executeQuery(bindParameters(statement, params)));
 	}
 
@@ -2266,6 +2322,7 @@ public class SQLKit
 
 	protected boolean exists(Statement statement, String sql) throws SQLException
 	{
+		log.debug("{}", sql);
 		return exists(executeQuery(statement, sql));
 	}
 
@@ -3331,31 +3388,37 @@ public class SQLKit
 
 	public ResultSet query(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return executeQuery(bindParameters(statement, params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeQuery(statement, params);
 	}
 
 	public ResultSet query(PreparedStatement statement, JSAN params) throws SQLException
 	{
-		return query(statement, (Iterable<?>) params);
+		log.debug("{} {}", statements.get(statement), params);
+		return executeQuery(statement, (Iterable<?>) params);
 	}
 
 	public ResultSet query(PreparedStatement statement, JSON params) throws SQLException
 	{
-		return query(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeQuery(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public ResultSet query(PreparedStatement statement, Map<String, ?> params) throws SQLException
 	{
-		return query(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeQuery(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public ResultSet query(PreparedStatement statement, Object... params) throws SQLException
 	{
+		log.debug("{} {}", statements.get(statement), params);
 		return executeQuery(bindParameters(statement, params));
 	}
 
 	protected ResultSet query(Statement statement, String sql) throws SQLException
 	{
+		log.debug("{}", sql);
 		return executeQuery(statement, sql);
 	}
 
@@ -3674,22 +3737,26 @@ public class SQLKit
 
 	public int update(PreparedStatement statement, Iterable<?> params) throws SQLException
 	{
-		return executeUpdate(bindParameters(statement, params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeUpdate(statement, params);
 	}
 
 	public int update(PreparedStatement statement, JSAN params) throws SQLException
 	{
-		return update(statement, (Iterable<?>) params);
+		log.debug("{} {}", statements.get(statement), params);
+		return executeUpdate(statement, (Iterable<?>) params);
 	}
 
 	public int update(PreparedStatement statement, JSON params) throws SQLException
 	{
-		return update(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeUpdate(statement, fillParameters(getParameter(statement), params));
 	}
 
 	public int update(PreparedStatement statement, Map<String, ?> params) throws SQLException
 	{
-		return update(statement, fillParameters(getParameter(statement), params));
+		log.debug("{} {}", statements.get(statement), params);
+		return executeUpdate(statement, fillParameters(getParameter(statement), params));
 	}
 
 	/**
@@ -3707,11 +3774,13 @@ public class SQLKit
 	 */
 	public int update(PreparedStatement statement, Object... params) throws SQLException
 	{
+		log.debug("{} {}", statements.get(statement), params);
 		return executeUpdate(bindParameters(statement, params));
 	}
 
 	protected int update(Statement statement, String sql) throws SQLException
 	{
+		log.debug("{}", sql);
 		return executeUpdate(statement, sql);
 	}
 
