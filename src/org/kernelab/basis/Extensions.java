@@ -59,54 +59,56 @@ public class Extensions
 			}
 		}
 
-		public boolean load(File location)
+		public int load(File location)
 		{
 			return load(location, null);
 		}
 
-		public boolean load(File location, String pattern)
+		public int load(File location, String pattern)
 		{
-			boolean success = false;
 			try
 			{
 				if (location.isFile())
 				{
 					if (pattern == null || location.getCanonicalPath().matches(pattern))
 					{
-						success = load(location.toURI().toURL());
+						return load(location.toURI().toURL());
 					}
 				}
 				else if (location.isDirectory())
 				{
-					success = true;
+					int count = 0;
+					count += load(location.toURI().toURL());
 					for (File l : location.listFiles())
 					{
-						success &= load(l, pattern);
+						count += load(l, pattern);
 					}
+					return count;
 				}
+
+				return 0;
 			}
 			catch (IOException e)
 			{
+				return 0;
 			}
-			return success;
 		}
 
-		public boolean load(JSAN locations)
+		public int load(JSAN locations)
 		{
-			boolean success = true;
+			int count = 0;
 			for (Object o : locations)
 			{
 				if (o != null)
 				{
-					success &= load(o.toString());
+					count += load(o.toString());
 				}
 			}
-			return success;
+			return count;
 		}
 
-		public boolean load(String location)
+		public int load(String location)
 		{
-			boolean success = false;
 			URL url = null;
 			File file = null;
 			try
@@ -119,19 +121,22 @@ public class Extensions
 			}
 			if (url != null)
 			{
-				success = load(url);
+				return load(url);
 			}
 			else if (file != null)
 			{
-				success = load(file);
+				return load(file);
 			}
-			return success;
+			else
+			{
+				return 0;
+			}
 		}
 
-		public boolean load(URL location)
+		public int load(URL location)
 		{
 			this.addURL(location);
-			return true;
+			return 1;
 		}
 
 		protected void setAddToParent(Method addToParent)
@@ -167,27 +172,27 @@ public class Extensions
 		return Singleton;
 	}
 
-	public static boolean load(File location)
+	public static int load(File location)
 	{
 		return instance().getLoader().load(location);
 	}
 
-	public static boolean load(File location, String pattern)
+	public static int load(File location, String pattern)
 	{
 		return instance().getLoader().load(location, pattern);
 	}
 
-	public static boolean load(JSAN locations)
+	public static int load(JSAN locations)
 	{
 		return instance().getLoader().load(locations);
 	}
 
-	public static boolean load(String location)
+	public static int load(String location)
 	{
 		return instance().getLoader().load(location);
 	}
 
-	public static boolean load(URL location)
+	public static int load(URL location)
 	{
 		return instance().getLoader().load(location);
 	}
