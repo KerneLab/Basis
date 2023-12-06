@@ -1969,7 +1969,7 @@ public class SQLKit
 		{
 			try
 			{
-				this.manager.recycleConnection(this.connection);
+				this.manager.recycleConnection(this.getConnectionOrigin());
 			}
 			catch (SQLException e)
 			{
@@ -2509,19 +2509,18 @@ public class SQLKit
 
 	public boolean isClosed()
 	{
-		boolean is = connection == null;
-		if (!is)
+		if (getConnectionOrigin() == null)
 		{
-			try
-			{
-				is = connection.isClosed();
-			}
-			catch (SQLException e)
-			{
-				is = false;
-			}
+			return true;
 		}
-		return is;
+		try
+		{
+			return getConnectionOrigin().isClosed();
+		}
+		catch (SQLException e)
+		{
+			return true;
+		}
 	}
 
 	protected boolean isReused(Statement statement)
@@ -2543,7 +2542,7 @@ public class SQLKit
 	{
 		try
 		{
-			return connection != null && connection.isValid(Math.max(timeout, 0));
+			return getConnectionOrigin() != null && getConnectionOrigin().isValid(Math.max(timeout, 0));
 		}
 		catch (SQLException e)
 		{
