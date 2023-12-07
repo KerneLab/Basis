@@ -8086,6 +8086,7 @@ public class Tools
 
 	/**
 	 * To get a sub array of a given array according to the from/to index.
+	 * Negative index means the nth index from tail.
 	 * 
 	 * @param arr
 	 *            the origin array.
@@ -8100,11 +8101,9 @@ public class Tools
 	{
 		from = Tools.limitNumber(from >= 0 ? from : (from + arr.length), 0, arr.length);
 		to = Tools.limitNumber(to >= 0 ? to : (to + arr.length), 0, arr.length);
-		T[] res = (T[]) java.lang.reflect.Array.newInstance(arr.getClass().getComponentType(), to - from);
-		for (int i = from; i < to; i++)
-		{
-			res[i - from] = arr[i];
-		}
+		int len = Math.max(to - from, 0);
+		T[] res = (T[]) java.lang.reflect.Array.newInstance(arr.getClass().getComponentType(), len);
+		System.arraycopy(arr, from, res, 0, len);
 		return res;
 	}
 
