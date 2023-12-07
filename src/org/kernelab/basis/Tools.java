@@ -8085,6 +8085,30 @@ public class Tools
 	}
 
 	/**
+	 * To get a sub array of a given array according to the from/to index.
+	 * 
+	 * @param arr
+	 *            the origin array.
+	 * @param from
+	 *            the begin index (included).
+	 * @param to
+	 *            the end index (excluded).
+	 * @return the sub array.
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T[] slice(T[] arr, int from, int to)
+	{
+		from = Tools.limitNumber(from >= 0 ? from : (from + arr.length), 0, arr.length);
+		to = Tools.limitNumber(to >= 0 ? to : (to + arr.length), 0, arr.length);
+		T[] res = (T[]) java.lang.reflect.Array.newInstance(arr.getClass().getComponentType(), to - from);
+		for (int i = from; i < to; i++)
+		{
+			res[i - from] = arr[i];
+		}
+		return res;
+	}
+
+	/**
 	 * Split a CharSequence which is divided by split.<br />
 	 * If the CharSequence does not contain the split then return a String of
 	 * the CharSequence.
