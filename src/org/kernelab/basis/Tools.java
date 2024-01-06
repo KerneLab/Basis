@@ -524,6 +524,202 @@ public class Tools
 		return false;
 	}
 
+	public static Boolean[] arrayOf(boolean... src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		Boolean[] dst = new Boolean[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static boolean[] arrayOf(Boolean[] src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		boolean[] dst = new boolean[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static Byte[] arrayOf(byte... src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		Byte[] dst = new Byte[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static byte[] arrayOf(Byte[] src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		byte[] dst = new byte[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static Double[] arrayOf(double... src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		Double[] dst = new Double[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static double[] arrayOf(Double[] src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		double[] dst = new double[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static Float[] arrayOf(float... src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		Float[] dst = new Float[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static float[] arrayOf(Float[] src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		float[] dst = new float[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static Integer[] arrayOf(int... src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		Integer[] dst = new Integer[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static int[] arrayOf(Integer[] src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		int[] dst = new int[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static Long[] arrayOf(long... src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		Long[] dst = new Long[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static long[] arrayOf(Long[] src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		long[] dst = new long[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static Short[] arrayOf(short... src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		Short[] dst = new Short[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
+	public static short[] arrayOf(Short[] src)
+	{
+		if (src == null)
+		{
+			return null;
+		}
+		short[] dst = new short[src.length];
+		for (int i = 0; i < src.length; i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+
 	/**
 	 * To cast an object to a given class.
 	 * 
