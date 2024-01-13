@@ -30,6 +30,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 		{
 			Tools.waitFor(new Callable<Object>()
 			{
+				@Override
 				public Object call() throws Exception
 				{
 					conn.close();
@@ -82,6 +83,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 		return provideConnection(0L);
 	}
 
+	@Override
 	public Connection provideConnection(long timeout) throws SQLException
 	{
 		try
@@ -107,6 +109,7 @@ public class ConnectionPool extends AbstractPool<Connection> implements Connecti
 		}
 	}
 
+	@Override
 	public void recycleConnection(Connection conn)
 	{
 		this.recycle(conn);

@@ -3,13 +3,15 @@ package org.kernelab.basis.io;
 import java.io.IOException;
 import java.io.Reader;
 
-import org.kernelab.basis.Tools;
-
 public class StringBuilderReader extends Reader
 {
-	private volatile boolean	closed;
+	private StringBuilder	builder;
 
-	private StringBuilder		builder;
+	private int				pos		= 0;
+
+	private int				mark	= 0;
+
+	private boolean			commit	= false;
 
 	public StringBuilderReader()
 	{
@@ -23,26 +25,33 @@ public class StringBuilderReader extends Reader
 
 	public StringBuilderReader(StringBuilder builder)
 	{
-		this(builder, false);
+		this(builder, true);
 	}
 
-	public StringBuilderReader(StringBuilder builder, boolean closed)
+	public StringBuilderReader(StringBuilder builder, boolean commit)
 	{
-		this.setBuilder(builder).setClosed(closed);
+		this.setBuilder(builder).setCommit(commit);
 	}
 
 	@Override
 	public synchronized void close() throws IOException
 	{
-		this.setClosed(true);
+		this.setBuilder(null);
 		this.remind();
+	}
+
+	public synchronized StringBuilderReader commit()
+	{
+		this.setCommit(true);
+		this.remind();
+		return this;
 	}
 
 	protected void ensure() throws IOException
 	{
 		if (this.isClosed())
 		{
-			throw new IOException();
+			throw new IOException("Reader has been closed");
 		}
 	}
 
@@ -51,27 +60,26 @@ public class StringBuilderReader extends Reader
 		return builder;
 	}
 
-	public synchronized <T extends StringBuilderReader> T input(char[] cs) throws IOException
+	public synchronized StringBuilderReader input(char[] cs) throws IOException
 	{
 		return input(cs, false);
 	}
 
-	public synchronized <T extends StringBuilderReader> T input(char[] cs, boolean remind) throws IOException
+	public synchronized StringBuilderReader input(char[] cs, boolean remind) throws IOException
 	{
 		return input(cs, 0, cs.length, remind);
 	}
 
-	public synchronized <T extends StringBuilderReader> T input(char[] cs, int offset, int length) throws IOException
+	public synchronized StringBuilderReader input(char[] cs, int offset, int length) throws IOException
 	{
 		return input(cs, offset, length, false);
 	}
 
-	public synchronized <T extends StringBuilderReader> T input(char[] cs, int offset, int length, boolean remind)
-			throws IOException
+	public synchronized StringBuilderReader input(char[] cs, int offset, int length, boolean remind) throws IOException
 	{
 		this.ensure();
 
-		builder.append(cs, offset, length);
+		this.builder.append(cs, offset, length);
 
 		if (remind)
 		{
@@ -79,20 +87,20 @@ public class StringBuilderReader extends Reader
 		}
 		else
 		{
-			return Tools.cast(this);
+			return this;
 		}
 	}
 
-	public synchronized <T extends StringBuilderReader> T input(CharSequence cs) throws IOException
+	public synchronized StringBuilderReader input(CharSequence cs) throws IOException
 	{
 		return input(cs, false);
 	}
 
-	public synchronized <T extends StringBuilderReader> T input(CharSequence cs, boolean remind) throws IOException
+	public synchronized StringBuilderReader input(CharSequence cs, boolean remind) throws IOException
 	{
 		this.ensure();
 
-		builder.append(cs);
+		this.builder.append(cs);
 
 		if (remind)
 		{
@@ -100,20 +108,20 @@ public class StringBuilderReader extends Reader
 		}
 		else
 		{
-			return Tools.cast(this);
+			return this;
 		}
 	}
 
-	public synchronized <T extends StringBuilderReader> T input(Object o) throws IOException
+	public synchronized StringBuilderReader input(Object o) throws IOException
 	{
 		return input(o, false);
 	}
 
-	public synchronized <T extends StringBuilderReader> T input(Object o, boolean remind) throws IOException
+	public synchronized StringBuilderReader input(Object o, boolean remind) throws IOException
 	{
 		this.ensure();
 
-		builder.append(o);
+		this.builder.append(o);
 
 		if (remind)
 		{
@@ -121,13 +129,30 @@ public class StringBuilderReader extends Reader
 		}
 		else
 		{
-			return Tools.cast(this);
+			return this;
 		}
 	}
 
 	public boolean isClosed()
 	{
-		return closed;
+		return builder == null;
+	}
+
+	public synchronized boolean isCommit()
+	{
+		return commit;
+	}
+
+	@Override
+	public synchronized void mark(int readAheadLimit) throws IOException
+	{
+		this.mark = this.pos;
+	}
+
+	@Override
+	public boolean markSupported()
+	{
+		return true;
 	}
 
 	@Override
@@ -143,7 +168,9 @@ public class StringBuilderReader extends Reader
 			return 0;
 		}
 
-		while (!this.isClosed() && offset >= builder.length())
+		this.ensure();
+
+		while (!this.isCommit() && this.pos >= this.builder.length())
 		{
 			try
 			{
@@ -154,53 +181,74 @@ public class StringBuilderReader extends Reader
 			}
 		}
 
-		if (this.isClosed() && offset >= builder.length())
+		this.ensure();
+
+		if (this.isCommit() && this.pos >= this.builder.length())
 		{
 			return -1;
 		}
 		else
 		{
-			int len = Math.min(Math.min(cs.length - offset, length), builder.length());
-
-			builder.getChars(0, len, cs, offset);
-
-			builder.delete(0, len);
-
+			int len = Math.min(this.builder.length() - this.pos, length);
+			if (len > 0)
+			{
+				this.builder.getChars(this.pos, this.pos + len, cs, offset);
+				this.pos += len;
+			}
 			return len;
 		}
 	}
 
 	@Override
-	public boolean ready()
+	public synchronized boolean ready() throws IOException
 	{
-		return !this.isClosed();
+		this.ensure();
+		return this.isCommit() || this.pos < this.builder.length();
 	}
 
-	public synchronized <T extends StringBuilderReader> T remind()
+	public StringBuilderReader remind()
 	{
 		this.notifyAll();
-		return Tools.cast(this);
+		return this;
 	}
 
 	@Override
-	public synchronized void reset()
+	public synchronized void reset() throws IOException
 	{
-		Tools.clearStringBuilder(builder);
+		reset(this.mark);
 	}
 
-	private <T extends StringBuilderReader> T setBuilder(StringBuilder builder)
+	/**
+	 * Reset this reader to the given position.
+	 * 
+	 * @param pos
+	 * @return
+	 * @throws IOException
+	 */
+	public synchronized StringBuilderReader reset(int pos) throws IOException
 	{
-		if (builder == null)
-		{
-			builder = new StringBuilder();
-		}
+		this.ensure();
+		this.pos = Math.min(Math.max(pos, 0), this.builder.length());
+		return this.remind();
+	}
+
+	public StringBuilderReader setBuilder(StringBuilder builder)
+	{
 		this.builder = builder;
-		return Tools.cast(this);
+		return this;
 	}
 
-	private <T extends StringBuilderReader> T setClosed(boolean closed)
+	protected void setCommit(boolean commit)
 	{
-		this.closed = closed;
-		return Tools.cast(this);
+		this.commit = commit;
+	}
+
+	@Override
+	public synchronized long skip(long n) throws IOException
+	{
+		this.ensure();
+		int skip = (int) Math.min(this.builder.length() - this.pos, n);
+		this.pos += skip;
+		return skip;
 	}
 }
