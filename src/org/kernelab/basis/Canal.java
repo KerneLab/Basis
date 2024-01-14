@@ -2064,6 +2064,28 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
+		public E get(Producer<RuntimeException> raiser)
+		{
+			if (raiser != null)
+			{
+				RuntimeException ex = null;
+				try
+				{
+					ex = raiser.produce();
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				if (ex != null)
+				{
+					throw ex;
+				}
+			}
+			return this.get();
+		}
+
+		@Override
 		public boolean given()
 		{
 			return false;
@@ -2084,7 +2106,7 @@ public class Canal<U, D> implements Iterable<D>
 			}
 			catch (Exception e)
 			{
-				return null;
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -2092,6 +2114,19 @@ public class Canal<U, D> implements Iterable<D>
 		public Option<E> orElse(Option<E> opt)
 		{
 			return opt;
+		}
+
+		@Override
+		public Option<E> orElse(Producer<Option<E>> opt)
+		{
+			try
+			{
+				return opt.produce();
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 
 		@Override
@@ -2122,7 +2157,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static abstract class Option<E> extends Canal<E, E>
 	{
-		protected final static None<?> NONE = new None<Object>();
+		protected static final None<?> NONE = new None<Object>();
 
 		@SuppressWarnings("unchecked")
 		public static <T> None<T> none()
@@ -2161,6 +2196,8 @@ public class Canal<U, D> implements Iterable<D>
 
 		public abstract E get();
 
+		public abstract E get(Producer<RuntimeException> raiser);
+
 		public abstract boolean given();
 
 		public abstract E or(E defaultValue);
@@ -2168,6 +2205,8 @@ public class Canal<U, D> implements Iterable<D>
 		public abstract E or(Producer<E> defaultProducer);
 
 		public abstract Option<E> orElse(Option<E> opt);
+
+		public abstract Option<E> orElse(Producer<Option<E>> opt);
 
 		public abstract E orNull();
 	}
@@ -3093,6 +3132,12 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
+		public E get(Producer<RuntimeException> raiser)
+		{
+			return value;
+		}
+
+		@Override
 		public boolean given()
 		{
 			return true;
@@ -3112,6 +3157,12 @@ public class Canal<U, D> implements Iterable<D>
 
 		@Override
 		public Option<E> orElse(Option<E> opt)
+		{
+			return this;
+		}
+
+		@Override
+		public Option<E> orElse(Producer<Option<E>> opt)
 		{
 			return this;
 		}
