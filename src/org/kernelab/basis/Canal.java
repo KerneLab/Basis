@@ -2122,6 +2122,20 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static abstract class Option<E> extends Canal<E, E>
 	{
+		protected final static None<?> NONE = new None<Object>();
+
+		@SuppressWarnings("unchecked")
+		public static <T> None<T> none()
+		{
+			return (None<T>) NONE;
+		}
+
+		@SuppressWarnings("unchecked")
+		public static <T> Option<T> of(T value)
+		{
+			return value != null ? new Some<T>(value) : (None<T>) NONE;
+		}
+
 		public static <T> T or(T value, Producer<T> deft)
 		{
 			try
@@ -2138,6 +2152,11 @@ public class Canal<U, D> implements Iterable<D>
 		public static <T> T or(T value, T deft)
 		{
 			return value != null ? value : deft;
+		}
+
+		public static <T> Some<T> some(T value)
+		{
+			return new Some<T>(value);
 		}
 
 		public abstract E get();
@@ -4206,7 +4225,7 @@ public class Canal<U, D> implements Iterable<D>
 	 */
 	public static <E> None<E> none()
 	{
-		return new None<E>();
+		return Option.none();
 	}
 
 	public static <E> Canal<?, E> of(E[] array)
@@ -4266,7 +4285,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static <E> Option<E> option(E value)
 	{
-		return value != null ? some(value) : Canal.<E> none();
+		return Option.of(value);
 	}
 
 	public static Item<Double> preceding(Double amount)
@@ -4341,7 +4360,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	public static <E> Some<E> some(E value)
 	{
-		return new Some<E>(value);
+		return Option.some(value);
 	}
 
 	public static <E> List<Iterable<E>> stratify(Iterable<E> data, Comparator<E> cmp)
