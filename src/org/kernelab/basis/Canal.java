@@ -2194,6 +2194,26 @@ public class Canal<U, D> implements Iterable<D>
 			return new Some<T>(value);
 		}
 
+		@Override
+		public Option<E> filter(Filter<E> filter)
+		{
+			try
+			{
+				if (this.given() && filter.filter(this.get()))
+				{
+					return this;
+				}
+				else
+				{
+					return none();
+				}
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+
 		public abstract E get();
 
 		public abstract E get(Producer<RuntimeException> raiser);
@@ -2209,6 +2229,31 @@ public class Canal<U, D> implements Iterable<D>
 		public abstract Option<E> orElse(Producer<Option<E>> opt);
 
 		public abstract E orNull();
+
+		/**
+		 * Any alias of map but return Option
+		 * 
+		 * @param mapper
+		 * @return
+		 */
+		public <F> Option<F> to(Mapper<E, F> mapper)
+		{
+			if (this.given())
+			{
+				try
+				{
+					return some(mapper.map(this.get()));
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			else
+			{
+				return none();
+			}
+		}
 	}
 
 	public static class PairCanal<U, K, V> extends Canal<U, Tuple2<K, V>>
