@@ -413,17 +413,17 @@ public class Sequel implements Iterable<ResultSet>
 				.refreshUpdateCount();
 	}
 
-	public Canal<?, ResultSet> canal()
+	public Canal<ResultSet> canal()
 	{
 		return Canal.of(this);
 	}
 
-	public Canal<?, Sequel> canals()
+	public Canal<Sequel> canals()
 	{
 		return Canal.of(this.iterate());
 	}
 
-	public Canal<?, Sequel> canals(int current)
+	public Canal<Sequel> canals(int current)
 	{
 		return Canal.of(this.iterate(current));
 	}
@@ -651,19 +651,18 @@ public class Sequel implements Iterable<ResultSet>
 	}
 
 	@SuppressWarnings("unchecked")
-	public <E> Canal<?, E> getRows(Class<E> cls) throws SQLException
+	public <E> Canal<E> getRows(Class<E> cls) throws SQLException
 	{
 		if (Tools.isSubClass(cls, JSON.class))
 		{
 			if (Tools.isSubClass(cls, JSAN.class))
 			{
-				return (Canal<?, E>) this.getRows(SQLKit.mapIndexOfMetaData(this.getResultSet().getMetaData()),
+				return (Canal<E>) this.getRows(SQLKit.mapIndexOfMetaData(this.getResultSet().getMetaData()),
 						JSAN.class);
 			}
 			else
 			{
-				return (Canal<?, E>) this.getRows(SQLKit.mapNameOfMetaData(this.getResultSet().getMetaData()),
-						JSON.class);
+				return (Canal<E>) this.getRows(SQLKit.mapNameOfMetaData(this.getResultSet().getMetaData()), JSON.class);
 			}
 		}
 		else
@@ -672,12 +671,12 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	public <E> Canal<?, E> getRows(Class<E> cls, Map<String, Object> map) throws SQLException
+	public <E> Canal<E> getRows(Class<E> cls, Map<String, Object> map) throws SQLException
 	{
 		return this.getRows(cls, map, this.getTypeMap());
 	}
 
-	public <E> Canal<?, E> getRows(Class<E> cls, Map<String, Object> map, Map<Class<?>, Mapper<Object, Object>> typeMap)
+	public <E> Canal<E> getRows(Class<E> cls, Map<String, Object> map, Map<Class<?>, Mapper<Object, Object>> typeMap)
 			throws SQLException
 	{
 		return SQLKit.mapResultSet(this.getKit(), this.getResultSet(), cls, map, typeMap);
@@ -764,17 +763,17 @@ public class Sequel implements Iterable<ResultSet>
 		return rows;
 	}
 
-	public Canal<?, JSON> getRows(Map<String, Object> map) throws SQLException
+	public Canal<JSON> getRows(Map<String, Object> map) throws SQLException
 	{
 		return this.getRows(map, JSON.class);
 	}
 
-	public Canal<?, JSON> getRows(Map<String, Object> map, Class<? extends JSON> cls) throws SQLException
+	public Canal<JSON> getRows(Map<String, Object> map, Class<? extends JSON> cls) throws SQLException
 	{
 		return SQLKit.jsonOfResultSet(this.getKit(), this.getResultSet(), map, cls);
 	}
 
-	public <E> Canal<?, E> getRows(Mapper<ResultSet, E> mapper) throws SQLException
+	public <E> Canal<E> getRows(Mapper<ResultSet, E> mapper) throws SQLException
 	{
 		return SQLKit.mapResultSet(this.getKit(), this.getResultSet(), mapper);
 	}

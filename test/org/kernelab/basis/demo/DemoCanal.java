@@ -17,7 +17,7 @@ public class DemoCanal
 
 	public static void main(String[] args)
 	{
-		Map<Tuple2<String, String>, Canal<?, Integer>> m = Canal.of(new Integer[] { 0, 1, 2, 3, 4 })
+		Map<Tuple2<String, String>, Canal<Integer>> m = Canal.of(new Integer[] { 0, 1, 2, 3, 4 })
 				.keyBy(new Mapper<Integer, Tuple2<String, String>>()
 				{
 					@Override
@@ -25,18 +25,18 @@ public class DemoCanal
 					{
 						return Tuple.of(String.valueOf(el % 2), String.valueOf(el % 2));
 					}
-				}).groupByKey().peek(new Canal.Action<Canal.Tuple2<Tuple2<String, String>, Canal<?, Integer>>>()
+				}).groupByKey().peek(new Canal.Action<Canal.Tuple2<Tuple2<String, String>, Canal<Integer>>>()
 				{
 					@Override
-					public void action(Tuple2<Tuple2<String, String>, Canal<?, Integer>> el)
+					public void action(Tuple2<Tuple2<String, String>, Canal<Integer>> el)
 					{
 						Tools.debug(el);
 					}
-				}).collectAsMap(new HashMap<Tuple2<String, String>, Canal<?, Integer>>());
+				}).collectAsMap(new HashMap<Tuple2<String, String>, Canal<Integer>>());
 
-		for (Entry<Tuple2<String, String>, Canal<?, Integer>> e : m.entrySet())
+		for (Entry<Tuple2<String, String>, Canal<Integer>> e : m.entrySet())
 		{
-			Canal<?, Integer> o = e.getValue();
+			Canal<Integer> o = e.getValue();
 
 			Tools.debug(o);
 		}

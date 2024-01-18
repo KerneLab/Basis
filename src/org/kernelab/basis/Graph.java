@@ -418,7 +418,7 @@ public class Graph<N, E>
 		return this.getInDegree(node) + this.getOutDegree(node);
 	}
 
-	public Canal<?, Edge<N, E>> getEdges()
+	public Canal<Edge<N, E>> getEdges()
 	{
 		return mapLinksToEdges(this.getLinks());
 	}
@@ -435,7 +435,7 @@ public class Graph<N, E>
 		});
 	}
 
-	public Canal<?, Edge<N, E>> getInEdges(N node)
+	public Canal<Edge<N, E>> getInEdges(N node)
 	{
 		return mapLinksToEdges(this.getInLinks(node));
 	}
@@ -450,7 +450,7 @@ public class Graph<N, E>
 		return this.getLinkSet(this.getInLinks(), node);
 	}
 
-	public Canal<?, N> getInNeighbors(N node)
+	public Canal<N> getInNeighbors(N node)
 	{
 		return Canal.of(this.getInLinks(node)).map(new Mapper<Link<N, E>, N>()
 		{
@@ -486,7 +486,7 @@ public class Graph<N, E>
 		return map;
 	}
 
-	public Canal<?, N> getNeighbors(N node)
+	public Canal<N> getNeighbors(N node)
 	{
 		return this.getInNeighbors(node).union(this.getOutNeighbors(node)).distinct();
 	}
@@ -518,7 +518,7 @@ public class Graph<N, E>
 		});
 	}
 
-	public Canal<?, Edge<N, E>> getOutEdges(N node)
+	public Canal<Edge<N, E>> getOutEdges(N node)
 	{
 		return mapLinksToEdges(this.getOutLinks(node));
 	}
@@ -533,7 +533,7 @@ public class Graph<N, E>
 		return this.getLinkSet(this.getOutLinks(), node);
 	}
 
-	public Canal<?, N> getOutNeighbors(N node)
+	public Canal<N> getOutNeighbors(N node)
 	{
 		return Canal.of(this.getOutLinks(node)).map(new Mapper<Link<N, E>, N>()
 		{
@@ -560,7 +560,7 @@ public class Graph<N, E>
 		this.setOutLinks(new HashMap<N, Set<Link<N, E>>>());
 	}
 
-	protected Canal<?, Edge<N, E>> mapLinksToEdges(Collection<Link<N, E>> links)
+	protected Canal<Edge<N, E>> mapLinksToEdges(Collection<Link<N, E>> links)
 	{
 		return Canal.of(links).flatMap(new Mapper<Link<N, E>, Iterable<Edge<N, E>>>()
 		{

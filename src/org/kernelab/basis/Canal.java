@@ -21,7 +21,7 @@ import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
 import org.kernelab.basis.sql.Row;
 
-public class Canal<U, D> implements Iterable<D>
+public class Canal<D> implements Iterable<D>
 {
 	public static abstract class AbstractAggregator<O> implements Aggregator<O>
 	{
@@ -282,9 +282,9 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class CartesianOp<A, B> implements Converter<A, Tuple2<A, B>>
 	{
-		protected final Canal<?, B> that;
+		protected final Canal<B> that;
 
-		public CartesianOp(Canal<?, B> that)
+		public CartesianOp(Canal<B> that)
 		{
 			this.that = that;
 		}
@@ -302,7 +302,7 @@ public class Canal<U, D> implements Iterable<D>
 
 		private A			left;
 
-		public CartesianPond(Canal<?, B> that)
+		public CartesianPond(Canal<B> that)
 		{
 			super(that);
 		}
@@ -630,9 +630,9 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static abstract class Dam<A, B, C> extends AbstractPond<A, C>
 	{
-		protected final Canal<?, B> that;
+		protected final Canal<B> that;
 
-		public Dam(Canal<?, B> that)
+		public Dam(Canal<B> that)
 		{
 			this.that = that;
 		}
@@ -1085,7 +1085,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class FullJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, Option<U>, Option<V>>
 	{
-		public FullJoiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public FullJoiner(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			super(that, kol, kor, vol, vor);
 		}
@@ -1136,7 +1136,7 @@ public class Canal<U, D> implements Iterable<D>
 	protected static class FullJoinOp<L, R, K, U, V> extends JoinOp<L, R, K, U, V>
 			implements Converter<L, Tuple2<K, Tuple2<Option<U>, Option<V>>>>
 	{
-		public FullJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public FullJoinOp(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			super(that, kol, kor, vol, vor);
 		}
@@ -1202,7 +1202,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
-	protected static class GroupByOp<E, K, V> implements Converter<E, Tuple2<K, Canal<?, V>>>
+	protected static class GroupByOp<E, K, V> implements Converter<E, Tuple2<K, Canal<V>>>
 	{
 		protected final Mapper<E, K>	kop;
 
@@ -1215,13 +1215,13 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public Pond<E, Tuple2<K, Canal<?, V>>> newPond()
+		public Pond<E, Tuple2<K, Canal<V>>> newPond()
 		{
 			return new Grouper<E, K, V>(kop, vop);
 		}
 	}
 
-	protected static class Grouper<E, K, V> extends AbstractPond<E, Tuple2<K, Canal<?, V>>>
+	protected static class Grouper<E, K, V> extends AbstractPond<E, Tuple2<K, Canal<V>>>
 	{
 		protected final Mapper<E, K>		kop;
 
@@ -1268,10 +1268,10 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public Tuple2<K, Canal<?, V>> next()
+		public Tuple2<K, Canal<V>> next()
 		{
 			Entry<K, List<V>> entry = iter.next();
-			return Tuple.<K, Canal<?, V>> of(entry.getKey(), Canal.of(entry.getValue()));
+			return Tuple.<K, Canal<V>> of(entry.getKey(), Canal.of(entry.getValue()));
 		}
 	}
 
@@ -1306,7 +1306,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class InnerJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, U, V>
 	{
-		public InnerJoiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public InnerJoiner(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			super(that, kol, kor, vol, vor);
 		}
@@ -1357,7 +1357,7 @@ public class Canal<U, D> implements Iterable<D>
 	protected static class InnerJoinOp<L, R, K, U, V> extends JoinOp<L, R, K, U, V>
 			implements Converter<L, Tuple2<K, Tuple2<U, V>>>
 	{
-		public InnerJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public InnerJoinOp(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			super(that, kol, kor, vol, vor);
 		}
@@ -1371,11 +1371,11 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class IntersectionOp<E> implements Converter<E, E>
 	{
-		protected final Canal<?, E>		that;
+		protected final Canal<E>		that;
 
 		protected final Comparator<E>	cmp;
 
-		public IntersectionOp(Canal<?, E> that, Comparator<E> cmp)
+		public IntersectionOp(Canal<E> that, Comparator<E> cmp)
 		{
 			this.that = that;
 			this.cmp = cmp;
@@ -1396,7 +1396,7 @@ public class Canal<U, D> implements Iterable<D>
 
 		private E						here;
 
-		public IntersectionPond(Canal<?, E> that, Comparator<E> cmp)
+		public IntersectionPond(Canal<E> that, Comparator<E> cmp)
 		{
 			super(that);
 			this.cmp = cmp;
@@ -1538,7 +1538,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
-	public static class JoinCanal<U, K, L, R> extends PairCanal<U, K, Tuple2<L, R>>
+	public static class JoinCanal<K, L, R> extends PairCanal<K, Tuple2<L, R>>
 	{
 		/**
 		 * Map each joint in this Canal.
@@ -1546,7 +1546,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param mapper
 		 * @return
 		 */
-		public <W> Canal<Tuple2<K, Tuple2<L, R>>, W> mapJoint(final JointMapper<L, R, K, W> mapper)
+		public <W> Canal<W> mapJoint(final JointMapper<L, R, K, W> mapper)
 		{
 			return this.map(new Mapper<Tuple2<K, Tuple2<L, R>>, W>()
 			{
@@ -1561,7 +1561,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static abstract class Joiner<L, R, K, U, V, M, N> extends AbstractPond<L, Tuple2<K, Tuple2<M, N>>>
 	{
-		protected final Canal<?, R>		that;
+		protected final Canal<R>		that;
 
 		protected final Mapper<L, K>	kol;
 
@@ -1609,7 +1609,7 @@ public class Canal<U, D> implements Iterable<D>
 
 		private byte					hasN;
 
-		public Joiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public Joiner(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			this.that = that;
 			this.kol = kol;
@@ -1738,7 +1738,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static abstract class JoinOp<L, R, K, U, V>
 	{
-		protected final Canal<?, R>		that;
+		protected final Canal<R>		that;
 
 		protected final Mapper<L, K>	kol;
 
@@ -1748,7 +1748,7 @@ public class Canal<U, D> implements Iterable<D>
 
 		protected final Mapper<R, V>	vor;
 
-		public JoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public JoinOp(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			this.that = that;
 			this.kol = kol;
@@ -1850,7 +1850,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class LeftJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, U, Option<V>>
 	{
-		public LeftJoiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public LeftJoiner(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			super(that, kol, kor, vol, vor);
 		}
@@ -1901,7 +1901,7 @@ public class Canal<U, D> implements Iterable<D>
 	protected static class LeftJoinOp<L, R, K, U, V> extends JoinOp<L, R, K, U, V>
 			implements Converter<L, Tuple2<K, Tuple2<U, Option<V>>>>
 	{
-		public LeftJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public LeftJoinOp(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			super(that, kol, kor, vol, vor);
 		}
@@ -2155,7 +2155,7 @@ public class Canal<U, D> implements Iterable<D>
 		Pond<I, O> newPond();
 	}
 
-	public static abstract class Option<E> extends Canal<E, E>
+	public static abstract class Option<E> extends Canal<E>
 	{
 		protected static final None<?> NONE = new None<Object>();
 
@@ -2220,23 +2220,8 @@ public class Canal<U, D> implements Iterable<D>
 
 		public abstract boolean given();
 
-		public abstract E or(E defaultValue);
-
-		public abstract E or(Producer<E> defaultProducer);
-
-		public abstract Option<E> orElse(Option<E> opt);
-
-		public abstract Option<E> orElse(Producer<Option<E>> opt);
-
-		public abstract E orNull();
-
-		/**
-		 * Any alias of map but return Option
-		 * 
-		 * @param mapper
-		 * @return
-		 */
-		public <F> Option<F> to(Mapper<E, F> mapper)
+		@Override
+		public <F> Option<F> map(Mapper<E, F> mapper)
 		{
 			if (this.given())
 			{
@@ -2254,9 +2239,19 @@ public class Canal<U, D> implements Iterable<D>
 				return none();
 			}
 		}
+
+		public abstract E or(E defaultValue);
+
+		public abstract E or(Producer<E> defaultProducer);
+
+		public abstract Option<E> orElse(Option<E> opt);
+
+		public abstract Option<E> orElse(Producer<Option<E>> opt);
+
+		public abstract E orNull();
 	}
 
-	public static class PairCanal<U, K, V> extends Canal<U, Tuple2<K, V>>
+	public static class PairCanal<K, V> extends Canal<Tuple2<K, V>>
 	{
 		/**
 		 * Collect elements into map.<br />
@@ -2289,13 +2284,12 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param folder
 		 * @return
 		 */
-		public <W> PairCanal<Tuple2<K, Canal<?, V>>, K, W> foldByKey(final Producer<W> initiator,
-				final Reducer<V, W> folder)
+		public <W> PairCanal<K, W> foldByKey(final Producer<W> initiator, final Reducer<V, W> folder)
 		{
-			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, W>()
+			return this.groupByKey().mapValues(new Mapper<Canal<V>, W>()
 			{
 				@Override
-				public W map(Canal<?, V> el) throws Exception
+				public W map(Canal<V> el) throws Exception
 				{
 					return el.fold(initiator.produce(), folder);
 				}
@@ -2308,8 +2302,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param that
 		 * @return
 		 */
-		public <W> JoinCanal<Tuple2<K, Tuple2<Option<V>, Option<W>>>, K, Option<V>, Option<W>> fullJoin(
-				Canal<?, Tuple2<K, W>> that)
+		public <W> JoinCanal<K, Option<V>, Option<W>> fullJoin(Canal<Tuple2<K, W>> that)
 		{
 			return fullJoin(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
 					.<K, Tuple2<Option<V>, Option<W>>> toPair().toJoin();
@@ -2320,7 +2313,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * 
 		 * @return
 		 */
-		public PairCanal<Tuple2<K, V>, K, Canal<?, V>> groupByKey()
+		public PairCanal<K, Canal<V>> groupByKey()
 		{
 			return this.groupBy(new DefaultKop<Tuple2<K, V>, K>(), new DefaultVop<Tuple2<K, V>, V>());
 		}
@@ -2331,7 +2324,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param pred
 		 * @return
 		 */
-		public PairCanal<Tuple2<K, V>, K, V> having(final Filter<V> pred)
+		public PairCanal<K, V> having(final Filter<V> pred)
 		{
 			return this.filter(new Filter<Tuple2<K, V>>()
 			{
@@ -2349,7 +2342,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param that
 		 * @return
 		 */
-		public <W> JoinCanal<Tuple2<K, Tuple2<V, W>>, K, V, W> join(Canal<?, Tuple2<K, W>> that)
+		public <W> JoinCanal<K, V, W> join(Canal<Tuple2<K, W>> that)
 		{
 			return join(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
 					.<K, Tuple2<V, W>> toPair().toJoin();
@@ -2360,7 +2353,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * 
 		 * @return
 		 */
-		public Canal<Tuple2<K, V>, K> keys()
+		public Canal<K> keys()
 		{
 			return this.map(new DefaultKop<Tuple2<K, V>, K>());
 		}
@@ -2371,7 +2364,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param that
 		 * @return
 		 */
-		public <W> JoinCanal<Tuple2<K, Tuple2<V, Option<W>>>, K, V, Option<W>> leftJoin(Canal<?, Tuple2<K, W>> that)
+		public <W> JoinCanal<K, V, Option<W>> leftJoin(Canal<Tuple2<K, W>> that)
 		{
 			return leftJoin(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
 					.<K, Tuple2<V, Option<W>>> toPair().toJoin();
@@ -2383,7 +2376,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param mapper
 		 * @return
 		 */
-		public <W> PairCanal<Tuple2<K, V>, K, W> mapValues(final Mapper<V, W> mapper)
+		public <W> PairCanal<K, W> mapValues(final Mapper<V, W> mapper)
 		{
 			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>()
 			{
@@ -2401,12 +2394,12 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param reducer
 		 * @return
 		 */
-		public PairCanal<Tuple2<K, Canal<?, V>>, K, V> reduceByKey(final Reducer<V, V> reducer)
+		public PairCanal<K, V> reduceByKey(final Reducer<V, V> reducer)
 		{
-			return this.groupByKey().mapValues(new Mapper<Canal<?, V>, V>()
+			return this.groupByKey().mapValues(new Mapper<Canal<V>, V>()
 			{
 				@Override
-				public V map(Canal<?, V> el)
+				public V map(Canal<V> el)
 				{
 					return el.reduce(reducer).get();
 				}
@@ -2419,25 +2412,24 @@ public class Canal<U, D> implements Iterable<D>
 		 * @param that
 		 * @return
 		 */
-		public <W> JoinCanal<Tuple2<K, Tuple2<Option<V>, W>>, K, Option<V>, W> rightJoin(Canal<?, Tuple2<K, W>> that)
+		public <W> JoinCanal<K, Option<V>, W> rightJoin(Canal<Tuple2<K, W>> that)
 		{
 			return rightJoin(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
 					.<K, Tuple2<Option<V>, W>> toPair().toJoin();
 		}
 
 		@SuppressWarnings("unchecked")
-		public <L, R> JoinCanal<Tuple2<K, V>, K, L, R> toJoin()
+		public <L, R> JoinCanal<K, L, R> toJoin()
 		{
-			return (JoinCanal<Tuple2<K, V>, K, L, R>) new JoinCanal<Tuple2<K, V>, K, L, R>().setUpstream(this)
-					.setOperator(new MapOp<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>(
-							new Mapper<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>()
-							{
-								@Override
-								public Tuple2<K, Tuple2<L, R>> map(Tuple2<K, V> el)
-								{
-									return (Tuple2<K, Tuple2<L, R>>) el;
-								}
-							}));
+			return (JoinCanal<K, L, R>) new JoinCanal<K, L, R>().setUpstream(this).setOperator(
+					new MapOp<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>(new Mapper<Tuple2<K, V>, Tuple2<K, Tuple2<L, R>>>()
+					{
+						@Override
+						public Tuple2<K, Tuple2<L, R>> map(Tuple2<K, V> el)
+						{
+							return (Tuple2<K, Tuple2<L, R>>) el;
+						}
+					}));
 		}
 
 		/**
@@ -2445,7 +2437,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * 
 		 * @return
 		 */
-		public Canal<Tuple2<K, V>, V> values()
+		public Canal<V> values()
 		{
 			return this.map(new DefaultVop<Tuple2<K, V>, V>());
 		}
@@ -2610,7 +2602,7 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class RightJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, Option<U>, V>
 	{
-		public RightJoiner(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public RightJoiner(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			super(that, kol, kor, vol, vor);
 		}
@@ -2661,7 +2653,7 @@ public class Canal<U, D> implements Iterable<D>
 	protected static class RightJoinOp<L, R, K, U, V> extends JoinOp<L, R, K, U, V>
 			implements Converter<L, Tuple2<K, Tuple2<Option<U>, V>>>
 	{
-		public RightJoinOp(Canal<?, R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
+		public RightJoinOp(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
 			super(that, kol, kor, vol, vor);
 		}
@@ -2688,7 +2680,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 	}
 
-	public static class RowCanal<R extends Map<String, ?>> extends Canal<R, R>
+	public static class RowCanal<R extends Map<String, ?>> extends Canal<R>
 	{
 		protected static class ItemComparator<T extends Comparable<T>> implements Comparator<Map<String, Object>>
 		{
@@ -2774,7 +2766,7 @@ public class Canal<U, D> implements Iterable<D>
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		public Canal<R, Canal<?, R>> stratifyBy(Item<?>... items)
+		public Canal<Canal<R>> stratifyBy(Item<?>... items)
 		{
 			return this.stratifyWith((Comparator<R>) comparator(comparatorsOfItems(items)));
 		}
@@ -2788,16 +2780,16 @@ public class Canal<U, D> implements Iterable<D>
 			{
 				final WindowRanger ranger = getRanger(aggr);
 
-				canal = canal.stratifyBy(aggr.partBy()).flatMap(new Mapper<Canal<?, R>, Iterable<R>>()
+				canal = canal.stratifyBy(aggr.partBy()).flatMap(new Mapper<Canal<R>, Iterable<R>>()
 				{
 					@Override
-					public Iterable<R> map(Canal<?, R> partition) throws Exception
+					public Iterable<R> map(Canal<R> partition) throws Exception
 					{
 						List<List<R>> ordered = (List<List<R>>) partition.<R> toRows().stratifyBy(aggr.orderBy())
-								.map(new Mapper<Canal<?, R>, List<R>>()
+								.map(new Mapper<Canal<R>, List<R>>()
 								{
 									@Override
-									public List<R> map(Canal<?, R> el) throws Exception
+									public List<R> map(Canal<R> el) throws Exception
 									{
 										return (List<R>) el.collect(new LinkedList<R>());
 									}
@@ -3328,7 +3320,7 @@ public class Canal<U, D> implements Iterable<D>
 		Source<E> newPond();
 	}
 
-	protected static class StratifyPond<E> extends AbstractPond<E, Canal<?, E>>
+	protected static class StratifyPond<E> extends AbstractPond<E, Canal<E>>
 	{
 		protected final Comparator<E>	cmp;
 
@@ -3359,13 +3351,13 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public Canal<?, E> next()
+		public Canal<E> next()
 		{
 			return Canal.of(res.next());
 		}
 	}
 
-	protected static class StratifyWithOp<E> implements Converter<E, Canal<?, E>>
+	protected static class StratifyWithOp<E> implements Converter<E, Canal<E>>
 	{
 		protected final Comparator<E> cmp;
 
@@ -3375,7 +3367,7 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		@Override
-		public Pond<E, Canal<?, E>> newPond()
+		public Pond<E, Canal<E>> newPond()
 		{
 			return new StratifyPond<E>(cmp);
 		}
@@ -3461,11 +3453,11 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class SubtractOp<E> implements Converter<E, E>
 	{
-		protected final Canal<?, E>		that;
+		protected final Canal<E>		that;
 
 		protected final Comparator<E>	cmp;
 
-		public SubtractOp(Canal<?, E> that, Comparator<E> cmp)
+		public SubtractOp(Canal<E> that, Comparator<E> cmp)
 		{
 			this.that = that;
 			this.cmp = cmp;
@@ -3486,7 +3478,7 @@ public class Canal<U, D> implements Iterable<D>
 
 		private E						here;
 
-		public SubtractPond(Canal<?, E> that, Comparator<E> cmp)
+		public SubtractPond(Canal<E> that, Comparator<E> cmp)
 		{
 			super(that);
 			this.cmp = cmp;
@@ -3868,11 +3860,11 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class UnionOp<E> implements Converter<E, E>
 	{
-		protected final Canal<?, E>	self;
+		protected final Canal<E>	self;
 
-		protected final Canal<?, E>	that;
+		protected final Canal<E>	that;
 
-		public UnionOp(Canal<?, E> self, Canal<?, E> that)
+		public UnionOp(Canal<E> self, Canal<E> that)
 		{
 			this.self = self;
 			this.that = that;
@@ -4000,9 +3992,9 @@ public class Canal<U, D> implements Iterable<D>
 
 	protected static class ZipOp<A, B> implements Converter<A, Tuple2<A, B>>
 	{
-		protected final Canal<?, B> that;
+		protected final Canal<B> that;
 
-		public ZipOp(Canal<?, B> that)
+		public ZipOp(Canal<B> that)
 		{
 			this.that = that;
 		}
@@ -4018,7 +4010,7 @@ public class Canal<U, D> implements Iterable<D>
 	{
 		private Pond<?, B> there;
 
-		public ZipPond(Canal<?, B> that)
+		public ZipPond(Canal<B> that)
 		{
 			super(that);
 		}
@@ -4324,31 +4316,30 @@ public class Canal<U, D> implements Iterable<D>
 		return Option.none();
 	}
 
-	public static <E> Canal<?, E> of(E[] array)
+	public static <E> Canal<E> of(E[] array)
 	{
 		return of(array, 0);
 	}
 
-	public static <E> Canal<?, E> of(E[] array, int begin)
+	public static <E> Canal<E> of(E[] array, int begin)
 	{
 		return of(array, begin, array.length);
 	}
 
-	public static <E> Canal<?, E> of(E[] array, int begin, int end)
+	public static <E> Canal<E> of(E[] array, int begin, int end)
 	{
-		return new Canal<E, E>().setOperator(new ArraySourcer<E>(array, begin, end));
+		return new Canal<E>().setOperator(new ArraySourcer<E>(array, begin, end));
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <E> Canal<?, E> of(Iterable<E> iter)
+	public static <E> Canal<E> of(Iterable<E> iter)
 	{
-		return iter instanceof Canal ? (Canal<?, E>) iter //
-				: new Canal<E, E>().setOperator(new IterableSourcer<E>(iter));
+		return iter instanceof Canal ? (Canal<E>) iter //
+				: new Canal<E>().setOperator(new IterableSourcer<E>(iter));
 	}
 
-	public static PairCanal<?, String, Object> of(JSON json)
+	public static PairCanal<String, Object> of(JSON json)
 	{
-		return new Canal<JSON.Pair, JSON.Pair>() //
+		return new Canal<JSON.Pair>() //
 				.setOperator(new IterableSourcer<JSON.Pair>(json.pairs())) //
 				.map(new Mapper<JSON.Pair, Tuple2<String, Object>>()
 				{
@@ -4360,9 +4351,9 @@ public class Canal<U, D> implements Iterable<D>
 				}).toPair();
 	}
 
-	public static <K, V> PairCanal<?, K, V> of(Map<K, V> map)
+	public static <K, V> PairCanal<K, V> of(Map<K, V> map)
 	{
-		return new Canal<Entry<K, V>, Entry<K, V>>() //
+		return new Canal<Entry<K, V>>() //
 				.setOperator(new IterableSourcer<Entry<K, V>>(map.entrySet())) //
 				.map(new Mapper<Entry<K, V>, Tuple2<K, V>>()
 				{
@@ -4374,9 +4365,9 @@ public class Canal<U, D> implements Iterable<D>
 				}).toPair();
 	}
 
-	public static <E> Canal<?, E> of(Producer<E> spring)
+	public static <E> Canal<E> of(Producer<E> spring)
 	{
-		return new Canal<E, E>().setOperator(new GeneratedSourcer<E>(spring));
+		return new Canal<E>().setOperator(new GeneratedSourcer<E>(spring));
 	}
 
 	public static <E> Option<E> option(E value)
@@ -4493,18 +4484,19 @@ public class Canal<U, D> implements Iterable<D>
 		return new SUM(vop);
 	}
 
-	private Canal<?, U>		upstream;
+	private Canal<?>		upstream;
 
-	private Operator<U, D>	operator;
+	private Operator<?, D>	operator;
 
-	protected Pond<U, D> build()
+	protected Pond<?, D> build()
 	{
 		return begin(build(null));
 	}
 
-	protected Pond<U, D> build(Pond<D, ?> down)
+	@SuppressWarnings("unchecked")
+	protected <U> Pond<U, D> build(Pond<D, ?> down)
 	{
-		Pond<U, D> pond = this.newPond();
+		Pond<U, D> pond = (Pond<U, D>) this.newPond();
 
 		if (down != null)
 		{
@@ -4512,9 +4504,9 @@ public class Canal<U, D> implements Iterable<D>
 		}
 
 		// The upstream of source is null
-		if (getUpstream() != null)
+		if (this.getUpstream() != null)
 		{
-			getUpstream().build(pond);
+			this.<U> getUpstream().build(pond);
 		}
 
 		return pond;
@@ -4526,7 +4518,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param that
 	 * @return
 	 */
-	public <N> PairCanal<D, D, N> cartesian(Canal<?, N> that)
+	public <N> PairCanal<D, N> cartesian(Canal<N> that)
 	{
 		return this.follow(new CartesianOp<D, N>(that)).toPair();
 	}
@@ -4653,7 +4645,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * 
 	 * @return
 	 */
-	public Canal<D, D> distinct()
+	public Canal<D> distinct()
 	{
 		return this.distinct((Comparator<D>) null);
 	}
@@ -4664,7 +4656,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D, D> distinct(Comparator<D> cmp)
+	public Canal<D> distinct(Comparator<D> cmp)
 	{
 		return this.follow(new DistinctOp<D>(cmp));
 	}
@@ -4675,7 +4667,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param eql
 	 * @return
 	 */
-	public Canal<D, D> distinct(HashedEquality<D> eql)
+	public Canal<D> distinct(HashedEquality<D> eql)
 	{
 		return this.follow(new DistinctOp<D>(eql));
 	}
@@ -4683,7 +4675,7 @@ public class Canal<U, D> implements Iterable<D>
 	@SuppressWarnings("unchecked")
 	protected <T> T evaluate()
 	{
-		return ((Terminal<U, T>) this.build()).get();
+		return ((Terminal<?, T>) this.build()).get();
 	}
 
 	/**
@@ -4694,7 +4686,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            element need to be passed to the downstream.
 	 * @return
 	 */
-	public Canal<D, D> filter(Filter<D> filter)
+	public Canal<D> filter(Filter<D> filter)
 	{
 		return this.follow(new FilterOp<D>(filter));
 	}
@@ -4736,7 +4728,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (D data)->Iterable<V>}
 	 * @return
 	 */
-	public <V> Canal<D, V> flatMap(Mapper<D, Iterable<V>> mapper)
+	public <V> Canal<V> flatMap(Mapper<D, Iterable<V>> mapper)
 	{
 		return this.follow(new FlatMapOp<D, V>(mapper));
 	}
@@ -4754,9 +4746,9 @@ public class Canal<U, D> implements Iterable<D>
 		return this.follow(new FoldOp<D, R>(init, folder)).evaluate();
 	}
 
-	protected <N> Canal<D, N> follow(Operator<D, N> op)
+	protected <N> Canal<N> follow(Operator<D, N> op)
 	{
-		return new Canal<D, N>().setUpstream(this).setOperator(op);
+		return new Canal<N>().setUpstream(this).setOperator(op);
 	}
 
 	/**
@@ -4782,8 +4774,8 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (R data)->K key} the kop of right.
 	 * @return
 	 */
-	protected <R, K, M, N> Canal<D, Tuple2<K, Tuple2<Option<M>, Option<N>>>> fullJoin(Canal<?, R> that,
-			Mapper<D, K> kol, Mapper<R, K> kor)
+	protected <R, K, M, N> Canal<Tuple2<K, Tuple2<Option<M>, Option<N>>>> fullJoin(Canal<R> that, Mapper<D, K> kol,
+			Mapper<R, K> kor)
 	{
 		return fullJoin(that, kol, kor, new DefaultVop<D, M>(), new DefaultVop<R, N>());
 	}
@@ -4803,20 +4795,21 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (R data)->N value} the vop of right.
 	 * @return
 	 */
-	public <R, K, M, N> Canal<D, Tuple2<K, Tuple2<Option<M>, Option<N>>>> fullJoin(Canal<?, R> that, Mapper<D, K> kol,
+	public <R, K, M, N> Canal<Tuple2<K, Tuple2<Option<M>, Option<N>>>> fullJoin(Canal<R> that, Mapper<D, K> kol,
 			Mapper<R, K> kor, Mapper<D, M> vol, Mapper<R, N> vor)
 	{
 		return this.follow(new FullJoinOp<D, R, K, M, N>(that, kol, kor, vol, vor));
 	}
 
-	protected Operator<U, D> getOperator()
+	protected Operator<?, D> getOperator()
 	{
 		return operator;
 	}
 
-	protected Canal<?, U> getUpstream()
+	@SuppressWarnings("unchecked")
+	protected <U> Canal<U> getUpstream()
 	{
-		return upstream;
+		return (Canal<U>) upstream;
 	}
 
 	/**
@@ -4826,7 +4819,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (D data)->K key} the kop of data.
 	 * @return
 	 */
-	public <K> PairCanal<D, K, Canal<?, D>> groupBy(Mapper<D, K> kop)
+	public <K> PairCanal<K, Canal<D>> groupBy(Mapper<D, K> kop)
 	{
 		return groupBy(kop, new SelfMapper<D>());
 	}
@@ -4840,7 +4833,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (D data)->V value} the vop of data.
 	 * @return
 	 */
-	public <K, V> PairCanal<D, K, Canal<?, V>> groupBy(Mapper<D, K> kop, Mapper<D, V> vop)
+	public <K, V> PairCanal<K, Canal<V>> groupBy(Mapper<D, K> kop, Mapper<D, V> vop)
 	{
 		return this.follow(new GroupByOp<D, K, V>(kop, vop)).toPair();
 	}
@@ -4851,7 +4844,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param that
 	 * @return
 	 */
-	public Canal<D, D> intersection(Canal<?, D> that)
+	public Canal<D> intersection(Canal<D> that)
 	{
 		return intersection(that, null);
 	}
@@ -4863,7 +4856,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D, D> intersection(Canal<?, D> that, Comparator<D> cmp)
+	public Canal<D> intersection(Canal<D> that, Comparator<D> cmp)
 	{
 		return this.follow(new IntersectionOp<D>(that, cmp));
 	}
@@ -4885,7 +4878,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (R data)->K key} the kop of right.
 	 * @return
 	 */
-	protected <R, K, M, N> Canal<D, Tuple2<K, Tuple2<M, N>>> join(Canal<?, R> that, Mapper<D, K> kol, Mapper<R, K> kor)
+	protected <R, K, M, N> Canal<Tuple2<K, Tuple2<M, N>>> join(Canal<R> that, Mapper<D, K> kol, Mapper<R, K> kor)
 	{
 		return join(that, kol, kor, new DefaultVop<D, M>(), new DefaultVop<R, N>());
 	}
@@ -4905,7 +4898,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (R data)->N value} the vop of right.
 	 * @return
 	 */
-	public <R, K, M, N> Canal<D, Tuple2<K, Tuple2<M, N>>> join(Canal<?, R> that, Mapper<D, K> kol, Mapper<R, K> kor,
+	public <R, K, M, N> Canal<Tuple2<K, Tuple2<M, N>>> join(Canal<R> that, Mapper<D, K> kol, Mapper<R, K> kor,
 			Mapper<D, M> vol, Mapper<R, N> vor)
 	{
 		return this.follow(new InnerJoinOp<D, R, K, M, N>(that, kol, kor, vol, vor));
@@ -4919,7 +4912,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (D data)->K key} the kop of data.
 	 * @return
 	 */
-	public <K> PairCanal<D, K, D> keyBy(final Mapper<D, K> kop)
+	public <K> PairCanal<K, D> keyBy(final Mapper<D, K> kop)
 	{
 		return this.map(new Mapper<D, Tuple2<K, D>>()
 		{
@@ -4942,7 +4935,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (R data)->K key} the kop of right.
 	 * @return
 	 */
-	protected <R, K, M, N> Canal<D, Tuple2<K, Tuple2<M, Option<N>>>> leftJoin(Canal<?, R> that, Mapper<D, K> kol,
+	protected <R, K, M, N> Canal<Tuple2<K, Tuple2<M, Option<N>>>> leftJoin(Canal<R> that, Mapper<D, K> kol,
 			Mapper<R, K> kor)
 	{
 		return leftJoin(that, kol, kor, new DefaultVop<D, M>(), new DefaultVop<R, N>());
@@ -4963,7 +4956,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (R data)->N value} the vop of right.
 	 * @return
 	 */
-	public <R, K, M, N> Canal<D, Tuple2<K, Tuple2<M, Option<N>>>> leftJoin(Canal<?, R> that, Mapper<D, K> kol,
+	public <R, K, M, N> Canal<Tuple2<K, Tuple2<M, Option<N>>>> leftJoin(Canal<R> that, Mapper<D, K> kol,
 			Mapper<R, K> kor, Mapper<D, M> vol, Mapper<R, N> vor)
 	{
 		return this.follow(new LeftJoinOp<D, R, K, M, N>(that, kol, kor, vol, vor));
@@ -4975,7 +4968,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param limit
 	 * @return
 	 */
-	public Canal<D, D> limit(int limit)
+	public Canal<D> limit(int limit)
 	{
 		return this.follow(new LimitOp<D>(limit));
 	}
@@ -4987,17 +4980,17 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (D data)->V value}
 	 * @return
 	 */
-	public <V> Canal<D, V> map(Mapper<D, V> mapper)
+	public <V> Canal<V> map(Mapper<D, V> mapper)
 	{
 		return this.follow(new MapOp<D, V>(mapper));
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Pond<U, D> newPond()
+	protected Pond<?, D> newPond()
 	{
 		if (this.getOperator() instanceof Sourcer<?>)
 		{
-			return (Pond<U, D>) ((Sourcer<D>) this.getOperator()).newPond();
+			return (Pond<?, D>) ((Sourcer<D>) this.getOperator()).newPond();
 		}
 		else
 		{
@@ -5014,7 +5007,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            element.
 	 * @return
 	 */
-	public Canal<D, D> peek(Action<D> action)
+	public Canal<D> peek(Action<D> action)
 	{
 		return this.follow(new PeekOp<D>(action));
 	}
@@ -5037,7 +5030,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * 
 	 * @return
 	 */
-	public Canal<D, D> reverse()
+	public Canal<D> reverse()
 	{
 		return this.follow(new ReverseOp<D>());
 	}
@@ -5053,7 +5046,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (R data)->K key} the kop of right.
 	 * @return
 	 */
-	protected <R, K, M, N> Canal<D, Tuple2<K, Tuple2<Option<M>, N>>> rightJoin(Canal<?, R> that, Mapper<D, K> kol,
+	protected <R, K, M, N> Canal<Tuple2<K, Tuple2<Option<M>, N>>> rightJoin(Canal<R> that, Mapper<D, K> kol,
 			Mapper<R, K> kor)
 	{
 		return rightJoin(that, kol, kor, new DefaultVop<D, M>(), new DefaultVop<R, N>());
@@ -5074,19 +5067,19 @@ public class Canal<U, D> implements Iterable<D>
 	 *            {@code (R data)->N value} the vop of right.
 	 * @return
 	 */
-	public <R, K, M, N> Canal<D, Tuple2<K, Tuple2<Option<M>, N>>> rightJoin(Canal<?, R> that, Mapper<D, K> kol,
+	public <R, K, M, N> Canal<Tuple2<K, Tuple2<Option<M>, N>>> rightJoin(Canal<R> that, Mapper<D, K> kol,
 			Mapper<R, K> kor, Mapper<D, M> vol, Mapper<R, N> vor)
 	{
 		return this.follow(new RightJoinOp<D, R, K, M, N>(that, kol, kor, vol, vor));
 	}
 
-	protected Canal<U, D> setOperator(Operator<U, D> operator)
+	protected Canal<D> setOperator(Operator<?, D> operator)
 	{
 		this.operator = operator;
 		return this;
 	}
 
-	protected Canal<U, D> setUpstream(Canal<?, U> upstream)
+	protected Canal<D> setUpstream(Canal<?> upstream)
 	{
 		this.upstream = upstream;
 		return this;
@@ -5098,7 +5091,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param skip
 	 * @return
 	 */
-	public Canal<D, D> skip(int skip)
+	public Canal<D> skip(int skip)
 	{
 		return this.follow(new SkipOp<D>(skip));
 	}
@@ -5111,7 +5104,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            The max size of the window to hold data.
 	 * @return
 	 */
-	public Canal<D, Iterable<D>> sliding(int size)
+	public Canal<Iterable<D>> sliding(int size)
 	{
 		return this.follow(new SlidingOp<D>(size, size));
 	}
@@ -5126,7 +5119,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            Sliding step length.
 	 * @return
 	 */
-	public Canal<D, Iterable<D>> sliding(int size, int step)
+	public Canal<Iterable<D>> sliding(int size, int step)
 	{
 		return this.follow(new SlidingOp<D>(size, step));
 	}
@@ -5142,7 +5135,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            previous Mapper parameter.
 	 * @return
 	 */
-	public Canal<D, D> sortBy(Object... orders)
+	public Canal<D> sortBy(Object... orders)
 	{
 		return this.follow(new SortByOp<D>(Canal.<D> comparatorsOfOrders(orders)));
 	}
@@ -5152,7 +5145,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * 
 	 * @return
 	 */
-	public Canal<D, D> sortWith()
+	public Canal<D> sortWith()
 	{
 		return sortWith(null);
 	}
@@ -5163,7 +5156,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<D, D> sortWith(boolean ascend)
+	public Canal<D> sortWith(boolean ascend)
 	{
 		return sortWith(null, ascend);
 	}
@@ -5174,7 +5167,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D, D> sortWith(Comparator<D> cmp)
+	public Canal<D> sortWith(Comparator<D> cmp)
 	{
 		return sortWith(cmp, true);
 	}
@@ -5186,7 +5179,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<D, D> sortWith(Comparator<D> cmp, boolean ascend)
+	public Canal<D> sortWith(Comparator<D> cmp, boolean ascend)
 	{
 		if (cmp == null && !ascend)
 		{
@@ -5209,7 +5202,7 @@ public class Canal<U, D> implements Iterable<D>
 	 *            previous Mapper parameter.
 	 * @return
 	 */
-	public Canal<D, Canal<?, D>> stratifyBy(Object... orders)
+	public Canal<Canal<D>> stratifyBy(Object... orders)
 	{
 		return this.stratifyWith(comparator(Canal.<D> comparatorsOfOrders(orders)));
 	}
@@ -5220,7 +5213,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D, Canal<?, D>> stratifyWith(Comparator<D> cmp)
+	public Canal<Canal<D>> stratifyWith(Comparator<D> cmp)
 	{
 		return this.follow(new StratifyWithOp<D>(cmp));
 	}
@@ -5233,7 +5226,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<D, Canal<?, D>> stratifyWith(Comparator<D> cmp, boolean ascend)
+	public Canal<Canal<D>> stratifyWith(Comparator<D> cmp, boolean ascend)
 	{
 		return this.stratifyWith(ascend ? cmp : inverse(cmp));
 	}
@@ -5244,7 +5237,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param that
 	 * @return
 	 */
-	public Canal<D, D> subtract(Canal<?, D> that)
+	public Canal<D> subtract(Canal<D> that)
 	{
 		return subtract(that, null);
 	}
@@ -5256,7 +5249,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D, D> subtract(Canal<?, D> that, Comparator<D> cmp)
+	public Canal<D> subtract(Canal<D> that, Comparator<D> cmp)
 	{
 		return this.follow(new SubtractOp<D>(that, cmp));
 	}
@@ -5292,10 +5285,10 @@ public class Canal<U, D> implements Iterable<D>
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <K, V> PairCanal<U, K, V> toPair()
+	public <K, V> PairCanal<K, V> toPair()
 	{
-		return (PairCanal<U, K, V>) new PairCanal<U, K, V>().setUpstream(this.getUpstream())
-				.setOperator((Operator<U, Tuple2<K, V>>) this.getOperator());
+		return (PairCanal<K, V>) new PairCanal<K, V>().setUpstream(this.getUpstream())
+				.setOperator((Operator<?, Tuple2<K, V>>) this.getOperator());
 	}
 
 	/**
@@ -5308,7 +5301,7 @@ public class Canal<U, D> implements Iterable<D>
 	@SuppressWarnings("unchecked")
 	public <R extends Map<String, ?>> RowCanal<R> toRows()
 	{
-		Canal<?, D> canal = this.filter(new Filter<D>()
+		Canal<D> canal = this.filter(new Filter<D>()
 		{
 			@Override
 			public boolean filter(D el) throws Exception
@@ -5325,7 +5318,7 @@ public class Canal<U, D> implements Iterable<D>
 			}
 		});
 		RowCanal<R> rows = new RowCanal<R>();
-		rows.setUpstream((Canal<?, R>) canal.getUpstream());
+		rows.setUpstream((Canal<R>) canal.getUpstream());
 		rows.setOperator((Operator<R, R>) canal.getOperator());
 		return rows;
 	}
@@ -5341,7 +5334,7 @@ public class Canal<U, D> implements Iterable<D>
 	@SuppressWarnings("unchecked")
 	public <R extends Map<String, Object>> RowCanal<R> toRows(final Class<R> cls)
 	{
-		Canal<?, R> canal = this.map(new Mapper<D, R>()
+		Canal<R> canal = this.map(new Mapper<D, R>()
 		{
 			@Override
 			public R map(D el) throws Exception
@@ -5393,7 +5386,7 @@ public class Canal<U, D> implements Iterable<D>
 			}
 		});
 		RowCanal<R> rows = new RowCanal<R>();
-		rows.setUpstream((Canal<?, R>) canal.getUpstream());
+		rows.setUpstream((Canal<R>) canal.getUpstream());
 		rows.setOperator((Operator<R, R>) canal.getOperator());
 		return rows;
 	}
@@ -5455,7 +5448,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param that
 	 * @return
 	 */
-	public Canal<D, D> union(Canal<?, D> that)
+	public Canal<D> union(Canal<D> that)
 	{
 		return this.follow(new UnionOp<D>(this, that));
 	}
@@ -5467,7 +5460,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * @param that
 	 * @return
 	 */
-	public <E> PairCanal<D, D, E> zip(Canal<?, E> that)
+	public <E> PairCanal<D, E> zip(Canal<E> that)
 	{
 		return this.follow(new ZipOp<D, E>(that)).toPair();
 	}
@@ -5478,7 +5471,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * 
 	 * @return
 	 */
-	public PairCanal<D, D, Integer> zipWithIndex()
+	public PairCanal<D, Integer> zipWithIndex()
 	{
 		return this.follow(new ZipWithIndexOp<D>()).toPair();
 	}
@@ -5489,7 +5482,7 @@ public class Canal<U, D> implements Iterable<D>
 	 * 
 	 * @return
 	 */
-	public PairCanal<D, D, Long> zipWithIndexLong()
+	public PairCanal<D, Long> zipWithIndexLong()
 	{
 		return this.follow(new ZipWithIndexLongOp<D>()).toPair();
 	}

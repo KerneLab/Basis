@@ -59,7 +59,7 @@ public class TestCanal
 		coll.add(4);
 		coll.add(5);
 
-		Canal<Integer, Integer> c = Canal.of(coll).filter(new Filter<Integer>()
+		Canal<Integer> c = Canal.of(coll).filter(new Filter<Integer>()
 		{
 			@Override
 			public boolean filter(Integer element)
@@ -91,8 +91,15 @@ public class TestCanal
 
 		Tools.debug("============");
 
-		Integer[] array = new Integer[] { 1, 2, 3, 4, 4, 5, 6 };
-		c = Canal.of(array).filter(new Filter<Integer>()
+		String[] array = new String[] { "1", "2", "3", "4", "4", "5", "6" };
+		c = Canal.of(array).map(new Mapper<String, Integer>()
+		{
+			@Override
+			public Integer map(String el) throws Exception
+			{
+				return Integer.valueOf(el);
+			}
+		}).filter(new Filter<Integer>()
 		{
 			@Override
 			public boolean filter(Integer element)
@@ -435,10 +442,10 @@ public class TestCanal
 					{
 						return el[1];
 					}
-				}).foreach(new Canal.Action<Canal<?, Integer[]>>()
+				}).foreach(new Canal.Action<Canal<Integer[]>>()
 				{
 					@Override
-					public void action(Canal<?, Integer[]> el)
+					public void action(Canal<Integer[]> el)
 					{
 						for (Integer[] e : el)
 						{
@@ -585,10 +592,10 @@ public class TestCanal
 			{
 				return el % 3;
 			}
-		}).groupByKey().foreach(new Action<Tuple2<Integer, Canal<?, Integer>>>()
+		}).groupByKey().foreach(new Action<Tuple2<Integer, Canal<Integer>>>()
 		{
 			@Override
-			public void action(Tuple2<Integer, Canal<?, Integer>> el)
+			public void action(Tuple2<Integer, Canal<Integer>> el)
 			{
 				Tools.debug(el);
 			}
@@ -602,17 +609,17 @@ public class TestCanal
 			{
 				return el % 3;
 			}
-		}).groupByKey().having(new Filter<Canal<?, Integer>>()
+		}).groupByKey().having(new Filter<Canal<Integer>>()
 		{
 			@Override
-			public boolean filter(Canal<?, Integer> el)
+			public boolean filter(Canal<Integer> el)
 			{
 				return el.count() > 1;
 			}
-		}).foreach(new Action<Tuple2<Integer, Canal<?, Integer>>>()
+		}).foreach(new Action<Tuple2<Integer, Canal<Integer>>>()
 		{
 			@Override
-			public void action(Tuple2<Integer, Canal<?, Integer>> el)
+			public void action(Tuple2<Integer, Canal<Integer>> el)
 			{
 				Tools.debug(el);
 			}

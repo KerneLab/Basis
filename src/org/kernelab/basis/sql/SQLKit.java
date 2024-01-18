@@ -907,7 +907,7 @@ public class SQLKit
 		return jsonOfResultRow(rs, null, map);
 	}
 
-	public static Canal<?, JSON> jsonOfResultSet(SQLKit kit, final ResultSet rs, final Map<String, Object> map,
+	public static Canal<JSON> jsonOfResultSet(SQLKit kit, final ResultSet rs, final Map<String, Object> map,
 			final Class<? extends JSON> cls) throws SQLException
 	{
 		return Canal.of(Sequel.iterate(rs).kit(kit)).map(new Mapper<ResultSet, JSON>()
@@ -1335,20 +1335,19 @@ public class SQLKit
 		return rows;
 	}
 
-	public static <E> Canal<?, E> mapResultSet(SQLKit kit, ResultSet rs, Class<E> cls, Map<String, Object> map)
+	public static <E> Canal<E> mapResultSet(SQLKit kit, ResultSet rs, Class<E> cls, Map<String, Object> map)
 			throws SQLException
 	{
 		return mapResultSet(kit, rs, cls, map, null);
 	}
 
-	public static <E> Canal<?, E> mapResultSet(SQLKit kit, ResultSet rs, Class<E> cls, Map<String, Object> map,
+	public static <E> Canal<E> mapResultSet(SQLKit kit, ResultSet rs, Class<E> cls, Map<String, Object> map,
 			Map<Class<?>, Mapper<Object, Object>> typeMap) throws SQLException
 	{
 		return mapResultSet(kit, rs, new ResultSetMapper<E>(cls, map).setTypeMap(typeMap));
 	}
 
-	public static <E> Canal<?, E> mapResultSet(SQLKit kit, ResultSet rs, Mapper<ResultSet, E> mapper)
-			throws SQLException
+	public static <E> Canal<E> mapResultSet(SQLKit kit, ResultSet rs, Mapper<ResultSet, E> mapper) throws SQLException
 	{
 		return Canal.of(Sequel.iterate(rs).kit(kit)).map(mapper);
 	}
