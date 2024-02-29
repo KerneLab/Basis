@@ -12,28 +12,14 @@ public class FixedDeque<E> extends LinkedList<E>
 
 	public static void main(String[] args)
 	{
-		FixedDeque<Integer> q = new FixedDeque<Integer>(0);
+		FixedDeque<Integer> q = new FixedDeque<Integer>(-3);
+
+		q.add(1);
+		q.add(2);
 
 		for (int i = 0; i < 10; i++)
 		{
-			q.offerLast(i);
-		}
-
-		Tools.debug(q);
-
-		Tools.debug("----");
-
-		q.setFixed(3);
-
-		Tools.debug(q);
-
-		Tools.debug("----");
-
-		q.setFixed(0);
-
-		for (int i = 10; i < 15; i++)
-		{
-			q.offerLast(i);
+			q.add(1, i);
 		}
 
 		Tools.debug(q);
@@ -56,31 +42,14 @@ public class FixedDeque<E> extends LinkedList<E>
 	public void add(int index, E element)
 	{
 		super.add(index, element);
-
-		int fixed = this.getFixed();
-
-		if (fixed < 0)
-		{
-			this.pollLast();
-		}
-		else if (fixed > 0)
-		{
-			this.pollFirst();
-		}
+		this.cleanExtra(this.getFixed());
 	}
 
 	@Override
 	public boolean addAll(int index, Collection<? extends E> c)
 	{
 		boolean res = super.addAll(index, c);
-
-		int fixed = this.getFixed();
-
-		if (fixed != 0)
-		{
-			this.cleanExtra(fixed);
-		}
-
+		this.cleanExtra(this.getFixed());
 		return res;
 	}
 
@@ -181,18 +150,21 @@ public class FixedDeque<E> extends LinkedList<E>
 		return this.offerLast(e);
 	}
 
+	@Override
 	public boolean offerFirst(E e)
 	{
 		this.addFirst(e);
 		return true;
 	}
 
+	@Override
 	public boolean offerLast(E e)
 	{
 		this.addLast(e);
 		return true;
 	}
 
+	@Override
 	public E pollFirst()
 	{
 		if (this.isEmpty())
@@ -205,6 +177,7 @@ public class FixedDeque<E> extends LinkedList<E>
 		}
 	}
 
+	@Override
 	public E pollLast()
 	{
 		if (this.isEmpty())
@@ -217,6 +190,7 @@ public class FixedDeque<E> extends LinkedList<E>
 		}
 	}
 
+	@Override
 	public void push(E e)
 	{
 		this.addFirst(e);
