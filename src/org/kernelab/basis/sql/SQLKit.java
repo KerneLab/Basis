@@ -1861,7 +1861,7 @@ public class SQLKit
 
 	public SQLKit closeStatement(Statement statement) throws SQLException
 	{
-		if (statement != null && !isReuseStatements())
+		if (statement != null && (!isReuseStatements() || !isReused(statement)))
 		{
 			sentences.remove(statements.remove(statement));
 			statement.close();
