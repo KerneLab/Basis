@@ -302,6 +302,25 @@ public class TestCanal
 			}
 		}).limit(3).skip(1));
 
+		Tools.debug("============spring until");
+		Tools.debug(Canal.of(new Producer<Integer>()
+		{
+			int i = 0;
+
+			@Override
+			public Integer produce()
+			{
+				return i++;
+			}
+		}).until(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer el) throws Exception
+			{
+				return el > 3;
+			}
+		}));
+
 		Tools.debug("============sliding");
 		Canal.of(new Producer<Integer>()
 		{

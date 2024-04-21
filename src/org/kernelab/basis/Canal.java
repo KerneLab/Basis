@@ -3928,6 +3928,80 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	protected static class UntilOp<E> implements Converter<E, E>
+	{
+		protected final Filter<E> until;
+
+		public UntilOp(Filter<E> until)
+		{
+			this.until = until;
+		}
+
+		@Override
+		public Pond<E, E> newPond()
+		{
+			return new Wheel<E, E>()
+			{
+				boolean	over	= false;
+				boolean	take	= true;
+				E		next	= null;
+
+				@Override
+				public boolean hasNext()
+				{
+					if (over)
+					{
+						return false;
+					}
+					else if (!take)
+					{
+						return true;
+					}
+					else if (!upstream().hasNext())
+					{
+						return false;
+					}
+					else
+					{
+						next = upstream().next();
+						try
+						{
+							if (until.filter(next))
+							{
+								over = true;
+								next = null;
+								take = true;
+								return false;
+							}
+							else
+							{
+								take = false;
+								return true;
+							}
+						}
+						catch (Exception e)
+						{
+							throw new RuntimeException(e);
+						}
+					}
+				}
+
+				@Override
+				public E next()
+				{
+					try
+					{
+						return next;
+					}
+					finally
+					{
+						take = true;
+					}
+				}
+			};
+		}
+	}
+
 	protected static abstract class Wheel<I, O> extends AbstractPond<I, O>
 	{
 		/**
@@ -5451,6 +5525,17 @@ public class Canal<D> implements Iterable<D>
 	public Canal<D> union(Canal<D> that)
 	{
 		return this.follow(new UnionOp<D>(this, that));
+	}
+
+	/**
+	 * Pass the elements to downstream until some one meet the until condition.
+	 * 
+	 * @param until
+	 * @return
+	 */
+	public Canal<D> until(Filter<D> until)
+	{
+		return this.follow(new UntilOp<D>(until));
 	}
 
 	/**
