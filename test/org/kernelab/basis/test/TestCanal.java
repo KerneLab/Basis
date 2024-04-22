@@ -321,6 +321,28 @@ public class TestCanal
 			}
 		}));
 
+		Tools.debug("============spring until drop");
+		@SuppressWarnings("unchecked")
+		Option<Integer>[] drop = new Option[1];
+		Tools.debug(Canal.of(new Producer<Integer>()
+		{
+			int i = 0;
+
+			@Override
+			public Integer produce()
+			{
+				return i++;
+			}
+		}).until(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer el) throws Exception
+			{
+				return el > 3;
+			}
+		}, drop));
+		Tools.debug("drop: " + drop[0]);
+
 		Tools.debug("============sliding");
 		Canal.of(new Producer<Integer>()
 		{

@@ -3930,11 +3930,14 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class UntilOp<E> implements Converter<E, E>
 	{
-		protected final Filter<E> until;
+		protected final Filter<E>	until;
 
-		public UntilOp(Filter<E> until)
+		protected final Option<E>[]	drop;
+
+		public UntilOp(Filter<E> until, Option<E>[] drop)
 		{
 			this.until = until;
+			this.drop = drop;
 		}
 
 		@Override
@@ -3945,6 +3948,16 @@ public class Canal<D> implements Iterable<D>
 				boolean	over	= false;
 				boolean	take	= true;
 				E		next	= null;
+
+				@Override
+				public void begin()
+				{
+					if (drop != null && drop.length > 0)
+					{
+						drop[0] = Option.none();
+					}
+					super.begin();
+				}
 
 				@Override
 				public boolean hasNext()
@@ -3968,6 +3981,10 @@ public class Canal<D> implements Iterable<D>
 						{
 							if (until.filter(next))
 							{
+								if (drop != null && drop.length > 0)
+								{
+									drop[0] = Option.some(next);
+								}
 								over = true;
 								next = null;
 								take = true;
@@ -5528,14 +5545,30 @@ public class Canal<D> implements Iterable<D>
 	}
 
 	/**
-	 * Pass the elements to downstream until some one meet the until condition.
+	 * Pass the elements to downstream until some one satisfied the until
+	 * condition.
 	 * 
 	 * @param until
 	 * @return
 	 */
 	public Canal<D> until(Filter<D> until)
 	{
-		return this.follow(new UntilOp<D>(until));
+		return this.follow(new UntilOp<D>(until, null));
+	}
+
+	/**
+	 * Pass the elements to downstream until some one satisfied the until
+	 * condition. The satisfied element will be put into the drop array if the
+	 * array not null or not empty. If no satisfied element then Option.none()
+	 * will be put into the drop array.
+	 * 
+	 * @param until
+	 * @param drop
+	 * @return
+	 */
+	public Canal<D> until(Filter<D> until, Option<D>[] drop)
+	{
+		return this.follow(new UntilOp<D>(until, drop));
 	}
 
 	/**
