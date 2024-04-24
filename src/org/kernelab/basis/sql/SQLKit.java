@@ -343,8 +343,8 @@ public class SQLKit
 	 */
 	public static final String		ERR_NO_DB_CONN				= "No available database connection.";
 
-	protected static final Pattern	PATTERN_DDL					= Pattern
-			.compile("^\\s*(ALTER|ANALYZE|CREATE|DROP|RENAME|TRUNCATE)\\b.+$", Pattern.CASE_INSENSITIVE);
+	protected static final Pattern	PATTERN_DDL					= Pattern.compile(
+			"^\\s*(ALTER|ANALYZE|CREATE|DROP|RENAME|TRUNCATE)\\b.+$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 	private static final Logger		log							= LoggerFactory.getLogger(SQLKit.class);
 
