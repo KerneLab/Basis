@@ -13,17 +13,16 @@ import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.sql.DataBase;
-import org.kernelab.basis.sql.DataBase.MariaDB;
+import org.kernelab.basis.sql.DataBase.OracleClient;
 import org.kernelab.basis.sql.SQLKit;
 import org.kernelab.basis.sql.Sequel;
 
 public class TestSQLKit
 {
-
 	public static void main(String[] args)
 	{
-		// DataBase db = new OracleClient("orcl", "test", "TEST");
-		DataBase db = new MariaDB("localhost", 3306, "demo", "test", "test");
+		DataBase db = new OracleClient("orcl", "test", "TEST");
+		// DataBase db = new MariaDB("localhost", 3306, "demo", "test", "test");
 
 		try
 		{
@@ -32,12 +31,26 @@ public class TestSQLKit
 			// testInScope(kit);
 			// testTimestamp(kit);
 			// testExists(kit);
-			testBatches(kit);
+			// testBatches(kit);
+			testCanal(kit);
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
 		}
+	}
+
+	public static void testCanal(SQLKit kit) throws SQLException
+	{
+		kit.setAutoCommit(false);
+
+		for (int i = 0; i < 10000; i++)
+		{
+			kit.execute("SELECT * FROM STAF WHERE COMPID = ?compId?", new JSON().attr("compId", "1"))
+					.getRows(JSON.class).limit(-1).collect();
+		}
+
+		Tools.debug();
 	}
 
 	public static void testBatches(SQLKit kit) throws SQLException

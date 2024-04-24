@@ -343,6 +343,9 @@ public class SQLKit
 	 */
 	public static final String		ERR_NO_DB_CONN				= "No available database connection.";
 
+	protected static final Pattern	PATTERN_DDL					= Pattern
+			.compile("^\\s*(ALTER|ANALYZE|CREATE|DROP|RENAME|TRUNCATE)\\b.+$", Pattern.CASE_INSENSITIVE);
+
 	private static final Logger		log							= LoggerFactory.getLogger(SQLKit.class);
 
 	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, Iterable<?> params)
@@ -1861,9 +1864,9 @@ public class SQLKit
 
 	public SQLKit closeStatement(Statement statement) throws SQLException
 	{
-		if (statement != null && (!isReuseStatements() || !isReused(statement)))
+		if (statement != null && (!isReuseStatements() || !isReused(statement) || isDDL(statement)))
 		{
-			sentences.remove(statements.remove(statement));
+			this.getSentences().remove(this.getStatements().remove(statement));
 			statement.close();
 		}
 		return this;
@@ -2522,9 +2525,26 @@ public class SQLKit
 		}
 	}
 
+	protected boolean isDDL(Statement statement)
+	{
+		return isDDL(this.getSentence(statement));
+	}
+
+	protected boolean isDDL(String text)
+	{
+		if (text == null)
+		{
+			return false;
+		}
+		else
+		{
+			return PATTERN_DDL.matcher(text).matches();
+		}
+	}
+
 	protected boolean isReused(Statement statement)
 	{
-		return sentences.get(statements.get(statement)) != null;
+		return this.getStatement(this.getSentence(statement)) != null;
 	}
 
 	public boolean isReuseStatements()
