@@ -343,9 +343,6 @@ public class SQLKit
 	 */
 	public static final String		ERR_NO_DB_CONN				= "No available database connection.";
 
-	protected static final Pattern	PATTERN_DDL					= Pattern.compile(
-			"^\\s*(ALTER|ANALYZE|CREATE|DROP|RENAME|TRUNCATE)\\b.+$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-
 	private static final Logger		log							= LoggerFactory.getLogger(SQLKit.class);
 
 	public static PreparedStatement bindParameters(int offset, PreparedStatement statement, Iterable<?> params)
@@ -1864,7 +1861,7 @@ public class SQLKit
 
 	public SQLKit closeStatement(Statement statement) throws SQLException
 	{
-		if (statement != null && (!isReuseStatements() || !isReused(statement) || isDDL(statement)))
+		if (statement != null && (!isReuseStatements() || !isReused(statement)))
 		{
 			this.getSentences().remove(this.getStatements().remove(statement));
 			statement.close();
@@ -1924,38 +1921,15 @@ public class SQLKit
 	public Statement createStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException
 	{
-		if (isReuseStatements())
+		try
 		{
-			statement = sentences.get(sql);
-
-			if (statement == null)
-			{
-				try
-				{
-					statement = this.getConnection().createStatement(resultSetType, resultSetConcurrency,
-							resultSetHoldability);
-				}
-				catch (SQLException e)
-				{
-					statement = this.getConnection().createStatement();
-				}
-				statements.put(statement, sql);
-				sentences.put(sql, statement);
-			}
+			statement = this.getConnection().createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
 		}
-		else
+		catch (SQLException e)
 		{
-			try
-			{
-				statement = this.getConnection().createStatement(resultSetType, resultSetConcurrency,
-						resultSetHoldability);
-			}
-			catch (SQLException e)
-			{
-				statement = this.getConnection().createStatement();
-			}
-			statements.put(statement, sql);
+			statement = this.getConnection().createStatement();
 		}
+		statements.put(statement, sql);
 
 		return statement;
 	}
@@ -2522,23 +2496,6 @@ public class SQLKit
 		catch (SQLException e)
 		{
 			return true;
-		}
-	}
-
-	protected boolean isDDL(Statement statement)
-	{
-		return isDDL(this.getSentence(statement));
-	}
-
-	protected boolean isDDL(String text)
-	{
-		if (text == null)
-		{
-			return false;
-		}
-		else
-		{
-			return PATTERN_DDL.matcher(text).matches();
 		}
 	}
 
