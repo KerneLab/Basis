@@ -153,7 +153,7 @@ public class TestCanal
 		Tools.debug(Canal.of(new Integer[] { 1, 2 }).cartesian(Canal.of(new Integer[] { 4, 5 })).collect());
 
 		Tools.debug("============reduce");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).reduce(new Reducer<Integer, Integer>()
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).reduce(new Reducer<Integer, Integer>()
 		{
 			@Override
 			public Integer reduce(Integer result, Integer element)
@@ -163,7 +163,7 @@ public class TestCanal
 		}));
 
 		Tools.debug("============reduce");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).map(new Mapper<Integer, String>()
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).map(new Mapper<Integer, String>()
 		{
 			@Override
 			public String map(Integer key)
@@ -179,8 +179,42 @@ public class TestCanal
 			}
 		}));
 
+		Tools.debug("============reduce until");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).reduce(new Reducer<Integer, Integer>()
+		{
+			@Override
+			public Integer reduce(Integer result, Integer element)
+			{
+				return result + element;
+			}
+		}, new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer el) throws Exception
+			{
+				return el >= 3;
+			}
+		}));
+
+		Tools.debug("============reduce until");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).reduce(new Reducer<Integer, Integer>()
+		{
+			@Override
+			public Integer reduce(Integer result, Integer element)
+			{
+				return result + element;
+			}
+		}, new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer el) throws Exception
+			{
+				return el >= 100;
+			}
+		}));
+
 		Tools.debug("============fold");
-		Tools.debug(Canal.of(new Integer[] { 1, 2 }).fold(new HashSet<Integer>(),
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).fold(new HashSet<Integer>(),
 				new Reducer<Integer, Collection<Integer>>()
 				{
 					@Override
@@ -191,7 +225,79 @@ public class TestCanal
 					}
 				}));
 
-		Tools.debug("============");
+		Tools.debug("============fold until");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).fold(new Producer<Collection<Integer>>()
+		{
+			public Collection<Integer> produce()
+			{
+				return new HashSet<Integer>();
+			}
+		}, new Reducer<Integer, Collection<Integer>>()
+		{
+			@Override
+			public Collection<Integer> reduce(Collection<Integer> result, Integer element)
+			{
+				result.add(element);
+				return result;
+			}
+		}, new Filter<Collection<Integer>>()
+		{
+			@Override
+			public boolean filter(Collection<Integer> el) throws Exception
+			{
+				return el.size() >= 2;
+			}
+		}));
+
+		Tools.debug("============fold until");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).fold(new Producer<Collection<Integer>>()
+		{
+			public Collection<Integer> produce()
+			{
+				return new HashSet<Integer>();
+			}
+		}, new Reducer<Integer, Collection<Integer>>()
+		{
+			@Override
+			public Collection<Integer> reduce(Collection<Integer> result, Integer element)
+			{
+				result.add(element);
+				return result;
+			}
+		}, new Filter<Collection<Integer>>()
+		{
+			@Override
+			public boolean filter(Collection<Integer> el) throws Exception
+			{
+				return el.size() >= 100;
+			}
+		}));
+
+		Tools.debug("============fold until");
+		Tools.debug(Canal.of(new Integer[] {}).fold(new Producer<Collection<Integer>>()
+		{
+			public Collection<Integer> produce()
+			{
+				return new HashSet<Integer>();
+			}
+		}, new Reducer<Integer, Collection<Integer>>()
+		{
+			@Override
+			public Collection<Integer> reduce(Collection<Integer> result, Integer element)
+			{
+				result.add(element);
+				return result;
+			}
+		}, new Filter<Collection<Integer>>()
+		{
+			@Override
+			public boolean filter(Collection<Integer> el) throws Exception
+			{
+				return true;
+			}
+		}));
+
+		Tools.debug("============first");
 		Tools.debug(Canal.of(new Integer[] { 1, 2 }).first());
 		Tools.debug("============");
 		Tools.debug(Canal.of(new Integer[] { 1, 2 }).first(new Filter<Integer>()

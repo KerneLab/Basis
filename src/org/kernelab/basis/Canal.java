@@ -1028,6 +1028,74 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	protected static class FoldUntilOp<E, R> implements Evaluator<E, Option<R>>
+	{
+		private Producer<R>				init;
+
+		protected final Reducer<E, R>	folder;
+
+		protected final Filter<R>		until;
+
+		private R						result;
+
+		public FoldUntilOp(Producer<R> init, Reducer<E, R> folder, Filter<R> until)
+		{
+			this.init = init;
+			this.folder = folder;
+			this.until = until;
+		}
+
+		@Override
+		public Terminal<E, Option<R>> newPond()
+		{
+			return new AbstractTerminal<E, Option<R>>()
+			{
+				private boolean	empty	= true;
+
+				private boolean	meet	= false;
+
+				@Override
+				public void begin() throws Exception
+				{
+					try
+					{
+						meet = until == null;
+						while (upstream().hasNext())
+						{
+							if (empty)
+							{
+								empty = false;
+								result = init.produce();
+							}
+							result = folder.reduce(result, upstream().next());
+							if (until != null && until.filter(result))
+							{
+								meet = true;
+								break;
+							}
+						}
+					}
+					finally
+					{
+						try
+						{
+							this.end();
+						}
+						catch (Exception e)
+						{
+						}
+					}
+				}
+
+				@Override
+				public Option<R> get()
+				{
+					return meet && !empty ? Canal.some(result) : Canal.<R> none();
+				}
+			};
+		}
+	}
+
 	protected static class ForeachOp<E> implements Evaluator<E, Void>
 	{
 		protected final Action<E> action;
@@ -2516,11 +2584,14 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class ReduceOp<E> implements Evaluator<E, Option<E>>
 	{
-		protected final Reducer<E, E> reducer;
+		protected final Reducer<E, E>	reducer;
 
-		public ReduceOp(Reducer<E, E> reducer)
+		protected final Filter<E>		until;
+
+		public ReduceOp(Reducer<E, E> reducer, Filter<E> until)
 		{
 			this.reducer = reducer;
+			this.until = until;
 		}
 
 		@Override
@@ -2538,6 +2609,7 @@ public class Canal<D> implements Iterable<D>
 					try
 					{
 						E el = null;
+						boolean meet = until == null;
 						while (upstream().hasNext())
 						{
 							el = upstream().next();
@@ -2550,6 +2622,16 @@ public class Canal<D> implements Iterable<D>
 							{
 								result = reducer.reduce(result, el);
 							}
+							if (until != null && until.filter(result))
+							{
+								meet = true;
+								break;
+							}
+						}
+
+						if (!meet)
+						{
+							empty = true;
 						}
 					}
 					finally
@@ -4825,6 +4907,23 @@ public class Canal<D> implements Iterable<D>
 	}
 
 	/**
+	 * Fold each element with a given initial value until the condition
+	 * satisfied.
+	 * 
+	 * @param init
+	 *            {@code ()->R res} a result initializer.
+	 * @param folder
+	 *            {@code (R res,D data)->R res} a fold reducer.
+	 * @param condition
+	 * @return Some(res) if and only if at least one element be folded and the
+	 *         condition satisfied, otherwise None will be returned.
+	 */
+	public <R> Option<R> fold(Producer<R> init, Reducer<D, R> folder, Filter<R> condition)
+	{
+		return this.follow(new FoldUntilOp<D, R>(init, folder, condition)).evaluate();
+	}
+
+	/**
 	 * Fold each element with a given initial value.
 	 * 
 	 * @param init
@@ -5113,7 +5212,21 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public Option<D> reduce(Reducer<D, D> reducer)
 	{
-		return this.follow(new ReduceOp<D>(reducer)).evaluate();
+		return this.reduce(reducer, null);
+	}
+
+	/**
+	 * Reduce each element until the condition satisfied.
+	 * 
+	 * @param reducer
+	 *            {@code (D a,D b)->D res}
+	 * @param condition
+	 * @return Some(res) if and only if the condition satisfied or None will be
+	 *         returned.
+	 */
+	public Option<D> reduce(Reducer<D, D> reducer, Filter<D> condition)
+	{
+		return this.follow(new ReduceOp<D>(reducer, condition)).evaluate();
 	}
 
 	/**
