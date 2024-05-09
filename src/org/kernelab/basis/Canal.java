@@ -704,22 +704,6 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
-	public static class DisposableIterable<E> implements Iterable<E>
-	{
-		protected final Iterator<E> iter;
-
-		public DisposableIterable(Iterator<E> iter)
-		{
-			this.iter = iter;
-		}
-
-		@Override
-		public Iterator<E> iterator()
-		{
-			return iter;
-		}
-	}
-
 	protected static class DistinctOp<E> implements Converter<E, E>
 	{
 		protected final Comparator<E>		cmp;
@@ -3032,6 +3016,22 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	public static class SingleUseIterable<E> implements Iterable<E>
+	{
+		protected final Iterator<E> iter;
+
+		public SingleUseIterable(Iterator<E> iter)
+		{
+			this.iter = iter;
+		}
+
+		@Override
+		public Iterator<E> iterator()
+		{
+			return iter;
+		}
+	}
+
 	protected static class SkipOp<E> implements Converter<E, E>
 	{
 		protected final int skip;
@@ -4501,17 +4501,17 @@ public class Canal<D> implements Iterable<D>
 		};
 	}
 
-	public static <E> DisposableIterable<E> iterable(Enumeration<E> enumer)
+	public static <E> SingleUseIterable<E> iterable(Enumeration<E> enumer)
 	{
-		return new DisposableIterable<E>(iterator(enumer));
+		return iterable(iterator(enumer));
 	}
 
-	public static <E> DisposableIterable<E> iterable(Iterator<E> iter)
+	public static <E> SingleUseIterable<E> iterable(Iterator<E> iter)
 	{
-		return new DisposableIterable<E>(iter);
+		return new SingleUseIterable<E>(iter);
 	}
 
-	public static <E> Iterator<E> iterator(Enumeration<E> enumer)
+	public static <E> EnumerationIterator<E> iterator(Enumeration<E> enumer)
 	{
 		return new EnumerationIterator<E>(enumer);
 	}
