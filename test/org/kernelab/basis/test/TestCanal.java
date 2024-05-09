@@ -318,6 +318,27 @@ public class TestCanal
 			}
 		}));
 
+		Tools.debug("============last");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).last());
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).last(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer element)
+			{
+				return element > 1;
+			}
+		}));
+		Tools.debug("============");
+		Tools.debug(Canal.of(new Integer[] { 1, 2 }).last(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer element)
+			{
+				return element > 3;
+			}
+		}));
+
 		Tools.debug("============collectAsMap");
 		Map<?, ?> map = Canal.of(new Integer[] { 1, 2 }).map(new Mapper<Integer, Tuple2<Integer, Integer>>()
 		{

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -792,6 +793,28 @@ public class Canal<D> implements Iterable<D>
 		public Source<E> newPond()
 		{
 			return new EmptySource<E>();
+		}
+	}
+
+	public static class EnumerationIterator<E> implements Iterator<E>
+	{
+		protected final Enumeration<E> enumer;
+
+		public EnumerationIterator(Enumeration<E> enumer)
+		{
+			this.enumer = enumer;
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return enumer.hasMoreElements();
+		}
+
+		@Override
+		public E next()
+		{
+			return enumer.nextElement();
 		}
 	}
 
@@ -1884,6 +1907,61 @@ public class Canal<D> implements Iterable<D>
 				}
 			}
 			return null;
+		}
+	}
+
+	protected static class LastOp<E> implements Evaluator<E, Option<E>>
+	{
+		protected final Filter<E> filter;
+
+		public LastOp(Filter<E> filter)
+		{
+			this.filter = filter;
+		}
+
+		@Override
+		public Terminal<E, Option<E>> newPond()
+		{
+			return new AbstractTerminal<E, Option<E>>()
+			{
+				private boolean	found	= false;
+
+				private E		result;
+
+				@Override
+				public void begin() throws Exception
+				{
+					try
+					{
+						E find = null;
+						while (upstream().hasNext())
+						{
+							find = upstream().next();
+							if (filter.filter(find))
+							{
+								result = find;
+								found = true;
+							}
+						}
+					}
+					finally
+					{
+						try
+						{
+							this.end();
+						}
+						catch (Exception e)
+						{
+						}
+					}
+				}
+
+				@Override
+				public Option<E> get()
+				{
+					return found ? Canal.some(result) : Canal.<E> none();
+				}
+			};
 		}
 	}
 
@@ -4423,9 +4501,19 @@ public class Canal<D> implements Iterable<D>
 		};
 	}
 
+	public static <E> DisposableIterable<E> iterable(Enumeration<E> enumer)
+	{
+		return new DisposableIterable<E>(iterator(enumer));
+	}
+
 	public static <E> DisposableIterable<E> iterable(Iterator<E> iter)
 	{
 		return new DisposableIterable<E>(iter);
+	}
+
+	public static <E> Iterator<E> iterator(Enumeration<E> enumer)
+	{
+		return new EnumerationIterator<E>(enumer);
 	}
 
 	public static <T> Aggregator<T> LAG(Expr<T> vop)
@@ -4885,8 +4973,7 @@ public class Canal<D> implements Iterable<D>
 	 * Get the first element that satisfied the given predicate.
 	 * 
 	 * @param filter
-	 *            {@code (D data)->boolean} returns true if and only if the
-	 *            element need to be passed to the downstream.
+	 *            {@code (D data)->boolean}
 	 * @return
 	 */
 	public Option<D> first(Filter<D> filter)
@@ -5112,6 +5199,35 @@ public class Canal<D> implements Iterable<D>
 				return Tuple.of(kop.map(key), key);
 			}
 		}).toPair();
+	}
+
+	/**
+	 * Get the last element.
+	 * 
+	 * @return
+	 */
+	public Option<D> last()
+	{
+		return last(new Filter<D>()
+		{
+			@Override
+			public boolean filter(D element)
+			{
+				return true;
+			}
+		});
+	}
+
+	/**
+	 * Get the last element that satisfied the given predicate.
+	 * 
+	 * @param filter
+	 *            {@code (D data)->boolean}
+	 * @return
+	 */
+	public Option<D> last(Filter<D> filter)
+	{
+		return this.follow(new LastOp<D>(filter)).evaluate();
 	}
 
 	/**
