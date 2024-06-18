@@ -6149,7 +6149,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			else if (Variable.isFloatNumber(string))
 			{
-				return Double.parseDouble(string);
+				return new BigDecimal(string);
 			}
 			else if (TRUE_STRING.equals(string) || FALSE_STRING.equals(string))
 			{
