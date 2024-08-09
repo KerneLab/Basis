@@ -141,6 +141,26 @@ public class TestCanal
 		Tools.debug("============");
 		Tools.debug(c.countByValue());
 
+		Tools.debug("============forall true");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).forall(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer el) throws Exception
+			{
+				return el > 0;
+			}
+		}));
+
+		Tools.debug("============forall false");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).forall(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer el) throws Exception
+			{
+				return el > 1;
+			}
+		}));
+
 		Tools.debug("============");
 		Tools.debug(Canal.some((Integer) null).count());
 		Tools.debug("============");

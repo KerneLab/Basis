@@ -1103,6 +1103,66 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	protected static class ForallOp<E> implements Evaluator<E, Boolean>
+	{
+		protected final Filter<E> cond;
+
+		public ForallOp(Filter<E> cond)
+		{
+			this.cond = cond;
+		}
+
+		@Override
+		public Terminal<E, Boolean> newPond()
+		{
+			return new ForallPond<E>(cond);
+		}
+	}
+
+	protected static class ForallPond<E> extends AbstractTerminal<E, Boolean>
+	{
+		protected final Filter<E>	cond;
+
+		protected boolean			meet	= false;
+
+		public ForallPond(Filter<E> cond)
+		{
+			this.cond = cond;
+		}
+
+		@Override
+		public void begin() throws Exception
+		{
+			try
+			{
+				while (upstream().hasNext())
+				{
+					if (!cond.filter(upstream().next()))
+					{
+						return;
+					}
+				}
+				meet = true;
+			}
+			finally
+			{
+				try
+				{
+					this.end();
+				}
+				catch (Exception e)
+				{
+				}
+			}
+		}
+
+		@Override
+		public Boolean get()
+		{
+			return meet;
+		}
+	}
+
 	protected static class ForeachOp<E> implements Evaluator<E, Void>
 	{
 		protected final Action<E> action;
@@ -5026,6 +5086,17 @@ public class Canal<D> implements Iterable<D>
 	protected <N> Canal<N> follow(Operator<D, N> op)
 	{
 		return new Canal<N>().setUpstream(this).setOperator(op);
+	}
+
+	/**
+	 * Determine whether all the data meet the condition.
+	 * 
+	 * @param cond
+	 * @return
+	 */
+	public boolean forall(Filter<D> cond)
+	{
+		return this.follow(new ForallOp<D>(cond)).evaluate();
 	}
 
 	/**
