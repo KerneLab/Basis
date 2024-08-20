@@ -545,6 +545,12 @@ public class TestCanal
 		Tools.debug("============zipWithIndex");
 		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).zipWithIndex().collect());
 
+		Tools.debug("============zipWithEnd");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).zipWithEnd().collect());
+
+		Tools.debug("============zipWithEnd 1");
+		Tools.debug(Canal.of(new Integer[] { 1 }).zipWithEnd().collect());
+
 		Tools.debug("============sortBy");
 		Canal.of(new Integer[][] { //
 				new Integer[] { 1, 2 }, //

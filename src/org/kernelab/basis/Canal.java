@@ -4345,6 +4345,22 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	protected static class ZipWithEndOp<E> implements Converter<E, Tuple2<E, Boolean>>
+	{
+		@Override
+		public Pond<E, Tuple2<E, Boolean>> newPond()
+		{
+			return new Creek<E, Tuple2<E, Boolean>>()
+			{
+				@Override
+				public Tuple2<E, Boolean> next()
+				{
+					return Tuple.of(upstream().next(), !upstream().hasNext());
+				}
+			};
+		}
+	}
+
 	protected static class ZipWithIndexLongOp<E> implements Converter<E, Tuple2<E, Long>>
 	{
 		@Override
@@ -5881,6 +5897,17 @@ public class Canal<D> implements Iterable<D>
 	public <E> PairCanal<D, E> zip(Canal<E> that)
 	{
 		return this.follow(new ZipOp<D, E>(that)).toPair();
+	}
+
+	/**
+	 * Zip each element in this Canal with a flag indicates whether the element
+	 * is the end.
+	 * 
+	 * @return
+	 */
+	public PairCanal<D, Boolean> zipWithEnd()
+	{
+		return this.follow(new ZipWithEndOp<D>()).toPair();
 	}
 
 	/**
