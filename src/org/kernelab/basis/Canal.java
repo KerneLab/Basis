@@ -4345,22 +4345,6 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
-	protected static class ZipWithEndOp<E> implements Converter<E, Tuple2<E, Boolean>>
-	{
-		@Override
-		public Pond<E, Tuple2<E, Boolean>> newPond()
-		{
-			return new Creek<E, Tuple2<E, Boolean>>()
-			{
-				@Override
-				public Tuple2<E, Boolean> next()
-				{
-					return Tuple.of(upstream().next(), !upstream().hasNext());
-				}
-			};
-		}
-	}
-
 	protected static class ZipWithIndexLongOp<E> implements Converter<E, Tuple2<E, Long>>
 	{
 		@Override
@@ -4388,6 +4372,31 @@ public class Canal<D> implements Iterable<D>
 				public Tuple2<E, Integer> next()
 				{
 					return Tuple.of(upstream().next(), (int) index++);
+				}
+			};
+		}
+	}
+
+	protected static class ZipWithPhaseOp<E> implements Converter<E, Tuple2<E, Integer>>
+	{
+		@Override
+		public Pond<E, Tuple2<E, Integer>> newPond()
+		{
+			return new Creek<E, Tuple2<E, Integer>>()
+			{
+				private int head = 1;
+
+				@Override
+				public Tuple2<E, Integer> next()
+				{
+					try
+					{
+						return Tuple.of(upstream().next(), head | (upstream().hasNext() ? 0 : 2));
+					}
+					finally
+					{
+						head = 0;
+					}
 				}
 			};
 		}
@@ -5900,17 +5909,6 @@ public class Canal<D> implements Iterable<D>
 	}
 
 	/**
-	 * Zip each element in this Canal with a flag indicates whether the element
-	 * is the end.
-	 * 
-	 * @return
-	 */
-	public PairCanal<D, Boolean> zipWithEnd()
-	{
-		return this.follow(new ZipWithEndOp<D>()).toPair();
-	}
-
-	/**
 	 * Zip each element in this Canal with its index number as a {@code Tuple2
 	 * <D,Integer>}.
 	 * 
@@ -5930,5 +5928,21 @@ public class Canal<D> implements Iterable<D>
 	public PairCanal<D, Long> zipWithIndexLong()
 	{
 		return this.follow(new ZipWithIndexLongOp<D>()).toPair();
+	}
+
+	/**
+	 * Zip each element in this Canal with a flag indicates its phase:<br/>
+	 * <ul>
+	 * <li>1 (0b01): head</li>
+	 * <li>2 (0b10): tail</li>
+	 * <li>3 (0b11): both</li>
+	 * <li>0 (0b00): body</li>
+	 * </ul>
+	 * 
+	 * @return
+	 */
+	public PairCanal<D, Boolean> zipWithPhase()
+	{
+		return this.follow(new ZipWithPhaseOp<D>()).toPair();
 	}
 }
