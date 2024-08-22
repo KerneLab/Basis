@@ -5941,7 +5941,7 @@ public class Canal<D> implements Iterable<D>
 	 * 
 	 * @return
 	 */
-	public PairCanal<D, Boolean> zipWithPhase()
+	public PairCanal<D, Integer> zipWithPhase()
 	{
 		return this.follow(new ZipWithPhaseOp<D>()).toPair();
 	}
