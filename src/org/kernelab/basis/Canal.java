@@ -162,6 +162,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public void remove()
 		{
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -799,6 +800,12 @@ public class Canal<D> implements Iterable<D>
 		public E next()
 		{
 			return enumer.nextElement();
+		}
+
+		@Override
+		public void remove()
+		{
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -3521,6 +3528,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public void remove()
 		{
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -3844,6 +3852,7 @@ public class Canal<D> implements Iterable<D>
 			@Override
 			public void remove()
 			{
+				throw new UnsupportedOperationException();
 			}
 		}
 
@@ -4775,6 +4784,7 @@ public class Canal<D> implements Iterable<D>
 					@Override
 					public void remove()
 					{
+						throw new UnsupportedOperationException();
 					}
 				};
 			}
