@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -46,6 +47,11 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
+import org.kernelab.basis.Canal.Option;
+import org.kernelab.basis.Canal.Tuple2;
 import org.kernelab.basis.JSON.Context;
 import org.kernelab.basis.io.DataReader;
 import org.kernelab.basis.io.StringBuilderWriter;
@@ -841,7 +847,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			if (o != null)
 			{
-				index = Index(o.toString());
+				index = o instanceof Integer ? (Integer) o : Index(o.toString());
 			}
 
 			return index;
@@ -1915,7 +1921,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public boolean containsKey(Object key)
 		{
 			Integer index = Index(key);
-			return index != null ? array().containsKey(key) : super.containsKey(key);
+			return index != null ? array().containsKey(index.toString()) : super.containsKey(key);
 		}
 
 		@Override
@@ -1993,7 +1999,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return Quote(this.got(key));
 		}
 
-		protected Object got(int index)
+		public Object got(int index)
 		{
 			if (index >= this.length())
 			{
@@ -2003,7 +2009,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 
 		@Override
-		protected Object got(Object key)
+		public Object got(Object key)
 		{
 			Object element = null;
 
@@ -2015,11 +2021,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else
 				{
-					Integer index = Index(key.toString());
+					Integer index = Index(key);
 
 					if (index != null)
 					{
-						element = this.got((int) index);
+						element = this.got(index.intValue());
 					}
 					else
 					{
@@ -4086,6 +4092,562 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			this.status = status;
 			return this;
+		}
+	}
+
+	public static class Path
+	{
+		protected static class ChildFinder implements Finder
+		{
+			protected final Extractor xtr;
+
+			protected ChildFinder(Extractor xtr)
+			{
+				this.xtr = xtr;
+			}
+
+			@Override
+			public Iterable<Object> find(final JSON data) throws Exception
+			{
+				Iterable<Object> keys = xtr.extract(data);
+
+				if (keys == ALL_KEYS)
+				{
+					return data.values();
+				}
+				else
+				{
+					return Canal.of(keys).flatMap(new Mapper<Object, Iterable<Object>>()
+					{
+						@Override
+						public Iterable<Object> map(Object key) throws Exception
+						{
+							return access(data, key);
+						}
+					});
+				}
+			}
+		}
+
+		protected static class DotFinder implements Finder
+		{
+			protected final Extractor xtr;
+
+			protected DotFinder(Extractor xtr)
+			{
+				this.xtr = xtr;
+			}
+
+			@Override
+			public Iterable<Object> find(final JSON data) throws Exception
+			{
+				Iterable<Object> keys = xtr.extract(data);
+
+				if (keys == ALL_KEYS)
+				{
+					return data.values();
+				}
+				else
+				{
+					return Canal.of(keys).first().flatMap(new Mapper<Object, Iterable<Object>>()
+					{
+						@Override
+						public Iterable<Object> map(Object key) throws Exception
+						{
+							return access(data, key);
+						}
+					});
+				}
+			}
+		}
+
+		protected static class EnumExtractor implements Extractor
+		{
+			protected final Object[] keys;
+
+			protected EnumExtractor(Object[] keys)
+			{
+				this.keys = keys;
+			}
+
+			@Override
+			public Iterable<Object> extract(JSON data) throws Exception
+			{
+				return Canal.of(keys);
+			}
+		}
+
+		protected static interface Extractor
+		{
+			public Iterable<Object> extract(final JSON data) throws Exception;
+		}
+
+		protected static class FilterExtractor extends ScriptExtractor
+		{
+			protected FilterExtractor(String expr)
+			{
+				super(expr);
+			}
+
+			@Override
+			public Iterable<Object> extract(JSON data) throws Exception
+			{
+				return Canal.of(data.asMap()).filter(new Filter<Tuple2<String, Object>>()
+				{
+					ScriptEngine engine = new ScriptEngineManager().getEngineByName("javascript");
+
+					@Override
+					public boolean filter(Tuple2<String, Object> el) throws Exception
+					{
+						engine.put(REAL, el._2);
+						Object res = engine.eval(expr);
+						if (res == null || Boolean.FALSE.equals(res) || Tools.equals(0, res) || Tools.equals("", res))
+						{
+							return false;
+						}
+						else
+						{
+							return true;
+						}
+					}
+				}).map(new Mapper<Tuple2<String, Object>, Object>()
+				{
+					@Override
+					public Object map(Tuple2<String, Object> el) throws Exception
+					{
+						return el._1;
+					}
+				});
+			}
+		}
+
+		protected static interface Finder
+		{
+			public Iterable<Object> find(final JSON data) throws Exception;
+		}
+
+		public static class IllegalPathException extends IllegalArgumentException
+		{
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public IllegalPathException(String msg)
+			{
+				super(msg);
+			}
+
+			public IllegalPathException(String msg, Throwable cause)
+			{
+				super(msg, cause);
+			}
+		}
+
+		protected static class NameExtractor implements Extractor
+		{
+			protected final Iterable<Object> name;
+
+			protected NameExtractor(String name)
+			{
+				this.name = WILDCARD.equals(name) ? ALL_KEYS : Option.<Object> some(name);
+			}
+
+			@Override
+			public Iterable<Object> extract(JSON data) throws Exception
+			{
+				return name;
+			}
+		}
+
+		protected static class RangeExtractor implements Extractor
+		{
+			protected final int	begin;
+
+			protected final int	until;
+
+			protected final int	step;
+
+			protected RangeExtractor(Integer begin, Integer until, Integer step)
+			{
+				int a = begin == null ? Integer.MIN_VALUE : begin;
+				int b = until == null ? Integer.MAX_VALUE : until;
+				int c = step == null ? 1 : step;
+
+				if (step != null)
+				{
+					if (begin == null)
+					{
+						a = step < 0 ? Integer.MAX_VALUE : 0;
+					}
+					if (until == null)
+					{
+						b = step < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+					}
+				}
+				else
+				{
+					c = a > b ? -1 : 1;
+				}
+
+				this.begin = a;
+				this.until = b;
+				this.step = c;
+			}
+
+			@Override
+			public Iterable<Object> extract(JSON data) throws Exception
+			{
+				int size = data.size();
+				int begin = this.begin, until = this.until;
+
+				if (begin < 0)
+				{
+					begin += size;
+				}
+				if (until < 0)
+				{
+					until += size;
+				}
+
+				begin = Math.min(Math.max(begin, 0), size - 1);
+				until = Math.min(Math.max(until, -1), size);
+
+				if (step == 0)
+				{
+					return Canal.<Object> some(begin);
+				}
+
+				return Canal.of(Canal.range(begin, until, step)).map(new Mapper<Integer, Object>()
+				{
+					@Override
+					public Object map(Integer el) throws Exception
+					{
+						return el;
+					}
+				});
+			}
+		}
+
+		protected static class RecursiveFinder implements Finder
+		{
+			protected final Extractor xtr;
+
+			protected RecursiveFinder(Extractor xtr)
+			{
+				this.xtr = xtr;
+			}
+
+			@Override
+			public Iterable<Object> find(final JSON data) throws Exception
+			{
+				return recurs(data, xtr.extract(data));
+			}
+
+			protected Iterable<Object> recurs(final JSON data, final Iterable<Object> keys)
+			{
+				Iterable<Object> res = null;
+
+				if (keys == ALL_KEYS)
+				{
+					res = data.values();
+				}
+				else
+				{
+					res = Canal.of(keys).flatMap(new Mapper<Object, Iterable<Object>>()
+					{
+						@Override
+						public Iterable<Object> map(Object key) throws Exception
+						{
+							return access(data, key);
+						}
+					});
+				}
+
+				return Canal.of(res).union(Canal.of(data.values()).flatMap(new Mapper<Object, Iterable<Object>>()
+				{
+					@Override
+					public Iterable<Object> map(Object obj) throws Exception
+					{
+						if (!JSON.IsJSON(obj))
+						{
+							return Option.none();
+						}
+						return recurs((JSON) obj, keys);
+					}
+				}));
+			}
+		}
+
+		protected static class ScriptExtractor implements Extractor
+		{
+			protected static final String	SELF	= "@";
+
+			protected static final String	REAL	= "_$_";
+
+			protected final String			expr;
+
+			protected ScriptExtractor(String expr)
+			{
+				this.expr = expr.replace(SELF, REAL);
+			}
+
+			@Override
+			public Iterable<Object> extract(JSON data) throws Exception
+			{
+				ScriptEngine engine = new ScriptEngineManager().getEngineByName("javascript");
+				engine.put(REAL, data);
+				Object res = engine.eval(expr);
+				if (res instanceof Number)
+				{
+					res = ((Number) res).intValue();
+				}
+				return Option.some(res);
+			}
+		}
+
+		protected static class WildcardExtractor implements Extractor
+		{
+			@Override
+			public Iterable<Object> extract(JSON data) throws Exception
+			{
+				return ALL_KEYS;
+			}
+		}
+
+		public static final char				CHILD_CHAR	= '.';
+
+		public static final String				WILDCARD	= "*";
+
+		protected static final Iterable<Object>	ALL_KEYS	= Option.some(null);
+
+		protected static final Set<Character>	NAME_BOUND	= new HashSet<Character>();
+
+		static
+		{
+			NAME_BOUND.add('.');
+			NAME_BOUND.add('[');
+		}
+
+		protected static Option<Object> access(final JSON data, final Object key)
+		{
+			return data.containsKey(key) ? Option.some(data.get(key)) : Option.none();
+		}
+
+		protected static int findNext(String text, int from, Set<Character> chars)
+		{
+			for (int i = from; i < text.length(); i++)
+			{
+				if (chars.contains(text.charAt(i)))
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+
+		public static void main(String[] args)
+		{
+			JSON json = JSON.Parse("{\"a\":1, \"b\":true, \"c\":[1,2,3,\"xyz\"], \"d\":{\"a\":true}}");
+			try
+			{
+				Path path = Path.parse("$.d.b");
+
+				Tools.debug(path.find(json));
+
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+
+		public static Path parse(String text)
+		{
+			return new Path(parseFinders(text));
+		}
+
+		protected static Extractor parseExtractor(String text, int begin, int until)
+		{
+			String expr = text.substring(begin + 1, until).trim();
+
+			if (expr.isEmpty())
+			{
+				throw new IllegalPathException(
+						"Missing expression in [] between " + begin + "th to " + until + "th char of " + text);
+			}
+
+			if (expr.startsWith("("))
+			{ // script
+				if (!expr.endsWith(")"))
+				{
+					throw new IllegalPathException("Missing ')' before " + until + "th char of " + text);
+				}
+				return new ScriptExtractor(expr.substring(1, expr.length() - 1));
+			}
+			else if (expr.startsWith("?("))
+			{ // filter
+				if (!expr.endsWith(")"))
+				{
+					throw new IllegalPathException("Missing ')' before " + until + "th char of " + text);
+				}
+				return new FilterExtractor(expr.substring(2, expr.length() - 1));
+			}
+			else if (expr.indexOf(':') >= 0)
+			{ // range
+				String[] pair = expr.split(":", -1);
+				Integer a = parseInteger(pair[0].trim());
+				Integer b = parseInteger(pair[1].trim());
+				Integer c = pair.length > 2 ? parseInteger(pair[2].trim()) : null;
+				return new RangeExtractor(a, b, c);
+			}
+			else if (expr.indexOf(',') >= 0)
+			{ // enum
+				return new EnumExtractor(Canal.of(expr.split(",", -1)).map(new Mapper<String, String>()
+				{
+					@Override
+					public String map(String t) throws Exception
+					{
+						return restoreText(t.trim());
+					}
+				}).collect().toArray());
+			}
+			else
+			{ // name
+				return new NameExtractor(restoreText(expr.trim()));
+			}
+		}
+
+		protected static List<Finder> parseFinders(String text)
+		{
+			String path = text.trim();
+			if (!path.startsWith("$"))
+			{
+				throw new IllegalPathException(text + " must start with $");
+			}
+
+			List<Finder> res = new LinkedList<Finder>();
+
+			char c = '\0', n = '\0';
+			int j = 0, len = path.length();
+			for (int i = 1; i < len; i++)
+			{
+				c = path.charAt(i);
+
+				if (CHILD_CHAR == c)
+				{
+					i++;
+					if (i < path.length())
+					{
+						n = path.charAt(i);
+
+						if (CHILD_CHAR == n)
+						{ // Recursive
+							i++;
+							j = findNext(path, i, NAME_BOUND);
+							j = j >= 0 ? j : len;
+							if (j == i)
+							{
+								throw new IllegalPathException("Missing name after " + (i - 1) + "th char of " + text);
+							}
+							res.add(new RecursiveFinder(new NameExtractor(path.substring(i, j))));
+							i = j - 1;
+						}
+						else if (JSON.ARRAY_BEGIN_CHAR == n)
+						{ // Recursive
+							j = JSON.DualMatchIndex(path, JSON.ARRAY_BEGIN_CHAR, JSON.ARRAY_END_CHAR, i);
+							if (j < 0)
+							{
+								throw new IllegalPathException("Missing a ']' after " + i + "th char of " + text);
+							}
+							res.add(new RecursiveFinder(parseExtractor(path, i, j)));
+							i = j;
+						}
+						else
+						{ // Dot
+							j = findNext(path, i, NAME_BOUND);
+							j = j >= 0 ? j : len;
+							if (j == i)
+							{
+								throw new IllegalPathException("Missing name after " + i + "th char of " + text);
+							}
+							res.add(new DotFinder(new NameExtractor(path.substring(i, j))));
+							i = j - 1;
+						}
+					}
+				}
+				else if (JSON.ARRAY_BEGIN_CHAR == c)
+				{
+					j = JSON.DualMatchIndex(path, JSON.ARRAY_BEGIN_CHAR, JSON.ARRAY_END_CHAR, i);
+					if (j < 0)
+					{
+						throw new IllegalPathException("Missing a ']' after " + i + "th char of " + text);
+					}
+					res.add(new ChildFinder(parseExtractor(path, i, j)));
+					i = j;
+				}
+			}
+
+			return res;
+		}
+
+		protected static Integer parseInteger(String text)
+		{
+			if (text.isEmpty())
+			{
+				return null;
+			}
+			else
+			{
+				return Integer.valueOf(text);
+			}
+		}
+
+		protected static String restoreText(String text)
+		{
+			if (text.length() > 1 //
+					&& ((text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"') //
+							|| (text.charAt(0) == '\'' && text.charAt(text.length() - 1) == '\'')))
+			{
+				return JSON.RestoreStringContent(text.substring(1, text.length() - 1));
+			}
+			else
+			{
+				return text;
+			}
+		}
+
+		protected final List<Finder> finders;
+
+		protected Path(List<Finder> finders)
+		{
+			this.finders = finders;
+		}
+
+		public Iterable<Object> find(final Object data)
+		{
+			Iterable<Object> last = Option.some(data);
+
+			for (final Finder finder : finders)
+			{
+				last = Canal.of(last).filter(new Filter<Object>()
+				{
+					@Override
+					public boolean filter(Object el) throws Exception
+					{
+						return JSON.IsJSON(el);
+					}
+				}).flatMap(new Mapper<Object, Iterable<Object>>()
+				{
+					@Override
+					public Iterable<Object> map(Object el) throws Exception
+					{
+						return finder.find((JSON) el);
+					}
+				});
+			}
+
+			return last;
 		}
 	}
 
@@ -6178,6 +6740,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
+	public static Path Path(String text)
+	{
+		return JSON.Path.parse(text);
+	}
+
 	@SuppressWarnings("unchecked")
 	public static <T> T Project(Class<T> cls, JSON json)
 	{
@@ -7385,9 +7952,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
-	public Map<String, ?> asMap()
+	@SuppressWarnings("unchecked")
+	public <V extends Object> Map<String, V> asMap()
 	{
-		return (Map<String, ?>) this;
+		return (Map<String, V>) this;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -7562,7 +8130,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	@Override
 	public boolean containsKey(Object key)
 	{
-		return object().containsKey(key);
+		return object().containsKey(key != null ? key.toString() : null);
 	}
 
 	@Override
@@ -7647,6 +8215,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		super.finalize();
 	}
 
+	public Iterable<Object> find(JSON.Path path)
+	{
+		return path.find(this);
+	}
+
+	public Iterable<Object> find(String path)
+	{
+		return this.find(Path(path));
+	}
+
 	public JSON flatten()
 	{
 		return this.flatten(null, new JSON());
@@ -7680,7 +8258,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return Quote(this.got(key));
 	}
 
-	protected Object got(Object key)
+	public Object got(Object key)
 	{
 		return object().get(key);
 	}

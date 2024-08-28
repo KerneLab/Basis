@@ -4756,18 +4756,18 @@ public class Canal<D> implements Iterable<D>
 			{
 				return new Iterator<Integer>()
 				{
-					private int index = begin - step;
+					private int index = begin;
 
 					@Override
 					public boolean hasNext()
 					{
 						if (begin < until)
 						{
-							return step > 0 && index + step < until;
+							return step >= 0 && index < until;
 						}
 						else if (begin > until)
 						{
-							return step < 0 && index + step > until;
+							return step <= 0 && index > until;
 						}
 						else
 						{
@@ -4778,7 +4778,21 @@ public class Canal<D> implements Iterable<D>
 					@Override
 					public Integer next()
 					{
-						return index += step;
+						try
+						{
+							return index;
+						}
+						finally
+						{
+							if (step != 0)
+							{
+								index += step;
+							}
+							else
+							{
+								index = until;
+							}
+						}
 					}
 
 					@Override
