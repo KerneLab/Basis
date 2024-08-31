@@ -49,6 +49,7 @@ import java.util.regex.Pattern;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import org.kernelab.basis.Canal.Option;
 import org.kernelab.basis.Canal.Tuple2;
@@ -4199,9 +4200,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					@Override
 					public boolean filter(Tuple2<String, Object> el) throws Exception
 					{
-						engine.put(REAL, el._2);
-						Object res = engine.eval(expr);
-						if (res == null || Boolean.FALSE.equals(res) || Tools.equals(0, res) || Tools.equals("", res))
+						Object res = engine.eval(script(el._2));
+						if (res == null || Boolean.FALSE.equals(res) || Tools.equals("", res)
+								|| ((res instanceof Number) && ((Number) res).doubleValue() == 0.0))
 						{
 							return false;
 						}
@@ -4387,22 +4388,33 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			protected final String			expr;
 
+			protected final boolean			self;
+
 			protected ScriptExtractor(String expr)
 			{
 				this.expr = expr.replace(SELF, REAL);
+				this.self = expr.length() != this.expr.length();
+			}
+
+			protected Object eval(JSON data) throws ScriptException
+			{
+				return new ScriptEngineManager().getEngineByName("javascript").eval(script(data));
 			}
 
 			@Override
 			public Iterable<Object> extract(JSON data) throws Exception
 			{
-				ScriptEngine engine = new ScriptEngineManager().getEngineByName("javascript");
-				engine.put(REAL, data);
-				Object res = engine.eval(expr);
+				Object res = eval(data);
 				if (res instanceof Number)
 				{
 					res = ((Number) res).intValue();
 				}
 				return Option.some(res);
+			}
+
+			protected String script(Object data)
+			{
+				return (self ? "var " + REAL + "=" + (data != null ? data.toString() : "null") + ";\n" : "") + expr;
 			}
 		}
 

@@ -3046,6 +3046,19 @@ public class Tools
 	}
 
 	/**
+	 * Get the Calendar object according to a given time in milliseconds.
+	 * 
+	 * @param millis
+	 * @return
+	 */
+	public static Calendar getCalendar(long millis)
+	{
+		Calendar c = new GregorianCalendar();
+		c.setTimeInMillis(millis);
+		return c;
+	}
+
+	/**
 	 * Get the Calendar object according to the datetime String which is
 	 * formatted by {@link Tools#DEFAULT_DATETIME_FORMAT_STRING}.
 	 * 
