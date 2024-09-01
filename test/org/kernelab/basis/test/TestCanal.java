@@ -322,9 +322,25 @@ public class TestCanal
 			}
 		});
 
-		Tools.debug("============");
+		Tools.debug("============some");
 		Tools.debug(Canal.some((Integer) null).count());
-		Tools.debug("============");
+		Tools.debug("============some map");
+		Canal.some((Integer) 1).map(new Mapper<Integer, String>()
+		{
+			@Override
+			public String map(Integer el) throws Exception
+			{
+				return "=" + el;
+			}
+		}).foreach(new Action<String>()
+		{
+			@Override
+			public void action(String el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+		Tools.debug("============none");
 		Tools.debug(new Canal.None<Integer>().count());
 
 		Tools.debug("============");

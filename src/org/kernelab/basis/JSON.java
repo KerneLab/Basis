@@ -4299,22 +4299,26 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			@Override
 			public Iterable<Object> extract(JSON data) throws Exception
 			{
-				int size = data.size();
+				int len = data.size();
 				int begin = this.begin, until = this.until;
 
 				if (begin < 0)
 				{
-					begin += size;
+					begin += len;
 				}
 				if (until < 0)
 				{
-					until += size;
+					until += len;
 				}
 
-				begin = Math.min(Math.max(begin, 0), size - 1);
-				until = Math.min(Math.max(until, -1), size);
+				begin = Math.max(Math.min(begin, Math.max(len - 1, 0)), 0);
+				until = Math.max(Math.min(Math.max(until, -1), len), -len);
 
-				if (step == 0)
+				if (begin == until)
+				{
+					return Canal.none();
+				}
+				else if (step == 0)
 				{
 					return Canal.<Object> some(begin);
 				}

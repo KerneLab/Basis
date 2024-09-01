@@ -255,11 +255,11 @@ public class Canal<D> implements Iterable<D>
 		{
 			if (begin < until)
 			{
-				return step > 0 && 0 <= index && index < until;
+				return step > 0 && index < until;
 			}
 			else if (begin > until)
 			{
-				return step < 0 && until < index && index < array.length;
+				return step < 0 && index > until;
 			}
 			else
 			{
@@ -325,8 +325,8 @@ public class Canal<D> implements Iterable<D>
 
 			if (c != 0)
 			{
-				a = Math.max(Math.min(a, len - 1), 0);
-				b = Math.min(Math.max(b, -1), len);
+				a = Math.max(Math.min(a, Math.max(len - 1, 0)), 0);
+				b = Math.max(Math.min(Math.max(b, -1), len), -len);
 			}
 			else
 			{
@@ -833,7 +833,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public E next()
 		{
-			return null;
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -3440,18 +3440,52 @@ public class Canal<D> implements Iterable<D>
 
 	public static class Some<E> extends Option<E>
 	{
-		private static <E> E[] makeArray(E... es)
+		protected static class SomeSourcer<T> implements Sourcer<T>
 		{
-			return es;
+			protected class SomeSource extends Source<T>
+			{
+				protected boolean first = true;
+
+				@Override
+				public boolean hasNext()
+				{
+					return first;
+				}
+
+				@Override
+				public T next()
+				{
+					try
+					{
+						return SomeSourcer.this.value;
+					}
+					finally
+					{
+						first = false;
+					}
+				}
+			}
+
+			protected final T value;
+
+			protected SomeSourcer(T value)
+			{
+				this.value = value;
+			}
+
+			@Override
+			public Source<T> newPond()
+			{
+				return new SomeSource();
+			}
 		}
 
 		protected final E value;
 
-		@SuppressWarnings("unchecked")
 		public Some(E val)
 		{
 			this.value = val;
-			this.setOperator(new ArraySourcer<E>(makeArray(val), 0, 1, 1));
+			this.setOperator(new SomeSourcer<E>(val));
 		}
 
 		@Override
