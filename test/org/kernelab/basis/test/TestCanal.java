@@ -123,6 +123,97 @@ public class TestCanal
 		Tools.debug(c.count());
 		Tools.debug("============");
 
+		Tools.debug("============of array empty");
+		Canal.of(new Integer[] {}).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of array empty -1");
+		Canal.of(new Integer[] {}, null, null, -1).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of array");
+		Canal.of(new Integer[] { 0, 1, 2, 3 }).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of array 1");
+		Canal.of(new Integer[] { 0, 1, 2, 3 }, 1).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of array null 2");
+		Canal.of(new Integer[] { 0, 1, 2, 3 }, null, 2).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of array null null 2");
+		Canal.of(new Integer[] { 0, 1, 2, 3 }, null, null, 2).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of array 3 1");
+		Canal.of(new Integer[] { 0, 1, 2, 3 }, 3, 1).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of array 3 null -1");
+		Canal.of(new Integer[] { 0, 1, 2, 3 }, 3, null, -1).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of array null 1 -1");
+		Canal.of(new Integer[] { 0, 1, 2, 3 }, null, 1, -1).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============");
 		Integer[] array1 = new Integer[] { 1, 2, 3 };
 		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>()
 		{

@@ -235,28 +235,49 @@ public class Canal<D> implements Iterable<D>
 
 		protected final int	begin;
 
-		protected final int	end;
+		protected final int	until;
 
-		protected int		cur;
+		protected final int	step;
 
-		public ArraySource(E[] array, int begin, int end)
+		protected int		index;
+
+		public ArraySource(E[] array, int begin, int until, int step)
 		{
 			this.array = array;
 			this.begin = begin;
-			this.end = end;
-			this.cur = this.begin;
+			this.until = until;
+			this.step = step;
+			this.index = this.begin;
 		}
 
 		@Override
 		public boolean hasNext()
 		{
-			return cur < end;
+			if (begin < until)
+			{
+				return step > 0 && 0 <= index && index < until;
+			}
+			else if (begin > until)
+			{
+				return step < 0 && until < index && index < array.length;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		@Override
 		public E next()
 		{
-			return array[cur++];
+			try
+			{
+				return array[index];
+			}
+			finally
+			{
+				index += step;
+			}
 		}
 	}
 
@@ -266,19 +287,63 @@ public class Canal<D> implements Iterable<D>
 
 		protected final int	begin;
 
-		protected final int	end;
+		protected final int	until;
 
-		public ArraySourcer(E[] array, int begin, int end)
+		protected final int	step;
+
+		public ArraySourcer(E[] array, Integer begin, Integer until, Integer step)
 		{
+			int len = array.length;
+			int a = begin == null ? Integer.MIN_VALUE : begin;
+			int b = until == null ? Integer.MAX_VALUE : until;
+			int c = step == null ? 1 : step;
+
+			if (step != null)
+			{
+				if (begin == null)
+				{
+					a = step < 0 ? Integer.MAX_VALUE : 0;
+				}
+				if (until == null)
+				{
+					b = step < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+				}
+			}
+			else
+			{
+				c = a > b ? -1 : 1;
+			}
+
+			if (a < 0)
+			{
+				a += len;
+			}
+			if (b < 0)
+			{
+				b += len;
+			}
+
+			if (c != 0)
+			{
+				a = Math.max(Math.min(a, len - 1), 0);
+				b = Math.min(Math.max(b, -1), len);
+			}
+			else
+			{
+				c = 1;
+				b = a;
+			}
+
 			this.array = array;
-			this.begin = begin;
-			this.end = end;
+			this.begin = a;
+			this.until = b;
+			this.step = c;
 		}
 
 		@Override
 		public Source<E> newPond()
 		{
-			return new ArraySource<E>(array, begin, end);
+			return new ArraySource<E>(array, begin, until, step);
 		}
 	}
 
@@ -3386,7 +3451,7 @@ public class Canal<D> implements Iterable<D>
 		public Some(E val)
 		{
 			this.value = val;
-			this.setOperator(new ArraySourcer<E>(makeArray(val), 0, 1));
+			this.setOperator(new ArraySourcer<E>(makeArray(val), 0, 1, 1));
 		}
 
 		@Override
@@ -4676,14 +4741,19 @@ public class Canal<D> implements Iterable<D>
 		return of(array, 0);
 	}
 
-	public static <E> Canal<E> of(E[] array, int begin)
+	public static <E> Canal<E> of(E[] array, Integer begin)
 	{
-		return of(array, begin, array.length);
+		return of(array, begin, null);
 	}
 
-	public static <E> Canal<E> of(E[] array, int begin, int end)
+	public static <E> Canal<E> of(E[] array, Integer begin, Integer until)
 	{
-		return new Canal<E>().setOperator(new ArraySourcer<E>(array, begin, end));
+		return of(array, begin, until, null);
+	}
+
+	public static <E> Canal<E> of(E[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<E>().setOperator(new ArraySourcer<E>(array, begin, until, step));
 	}
 
 	public static <E> Canal<E> of(Iterable<E> iter)
