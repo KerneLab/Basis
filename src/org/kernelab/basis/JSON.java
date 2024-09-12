@@ -6940,7 +6940,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 								if (field != null)
 								{
 									type = field.getType();
-									if (IsSubTypeOf(type, Collection.class))
+									if (IsSubTypeOf(type, Collection.class) || IsSubTypeOf(type, Map.class))
 									{ // value is container, use generic type
 										type = field.getGenericType();
 									}
@@ -7071,7 +7071,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		ParameterizedType paramedType = type instanceof ParameterizedType ? (ParameterizedType) type : null;
 
-		if (cls != null && cls.isInstance(obj))
+		if (cls != null && cls.isInstance(obj) && paramedType == null)
 		{
 			val = obj;
 		}
@@ -7148,9 +7148,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			val = ((JSON.Projector<T>) project).project((T) val, (JSON) obj);
 		}
 		else if (paramedType != null && IsSubTypeOf(paramedType.getRawType(), Map.class) && JSON.IsJSON(obj))
-		{
-			// Target class is a Map.
+		{ // Target class is a Map.
 			Map<Object, Object> map = (Map<Object, Object>) (val == null ? new LinkedHashMap<Object, Object>() : val);
+
+			Type eleType = paramedType.getActualTypeArguments()[1];
+			Class<?> eleClass = null;
+			try
+			{
+				eleClass = (Class<?>) eleType;
+				project = ProjectOf(eleClass, projects);
+			}
+			catch (Exception e)
+			{
+			}
 
 			map.clear();
 
@@ -7158,9 +7168,48 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			if (project == null)
 			{
+				Object o;
 				for (Pair pair : json.pairs())
 				{
-					map.put(pair.getKey(), pair.getValue());
+					try
+					{
+						o = pair.getValue();
+						if (o != null && !eleClass.isInstance(o))
+						{
+							o = Project(eleClass.newInstance(), (JSON) o);
+						}
+						map.put(pair.getKey(), o);
+					}
+					catch (Exception e)
+					{
+						if (json.projectStrict())
+						{
+							throw e;
+						}
+					}
+				}
+			}
+			else if (project != null && eleClass != null && IsPlainJSON(json))
+			{
+				Object v;
+				for (Pair pair : json.pairs())
+				{
+					try
+					{
+						v = pair.getValue();
+						if (v != null && !eleClass.isInstance(v))
+						{
+							v = Project(eleClass.newInstance(), projects, (JSON) v);
+						}
+						map.put(pair.getKey(), v);
+					}
+					catch (Exception e)
+					{
+						if (json.projectStrict())
+						{
+							throw e;
+						}
+					}
 				}
 			}
 			else
@@ -7192,9 +7241,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			val = map;
 		}
 		else if (paramedType != null && IsSubTypeOf(paramedType.getRawType(), Collection.class) && JSON.IsJSON(obj))
-		{
-			// Target class is a Collection.
-			Collection<Object> col = (Collection<Object>) (val == null ? new LinkedList<Object>() : val);
+		{ // Target class is a Collection.
+			Collection<Object> coll = (Collection<Object>) (val == null ? new LinkedList<Object>() : val);
 
 			Type eleType = paramedType.getActualTypeArguments()[0];
 			Class<?> eleClass = null;
@@ -7207,15 +7255,36 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 			}
 
-			col.clear();
+			coll.clear();
 
 			JSON json = (JSON) obj;
 
 			if (project == null)
 			{
-				for (Pair pair : json.pairs())
+				for (Object o : json.values())
 				{
-					col.add(pair.getValue());
+					try
+					{
+						if (o == null)
+						{
+							coll.add(null);
+						}
+						else if (eleClass.isInstance(o))
+						{
+							coll.add(o);
+						}
+						else
+						{
+							coll.add(Project(eleClass.newInstance(), (JSON) o));
+						}
+					}
+					catch (Exception e)
+					{
+						if (json.projectStrict())
+						{
+							throw e;
+						}
+					}
 				}
 			}
 			else if (project != null && eleClass != null && IsJSAN(json))
@@ -7224,7 +7293,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				{
 					try
 					{
-						col.add(Project(eleClass.newInstance(), projects, o));
+						coll.add(Project(eleClass.newInstance(), projects, o));
 					}
 					catch (Exception e)
 					{
@@ -7247,7 +7316,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 							if (json.has(key))
 							{
-								col.add(json.attr(key));
+								coll.add(json.attr(key));
 							}
 						}
 						catch (Exception e)
@@ -7261,15 +7330,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 
-			val = col;
+			val = coll;
 		}
 		else if (cls != null && cls.isArray())
 		{
 			val = CastToArray(obj, cls.getComponentType(), projects);
 		}
 		else if (cls != null && JSON.IsJSON(obj))
-		{
-			// Target class is a normal Object.
+		{ // Target class is a normal Object.
 			JSON json = (JSON) obj;
 			val = Project(val == null ? cls.newInstance() : val, json.projects(), json);
 		}
