@@ -12,11 +12,11 @@ public class TestWindowFunction
 	public static void main(String[] args)
 	{
 		Row[] data = new Row[] { //
-				new Row().set("id", 1).set("name", "mike").set("gender", 1).set("age", 28).set("income", 1261.54), //
-				new Row().set("id", 2).set("name", "rose").set("gender", 2).set("age", 32).set("income", 3324.55), //
-				new Row().set("id", 3).set("name", "tom").set("gender", 1).set("age", 28).set("income", 7531.43), //
-				new Row().set("id", 4).set("name", "hellen").set("gender", 2).set("age", 30).set("income", 4483.12), //
-				new Row().set("id", 5).set("name", "jack").set("gender", 1).set("age", 31).set("income", 5331.50), //
+				new Row("id", 1, "name", "mike", "gender", 1, "age", 28, "income", 1261.54), //
+				new Row("id", 2, "name", "rose", "gender", 2, "age", 32, "income", 3324.55), //
+				new Row("id", 3, "name", "tom", "gender", 1, "age", 28, "income", 7531.43), //
+				new Row("id", 4, "name", "hellen", "gender", 2, "age", 30, "income", 4483.12), //
+				new Row("id", 5, "name", "jack", "gender", 1, "age", 31, "income", 5331.50), //
 		};
 
 		// Tools.debug(Canal.of(data).toRows().stratifyBy(Canal.Canal.$("gender")).collectAsJSAN().toString(0));

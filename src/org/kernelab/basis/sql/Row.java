@@ -3,6 +3,7 @@ package org.kernelab.basis.sql;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -18,7 +19,6 @@ import java.util.Set;
 
 import org.kernelab.basis.JSON;
 import org.kernelab.basis.JSON.JSAN;
-import org.kernelab.basis.JSON.Pair;
 import org.kernelab.basis.Mapper;
 import org.kernelab.basis.Tools;
 import org.kernelab.basis.sql.SQLKit.ProjectMapper;
@@ -77,7 +77,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		}
 		else
 		{
-			return new Row().set(map);
+			return new Row(map);
 		}
 	}
 
@@ -140,7 +140,13 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	public Row(Map<String, ?> data)
 	{
 		this();
-		this.putAll(data);
+		this.set(data);
+	}
+
+	public Row(Object... pairs)
+	{
+		this();
+		this.set(map(pairs));
 	}
 
 	public Row(ResultSet rs) throws SQLException
@@ -204,17 +210,9 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return null;
 	}
 
-	public Row clean()
-	{
-		this.clear();
-		return this;
-	}
-
 	@Override
 	public void clear()
 	{
-		this.resetCols();
-		this.getData().clear();
 	}
 
 	@Override
@@ -248,10 +246,11 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return this.getData().containsValue(value);
 	}
 
-	public Row delete(String key)
+	protected Map<String, Object> copy()
 	{
-		this.remove(key);
-		return this;
+		Map<String, Object> data = this.newData();
+		data.putAll(this.getData());
+		return data;
 	}
 
 	@Override
@@ -280,26 +279,32 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 
 	public Row exclude(Set<String> keys)
 	{
+		Map<String, Object> d = this.copy();
 		if (keys != null && !keys.isEmpty())
 		{
 			for (String key : keys)
 			{
-				this.remove(key);
+				d.remove(key);
 			}
 		}
-		return this;
+		Row r = this.newInstance();
+		r.setData(d);
+		return r;
 	}
 
 	public Row exclude(String... keys)
 	{
+		Map<String, Object> d = this.copy();
 		if (keys != null && keys.length > 0)
 		{
 			for (String key : keys)
 			{
-				this.remove(key);
+				d.remove(key);
 			}
 		}
-		return this;
+		Row r = this.newInstance();
+		r.setData(d);
+		return r;
 	}
 
 	public Object get(int index)
@@ -370,6 +375,38 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	{
 		BigDecimal get = getBigDecimal(key);
 		return get == null ? new BigDecimal(deft) : get;
+	}
+
+	public BigInteger getBigInteger(int index)
+	{
+		return getBigInteger(headers()[index]);
+	}
+
+	public BigInteger getBigInteger(int index, long deft)
+	{
+		return getBigInteger(headers()[index], deft);
+	}
+
+	public BigInteger getBigInteger(int index, String deft)
+	{
+		return getBigInteger(headers()[index], deft);
+	}
+
+	public BigInteger getBigInteger(String key)
+	{
+		return JSON.CastToBigInteger(this.get(key));
+	}
+
+	public BigInteger getBigInteger(String key, long deft)
+	{
+		BigInteger get = getBigInteger(key);
+		return get == null ? BigInteger.valueOf(deft) : get;
+	}
+
+	public BigInteger getBigInteger(String key, String deft)
+	{
+		BigInteger get = getBigInteger(key);
+		return get == null ? new BigInteger(deft) : get;
 	}
 
 	public Boolean getBoolean(int index)
@@ -811,7 +848,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	{
 		if (this.getData() == null)
 		{
-			this.setData(new LinkedHashMap<String, Object>());
+			this.setData(this.newData());
 		}
 	}
 
@@ -827,6 +864,49 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return this.getData().keySet();
 	}
 
+	@SuppressWarnings("unchecked")
+	protected Map<String, Object> map(Object... over)
+	{
+		if (over == null || over.length == 0)
+		{
+			return null;
+		}
+
+		Map<String, Object> data = newData();
+
+		if (over[0] instanceof Map)
+		{
+			for (Object obj : over)
+			{
+				if (obj instanceof Map)
+				{
+					Map<String, Object> m = (Map<String, Object>) obj;
+					for (Entry<String, Object> entry : m.entrySet())
+					{
+						data.put(entry.getKey(), entry.getValue());
+					}
+				}
+			}
+		}
+		else if (over.length > 1)
+		{
+			for (int i = 0; i + 1 < over.length; i += 2)
+			{
+				if (over[i] != null)
+				{
+					data.put(over[i].toString(), over[i + 1]);
+				}
+			}
+		}
+
+		return data;
+	}
+
+	protected Map<String, Object> newData()
+	{
+		return new LinkedHashMap<String, Object>();
+	}
+
 	protected Row newInstance()
 	{
 		try
@@ -835,77 +915,19 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
-			return new Row();
+			throw new RuntimeException(e);
 		}
-	}
-
-	public Row newRow(Iterable<String> keys)
-	{
-		Row r = newInstance();
-		for (String key : keys)
-		{
-			r.set(key, this.get(key));
-		}
-		return r;
-	}
-
-	public Row newRow(JSON map)
-	{
-		Row r = newInstance();
-		for (Pair pair : map.pairs())
-		{
-			r.set(pair.getKey(), this.get(pair.getValue().toString()));
-		}
-		return r;
-	}
-
-	public Row newRow(Map<String, ?> map)
-	{
-		Row r = newInstance();
-		Object i = null;
-		for (Entry<String, ?> entry : map.entrySet())
-		{
-			i = entry.getValue();
-			if (i instanceof Integer)
-			{
-				r.set(entry.getKey(), this.get((Integer) i));
-			}
-			else
-			{
-				r.set(entry.getKey(), this.get(i.toString()));
-			}
-		}
-		return r;
-	}
-
-	public Row newRow(String... keys)
-	{
-		Row r = newInstance();
-		for (String key : keys)
-		{
-			r.set(key, this.get(key));
-		}
-		return r;
 	}
 
 	@Override
 	public Object put(String key, Object value)
 	{
-		return this.resetCols().putting(key, value);
+		return null;
 	}
 
 	@Override
 	public void putAll(Map<? extends String, ?> m)
 	{
-		this.resetCols();
-		if (m != null)
-		{
-			for (Entry<?, ?> entry : m.entrySet())
-			{
-				this.putting(entry.getKey() != null ? entry.getKey().toString() : null, entry.getValue());
-			}
-		}
 	}
 
 	protected Object putting(String key, Object value)
@@ -916,7 +938,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	@Override
 	public Object remove(Object key)
 	{
-		return this.resetCols().getData().remove(key);
+		return null;
 	}
 
 	protected Row resetCols()
@@ -926,13 +948,52 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return this;
 	}
 
-	public Row set(Map<String, ?> data)
+	public Row select(String[] select, Object... over)
 	{
-		this.putAll(data);
+		Map<String, Object> data = this.newData();
+
+		if (select == null)
+		{ // select *
+			for (String key : this.keySet())
+			{
+				data.put(key, this.get(key));
+			}
+		}
+		else if (select.length > 0)
+		{
+			for (String key : select)
+			{
+				data.put(key, this.get(key));
+			}
+		}
+
+		Row r = this.newInstance();
+		r.setData(data);
+
+		Map<String, Object> overs = map(over);
+
+		if (overs != null)
+		{
+			for (Entry<String, Object> entry : overs.entrySet())
+			{
+				r.putting(entry.getKey(), entry.getValue());
+			}
+		}
+
+		return r;
+	}
+
+	protected Row set(Map<String, ?> data)
+	{
+		this.resetCols();
+		for (Entry<String, ?> entry : data.entrySet())
+		{
+			this.putting(entry.getKey(), entry.getValue());
+		}
 		return this;
 	}
 
-	public Row set(ResultSet rs) throws SQLException
+	protected Row set(ResultSet rs) throws SQLException
 	{
 		this.resetCols();
 		if (rs != null)
@@ -947,9 +1008,10 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return this;
 	}
 
-	public Row set(String key, Object value)
+	protected Row set(String key, Object value)
 	{
-		this.put(key, value);
+		this.resetCols();
+		this.putting(key, value);
 		return this;
 	}
 
