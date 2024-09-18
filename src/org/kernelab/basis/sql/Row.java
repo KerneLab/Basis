@@ -146,7 +146,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	public Row(Object... pairs)
 	{
 		this();
-		this.set(map(pairs));
+		this.set(mapOf(pairs));
 	}
 
 	public Row(ResultSet rs) throws SQLException
@@ -210,9 +210,14 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return null;
 	}
 
+	/**
+	 * UnsupportedOperation
+	 */
 	@Override
+	@Deprecated
 	public void clear()
 	{
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -253,6 +258,90 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return data;
 	}
 
+	/**
+	 * Delete columns from this Row object.
+	 * 
+	 * @param cols
+	 * @return
+	 */
+	public Row delete(Set<String> cols)
+	{
+		if (cols == null || cols.isEmpty())
+		{
+			return this;
+		}
+
+		for (String col : cols)
+		{
+			this.getData().remove(col);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Delete columns from this Row object.
+	 * 
+	 * @param cols
+	 * @return
+	 */
+	public Row delete(String... cols)
+	{
+		if (cols == null || cols.length == 0)
+		{
+			return this;
+		}
+
+		for (String col : cols)
+		{
+			this.getData().remove(col);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Return a new Row object which drops the given columns.
+	 * 
+	 * @param cols
+	 * @return
+	 */
+	public Row drop(Set<String> cols)
+	{
+		Map<String, Object> d = this.copy();
+		if (cols != null && !cols.isEmpty())
+		{
+			for (String col : cols)
+			{
+				d.remove(col);
+			}
+		}
+		Row r = this.newInstance();
+		r.setData(d);
+		return r;
+	}
+
+	/**
+	 * Return a new Row object which drops the given columns.
+	 * 
+	 * @param cols
+	 * @return
+	 */
+	public Row drop(String... cols)
+	{
+		Map<String, Object> d = this.copy();
+		if (cols != null && cols.length > 0)
+		{
+			for (String col : cols)
+			{
+				d.remove(col);
+			}
+		}
+		Row r = this.newInstance();
+		r.setData(d);
+		return r;
+	}
+
 	@Override
 	public Set<java.util.Map.Entry<String, Object>> entrySet()
 	{
@@ -275,36 +364,6 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 			return false;
 		}
 		return Tools.equals(this, (Row) obj);
-	}
-
-	public Row exclude(Set<String> keys)
-	{
-		Map<String, Object> d = this.copy();
-		if (keys != null && !keys.isEmpty())
-		{
-			for (String key : keys)
-			{
-				d.remove(key);
-			}
-		}
-		Row r = this.newInstance();
-		r.setData(d);
-		return r;
-	}
-
-	public Row exclude(String... keys)
-	{
-		Map<String, Object> d = this.copy();
-		if (keys != null && keys.length > 0)
-		{
-			for (String key : keys)
-			{
-				d.remove(key);
-			}
-		}
-		Row r = this.newInstance();
-		r.setData(d);
-		return r;
 	}
 
 	public Object get(int index)
@@ -865,7 +924,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Map<String, Object> map(Object... over)
+	protected Map<String, Object> mapOf(Object... over)
 	{
 		if (over == null || over.length == 0)
 		{
@@ -919,26 +978,39 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		}
 	}
 
+	/**
+	 * UnsupportedOperation
+	 */
 	@Override
+	@Deprecated
 	public Object put(String key, Object value)
 	{
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * UnsupportedOperation
+	 */
 	@Override
+	@Deprecated
 	public void putAll(Map<? extends String, ?> m)
 	{
+		throw new UnsupportedOperationException();
 	}
 
-	protected Object putting(String key, Object value)
+	protected Object putting(String col, Object value)
 	{
-		return this.getData().put(key, this.cast(value));
+		return this.getData().put(col, this.cast(value));
 	}
 
+	/**
+	 * UnsupportedOperation
+	 */
 	@Override
+	@Deprecated
 	public Object remove(Object key)
 	{
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	protected Row resetCols()
@@ -948,29 +1020,39 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return this;
 	}
 
+	/**
+	 * Return a new Row object which contains the selected columns from this Row
+	 * object and overwrite columns.
+	 * 
+	 * @param select
+	 *            the columns selected from this Row object.
+	 * @param over
+	 *            overwrite column-value pairs.
+	 * @return
+	 */
 	public Row select(String[] select, Object... over)
 	{
 		Map<String, Object> data = this.newData();
 
 		if (select == null)
 		{ // select *
-			for (String key : this.keySet())
+			for (String col : this.keySet())
 			{
-				data.put(key, this.get(key));
+				data.put(col, this.get(col));
 			}
 		}
 		else if (select.length > 0)
 		{
-			for (String key : select)
+			for (String col : select)
 			{
-				data.put(key, this.get(key));
+				data.put(col, this.get(col));
 			}
 		}
 
 		Row r = this.newInstance();
 		r.setData(data);
 
-		Map<String, Object> overs = map(over);
+		Map<String, Object> overs = mapOf(over);
 
 		if (overs != null)
 		{
@@ -983,7 +1065,13 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return r;
 	}
 
-	protected Row set(Map<String, ?> data)
+	/**
+	 * Set the given column-values map to this Row object.
+	 * 
+	 * @param data
+	 * @return
+	 */
+	public Row set(Map<String, ?> data)
 	{
 		this.resetCols();
 		for (Entry<String, ?> entry : data.entrySet())
@@ -1008,10 +1096,17 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return this;
 	}
 
-	protected Row set(String key, Object value)
+	/**
+	 * Set a given column-value pair to this Row object.
+	 * 
+	 * @param col
+	 * @param value
+	 * @return
+	 */
+	public Row set(String col, Object value)
 	{
 		this.resetCols();
-		this.putting(key, value);
+		this.putting(col, value);
 		return this;
 	}
 
