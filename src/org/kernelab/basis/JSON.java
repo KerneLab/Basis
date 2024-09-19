@@ -4669,6 +4669,26 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static interface Projector<T> extends Serializable
 	{
+		/**
+		 * To generate a new instance according to given target class and source
+		 * json. null can be returned which means using the default newInstance
+		 * policy.
+		 * 
+		 * @param cls
+		 * @param json
+		 * @return
+		 * @throws Exception
+		 */
+		public T instance(Class<T> cls, JSON json) throws Exception;
+
+		/**
+		 * Project the source json to the target object.
+		 * 
+		 * @param obj
+		 * @param json
+		 * @return
+		 * @throws Exception
+		 */
 		public T project(T obj, JSON json) throws Exception;
 	}
 
@@ -6761,10 +6781,35 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return JSON.Path.parse(text);
 	}
 
+	/**
+	 * Generate a new instance according to target class and source json.
+	 * 
+	 * @param cls
+	 * @param json
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T Project(Class<T> cls, JSON json)
 	{
-		T object = null;
+		Object project = ProjectOf(cls, json.projects());
+		if (project instanceof Projector)
+		{
+			try
+			{
+				T obj = ((Projector<T>) project).instance(cls, json);
+				if (obj != null)
+				{
+					return obj;
+				}
+			}
+			catch (Exception e)
+			{
+				if (json.projectStrict())
+				{
+					throw new RuntimeException(e);
+				}
+			}
+		}
 
 		TreeMap<Class<?>[], Constructor<?>> cons = new TreeMap<Class<?>[], Constructor<?>>(
 				new ArrayLengthReverseComparator<Class<?>>());
@@ -6803,8 +6848,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				System.arraycopy(params, 0, param, 0, param.length);
 				try
 				{
-					object = (T) con.newInstance(param);
-					break;
+					return (T) con.newInstance(param);
 				}
 				catch (Exception e)
 				{
@@ -6812,9 +6856,25 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
-		return object;
+		try
+		{
+			return cls.newInstance();
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 
+	/**
+	 * The default project procedure.
+	 * 
+	 * @param object
+	 *            target object
+	 * @param json
+	 *            source json
+	 * @return
+	 */
 	public static <T> T Project(T object, JSON json)
 	{
 		Map<String, Object> project = null;
@@ -6963,7 +7023,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 								{
 									try
 									{
-										result = ProjectTo(json.attr(key), type, value, json.projects());
+										Object obj = json.attr(key);
+										if (obj instanceof JSON)
+										{
+											JSON j = (JSON) obj;
+											if (j.projects() == null)
+											{
+												j.projects(json);
+											}
+										}
+										result = ProjectTo(obj, type, value, json.projects());
 									}
 									catch (Exception e)
 									{
@@ -7176,7 +7245,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						o = pair.getValue();
 						if (o != null && !eleClass.isInstance(o))
 						{
-							o = Project(eleClass.newInstance(), (JSON) o);
+							JSON j = (JSON) o;
+							if (j.projects() == null)
+							{
+								j.projects(json);
+							}
+							o = Project(eleClass.newInstance(), j);
 						}
 						map.put(pair.getKey(), o);
 					}
@@ -7199,7 +7273,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						v = pair.getValue();
 						if (v != null && !eleClass.isInstance(v))
 						{
-							v = Project(eleClass.newInstance(), projects, (JSON) v);
+							JSON j = (JSON) v;
+							if (j.projects() == null)
+							{
+								j.projects(json);
+							}
+							v = Project(Project(eleClass, (JSON) v), projects, j);
 						}
 						map.put(pair.getKey(), v);
 					}
@@ -7275,7 +7354,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						}
 						else
 						{
-							coll.add(Project(eleClass.newInstance(), (JSON) o));
+							JSON j = (JSON) o;
+							if (j.projects() == null)
+							{
+								j.projects(json);
+							}
+							coll.add(Project(eleClass.newInstance(), j));
 						}
 					}
 					catch (Exception e)
@@ -7293,7 +7377,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				{
 					try
 					{
-						coll.add(Project(eleClass.newInstance(), projects, o));
+						if (o.projects() == null)
+						{
+							o.projects(json);
+						}
+						coll.add(Project(Project(eleClass, o), projects, o));
 					}
 					catch (Exception e)
 					{
@@ -7339,7 +7427,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		else if (cls != null && JSON.IsJSON(obj))
 		{ // Target class is a normal Object.
 			JSON json = (JSON) obj;
-			val = Project(val == null ? cls.newInstance() : val, json.projects(), json);
+			val = Project(val == null ? Project(cls, json) : val, json.projects(), json);
 		}
 		else
 		{
@@ -7392,6 +7480,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return json;
 	}
 
+	/**
+	 * The default reflect procedure.
+	 * 
+	 * @param json
+	 *            target json
+	 * @param object
+	 *            source object
+	 * @return
+	 */
 	public static JSON Reflect(JSON json, Object object)
 	{
 		JSON reflect = null;
@@ -8571,20 +8668,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public <E> E project(Class<E> cls)
 	{
-		E object = null;
-
-		object = Project(cls, this);
-
-		if (object == null)
-		{
-			try
-			{
-				object = cls.newInstance();
-			}
-			catch (Exception e)
-			{
-			}
-		}
+		E object = Project(cls, this);
 
 		if (object != null)
 		{
