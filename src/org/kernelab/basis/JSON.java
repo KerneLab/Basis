@@ -6173,23 +6173,35 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		StringBuilder buffer = new StringBuilder((int) Math.ceil(string.length() * 1.5));
 
 		char c;
+		int last = 0;
 		String escape;
 		for (int i = 0; i < string.length(); i++)
 		{
 			c = string.charAt(i);
-
 			if (NeedToEscape(c))
 			{
+				if (last < i)
+				{
+					buffer.append(string, last, i);
+				}
 				escape = ESCAPED_CHAR.get(c);
 				buffer.append(escape != null ? escape : EscapeChar(c));
-			}
-			else
-			{
-				buffer.append(c);
+				last = i + 1;
 			}
 		}
 
-		return buffer.toString();
+		if (last == 0)
+		{
+			return string;
+		}
+		else
+		{
+			if (last < string.length())
+			{
+				buffer.append(string, last, string.length());
+			}
+			return buffer.toString();
+		}
 	}
 
 	public static <T> Map<String, Field> FieldsOf(Class<T> cls, Map<String, Field> fields)
