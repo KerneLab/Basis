@@ -5285,73 +5285,73 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	/**
 	 * 
 	 */
-	private static final long						serialVersionUID			= 6090747632739206720L;
+	private static final long					serialVersionUID			= 6090747632739206720L;
 
-	public static final char						OBJECT_BEGIN_CHAR			= '{';
-	public static final String						OBJECT_BEGIN_MARK			= String.valueOf(OBJECT_BEGIN_CHAR);
+	public static final char					OBJECT_BEGIN_CHAR			= '{';
+	public static final String					OBJECT_BEGIN_MARK			= String.valueOf(OBJECT_BEGIN_CHAR);
 
-	public static final char						OBJECT_END_CHAR				= '}';
-	public static final String						OBJECT_END_MARK				= String.valueOf(OBJECT_END_CHAR);
+	public static final char					OBJECT_END_CHAR				= '}';
+	public static final String					OBJECT_END_MARK				= String.valueOf(OBJECT_END_CHAR);
 
-	public static final char						ARRAY_BEGIN_CHAR			= '[';
-	public static final String						ARRAY_BEGIN_MARK			= String.valueOf(ARRAY_BEGIN_CHAR);
+	public static final char					ARRAY_BEGIN_CHAR			= '[';
+	public static final String					ARRAY_BEGIN_MARK			= String.valueOf(ARRAY_BEGIN_CHAR);
 
-	public static final char						ARRAY_END_CHAR				= ']';
-	public static final String						ARRAY_END_MARK				= String.valueOf(ARRAY_END_CHAR);
+	public static final char					ARRAY_END_CHAR				= ']';
+	public static final String					ARRAY_END_MARK				= String.valueOf(ARRAY_END_CHAR);
 
-	public static final char						PAIR_CHAR					= ',';
-	public static final String						PAIR_MARK					= String.valueOf(PAIR_CHAR);
+	public static final char					PAIR_CHAR					= ',';
+	public static final String					PAIR_MARK					= String.valueOf(PAIR_CHAR);
 
-	public static final char						ATTR_CHAR					= ':';
-	public static final String						ATTR_MARK					= String.valueOf(ATTR_CHAR);
+	public static final char					ATTR_CHAR					= ':';
+	public static final String					ATTR_MARK					= String.valueOf(ATTR_CHAR);
 
-	public static final char						QUOTE_CHAR					= '"';
-	public static final String						QUOTE_MARK					= String.valueOf(QUOTE_CHAR);
+	public static final char					QUOTE_CHAR					= '"';
+	public static final String					QUOTE_MARK					= String.valueOf(QUOTE_CHAR);
 
-	public static final char						ESCAPE_CHAR					= '\\';
-	public static final String						ESCAPE_MARK					= String.valueOf(ESCAPE_CHAR);
+	public static final char					ESCAPE_CHAR					= '\\';
+	public static final String					ESCAPE_MARK					= String.valueOf(ESCAPE_CHAR);
 
-	public static final char						COMMENT_CHAR				= '/';
-	public static final char						LINE_COMMENT_CHAR			= COMMENT_CHAR;
+	public static final char					COMMENT_CHAR				= '/';
+	public static final char					LINE_COMMENT_CHAR			= COMMENT_CHAR;
 
-	public static final char						BLOCK_COMMENT_CHAR			= '*';
+	public static final char					BLOCK_COMMENT_CHAR			= '*';
 
-	public static final String						BLOCK_COMMENT_END			= BLOCK_COMMENT_CHAR + ""
-			+ COMMENT_CHAR;
+	public static final String					BLOCK_COMMENT_END			= BLOCK_COMMENT_CHAR + "" + COMMENT_CHAR;
 
-	public static final int							NOT_FOUND					= -1;
+	public static final int						NOT_FOUND					= -1;
 
-	public static final Object						NOT_A_VALUE					= new String("NOT A VALUE");
+	public static final Object					NOT_A_VALUE					= new String("NOT A VALUE");
 
-	public static final String						NULL_STRING					= "null";
+	public static final String					NULL_STRING					= "null";
 
-	public static final String						TRUE_STRING					= "true";
+	public static final String					TRUE_STRING					= "true";
 
-	public static final String						FALSE_STRING				= "false";
+	public static final String					FALSE_STRING				= "false";
 
-	public static final char						UNICODE_ESCAPING_CHAR		= 'u';
+	public static final char					UNICODE_ESCAPING_CHAR		= 'u';
 
-	public static final int							UNICODE_ESCAPED_LENGTH		= 4;
+	public static final String					UNICODE_ESCAPING_MARK		= "\\u";
 
-	public static final int							UNICODE_ESCAPE_RADIX		= 16;
+	public static final int						UNICODE_ESCAPED_LENGTH		= 4;
 
-	public static final Map<Character, Character>	ESCAPING_CHAR				= new HashMap<Character, Character>();
+	public static final int						UNICODE_ESCAPE_RADIX		= 16;
 
-	public static final Map<Character, String>		ESCAPED_CHAR				= new HashMap<Character, String>();
+	protected static Map<Character, Character>	ESCAPING_CHAR				= new HashMap<Character, Character>();
 
-	public static final String						DEFAULT_DATETIME_FORMAT		= "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+	protected static Map<Character, String>		ESCAPED_CHAR				= new HashMap<Character, String>();
 
-	public static final String						DEFAULT_DATETIME_REGEX		= "^\\d{4}-\\d{2}-\\d{2}((T| )\\d{2}:\\d{2}(?::(\\d{2})(?:\\.(\\d{3}|\\d{6}||\\d{9}))?)?)?(Z|[+-]\\d{2}(?::?\\d{2})?)?$";
+	public static final String					DEFAULT_DATETIME_FORMAT		= "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
-	public static final Pattern						DEFAULT_DATETIME_PATTERN	= Pattern
-			.compile(DEFAULT_DATETIME_REGEX);
+	public static final String					DEFAULT_DATETIME_REGEX		= "^\\d{4}-\\d{2}-\\d{2}((T| )\\d{2}:\\d{2}(?::(\\d{2})(?:\\.(\\d{3}|\\d{6}||\\d{9}))?)?)?(Z|[+-]\\d{2}(?::?\\d{2})?)?$";
 
-	protected static final DateFormat				DEFAULT_DATE_FORMAT			= Tools
+	public static final Pattern					DEFAULT_DATETIME_PATTERN	= Pattern.compile(DEFAULT_DATETIME_REGEX);
+
+	protected static final DateFormat			DEFAULT_DATE_FORMAT			= Tools
 			.getDateFormat(DEFAULT_DATETIME_FORMAT);
 
-	public static String							DEFAULT_LINE_INDENT			= "\t";
+	public static String						DEFAULT_LINE_INDENT			= "\t";
 
-	public static String							LINE_WRAP					= "\n";
+	public static String						LINE_WRAP					= "\n";
 
 	static
 	{
@@ -5363,6 +5363,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		ESCAPING_CHAR.put('n', '\n');
 		ESCAPING_CHAR.put('r', '\r');
 		ESCAPING_CHAR.put('t', '\t');
+		ESCAPING_CHAR = Collections.unmodifiableMap(ESCAPING_CHAR);
 
 		ESCAPED_CHAR.put('"', "\\\"");
 		ESCAPED_CHAR.put('\\', "\\\\");
@@ -5372,6 +5373,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		ESCAPED_CHAR.put('\n', "\\n");
 		ESCAPED_CHAR.put('\r', "\\r");
 		ESCAPED_CHAR.put('\t', "\\t");
+		ESCAPED_CHAR = Collections.unmodifiableMap(ESCAPED_CHAR);
 	}
 
 	public static <T> Object Access(T object, String name, Field field) throws Exception
@@ -6163,25 +6165,27 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static String EscapeChar(char c)
 	{
-		return "\\" + UNICODE_ESCAPING_CHAR + String.format("%04x", (int) c);
+		return UNICODE_ESCAPING_MARK + String.format("%04x", (int) c);
 	}
 
 	public static String EscapeString(String string)
 	{
-		StringBuilder buffer = new StringBuilder(string);
+		StringBuilder buffer = new StringBuilder((int) Math.ceil(string.length() * 1.5));
 
 		char c;
 		String escape;
-		for (int i = 0; i < buffer.length(); i++)
+		for (int i = 0; i < string.length(); i++)
 		{
-			c = buffer.charAt(i);
+			c = string.charAt(i);
+
 			if (NeedToEscape(c))
 			{
-				buffer.deleteCharAt(i);
 				escape = ESCAPED_CHAR.get(c);
-				escape = escape != null ? escape : EscapeChar(c);
-				buffer.insert(i, escape);
-				i += escape.length() - 1;
+				buffer.append(escape != null ? escape : EscapeChar(c));
+			}
+			else
+			{
+				buffer.append(c);
 			}
 		}
 
@@ -6816,7 +6820,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		for (Constructor<?> c : cls.getConstructors())
 		{
-			cons.put(c.getParameterTypes(), c);
+			if (Modifier.isPublic(c.getModifiers()))
+			{
+				cons.put(c.getParameterTypes(), c);
+			}
 		}
 
 		Object[] params = null;
