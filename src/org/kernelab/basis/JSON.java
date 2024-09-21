@@ -6170,11 +6170,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static String EscapeString(String string)
 	{
-		StringBuilder buffer = new StringBuilder((int) Math.ceil(string.length() * 1.5));
+		StringBuilder buf = new StringBuilder((int) Math.ceil(string.length() * 1.5));
 
 		char c;
 		int last = 0;
-		String escape;
+		String esc;
 		for (int i = 0; i < string.length(); i++)
 		{
 			c = string.charAt(i);
@@ -6182,10 +6182,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (last < i)
 				{
-					buffer.append(string, last, i);
+					buf.append(string, last, i);
 				}
-				escape = ESCAPED_CHAR.get(c);
-				buffer.append(escape != null ? escape : EscapeChar(c));
+				esc = ESCAPED_CHAR.get(c);
+				buf.append(esc != null ? esc : EscapeChar(c));
 				last = i + 1;
 			}
 		}
@@ -6198,9 +6198,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			if (last < string.length())
 			{
-				buffer.append(string, last, string.length());
+				buf.append(string, last, string.length());
 			}
-			return buffer.toString();
+			return buf.toString();
 		}
 	}
 
@@ -7821,64 +7821,78 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return null;
 	}
 
-	public static String RestoreString(String string)
+	public static String RestoreString(String text)
 	{
-		if (string != null)
-		{
-			string = string.trim();
-
-			if (NULL_STRING.equals(string))
-			{
-				return null;
-			}
-			else
-			{
-				return RestoreStringContent(
-						string.replaceFirst("^" + QUOTE_CHAR + "([\\d\\D]*)" + QUOTE_CHAR + "$", "$1"));
-			}
-		}
-		else
+		if (text == null)
 		{
 			return null;
 		}
+
+		text = text.trim();
+
+		if (NULL_STRING.equals(text))
+		{
+			return null;
+		}
+		else if (text.length() >= 2 && text.charAt(0) == QUOTE_CHAR && text.charAt(text.length() - 1) == QUOTE_CHAR)
+		{
+			return RestoreStringContent(text.substring(1, text.length() - 1));
+		}
+		else
+		{
+			return RestoreStringContent(text);
+		}
 	}
 
-	public static String RestoreStringContent(String string)
+	public static String RestoreStringContent(String text)
 	{
-		StringBuilder buffer = new StringBuilder(string.length());
-
-		char c;
-
-		for (int i = 0; i < string.length(); i++)
+		if (text.length() == 0)
 		{
-			c = string.charAt(i);
+			return text;
+		}
+
+		StringBuilder buf = new StringBuilder(text.length());
+		char c;
+		int last = 0;
+
+		for (int i = 0; i < text.length(); i++)
+		{
+			c = text.charAt(i);
 
 			if (c == ESCAPE_CHAR)
 			{
+				buf.append(text, last, i);
 				i++;
-
-				c = string.charAt(i);
+				c = text.charAt(i);
 
 				if (c == UNICODE_ESCAPING_CHAR)
 				{
 					i++;
-
-					String unicode = string.substring(i, i + UNICODE_ESCAPED_LENGTH);
-
-					c = (char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX);
-
+					String unicode = text.substring(i, i + UNICODE_ESCAPED_LENGTH);
+					buf.append((char) Integer.parseInt(unicode, UNICODE_ESCAPE_RADIX));
 					i += UNICODE_ESCAPED_LENGTH - 1;
 				}
 				else if (ESCAPING_CHAR.containsKey(c))
 				{
-					c = ESCAPING_CHAR.get(c);
+					buf.append(ESCAPING_CHAR.get(c));
 				}
-			}
 
-			buffer.append(c);
+				last = i + 1;
+			}
 		}
 
-		return buffer.toString();
+		if (last == 0)
+		{
+			return text;
+		}
+		else
+		{
+			if (last < text.length())
+			{
+				buf.append(text, last, text.length());
+			}
+			return buf.toString();
+		}
 	}
 
 	public static StringBuilder Serialize(JSON json, StringBuilder buffer, int indents)
