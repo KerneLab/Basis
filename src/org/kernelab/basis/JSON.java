@@ -6170,22 +6170,29 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static String EscapeString(String string)
 	{
-		StringBuilder buf = new StringBuilder((int) Math.ceil(string.length() * 1.5));
-
 		char c;
 		int last = 0;
 		String esc;
+		StringBuilder buf = null;
+
 		for (int i = 0; i < string.length(); i++)
 		{
 			c = string.charAt(i);
 			if (NeedToEscape(c))
 			{
+				if (buf == null)
+				{
+					buf = new StringBuilder((int) Math.ceil(string.length() * 1.5));
+				}
+
 				if (last < i)
 				{
 					buf.append(string, last, i);
 				}
+
 				esc = ESCAPED_CHAR.get(c);
 				buf.append(esc != null ? esc : EscapeChar(c));
+
 				last = i + 1;
 			}
 		}
@@ -7851,9 +7858,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return text;
 		}
 
-		StringBuilder buf = new StringBuilder(text.length());
 		char c;
 		int last = 0;
+		StringBuilder buf = null;
 
 		for (int i = 0; i < text.length(); i++)
 		{
@@ -7861,6 +7868,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 			if (c == ESCAPE_CHAR)
 			{
+				if (buf == null)
+				{
+					buf = new StringBuilder(text.length());
+				}
+
 				buf.append(text, last, i);
 				i++;
 				c = text.charAt(i);
