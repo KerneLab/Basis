@@ -226,7 +226,10 @@ public class Tools
 				}
 				if (field != null)
 				{
-					return (E) field.get(object);
+					if (field.isAccessible())
+					{
+						return (E) field.get(object);
+					}
 				}
 				else
 				{
@@ -284,7 +287,10 @@ public class Tools
 			}
 			else if (field != null)
 			{
-				field.set(object, value);
+				if (field.isAccessible())
+				{
+					field.set(object, value);
+				}
 			}
 			else
 			{
@@ -3868,6 +3874,36 @@ public class Tools
 		}
 		calendar.setTimeInMillis(System.currentTimeMillis());
 		return calendar;
+	}
+
+	public static Exception getOriginalException(Exception e)
+	{
+		if (e == null)
+		{
+			return null;
+		}
+
+		Throwable ex = e;
+		while ((ex = e.getCause()) instanceof Exception)
+		{
+			e = (Exception) ex;
+		}
+		return e;
+	}
+
+	public static Throwable getOriginalThrowable(Throwable e)
+	{
+		if (e == null)
+		{
+			return null;
+		}
+
+		Throwable ex = e;
+		while ((ex = e.getCause()) != null)
+		{
+			e = ex;
+		}
+		return e;
 	}
 
 	/**
@@ -8776,14 +8812,12 @@ public class Tools
 
 	public static void throwOriginalException(Exception e) throws Exception
 	{
-		if (e.getCause() instanceof Exception)
-		{
-			throwOriginalException((Exception) e.getCause());
-		}
-		else
-		{
-			throw e;
-		}
+		throw getOriginalException(e);
+	}
+
+	public static void throwOriginalThrowable(Throwable e) throws Throwable
+	{
+		throw getOriginalThrowable(e);
 	}
 
 	/**
