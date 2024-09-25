@@ -5536,7 +5536,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				{
 					if (object instanceof JSON && ((JSON) object).projectStrict())
 					{
-						throw ex;
+						Tools.throwOriginalException(ex);
 					}
 				}
 				length++;
@@ -6805,7 +6805,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	}
 
 	/**
-	 * Generate a new instance according to target class and source json.
+	 * Generate a new instance according to the source json against target
+	 * class.
 	 * 
 	 * @param cls
 	 * @param json
@@ -6829,7 +6830,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (json.projectStrict())
 				{
-					throw new RuntimeException(e);
+					throw new RuntimeException(Tools.getOriginalThrowable(e));
 				}
 			}
 		}
@@ -6928,7 +6929,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 		catch (Exception e)
 		{
-			return object;
+			if (json.projectStrict())
+			{
+				throw new RuntimeException(Tools.getOriginalThrowable(e));
+			}
+			else
+			{
+				return object;
+			}
 		}
 	}
 
@@ -6971,7 +6979,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						{
 							if (obj.projectStrict())
 							{
-								throw e;
+								Tools.throwOriginalException(e);
 							}
 						}
 					}
@@ -7062,7 +7070,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 									}
 									catch (Exception e)
 									{
-										result = json.attr(key);
+										if (json.projectStrict())
+										{
+											Tools.throwOriginalException(e);
+										}
+										else
+										{
+											result = json.attr(key);
+										}
 									}
 								}
 								else
@@ -7113,7 +7128,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (json.projectStrict())
 				{
-					throw new RuntimeException(e);
+					throw new RuntimeException(Tools.getOriginalThrowable(e));
 				}
 			}
 		}
@@ -7284,7 +7299,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						if (json.projectStrict())
 						{
-							throw e;
+							Tools.throwOriginalException(e);
 						}
 					}
 				}
@@ -7312,7 +7327,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						if (json.projectStrict())
 						{
-							throw e;
+							Tools.throwOriginalException(e);
 						}
 					}
 				}
@@ -7336,7 +7351,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						{
 							if (json.projectStrict())
 							{
-								throw e;
+								Tools.throwOriginalException(e);
 							}
 						}
 					}
@@ -7392,7 +7407,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						if (json.projectStrict())
 						{
-							throw e;
+							Tools.throwOriginalException(e);
 						}
 					}
 				}
@@ -7413,7 +7428,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						if (json.projectStrict())
 						{
-							throw e;
+							Tools.throwOriginalException(e);
 						}
 					}
 				}
@@ -7437,7 +7452,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						{
 							if (json.projectStrict())
 							{
-								throw e;
+								Tools.throwOriginalException(e);
 							}
 						}
 					}
@@ -8821,6 +8836,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		if (json != null)
 		{
 			projects(json.projects());
+			projectStrict(json.projectStrict());
 		}
 		return this;
 	}
