@@ -2,6 +2,7 @@ package org.kernelab.basis;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 
 /**
@@ -12,13 +13,85 @@ import java.text.DecimalFormat;
  * @param <N>
  *            The generic type of number.
  */
-public class Variable<N extends java.lang.Number & Comparable<N>> extends java.lang.Number implements
-		Comparable<Variable<N>>, Serializable, Copieable<Variable<N>>
+public class Variable<N extends java.lang.Number & Comparable<N>> extends java.lang.Number
+		implements Comparable<Variable<N>>, Serializable, Copieable<Variable<N>>
 {
 	/**
-     * 
-     */
-	private static final long	serialVersionUID	= -4353893839356953344L;
+	 * 
+	 */
+	private static final long serialVersionUID = -4353893839356953344L;
+
+	/**
+	 * Try to convert the string to a BigDecimal value, if could not convert
+	 * then return null.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @return The BigDecimal object.
+	 */
+	public static BigDecimal asBigDecimal(String string)
+	{
+		return asBigDecimal(string, null);
+	}
+
+	/**
+	 * Try to convert the string to a BigDecimal object, if could not convert
+	 * then use the defaultValue instead.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @param defaultValue
+	 *            the default value which would be used if the string could not
+	 *            be converted to a BigDecimal.
+	 * @return The BigDecimal object.
+	 */
+	public static BigDecimal asBigDecimal(String string, BigDecimal defaultValue)
+	{
+		try
+		{
+			return new BigDecimal(string);
+		}
+		catch (Exception e)
+		{
+			return defaultValue;
+		}
+	}
+
+	/**
+	 * Try to convert the string to a BigInteger value, if could not convert
+	 * then return null.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @return The BigInteger object.
+	 */
+	public static BigInteger asBigInteger(String string)
+	{
+		return asBigInteger(string, null);
+	}
+
+	/**
+	 * Try to convert the string to a BigInteger object, if could not convert
+	 * then use the defaultValue instead.
+	 * 
+	 * @param string
+	 *            the number string.
+	 * @param defaultValue
+	 *            the default value which would be used if the string could not
+	 *            be converted to a BigInteger.
+	 * @return The BigInteger object.
+	 */
+	public static BigInteger asBigInteger(String string, BigInteger defaultValue)
+	{
+		try
+		{
+			return new BigInteger(string);
+		}
+		catch (Exception e)
+		{
+			return defaultValue;
+		}
+	}
 
 	/**
 	 * Try to convert the string to a Byte value, if could not convert then
@@ -547,6 +620,12 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 		Tools.debug(Variable.format("1234.5", "#,##0.00"));
 	}
 
+	@Deprecated
+	public static <N extends java.lang.Number & Comparable<N>> Variable<N> newInstance(N number)
+	{
+		return of(number);
+	}
+
 	/**
 	 * Get the instance of Variable. This method is no need to assign the
 	 * generic type of the number.
@@ -567,7 +646,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 	 *            The value of the number.
 	 * @return The instance of Variable.
 	 */
-	public static <N extends java.lang.Number & Comparable<N>> Variable<N> newInstance(N number)
+	public static <N extends java.lang.Number & Comparable<N>> Variable<N> of(N number)
 	{
 		return new Variable<N>(number);
 	}
@@ -605,7 +684,7 @@ public class Variable<N extends java.lang.Number & Comparable<N>> extends java.l
 		return value;
 	}
 
-	public N	value;
+	public N value;
 
 	public Variable(N value)
 	{
