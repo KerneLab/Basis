@@ -5378,56 +5378,59 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public static <T> Object Access(T object, String name, Field field) throws Exception
 	{
-		if (object != null)
+		if (object == null)
 		{
-			if (name == null && field != null)
-			{
-				name = field.getName();
-			}
-
-			if (name != null)
-			{
-				if (JSON.IsJSON(object))
-				{
-					return ((JSON) object).attr(name);
-				}
-				else if (object instanceof Map)
-				{
-					return ((Map<?, ?>) object).get(name);
-				}
-			}
-
-			return Tools.access(object, name, field);
+			return null;
 		}
-		return null;
+
+		if (name == null && field != null)
+		{
+			name = field.getName();
+		}
+
+		if (name != null)
+		{
+			if (JSON.IsJSON(object))
+			{
+				return ((JSON) object).attr(name);
+			}
+			else if (object instanceof Map)
+			{
+				return ((Map<?, ?>) object).get(name);
+			}
+		}
+
+		return Tools.access(object, name, field);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static <T> void Access(T object, String name, Field field, Object value) throws Exception
 	{
-		if (object != null)
+		if (object == null)
 		{
-			if (name == null && field != null)
-			{
-				name = field.getName();
-			}
-
-			if (name != null)
-			{
-				if (JSON.IsJSON(object))
-				{
-					((JSON) object).attr(name, value);
-					return;
-				}
-				else if (object instanceof Map)
-				{
-					((Map<String, Object>) object).put(name, value);
-					return;
-				}
-			}
-
-			Tools.access(object, name, field, value);
+			return;
 		}
+
+		if (name == null && field != null)
+		{
+			name = field.getName();
+		}
+
+		if (name != null)
+		{
+			if (JSON.IsJSON(object))
+			{
+				((JSON) object).attr(name, value);
+				return;
+			}
+			else if (object instanceof Map)
+			{
+				((Map<String, Object>) object).put(name, value);
+				return;
+			}
+		}
+
+		Tools.access(object, name, field, value);
 	}
 
 	public static final Context AsContext(Object o)
@@ -7085,7 +7088,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 									result = json.attr(key);
 								}
 
-								Access(object, name, field, result);
+								try
+								{
+									Access(object, name, field, result);
+								}
+								catch (IllegalAccessException e)
+								{
+								}
 							}
 						}
 						catch (Exception e)
