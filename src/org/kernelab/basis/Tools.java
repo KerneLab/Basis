@@ -30,7 +30,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -180,6 +182,74 @@ public class Tools
 	}
 
 	/**
+	 * Get the value of given field in an object.<br />
+	 * The "getter" method and the method with the same name to the field would
+	 * be tried one by one. Finally, directly get from the field would also be
+	 * tried.
+	 * 
+	 * @param object
+	 * @param member
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T, E> E access(T object, Member member)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	{
+		if (object == null || member == null)
+		{
+			return null;
+		}
+
+		if (member instanceof Method)
+		{
+			return (E) ((Method) member).invoke(object);
+		}
+		else if (member instanceof Field)
+		{
+			return (E) ((Field) member).get(object);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Set the value to given field name in an object.<br />
+	 * The "setter" method and the method with the same name to the field would
+	 * be tried one by one. The value's class type would be help to find the
+	 * method if not null, then the field type would be considered. Finally,
+	 * directly set to the field would also be tried if no method found.
+	 * 
+	 * @param object
+	 * @param member
+	 * @param value
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	public static <T> void access(T object, Member member, Object value)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	{
+		if (object == null || member == null)
+		{
+			return;
+		}
+
+		if (member instanceof Method)
+		{
+			((Method) member).invoke(object, value);
+		}
+		else if (member instanceof Field)
+		{
+			((Field) member).set(object, value);
+		}
+	}
+
+	/**
 	 * Get the value of given field name in an object.<br />
 	 * The "getter" method and the method with the same name to the field would
 	 * be tried one by one. Finally, directly get from the field would also be
@@ -199,42 +269,31 @@ public class Tools
 	 * @throws InvocationTargetException
 	 * @throws NoSuchFieldException
 	 */
-	@SuppressWarnings("unchecked")
 	public static <T, E> E access(T object, String name, Field field)
-			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchFieldException
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
-		if (object != null && (name != null || field != null))
+		if (object == null || (name == null && field == null))
 		{
-			Class<?> cls = object.getClass();
-
-			if (name == null)
-			{
-				name = field.getName();
-			}
-
-			Method method = accessor(cls, name);
-
-			if (method != null)
-			{
-				return (E) method.invoke(object);
-			}
-			else
-			{
-				if (field == null)
-				{
-					field = Tools.fieldOf(cls, name);
-				}
-				if (field != null)
-				{
-					return (E) field.get(object);
-				}
-				else
-				{
-					throw new NoSuchFieldException(name);
-				}
-			}
+			return null;
 		}
-		return null;
+
+		Class<?> cls = object.getClass();
+
+		if (name == null)
+		{
+			name = field.getName();
+		}
+
+		Member acs = accessor(cls, name);
+
+		if (acs != null)
+		{
+			return Tools.access(object, acs);
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -262,84 +321,53 @@ public class Tools
 	public static <T> void access(T object, String name, Field field, Object value)
 			throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchFieldException
 	{
-		if (object != null && (name != null || field != null))
+		if (object == null || (name == null && field == null))
 		{
-			Class<?> cls = object.getClass();
+			return;
+		}
 
-			if (name == null)
-			{
-				name = field.getName();
-			}
+		Class<?> cls = object.getClass();
 
-			if (field == null)
-			{
-				field = fieldOf(cls, name);
-			}
+		if (name == null)
+		{
+			name = field.getName();
+		}
 
-			Method method = accessor(cls, name, field, value == null ? null : value.getClass());
+		if (field == null)
+		{
+			field = fieldOf(cls, name);
+		}
 
-			if (method != null)
-			{
-				method.invoke(object, value);
-			}
-			else if (field != null)
-			{
-				field.set(object, value);
-			}
-			else
-			{
-				throw new NoSuchFieldException(name);
-			}
+		Member acs = accessor(cls, name, field, value == null ? null : value.getClass());
+
+		if (acs != null)
+		{
+			Tools.access(object, acs, value);
 		}
 	}
 
 	/**
 	 * Get the "getter" method of a field in an object according to the given
 	 * field name. The "getter" method and the method with the same name to the
-	 * field would be tried one by one.
+	 * field would be tried one by one. If no suitable method found, the field
+	 * will be returned if it was public and non-static.
 	 * 
 	 * @param cls
 	 *            The class.
 	 * @param name
 	 *            The field name.
-	 * @return The method found or null if not found.
+	 * @return The method or field found, null if not found.
 	 */
-	public static <T> Method accessor(Class<T> cls, String name)
+	public static Member accessor(Class<?> cls, String name)
 	{
-		if (cls != null && name != null)
-		{
-			String methodName = Tools.capitalize(name);
-
-			try
-			{
-				return cls.getMethod("get" + methodName);
-			}
-			catch (NoSuchMethodException e)
-			{
-				try
-				{
-					return cls.getMethod("is" + methodName);
-				}
-				catch (NoSuchMethodException ex)
-				{
-					try
-					{
-						return cls.getMethod(name);
-					}
-					catch (NoSuchMethodException err)
-					{
-						return null;
-					}
-				}
-			}
-		}
-		return null;
+		return accessor(cls, name, (Field) null);
 	}
 
 	/**
 	 * Get the "setter" method of a field in an object according to the given
 	 * field name. The "setter" method and the method with the same name to the
-	 * field would be tried one by one.
+	 * field would be tried one by one. If no suitable method found, the field
+	 * will be returned if it was public, non-static and non-final.
 	 * 
 	 * @param cls
 	 *            The class.
@@ -347,35 +375,121 @@ public class Tools
 	 *            The field name.
 	 * @param type
 	 *            The parameter type.
-	 * @return The method found or null if not found.
+	 * @return The method or field found, null if not found.
 	 */
-	public static <T> Method accessor(Class<T> cls, String name, Class<?> type)
+	public static Member accessor(Class<?> cls, String name, Class<?> type)
 	{
-		if (cls != null && name != null && type != null)
+		if (cls == null || name == null || type == null)
 		{
-			try
-			{
-				return cls.getMethod("set" + Tools.capitalize(name), type);
-			}
-			catch (NoSuchMethodException e)
-			{
-			}
+			return null;
+		}
 
-			try
+		Method method = null;
+		try
+		{
+			method = cls.getMethod("set" + Tools.capitalize(name), type);
+			if (isAccessor(method))
 			{
-				return cls.getMethod(name, type);
-			}
-			catch (NoSuchMethodException e)
-			{
+				return method;
 			}
 		}
-		return null;
+		catch (NoSuchMethodException e)
+		{
+		}
+
+		try
+		{
+			method = cls.getMethod(name, type);
+			if (isAccessor(method))
+			{
+				return method;
+			}
+		}
+		catch (NoSuchMethodException e)
+		{
+		}
+
+		Field field = Tools.fieldOf(cls, name);
+		return isAccessor(field, false) ? field : null;
+	}
+
+	/**
+	 * Get the "getter" method of a field in an object according to the given
+	 * field name. The "getter" method and the method with the same name to the
+	 * field would be tried one by one. If no suitable method found, the field
+	 * will be returned if it was public and non-static.
+	 * 
+	 * @param cls
+	 *            The class.
+	 * @param name
+	 *            The field name.
+	 * @param field
+	 *            The field.
+	 * @return The method or field found, null if not found.
+	 */
+	public static Member accessor(Class<?> cls, String name, Field field)
+	{
+		if (cls == null || (name == null && field == null))
+		{
+			return null;
+		}
+
+		if (name == null)
+		{
+			name = field.getName();
+		}
+
+		String methodName = Tools.capitalize(name);
+
+		Method method = null;
+		try
+		{
+			method = cls.getMethod("get" + methodName);
+			if (isAccessor(method))
+			{
+				return method;
+			}
+		}
+		catch (NoSuchMethodException e)
+		{
+		}
+
+		try
+		{
+			method = cls.getMethod("is" + methodName);
+			if (isAccessor(method))
+			{
+				return method;
+			}
+		}
+		catch (NoSuchMethodException e)
+		{
+		}
+
+		try
+		{
+			method = cls.getMethod(name);
+			if (isAccessor(method))
+			{
+				return method;
+			}
+		}
+		catch (NoSuchMethodException e)
+		{
+		}
+
+		if (field == null)
+		{
+			field = Tools.fieldOf(cls, name);
+		}
+		return isAccessor(field, true) ? field : null;
 	}
 
 	/**
 	 * Get the "setter" method of a field in an object according to the given
 	 * field name. The "setter" method and the method with the same name to the
-	 * field would be tried one by one.
+	 * field would be tried one by one. If no suitable method found, the field
+	 * will be returned if it was public, non-static and non-final.
 	 * 
 	 * @param cls
 	 *            The class.
@@ -389,85 +503,110 @@ public class Tools
 	 *            The parameter type.
 	 * @return The method found or null if not found.
 	 */
-	public static <T> Method accessor(Class<T> cls, String name, Field field, Class<?> type)
+	public static Member accessor(Class<?> cls, String name, Field field, Class<?> type)
 	{
-		if (cls != null && (name != null || field != null) && (field != null || type != null))
+		if (cls == null || (name == null && field == null) || (field == null && type == null))
 		{
-			if (name == null)
-			{
-				name = field.getName();
-			}
+			return null;
+		}
 
-			String setter = "set" + Tools.capitalize(name);
+		if (name == null)
+		{
+			name = field.getName();
+		}
 
-			if (type != null)
-			{
-				try
-				{
-					return cls.getMethod(setter, type);
-				}
-				catch (NoSuchMethodException e)
-				{
-				}
-			}
+		Method method = null;
 
-			if (field != null)
+		String setter = "set" + Tools.capitalize(name);
+
+		if (type != null)
+		{
+			try
 			{
-				try
+				method = cls.getMethod(setter, type);
+				if (isAccessor(method))
 				{
-					return cls.getMethod(setter, field.getType());
-				}
-				catch (NoSuchMethodException e)
-				{
+					return method;
 				}
 			}
-
-			if (type != null)
+			catch (NoSuchMethodException e)
 			{
-				try
-				{
-					return cls.getMethod(name, type);
-				}
-				catch (NoSuchMethodException e)
-				{
-				}
-			}
-
-			if (field != null)
-			{
-				try
-				{
-					return cls.getMethod(name, field.getType());
-				}
-				catch (NoSuchMethodException e)
-				{
-				}
 			}
 		}
-		return null;
+
+		if (field != null)
+		{
+			try
+			{
+				method = cls.getMethod(setter, field.getType());
+				if (isAccessor(method))
+				{
+					return method;
+				}
+			}
+			catch (NoSuchMethodException e)
+			{
+			}
+		}
+
+		if (type != null)
+		{
+			try
+			{
+				method = cls.getMethod(name, type);
+				if (isAccessor(method))
+				{
+					return method;
+				}
+			}
+			catch (NoSuchMethodException e)
+			{
+			}
+		}
+
+		if (field != null)
+		{
+			try
+			{
+				method = cls.getMethod(name, field.getType());
+				if (isAccessor(method))
+				{
+					return method;
+				}
+			}
+			catch (NoSuchMethodException e)
+			{
+			}
+		}
+
+		return isAccessor(field, false) ? field : null;
 	}
 
 	/**
 	 * Get the "getter" method of a field. The "getter" method and the method
-	 * with the same name to the field's name would be tried one by one.
+	 * with the same name to the field's name would be tried one by one. If no
+	 * suitable method found, the field will be returned if it was public and
+	 * non-static.
 	 * 
 	 * @param field
 	 * @return
 	 */
-	public static <T> Method accessor(Field field)
+	public static Member accessor(Field field)
 	{
 		return accessor(field.getDeclaringClass(), field.getName());
 	}
 
 	/**
 	 * Get the "setter" method of a field. The "setter" method and the method
-	 * with the same name to the field's name would be tried one by one.
+	 * with the same name to the field's name would be tried one by one. If no
+	 * suitable method found, the field will be returned if it was public,
+	 * non-static and non-final.
 	 * 
 	 * @param field
 	 * @param type
 	 * @return
 	 */
-	public static <T> Method accessor(Field field, Class<?> type)
+	public static Member accessor(Field field, Class<?> type)
 	{
 		return accessor(field.getDeclaringClass(), field.getName(), field, type);
 	}
@@ -3019,6 +3158,22 @@ public class Tools
 		return index;
 	}
 
+	public static Class<?> getAccessorType(Member accessor)
+	{
+		if (accessor instanceof Method)
+		{
+			return ((Method) accessor).getReturnType();
+		}
+		else if (accessor instanceof Field)
+		{
+			return ((Field) accessor).getType();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
 	/**
 	 * Get the File which the Class belongs to.<br />
 	 * Returns null if any exception occurred.
@@ -4452,6 +4607,42 @@ public class Tools
 		}
 
 		return result;
+	}
+
+	/**
+	 * To determine whether the given Field is an access or not. A Field
+	 * accessor must be non-static, non-final(setter), public field.
+	 * 
+	 * @param field
+	 * @param getter
+	 *            false means setter which requires non-final field.
+	 * @return
+	 */
+	public static boolean isAccessor(Field field, boolean getter)
+	{
+		if (field == null)
+		{
+			return false;
+		}
+		int mod = field.getModifiers();
+		return Modifier.isPublic(mod) && !Modifier.isStatic(mod) && (getter || !Modifier.isFinal(mod));
+	}
+
+	/**
+	 * To determine whether the given Method is an accessor or not. An Method
+	 * accessor must be non-static public method.
+	 * 
+	 * @param method
+	 * @return
+	 */
+	public static boolean isAccessor(Method method)
+	{
+		if (method == null)
+		{
+			return false;
+		}
+		int mod = method.getModifiers();
+		return Modifier.isPublic(mod) && !Modifier.isStatic(mod);
 	}
 
 	/**

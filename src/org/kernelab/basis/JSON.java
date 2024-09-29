@@ -13,7 +13,7 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.Member;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -1228,8 +1228,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						try
 						{
-							jsan.attr(i, Access(object, field.toString(), null));
-							i++;
+							i = Access(jsan, i, object, field.toString(), null);
 						}
 						catch (Exception e)
 						{
@@ -5376,61 +5375,121 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		ESCAPED_CHAR = Collections.unmodifiableMap(ESCAPED_CHAR);
 	}
 
-	public static <T> Object Access(T object, String name, Field field) throws Exception
+	protected static int Access(JSAN jsan, int idx, Object object, String name, Field field) throws Exception
 	{
-		if (object == null)
+		if (object == null || (name == null && field == null))
 		{
-			return null;
+			return idx;
 		}
 
-		if (name == null && field != null)
+		if (name == null)
 		{
 			name = field.getName();
 		}
 
-		if (name != null)
+		if (JSON.IsJSON(object))
 		{
-			if (JSON.IsJSON(object))
+			jsan.attr(idx, ((JSON) object).attr(name));
+			return idx + 1;
+		}
+		else if (object instanceof Map)
+		{
+			jsan.attr(idx, ((Map<?, ?>) object).get(name));
+			return idx + 1;
+		}
+		else
+		{
+			Member acs = Tools.accessor(object.getClass(), name, field);
+			if (acs != null)
 			{
-				return ((JSON) object).attr(name);
+				jsan.attr(idx, Tools.access(object, acs));
+				return idx + 1;
 			}
-			else if (object instanceof Map)
-			{
-				return ((Map<?, ?>) object).get(name);
-			}
+			return idx;
+		}
+	}
+
+	protected static void Access(JSON json, String key, Object object, String name, Field field) throws Exception
+	{
+		if (object == null || (name == null && field == null))
+		{
+			return;
 		}
 
-		return Tools.access(object, name, field);
+		if (name == null)
+		{
+			name = field.getName();
+		}
+
+		if (JSON.IsJSON(object))
+		{
+			json.attr(key, ((JSON) object).attr(name));
+		}
+		else if (object instanceof Map)
+		{
+			json.attr(key, ((Map<?, ?>) object).get(name));
+		}
+		else
+		{
+			Member acs = Tools.accessor(object.getClass(), name, field);
+			if (acs != null)
+			{
+				json.attr(key, Tools.access(object, acs));
+			}
+		}
+	}
+
+	public static <T> Object Access(T object, String name, Field field) throws Exception
+	{
+		if (object == null || (name == null && field == null))
+		{
+			return null;
+		}
+
+		if (name == null)
+		{
+			name = field.getName();
+		}
+
+		if (JSON.IsJSON(object))
+		{
+			return ((JSON) object).attr(name);
+		}
+		else if (object instanceof Map)
+		{
+			return ((Map<?, ?>) object).get(name);
+		}
+		else
+		{
+			return Tools.access(object, name, field);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public static <T> void Access(T object, String name, Field field, Object value) throws Exception
 	{
-		if (object == null)
+		if (object == null || (name == null && field == null))
 		{
 			return;
 		}
 
-		if (name == null && field != null)
+		if (name == null)
 		{
 			name = field.getName();
 		}
 
-		if (name != null)
+		if (JSON.IsJSON(object))
 		{
-			if (JSON.IsJSON(object))
-			{
-				((JSON) object).attr(name, value);
-				return;
-			}
-			else if (object instanceof Map)
-			{
-				((Map<String, Object>) object).put(name, value);
-				return;
-			}
+			((JSON) object).attr(name, value);
 		}
-
-		Tools.access(object, name, field, value);
+		else if (object instanceof Map)
+		{
+			((Map<String, Object>) object).put(name, value);
+		}
+		else
+		{
+			Tools.access(object, name, field, value);
+		}
 	}
 
 	public static final Context AsContext(Object o)
@@ -7048,11 +7107,8 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 								}
 								else
 								{ // The value read by "getter" was null.
-									Method m = Tools.accessor(cls, name);
-									if (m != null)
-									{
-										type = m.getReturnType();
-									}
+									Member m = Tools.accessor(cls, name);
+									type = Tools.getAccessorType(m);
 								}
 
 								Object result = null;
@@ -7710,7 +7766,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						if (pair.getKey() != null)
 						{
-							json.attr(pair.getKey(), Access(object, pair.getValue().toString(), null));
+							Access(json, pair.getKey(), object, pair.getValue().toString(), null);
 						}
 					}
 					catch (Exception e)

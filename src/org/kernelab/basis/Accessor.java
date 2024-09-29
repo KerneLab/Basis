@@ -2,7 +2,7 @@ package org.kernelab.basis;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.Member;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,25 +24,25 @@ public class Accessor
 
 	private Field					field;
 
-	private Method					getter;
+	private Member					getter;
 
-	private Map<Class<?>, Method>	setter	= new HashMap<Class<?>, Method>();
+	private Map<Class<?>, Member>	setter	= new HashMap<Class<?>, Member>();
 
 	public Accessor(Class<?> cls, String name)
 	{
 		this.init(cls, name);
 	}
 
-	protected Method findSetter(Class<?> paramType)
+	protected Member findSetter(Class<?> paramType)
 	{
-		if (paramType == null && this.getGetter() != null)
+		if (paramType == null)
 		{
-			paramType = this.getGetter().getReturnType();
+			paramType = Tools.getAccessorType(this.getGetter());
 		}
 
 		if (paramType != null)
 		{
-			Method setter = this.getSetter(paramType);
+			Member setter = this.getSetter(paramType);
 
 			if (setter == null && !this.getSetter().containsKey(paramType))
 			{
@@ -65,7 +65,7 @@ public class Accessor
 	{
 		if (this.getGetter() != null)
 		{
-			return (E) this.getGetter().invoke(object);
+			return Tools.access(object, this.getGetter());
 		}
 
 		if (this.getField() != null)
@@ -81,7 +81,7 @@ public class Accessor
 		return cls;
 	}
 
-	protected Method getDefaultSetter()
+	protected Member getDefaultSetter()
 	{
 		if (this.getField() != null)
 		{
@@ -98,7 +98,7 @@ public class Accessor
 		return field;
 	}
 
-	public Method getGetter()
+	public Member getGetter()
 	{
 		return getter;
 	}
@@ -108,12 +108,12 @@ public class Accessor
 		return name;
 	}
 
-	protected Map<Class<?>, Method> getSetter()
+	protected Map<Class<?>, Member> getSetter()
 	{
 		return setter;
 	}
 
-	public Method getSetter(Class<?> paramType)
+	public Member getSetter(Class<?> paramType)
 	{
 		return this.getSetter().get(paramType);
 	}
@@ -140,20 +140,9 @@ public class Accessor
 	{
 		Class<?> paramType = value == null ? null : value.getClass();
 
-		Method setter = this.findSetter(paramType);
+		Member setter = this.findSetter(paramType);
 
-		if (setter != null)
-		{
-			setter.invoke(object, value);
-		}
-		else if (this.getField() != null)
-		{
-			this.getField().set(object, value);
-		}
-		else
-		{
-			throw new IllegalAccessException(this.getName());
-		}
+		Tools.access(object, setter, value);
 
 		return object;
 	}
@@ -163,12 +152,12 @@ public class Accessor
 		this.field = field;
 	}
 
-	protected void setGetter(Method getter)
+	protected void setGetter(Member getter)
 	{
 		this.getter = getter;
 	}
 
-	protected void setSetter(Class<?> paramType, Method setter)
+	protected void setSetter(Class<?> paramType, Member setter)
 	{
 		this.getSetter().put(paramType, setter);
 	}
