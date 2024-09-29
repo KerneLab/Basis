@@ -226,10 +226,7 @@ public class Tools
 				}
 				if (field != null)
 				{
-					if (field.isAccessible())
-					{
-						return (E) field.get(object);
-					}
+					return (E) field.get(object);
 				}
 				else
 				{
@@ -287,10 +284,7 @@ public class Tools
 			}
 			else if (field != null)
 			{
-				if (field.isAccessible())
-				{
-					field.set(object, value);
-				}
+				field.set(object, value);
 			}
 			else
 			{
@@ -938,25 +932,27 @@ public class Tools
 	/**
 	 * Clear the StringBuffer.
 	 * 
-	 * @param stringBuffer
+	 * @param buf
 	 *            The StringBuffer to be cleared.
 	 * @return The StringBuffer.
 	 */
-	public static StringBuffer clearStringBuffer(StringBuffer stringBuffer)
+	public static StringBuffer clearStringBuffer(StringBuffer buf)
 	{
-		return stringBuffer.delete(0, stringBuffer.length());
+		buf.setLength(0);
+		return buf;
 	}
 
 	/**
 	 * Clear the StringBuilder.
 	 * 
-	 * @param stringBuilder
+	 * @param buf
 	 *            The StringBuilder to be cleared.
 	 * @return The StringBuilder.
 	 */
-	public static StringBuilder clearStringBuilder(StringBuilder stringBuilder)
+	public static StringBuilder clearStringBuilder(StringBuilder buf)
 	{
-		return stringBuilder.delete(0, stringBuilder.length());
+		buf.setLength(0);
+		return buf;
 	}
 
 	/**
