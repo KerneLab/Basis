@@ -2326,11 +2326,11 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public E get(Producer<RuntimeException> raiser)
+		public E get(Producer<Exception> raiser) throws Exception
 		{
 			if (raiser != null)
 			{
-				RuntimeException ex = null;
+				Exception ex = null;
 				try
 				{
 					ex = raiser.produce();
@@ -2478,7 +2478,7 @@ public class Canal<D> implements Iterable<D>
 
 		public abstract E get();
 
-		public abstract E get(Producer<RuntimeException> raiser);
+		public abstract E get(Producer<Exception> raiser) throws Exception;
 
 		public abstract boolean given();
 
@@ -3495,7 +3495,7 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public E get(Producer<RuntimeException> raiser)
+		public E get(Producer<Exception> raiser)
 		{
 			return value;
 		}
