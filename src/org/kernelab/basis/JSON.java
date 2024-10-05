@@ -17,6 +17,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -7330,8 +7331,31 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			Class<?> eleClass = null;
 			try
 			{
-				eleClass = (Class<?>) eleType;
-				project = ProjectOf(eleClass, projects);
+				if (eleType instanceof Class)
+				{
+					eleClass = (Class<?>) eleType;
+				}
+				else if (eleType instanceof WildcardType)
+				{
+					WildcardType w = (WildcardType) eleType;
+					Type[] t = w.getUpperBounds();
+					if (t != null && t.length > 0 && t[0] != Object.class)
+					{
+						eleClass = (Class<?>) t[0];
+					}
+					else
+					{
+						t = w.getLowerBounds();
+						if (t != null && t.length > 0)
+						{
+							eleClass = (Class<?>) t[0];
+						}
+					}
+				}
+				if (eleClass != null)
+				{
+					project = ProjectOf(eleClass, projects);
+				}
 			}
 			catch (Exception e)
 			{
@@ -7349,7 +7373,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					try
 					{
 						o = pair.getValue();
-						if (o != null && !eleClass.isInstance(o))
+						if (o != null && eleClass != null && !eleClass.isInstance(o))
 						{
 							JSON j = (JSON) o;
 							if (j.projects() == null)
@@ -7433,8 +7457,31 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			Class<?> eleClass = null;
 			try
 			{
-				eleClass = (Class<?>) eleType;
-				project = ProjectOf(eleClass, projects);
+				if (eleType instanceof Class)
+				{
+					eleClass = (Class<?>) eleType;
+				}
+				else if (eleType instanceof WildcardType)
+				{
+					WildcardType w = (WildcardType) eleType;
+					Type[] t = w.getUpperBounds();
+					if (t != null && t.length > 0 && t[0] != Object.class)
+					{
+						eleClass = (Class<?>) t[0];
+					}
+					else
+					{
+						t = w.getLowerBounds();
+						if (t != null && t.length > 0)
+						{
+							eleClass = (Class<?>) t[0];
+						}
+					}
+				}
+				if (eleClass != null)
+				{
+					project = ProjectOf(eleClass, projects);
+				}
 			}
 			catch (Exception e)
 			{
@@ -7450,23 +7497,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				{
 					try
 					{
-						if (o == null)
-						{
-							coll.add(null);
-						}
-						else if (eleClass.isInstance(o))
-						{
-							coll.add(o);
-						}
-						else
+						if (o != null && eleClass != null && !eleClass.isInstance(o))
 						{
 							JSON j = (JSON) o;
 							if (j.projects() == null)
 							{
 								j.projects(json);
 							}
-							coll.add(Project(eleClass.newInstance(), j));
+							o = Project(eleClass.newInstance(), j);
 						}
+						coll.add(o);
 					}
 					catch (Exception e)
 					{
