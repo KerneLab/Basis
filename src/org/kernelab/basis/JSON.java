@@ -7375,12 +7375,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						o = pair.getValue();
 						if (o != null && eleClass != null && !eleClass.isInstance(o))
 						{
-							JSON j = (JSON) o;
-							if (j.projects() == null)
+							if (o instanceof JSON)
 							{
-								j.projects(json);
+								JSON j = (JSON) o;
+								if (j.projects() == null)
+								{
+									j.projects(json);
+								}
 							}
-							o = Project(eleClass.newInstance(), j);
+							o = ProjectTo(o, eleClass, null, json.projects());
 						}
 						map.put(pair.getKey(), o);
 					}
@@ -7499,12 +7502,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 					{
 						if (o != null && eleClass != null && !eleClass.isInstance(o))
 						{
-							JSON j = (JSON) o;
-							if (j.projects() == null)
+							if (o instanceof JSON)
 							{
-								j.projects(json);
+								JSON j = (JSON) o;
+								if (j.projects() == null)
+								{
+									j.projects(json);
+								}
 							}
-							o = Project(eleClass.newInstance(), j);
+							o = ProjectTo(o, eleClass, null, json.projects());
 						}
 						coll.add(o);
 					}
