@@ -728,6 +728,16 @@ public class TestCanal
 		Tools.debug("============zipWithPhase 1");
 		Tools.debug(Canal.of(new Integer[] { 1 }).zipWithPhase().collect());
 
+		Tools.debug("============zipWithPhase filter");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).filter(new Filter<Integer>()
+		{
+			@Override
+			public boolean filter(Integer el) throws Exception
+			{
+				return el > 1;
+			}
+		}).zipWithPhase().collect());
+
 		Tools.debug("============sortBy");
 		Canal.of(new Integer[][] { //
 				new Integer[] { 1, 2 }, //

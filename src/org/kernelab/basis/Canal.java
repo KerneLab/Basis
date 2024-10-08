@@ -876,6 +876,7 @@ public class Canal<D> implements Iterable<D>
 
 	protected static interface Evaluator<E, T> extends Operator<E, E>
 	{
+		@Override
 		Terminal<E, T> newPond();
 	}
 
@@ -4492,17 +4493,41 @@ public class Canal<D> implements Iterable<D>
 		{
 			return new Creek<E, Tuple2<E, Integer>>()
 			{
-				private int head = 1;
+				private Boolean	has;
+
+				private E		next;
+
+				private int		head	= 1, body = -1;
+
+				@Override
+				public boolean hasNext()
+				{
+					if (has == null)
+					{
+						has = body >= 0 ? body < 2 : upstream().hasNext();
+						if (has)
+						{
+							next = upstream().next();
+							body = upstream().hasNext() ? 0 : 2;
+						}
+						else
+						{
+							body = -1;
+						}
+					}
+					return has;
+				}
 
 				@Override
 				public Tuple2<E, Integer> next()
 				{
 					try
 					{
-						return Tuple.of(upstream().next(), head | (upstream().hasNext() ? 0 : 2));
+						return Tuple.of(next, head | body);
 					}
 					finally
 					{
+						has = null;
 						head = 0;
 					}
 				}
