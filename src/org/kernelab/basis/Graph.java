@@ -10,6 +10,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.kernelab.basis.Canal.Producer;
+
 public class Graph<N, E>
 {
 	public static class CyclicPathDetectException extends RuntimeException
@@ -323,6 +325,12 @@ public class Graph<N, E>
 		this.getLinks().add(link);
 		this.getInLinks(link.target).add(link);
 		this.getOutLinks(link.source).add(link);
+		return this;
+	}
+
+	public Graph<N, E> add(N node)
+	{
+		this.getNodes().add(node);
 		return this;
 	}
 
@@ -705,11 +713,34 @@ public class Graph<N, E>
 
 	/**
 	 * Return a TreeMap which divides nodes into each set according to its
-	 * topology level (zero-based).
+	 * topology level (zero-based). Each level will be stored as HashSet by
+	 * default. A customized Set can be specified by calling
+	 * {@link #stratify(Producer)} instead.
 	 * 
 	 * @return
+	 * @see #stratify(Producer)
 	 */
 	public TreeMap<Integer, Set<N>> stratify()
+	{
+		return stratify(new Producer<Set<N>>()
+		{
+			@Override
+			public Set<N> produce() throws Exception
+			{
+				return new HashSet<N>();
+			}
+		});
+	}
+
+	/**
+	 * Return a TreeMap which divides nodes into each set (provided by newSet)
+	 * according to its topology level (zero-based).
+	 * 
+	 * @param newSet
+	 *            A producer which makes a new Set for each level.
+	 * @return
+	 */
+	public TreeMap<Integer, Set<N>> stratify(Producer<Set<N>> newSet)
 	{
 		Map<Integer, Set<N>> res = new HashMap<Integer, Set<N>>();
 
@@ -721,7 +752,14 @@ public class Graph<N, E>
 			nodes = res.get(level);
 			if (nodes == null)
 			{
-				nodes = new HashSet<N>();
+				try
+				{
+					nodes = newSet.produce();
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
 				res.put(level, nodes);
 			}
 			nodes.add(entry.getKey());
