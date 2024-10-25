@@ -309,6 +309,15 @@ public class Graph<N, E>
 		this.init();
 	}
 
+	public Graph<N, E> add(Iterable<N> nodes)
+	{
+		for (N node : nodes)
+		{
+			this.getNodes().add(node);
+		}
+		return this;
+	}
+
 	protected Graph<N, E> add(Link<N, E> link)
 	{
 		this.getNodes().add(link.source);
@@ -733,14 +742,14 @@ public class Graph<N, E>
 	}
 
 	/**
-	 * Return a TreeMap which divides nodes into each set (provided by newSet)
+	 * Return a TreeMap which divides nodes into each set (provided by setMaker)
 	 * according to its topology level (zero-based).
 	 * 
-	 * @param newSet
+	 * @param setMaker
 	 *            A producer which makes a new Set for each level.
 	 * @return
 	 */
-	public TreeMap<Integer, Set<N>> stratify(Producer<Set<N>> newSet)
+	public TreeMap<Integer, Set<N>> stratify(Producer<Set<N>> setMaker)
 	{
 		Map<Integer, Set<N>> res = new HashMap<Integer, Set<N>>();
 
@@ -754,7 +763,7 @@ public class Graph<N, E>
 			{
 				try
 				{
-					nodes = newSet.produce();
+					nodes = setMaker.produce();
 				}
 				catch (Exception e)
 				{
@@ -825,17 +834,45 @@ public class Graph<N, E>
 
 	/**
 	 * Return topology sort result. The nodes on source side will be treated as
-	 * dependencies.
+	 * dependencies. Each level will be stored as HashSet by default. A
+	 * customized Set can be specified by calling {@link #topSort(Producer)}.
 	 * 
 	 * @return
 	 */
 	public List<N> topSort()
 	{
+		return topSort(new Producer<Set<N>>()
+		{
+			@Override
+			public Set<N> produce() throws Exception
+			{
+				return new HashSet<N>();
+			}
+		});
+	}
+
+	/**
+	 * Return topology sort result. The nodes on source side will be treated as
+	 * dependencies. Each level will be stored into a Set provided by setMaker.
+	 * 
+	 * @param setMaker
+	 * @return
+	 */
+	public List<N> topSort(Producer<Set<N>> setMaker)
+	{
 		Graph<N, Object> trace = this.toTrace();
 
 		LinkedList<N> top = new LinkedList<N>();
 
-		Set<N> heads = new HashSet<N>();
+		Set<N> heads;
+		try
+		{
+			heads = setMaker.produce();
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
 		Set<N> nexts = null;
 
 		while (!trace.getNodes().isEmpty())
@@ -863,7 +900,14 @@ public class Graph<N, E>
 			}
 			else
 			{
-				nexts = new HashSet<N>();
+				try
+				{
+					nexts = setMaker.produce();
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
 			}
 
 			for (N node : heads)
