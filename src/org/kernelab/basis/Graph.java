@@ -931,6 +931,8 @@ public class Graph<N, E>
 	{
 		Graph<N, Object> trace = new Graph<N, Object>();
 
+		trace.add(this.getNodes());
+
 		for (Trace<N> t : this.getMap().keySet())
 		{
 			trace.add(t);
