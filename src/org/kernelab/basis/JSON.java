@@ -7527,19 +7527,26 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				for (JSON o : ((JSAN) json).iterator(JSON.class))
 				{
-					try
+					if (o == null)
 					{
-						if (o.projects() == null)
-						{
-							o.projects(json);
-						}
-						coll.add(Project(Project(eleClass, o), projects, o));
+						coll.add(null);
 					}
-					catch (Exception e)
+					else
 					{
-						if (json.projectStrict())
+						try
 						{
-							Tools.throwOriginalException(e);
+							if (o.projects() == null)
+							{
+								o.projects(json);
+							}
+							coll.add(Project(Project(eleClass, o), projects, o));
+						}
+						catch (Exception e)
+						{
+							if (json.projectStrict())
+							{
+								Tools.throwOriginalException(e);
+							}
 						}
 					}
 				}
@@ -7548,7 +7555,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				for (Object v : ((Map<String, Object>) project).values())
 				{
-					if (v != null)
+					if (v == null)
+					{
+						coll.add(null);
+					}
+					else
 					{
 						try
 						{

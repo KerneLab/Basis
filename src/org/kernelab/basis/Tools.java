@@ -85,6 +85,7 @@ import java.util.zip.ZipFile;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.kernelab.basis.Canal.Producer;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.io.DataReader;
 import org.kernelab.basis.io.DataWriter;
@@ -6399,6 +6400,25 @@ public class Tools
 		}
 
 		return true;
+	}
+
+	/**
+	 * Return the value if not null or the value given by default.
+	 * 
+	 * @param value
+	 * @param byDefault
+	 * @return
+	 */
+	public static <T> T or(T value, Producer<T> byDefault)
+	{
+		try
+		{
+			return value != null || byDefault == null ? value : byDefault.produce();
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
 	}
 
 	/**
