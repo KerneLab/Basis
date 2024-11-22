@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1274,36 +1275,6 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		{
 			return false;
 		}
-
-		// return Tools.waitFor(new Callable<Boolean>()
-		// {
-		// public Boolean call() throws Exception
-		// {
-		// boolean ac = conn.getAutoCommit();
-		//
-		// if (ac)
-		// {
-		// conn.setAutoCommit(false);
-		// }
-		//
-		// conn.rollback();
-		//
-		// if (ac)
-		// {
-		// conn.setAutoCommit(true);
-		// }
-		//
-		// return true;
-		// }
-		// }, false, timeout * 1000);
-	}
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args)
-	{
-
 	}
 
 	public static final Properties PropertiesOfMap(Map<?, Object> map)
@@ -1355,6 +1326,28 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		buf.insert(0, m.group(1) + "://");
 		buf.append(m.group(3));
 		return buf.toString();
+	}
+
+	public static Collection<String> resolveSingles(String url)
+	{
+		Collection<String> res = new ArrayList<String>();
+
+		Matcher m = MULTI_NODES_URL_PATTERN.matcher(url);
+
+		if (!m.matches())
+		{
+			res.add(url);
+		}
+		else
+		{
+			String head = m.group(1), tail = m.group(3);
+			for (String node : m.group(2).split(","))
+			{
+				res.add(head + "://" + node + tail);
+			}
+		}
+
+		return res;
 	}
 
 	protected String			serverName;
@@ -1459,6 +1452,11 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return portNumber;
 	}
 
+	public Properties getProperties()
+	{
+		return PropertiesOfMap(this.getInformation());
+	}
+
 	public String getServerName()
 	{
 		return serverName;
@@ -1500,7 +1498,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 				throw new SQLException(e);
 			}
 		}
-		return DriverManager.getConnection(this.getURL(), PropertiesOfMap(this.getInformation()));
+		return DriverManager.getConnection(this.getURL(), this.getProperties());
 	}
 
 	@Override
