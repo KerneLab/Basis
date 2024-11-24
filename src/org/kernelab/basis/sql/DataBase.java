@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1328,9 +1327,9 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 		return buf.toString();
 	}
 
-	public static Collection<String> resolveSingles(String url)
+	public static List<String> resolveSingles(String url)
 	{
-		Collection<String> res = new ArrayList<String>();
+		List<String> res = new ArrayList<String>();
 
 		Matcher m = MULTI_NODES_URL_PATTERN.matcher(url);
 
