@@ -8815,19 +8815,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public JSON pairs(Object... pairs)
 	{
-		for (int i = 0; i < pairs.length; i++)
+		Object key = null;
+		for (int i = 0, n = pairs.length - 1; i < n; i += 2)
 		{
-			Object key = pairs[i];
-			Object value = null;
-			i++;
-			if (i < pairs.length)
-			{
-				value = pairs[i];
-			}
-
+			key = pairs[i];
 			if (key != null)
 			{
-				this.attr(key.toString(), value);
+				this.attr(key.toString(), pairs[i + 1]);
 			}
 		}
 		return this;
