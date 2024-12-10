@@ -2259,6 +2259,48 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	protected static class MapWithStateOp<I, S, O> implements Converter<I, O>
+	{
+		protected final StatefulMapper<I, S, O>	mapper;
+
+		protected final Producer<S>				state;
+
+		public MapWithStateOp(StatefulMapper<I, S, O> mapper, Producer<S> state)
+		{
+			this.mapper = mapper;
+			this.state = state;
+		}
+
+		@Override
+		public Pond<I, O> newPond()
+		{
+			return new Creek<I, O>()
+			{
+				private boolean	init	= false;
+
+				private S		stat	= null;
+
+				@Override
+				public O next()
+				{
+					try
+					{
+						if (!init)
+						{
+							stat = state.produce();
+							init = true;
+						}
+						return mapper.map(upstream().next(), stat);
+					}
+					catch (Exception e)
+					{
+						throw new RuntimeException(e);
+					}
+				}
+			};
+		}
+	}
+
 	protected static class MAX<T extends Comparable<T>> extends AbstractAggregator<T>
 	{
 		protected final Expr<T> vop;
@@ -5538,6 +5580,20 @@ public class Canal<D> implements Iterable<D>
 	public <V> Canal<V> map(Mapper<D, V> mapper)
 	{
 		return this.follow(new MapOp<D, V>(mapper));
+	}
+
+	/**
+	 * Map each element with state.
+	 * 
+	 * @param mapper
+	 *            {@code (D data, S state)->V value}
+	 * @param state
+	 *            state producer which generates a initial state.
+	 * @return
+	 */
+	public <S, V> Canal<V> mapWithState(StatefulMapper<D, S, V> mapper, Producer<S> state)
+	{
+		return this.follow(new MapWithStateOp<D, S, V>(mapper, state));
 	}
 
 	@SuppressWarnings("unchecked")
