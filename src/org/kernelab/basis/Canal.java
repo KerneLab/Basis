@@ -2261,14 +2261,14 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class MapWithStateOp<I, S, O> implements Converter<I, O>
 	{
-		protected final StatefulMapper<I, S, O>	mapper;
-
 		protected final Producer<S>				state;
 
-		public MapWithStateOp(StatefulMapper<I, S, O> mapper, Producer<S> state)
+		protected final StatefulMapper<I, S, O>	mapper;
+
+		public MapWithStateOp(Producer<S> state, StatefulMapper<I, S, O> mapper)
 		{
-			this.mapper = mapper;
 			this.state = state;
+			this.mapper = mapper;
 		}
 
 		@Override
@@ -5585,15 +5585,15 @@ public class Canal<D> implements Iterable<D>
 	/**
 	 * Map each element with state.
 	 * 
-	 * @param mapper
-	 *            {@code (D data, S state)->V value}
 	 * @param state
 	 *            state producer which generates a initial state.
+	 * @param mapper
+	 *            {@code (D data, S state)->V value}
 	 * @return
 	 */
-	public <S, V> Canal<V> mapWithState(StatefulMapper<D, S, V> mapper, Producer<S> state)
+	public <S, V> Canal<V> mapWithState(Producer<S> state, StatefulMapper<D, S, V> mapper)
 	{
-		return this.follow(new MapWithStateOp<D, S, V>(mapper, state));
+		return this.follow(new MapWithStateOp<D, S, V>(state, mapper));
 	}
 
 	@SuppressWarnings("unchecked")
