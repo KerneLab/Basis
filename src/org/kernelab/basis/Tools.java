@@ -885,6 +885,66 @@ public class Tools
 	}
 
 	/**
+	 * To determine whether the given value satisfies:
+	 * {@code min <= val <= max}. Using
+	 * {@link #within(Comparable, Comparable, boolean, Comparable, boolean)}
+	 * instead if you want to ignore the order of lower and upper bound.
+	 * 
+	 * @param val
+	 *            the given value.
+	 * @param min
+	 *            the minimum point of the range.
+	 * @param includeMin
+	 *            whether including min.
+	 * @param max
+	 *            the maximum point of the range.
+	 * @param includeMax
+	 *            whether including max.
+	 * @return true if the given value is between min and max.
+	 * @see #within(Comparable, Comparable, boolean, Comparable, boolean)
+	 */
+	public static <V extends Comparable<V>> boolean between(V val, V min, boolean includeMin, V max, boolean includeMax)
+	{
+		if (val == null || min == null || max == null)
+		{
+			return false;
+		}
+		else
+		{
+			int c, d;
+			return ((c = min.compareTo(val)) < 0 || (c == 0 && includeMin)) //
+					&& ((d = val.compareTo(max)) < 0 || (d == 0 && includeMax));
+		}
+	}
+
+	/**
+	 * To determine whether the given value satisfies:
+	 * {@code min <= val <= max}. Using
+	 * {@link #within(Comparable, Comparable, Comparable)} instead if you want
+	 * to ignore the order of lower and upper bound.
+	 * 
+	 * @param val
+	 *            the given value.
+	 * @param min
+	 *            the minimum point of the range.
+	 * @param max
+	 *            the maximum point of the range.
+	 * @return true if the given value is between min and max.
+	 * @see #within(Comparable, Comparable, Comparable)
+	 */
+	public static <V extends Comparable<V>> boolean between(V val, V min, V max)
+	{
+		if (val == null || min == null || max == null)
+		{
+			return false;
+		}
+		else
+		{
+			return min.compareTo(val) <= 0 && val.compareTo(max) <= 0;
+		}
+	}
+
+	/**
 	 * Return a new String with the first character in source CharSequence
 	 * become upper case.
 	 * 
@@ -9278,5 +9338,89 @@ public class Tools
 	public static <D, T> CaseWhenMapper<D, T> when(Filter<D> cond, Mapper<D, T> then, Producer<T> other)
 	{
 		return CaseWhenMapper.of(cond, then, other);
+	}
+
+	/**
+	 * To determine whether the given value is within the range from {@code a}
+	 * to {@code b}, no mater {@code a} was less or greater than {@code b}.
+	 * Using
+	 * {@link #between(Comparable, Comparable, boolean, Comparable, boolean)}
+	 * instead if you want to check whether {@code a<=b} additionally.
+	 * 
+	 * @param val
+	 *            the given value.
+	 * @param a
+	 *            one end point of the range.
+	 * @param includeA
+	 *            whether including a.
+	 * @param b
+	 *            another end point of the range.
+	 * @param includeB
+	 *            whether including b.
+	 * @return true if the given value is within the range.
+	 * @see #between(Comparable, Comparable, boolean, Comparable, boolean)
+	 */
+	public static <V extends Comparable<V>> boolean within(V val, V a, boolean includeA, V b, boolean includeB)
+	{
+		if (val == null || a == null || b == null)
+		{
+			return false;
+		}
+
+		V min, max;
+		boolean i, x;
+		if (a.compareTo(b) < 0)
+		{
+			min = a;
+			max = b;
+			i = includeA;
+			x = includeB;
+		}
+		else
+		{
+			min = b;
+			max = a;
+			i = includeB;
+			x = includeA;
+		}
+
+		return between(val, min, i, max, x);
+	}
+
+	/**
+	 * To determine whether the given value is within the range from {@code a}
+	 * to {@code b}, no mater {@code a} was less or greater than {@code b}.
+	 * Using {@link #between(Comparable, Comparable, Comparable)} instead if you
+	 * want to check whether {@code a<=b} additionally.
+	 * 
+	 * @param val
+	 *            the given value.
+	 * @param a
+	 *            one end point of the range.
+	 * @param b
+	 *            another end point of the range.
+	 * @return true if the given value is within the range.
+	 * @see #between(Comparable, Comparable, Comparable)
+	 */
+	public static <V extends Comparable<V>> boolean within(V val, V a, V b)
+	{
+		if (val == null || a == null || b == null)
+		{
+			return false;
+		}
+
+		V min, max;
+		if (a.compareTo(b) < 0)
+		{
+			min = a;
+			max = b;
+		}
+		else
+		{
+			min = b;
+			max = a;
+		}
+
+		return between(val, min, max);
 	}
 }
