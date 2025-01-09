@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
@@ -2298,6 +2300,61 @@ public class Canal<D> implements Iterable<D>
 					}
 				}
 			};
+		}
+	}
+
+	protected static class MatchFindIterable implements Iterable<Matcher>
+	{
+		protected final Pattern			regex;
+
+		protected final CharSequence	text;
+
+		public MatchFindIterable(Pattern regex, CharSequence text)
+		{
+			this.regex = regex;
+			this.text = text;
+		}
+
+		@Override
+		public Iterator<Matcher> iterator()
+		{
+			return new MatchFindIterator(regex, text);
+		}
+	}
+
+	protected static class MatchFindIterator implements Iterator<Matcher>
+	{
+		protected final Matcher	m;
+
+		protected final Matcher	n;
+
+		private boolean			find;
+
+		public MatchFindIterator(Pattern regex, CharSequence text)
+		{
+			this.m = regex.matcher(text);
+			this.n = regex.matcher(text);
+			this.find = this.n.find();
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return find;
+		}
+
+		@Override
+		public Matcher next()
+		{
+			try
+			{
+				m.find();
+				return m;
+			}
+			finally
+			{
+				find = n.find();
+			}
 		}
 	}
 
@@ -4771,6 +4828,11 @@ public class Canal<D> implements Iterable<D>
 		return new SingleUseIterable<E>(iter);
 	}
 
+	public static Iterable<Matcher> iterable(Pattern regex, CharSequence text)
+	{
+		return new MatchFindIterable(regex, text);
+	}
+
 	public static <E> EnumerationIterator<E> iterator(Enumeration<E> enumer)
 	{
 		return new EnumerationIterator<E>(enumer);
@@ -4889,6 +4951,11 @@ public class Canal<D> implements Iterable<D>
 						return Tuple.of(el.getKey(), el.getValue());
 					}
 				}).toPair();
+	}
+
+	public static Canal<Matcher> of(Pattern regex, CharSequence text)
+	{
+		return of(iterable(regex, text));
 	}
 
 	public static <E> Canal<E> of(Producer<E> spring)
