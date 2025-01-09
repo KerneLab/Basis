@@ -8148,7 +8148,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 						out.append(QUOTE_CHAR);
 					}
 
-					out.append(EscapeString(entry.getKey()));
+					out.append(EscapeString(key));
 
 					if (JSON.IsContext(json))
 					{
@@ -8218,6 +8218,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		else if (value instanceof CharSequence || value instanceof Character)
 		{
 			return QUOTE_CHAR + EscapeString(value.toString()) + QUOTE_CHAR;
+		}
+		else if (value instanceof BigDecimal)
+		{
+			return ((BigDecimal) value).toPlainString();
+		}
+		else if (value instanceof Double || value instanceof Float)
+		{
+			return new BigDecimal(value.toString()).toPlainString();
 		}
 		else if (value instanceof java.util.Date)
 		{
