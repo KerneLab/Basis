@@ -917,6 +917,10 @@ public class Canal<D> implements Iterable<D>
 						}
 						return false;
 					}
+					catch (RuntimeException e)
+					{
+						throw e;
+					}
 					catch (Exception e)
 					{
 						throw new RuntimeException(e);
@@ -1047,6 +1051,10 @@ public class Canal<D> implements Iterable<D>
 						}
 						return false;
 					}
+					catch (RuntimeException e)
+					{
+						throw e;
+					}
 					catch (Exception e)
 					{
 						throw new RuntimeException(e);
@@ -1112,7 +1120,7 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class FoldUntilOp<E, R> implements Evaluator<E, Option<R>>
 	{
-		private Producer<R>				init;
+		protected final Producer<R>		init;
 
 		protected final Reducer<E, R>	folder;
 
@@ -1388,6 +1396,10 @@ public class Canal<D> implements Iterable<D>
 			try
 			{
 				return generator.produce();
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
 			}
 			catch (Exception e)
 			{
@@ -2229,6 +2241,10 @@ public class Canal<D> implements Iterable<D>
 					{
 						return mapper.map(upstream().next());
 					}
+					catch (RuntimeException e)
+					{
+						throw e;
+					}
 					catch (Exception e)
 					{
 						throw new RuntimeException(e);
@@ -2253,6 +2269,10 @@ public class Canal<D> implements Iterable<D>
 			try
 			{
 				return mapper.map(o1).compareTo(mapper.map(o2));
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
 			}
 			catch (Exception e)
 			{
@@ -2293,6 +2313,10 @@ public class Canal<D> implements Iterable<D>
 							init = true;
 						}
 						return mapper.map(upstream().next(), stat);
+					}
+					catch (RuntimeException e)
+					{
+						throw e;
 					}
 					catch (Exception e)
 					{
@@ -2466,6 +2490,10 @@ public class Canal<D> implements Iterable<D>
 			{
 				return defaultProducer.produce();
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
 				throw new RuntimeException(e);
@@ -2484,6 +2512,10 @@ public class Canal<D> implements Iterable<D>
 			try
 			{
 				return opt.produce();
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
 			}
 			catch (Exception e)
 			{
@@ -2570,6 +2602,10 @@ public class Canal<D> implements Iterable<D>
 					return none();
 				}
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
 				throw new RuntimeException(e);
@@ -2590,6 +2626,10 @@ public class Canal<D> implements Iterable<D>
 				try
 				{
 					return some(mapper.map(this.get()));
+				}
+				catch (RuntimeException e)
+				{
+					throw e;
 				}
 				catch (Exception e)
 				{
@@ -2826,6 +2866,10 @@ public class Canal<D> implements Iterable<D>
 					try
 					{
 						action.action(el);
+					}
+					catch (RuntimeException e)
+					{
+						throw e;
 					}
 					catch (Exception e)
 					{
@@ -3091,6 +3135,10 @@ public class Canal<D> implements Iterable<D>
 					{
 						return a.compareTo((T) b) * item.getFactor();
 					}
+				}
+				catch (RuntimeException e)
+				{
+					throw e;
 				}
 				catch (Exception e)
 				{
@@ -4424,6 +4472,10 @@ public class Canal<D> implements Iterable<D>
 								return true;
 							}
 						}
+						catch (RuntimeException e)
+						{
+							throw e;
+						}
 						catch (Exception e)
 						{
 							throw new RuntimeException(e);
@@ -4683,6 +4735,10 @@ public class Canal<D> implements Iterable<D>
 		try
 		{
 			pond.begin();
+		}
+		catch (RuntimeException e)
+		{
+			throw e;
 		}
 		catch (Exception e)
 		{
@@ -5345,16 +5401,18 @@ public class Canal<D> implements Iterable<D>
 	 * satisfied.
 	 * 
 	 * @param init
-	 *            {@code ()->R res} a result initializer.
+	 *            {@code ()->R res} a result initializer called on the first
+	 *            fold.
 	 * @param folder
 	 *            {@code (R res,D data)->R res} a fold reducer.
-	 * @param condition
+	 * @param until
+	 *            the stop condition.
 	 * @return Some(res) if and only if at least one element be folded and the
 	 *         condition satisfied, otherwise None will be returned.
 	 */
-	public <R> Option<R> fold(Producer<R> init, Reducer<D, R> folder, Filter<R> condition)
+	public <R> Option<R> fold(Producer<R> init, Reducer<D, R> folder, Filter<R> until)
 	{
-		return this.follow(new FoldUntilOp<D, R>(init, folder, condition)).evaluate();
+		return this.follow(new FoldUntilOp<D, R>(init, folder, until)).evaluate();
 	}
 
 	/**

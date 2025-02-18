@@ -4088,6 +4088,21 @@ public class Tools
 		return calendar;
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T extends Throwable> T getOriginalCause(Throwable e, Class<T> cls)
+	{
+		if (e == null || cls == null)
+		{
+			return null;
+		}
+
+		while (e != null && !cls.isInstance(e))
+		{
+			e = e.getCause();
+		}
+		return (T) e;
+	}
+
 	public static Exception getOriginalException(Exception e)
 	{
 		if (e == null)
