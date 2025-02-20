@@ -6893,7 +6893,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (json.projectStrict())
 				{
-					throw new RuntimeException(Tools.getOriginalThrowable(e));
+					Tools.throwAsRuntimeException(Tools.getOriginalThrowable(e));
 				}
 			}
 		}
@@ -6994,12 +6994,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			if (json.projectStrict())
 			{
-				throw new RuntimeException(Tools.getOriginalThrowable(e));
+				Tools.throwAsRuntimeException(Tools.getOriginalThrowable(e));
 			}
-			else
-			{
-				return object;
-			}
+			return object;
 		}
 	}
 
@@ -7194,7 +7191,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				if (json.projectStrict())
 				{
-					throw new RuntimeException(Tools.getOriginalThrowable(e));
+					Tools.throwAsRuntimeException(Tools.getOriginalThrowable(e));
 				}
 			}
 		}

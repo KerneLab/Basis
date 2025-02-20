@@ -4096,11 +4096,18 @@ public class Tools
 			return null;
 		}
 
-		while (e != null && !cls.isInstance(e))
+		T t = null;
+		do
 		{
+			if (cls.isInstance(e))
+			{
+				t = (T) e;
+			}
 			e = e.getCause();
 		}
-		return (T) e;
+		while (e != null);
+
+		return t;
 	}
 
 	public static Exception getOriginalException(Exception e)
@@ -4216,6 +4223,23 @@ public class Tools
 	{
 		String charset = getPlatformCharset();
 		return charset == null ? defaultCharset : charset;
+	}
+
+	public static RuntimeException getRuntimeException(Throwable e)
+	{
+		if (e == null)
+		{
+			return null;
+		}
+
+		if (e instanceof RuntimeException)
+		{
+			return (RuntimeException) e;
+		}
+		else
+		{
+			return new RuntimeException(e);
+		}
 	}
 
 	/**
@@ -9090,6 +9114,15 @@ public class Tools
 		}
 
 		return c;
+	}
+
+	public static void throwAsRuntimeException(Throwable e)
+	{
+		RuntimeException x = getRuntimeException(e);
+		if (x != null)
+		{
+			throw x;
+		}
 	}
 
 	public static void throwOriginalException(Exception e) throws Exception
