@@ -177,6 +177,19 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
+	public static class NoMoreResultRowException extends SQLException
+	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public NoMoreResultRowException()
+		{
+			super();
+		}
+	}
+
 	public static class ObjectIterator<T> extends AbstractIterator<T>
 	{
 		private Mapper<ResultSet, T> mapper;
@@ -2141,6 +2154,37 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
+	/**
+	 * Move to next result row. If current row is before the first row, then
+	 * {@link #prepareFirstRow()} method will be called, otherwise
+	 * {@code resultSet.next()} will be called. SQLException will be thrown if
+	 * no more result row found or any other error occurred.
+	 * 
+	 * @return this Sequel
+	 * @throws SQLException
+	 */
+	public Sequel next() throws SQLException
+	{
+		if (this.isResultSet())
+		{
+			if (this.initNext == null)
+			{
+				if (!this.prepareFirstRow())
+				{
+					throw new NoMoreResultRowException();
+				}
+			}
+			else
+			{
+				if (!this.getResultSet().next())
+				{
+					throw new NoMoreResultRowException();
+				}
+			}
+		}
+		return this;
+	}
+
 	public boolean nextResult() throws SQLException
 	{
 		return nextResult(Statement.CLOSE_CURRENT_RESULT);
@@ -2196,6 +2240,22 @@ public class Sequel implements Iterable<ResultSet>
 						this.initNext = !this.getResultSet().isAfterLast();
 					}
 				}
+			}
+			return this.initNext;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	private boolean prepareFirstRow() throws SQLException
+	{
+		if (this.isResultSet())
+		{
+			if (this.initNext == null)
+			{
+				this.initNext = this.getResultSet().next();
 			}
 			return this.initNext;
 		}
