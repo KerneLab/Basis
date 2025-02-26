@@ -2384,6 +2384,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public void remove()
 		{
+			throw new UnsupportedOperationException();
 		}
 	}
 
