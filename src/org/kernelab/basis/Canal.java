@@ -2380,6 +2380,11 @@ public class Canal<D> implements Iterable<D>
 				find = n.find();
 			}
 		}
+
+		@Override
+		public void remove()
+		{
+		}
 	}
 
 	protected static class MAX<T extends Comparable<T>> extends AbstractAggregator<T>
