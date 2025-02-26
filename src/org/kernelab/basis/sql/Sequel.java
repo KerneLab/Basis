@@ -2015,7 +2015,7 @@ public class Sequel implements Iterable<ResultSet>
 		return this.isResultSet() || this.getUpdateCount() != N_A;
 	}
 
-	private Sequel hasResultSetObject(boolean resultSetObject) throws SQLException
+	protected Sequel hasResultSetObject(boolean resultSetObject) throws SQLException
 	{
 		if (resultSetObject)
 		{
@@ -2219,7 +2219,7 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	private boolean preparedResultSet() throws SQLException
+	protected boolean preparedResultSet() throws SQLException
 	{
 		if (this.isResultSet())
 		{
@@ -2237,7 +2237,7 @@ public class Sequel implements Iterable<ResultSet>
 					}
 					catch (SQLException e)
 					{
-						this.initNext = !this.getResultSet().isAfterLast();
+						this.initNext = false;
 					}
 				}
 			}
@@ -2249,7 +2249,7 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	private boolean prepareFirstRow() throws SQLException
+	protected boolean prepareFirstRow() throws SQLException
 	{
 		if (this.isResultSet())
 		{
@@ -2277,7 +2277,7 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	private boolean refreshUpdateCount() throws SQLException
+	protected boolean refreshUpdateCount() throws SQLException
 	{
 		this.updateCount = statement.getUpdateCount();
 		return this.updateCount != N_A;
@@ -2301,13 +2301,13 @@ public class Sequel implements Iterable<ResultSet>
 		return this;
 	}
 
-	private Sequel setKit(SQLKit kit)
+	protected Sequel setKit(SQLKit kit)
 	{
 		this.kit = kit;
 		return this;
 	}
 
-	private Sequel setResultSet(ResultSet resultSet)
+	protected Sequel setResultSet(ResultSet resultSet)
 	{
 		this.resultSet = resultSet;
 		this.initNext = null;
@@ -2316,7 +2316,7 @@ public class Sequel implements Iterable<ResultSet>
 		return this;
 	}
 
-	private Sequel setStatement(Statement statement)
+	protected Sequel setStatement(Statement statement)
 	{
 		this.statement = statement;
 		return this;
