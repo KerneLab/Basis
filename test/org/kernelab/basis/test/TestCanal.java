@@ -719,6 +719,10 @@ public class TestCanal
 		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 })
 				.zip(Canal.of(new String[] { "one", "two", "three", "four" })).collect());
 
+		Tools.debug("============zipOuter");
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }) //
+				.zipOuter(Canal.of(new String[] { "one", "two" })).collect());
+
 		Tools.debug("============zipWithIndex");
 		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).zipWithIndex().collect());
 

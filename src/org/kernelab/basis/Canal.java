@@ -4583,6 +4583,55 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	protected static class ZipOuterOp<A, B> implements Converter<A, Tuple2<Option<A>, Option<B>>>
+	{
+		protected final Canal<B> that;
+
+		public ZipOuterOp(Canal<B> that)
+		{
+			this.that = that;
+		}
+
+		@Override
+		public Pond<A, Tuple2<Option<A>, Option<B>>> newPond()
+		{
+			return new ZipOuterPond<A, B>(that);
+		}
+	}
+
+	protected static class ZipOuterPond<A, B> extends Dam<A, B, Tuple2<Option<A>, Option<B>>>
+	{
+		private Pond<?, B>	there;
+
+		private boolean		hasThis;
+
+		private boolean		hasThat;
+
+		public ZipOuterPond(Canal<B> that)
+		{
+			super(that);
+		}
+
+		@Override
+		public void begin()
+		{
+			this.there = that.build();
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return (hasThis = upstream().hasNext()) | (hasThat = there.hasNext());
+		}
+
+		@Override
+		public Tuple2<Option<A>, Option<B>> next()
+		{
+			return Tuple.of(hasThis ? Option.some(upstream().next()) : Option.<A> none(),
+					hasThat ? Option.some(there.next()) : Option.<B> none());
+		}
+	}
+
 	protected static class ZipPond<A, B> extends Dam<A, B, Tuple2<A, B>>
 	{
 		private Pond<?, B> there;
@@ -6237,8 +6286,8 @@ public class Canal<D> implements Iterable<D>
 	}
 
 	/**
-	 * Zip each element with element in another Canal into a {@code Tuple2<D,E>}
-	 * .
+	 * Zip each element with element in another Canal into a
+	 * {@code Tuple2<D,E>}.
 	 * 
 	 * @param that
 	 * @return
@@ -6246,6 +6295,19 @@ public class Canal<D> implements Iterable<D>
 	public <E> PairCanal<D, E> zip(Canal<E> that)
 	{
 		return this.follow(new ZipOp<D, E>(that)).toPair();
+	}
+
+	/**
+	 * Zip each element with element in another Canal into a
+	 * {@code Tuple2<Option<D>,Option<E>>}. Value {@code None} would be filled
+	 * in case that the element was missing on the corresponding position.
+	 * 
+	 * @param that
+	 * @return
+	 */
+	public <E> PairCanal<Option<D>, Option<E>> zipOuter(Canal<E> that)
+	{
+		return this.follow(new ZipOuterOp<D, E>(that)).toPair();
 	}
 
 	/**
