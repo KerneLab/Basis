@@ -1487,7 +1487,7 @@ public abstract class DataBase implements ConnectionManager, Copieable<DataBase>
 	public Connection newConnection() throws SQLException
 	{
 		if (this.getDriverName() != null)
-		{ // No need for JDBC4.0 with Java6.0s
+		{ // No need for JDBC4.0 with Java6.0
 			try
 			{
 				Extensions.forName(this.getDriverName());

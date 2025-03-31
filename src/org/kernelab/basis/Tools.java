@@ -2874,28 +2874,25 @@ public class Tools
 	}
 
 	/**
-	 * Encode text to code by a certain encode algorithm like MD5, SHA-1
+	 * Encode data to code by a certain encode algorithm like MD5, SHA-1
 	 * 
-	 * @param text
-	 *            The text to be encoded.
+	 * @param data
+	 *            The bytes data to be encoded.
 	 * @param algorithm
 	 *            The name of encode algorithm.
-	 * @return The result of encoding.
+	 * @return The result of encoding in lower case
 	 */
-	public static String encode(String text, String algorithm)
+	public static String encode(byte[] data, String algorithm)
 	{
-		if (text != null && algorithm != null)
+		if (data != null && algorithm != null)
 		{
-			String result = null;
-
 			try
 			{
 				MessageDigest md = MessageDigest.getInstance(algorithm);
 
-				StringBuilder code = new StringBuilder();
+				byte[] digest = md.digest(data);
 
-				byte[] digest = md.digest(text.getBytes());
-
+				StringBuilder code = new StringBuilder(digest.length * 2);
 				String tmp = null;
 				for (int i = 0; i < digest.length; i++)
 				{
@@ -2907,13 +2904,29 @@ public class Tools
 					code.append(tmp);
 				}
 
-				result = code.toString();
+				return code.toString();
 			}
 			catch (NoSuchAlgorithmException e)
 			{
 			}
+		}
+		return null;
+	}
 
-			return result;
+	/**
+	 * Encode text to code by a certain encode algorithm like MD5, SHA-1
+	 * 
+	 * @param text
+	 *            The text to be encoded.
+	 * @param algorithm
+	 *            The name of encode algorithm.
+	 * @return The result of encoding in lower case.
+	 */
+	public static String encode(String text, String algorithm)
+	{
+		if (text != null && algorithm != null)
+		{
+			return encode(text.getBytes(), algorithm);
 		}
 		else
 		{
