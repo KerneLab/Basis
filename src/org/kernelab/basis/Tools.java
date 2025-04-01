@@ -2899,7 +2899,7 @@ public class Tools
 					tmp = Integer.toHexString(digest[i] & 0xFF);
 					if (tmp.length() == 1)
 					{
-						code.append("0");
+						code.append('0');
 					}
 					code.append(tmp);
 				}
