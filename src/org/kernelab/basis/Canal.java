@@ -5763,6 +5763,18 @@ public class Canal<D> implements Iterable<D>
 	}
 
 	/**
+	 * Map each element to pair and convert result Canal to PairCanal.
+	 * 
+	 * @param mapper
+	 *            {@code (D data)->(K key, V value)}
+	 * @return
+	 */
+	public <K, V> PairCanal<K, V> mapToPair(Mapper<D, Tuple2<K, V>> mapper)
+	{
+		return this.map(mapper).toPair();
+	}
+
+	/**
 	 * Map each element with state.
 	 * 
 	 * @param state
