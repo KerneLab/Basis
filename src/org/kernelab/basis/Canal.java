@@ -2350,20 +2350,21 @@ public class Canal<D> implements Iterable<D>
 	{
 		protected final Matcher	m;
 
-		protected final Matcher	n;
-
-		private boolean			find;
+		private Boolean			find;
 
 		public MatchFindIterator(Pattern regex, CharSequence text)
 		{
 			this.m = regex.matcher(text);
-			this.n = regex.matcher(text);
-			this.find = this.n.find();
+			this.find = m.find();
 		}
 
 		@Override
 		public boolean hasNext()
 		{
+			if (find == null)
+			{
+				find = m.find();
+			}
 			return find;
 		}
 
@@ -2372,12 +2373,11 @@ public class Canal<D> implements Iterable<D>
 		{
 			try
 			{
-				m.find();
 				return m;
 			}
 			finally
 			{
-				find = n.find();
+				find = null;
 			}
 		}
 

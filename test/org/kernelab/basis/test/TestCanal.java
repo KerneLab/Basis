@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.kernelab.basis.Canal;
 import org.kernelab.basis.Canal.Action;
@@ -210,6 +212,16 @@ public class TestCanal
 			public void action(Integer el) throws Exception
 			{
 				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============of regex find");
+		Canal.of(Pattern.compile("(\\d+)"), "100,200,300").skip(2).first().foreach(new Action<Matcher>()
+		{
+			@Override
+			public void action(Matcher m) throws Exception
+			{
+				Tools.debug(m.group(1));
 			}
 		});
 
