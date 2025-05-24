@@ -5,7 +5,7 @@ package org.kernelab.basis;
  * 
  * @author Dilly King
  *
- * @param <K>
+ * @param <E>
  *            The generic type of the elements to be mapped in a certain
  *            Collection.
  * @param <S>
@@ -13,7 +13,7 @@ package org.kernelab.basis;
  * @param <V>
  *            The generic type of the mapping result.
  */
-public interface StatefulMapper<K, S, V>
+public interface StatefulMapper<E, S, V>
 {
 	/**
 	 * To map a value into another value with state.
@@ -27,5 +27,5 @@ public interface StatefulMapper<K, S, V>
 	 *             to terminate the mapping procedure. {@link Terminator#SIGNAL}
 	 *             is recommended.
 	 */
-	public V map(K el, S st) throws Exception;
+	public V map(E el, S st) throws Exception;
 }

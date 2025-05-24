@@ -2779,7 +2779,7 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		/**
-		 * Map each value in pair.
+		 * Map each value in pair into a new value.
 		 * 
 		 * @param mapper
 		 * @return
@@ -2792,6 +2792,25 @@ public class Canal<D> implements Iterable<D>
 				public Tuple2<K, W> map(Tuple2<K, V> el) throws Exception
 				{
 					return Tuple.of(el._1, mapper.map(el._2));
+				}
+			}).toPair();
+		}
+
+		/**
+		 * Map each value in pair into a new value according to its key.
+		 * 
+		 * @param mapper
+		 *            {@code (V,K) -> W}
+		 * @return
+		 */
+		public <W> PairCanal<K, W> mapValues(final StatefulMapper<V, K, W> mapper)
+		{
+			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>()
+			{
+				@Override
+				public Tuple2<K, W> map(Tuple2<K, V> el) throws Exception
+				{
+					return Tuple.of(el._1, mapper.map(el._2, el._1));
 				}
 			}).toPair();
 		}
