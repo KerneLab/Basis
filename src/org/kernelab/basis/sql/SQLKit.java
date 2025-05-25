@@ -1570,8 +1570,6 @@ public class SQLKit
 
 	private String									boundary;
 
-	private int										queryTimeout			= -1;
-
 	private boolean									reuseStatements			= true;
 
 	private Set<Statement>							batchStatements			= new LinkedHashSet<Statement>();
@@ -1583,6 +1581,22 @@ public class SQLKit
 	private int										resultSetHoldability	= OPTIMIZING_PRESET_SCHEMES[OPTIMIZING_AS_DEFAULT][2];
 
 	private Map<Class<?>, Mapper<Object, Object>>	typeMap;
+
+	private String									cursorName				= null;
+
+	private Boolean									escapeProcessing		= null;
+
+	private Integer									fetchDirection			= null;
+
+	private Integer									fetchSize				= null;
+
+	private Integer									maxFieldSize			= null;
+
+	private Integer									maxRows					= null;
+
+	private Boolean									statementPoolable		= null;
+
+	private Integer									queryTimeout			= null;
 
 	public SQLKit(ConnectionManager manager) throws SQLException
 	{
@@ -1934,6 +1948,61 @@ public class SQLKit
 		return statement;
 	}
 
+	protected PreparedStatement decorate(PreparedStatement ps) throws SQLException
+	{
+		decorate((Statement) ps);
+		return ps;
+	}
+
+	protected Statement decorate(Statement statement) throws SQLException
+	{
+		String vs = null;
+		Boolean vb = null;
+		Integer vi = null;
+
+		if ((vs = this.getCursorName()) != null)
+		{
+			statement.setCursorName(vs);
+		}
+
+		if ((vb = this.getEscapeProcessing()) != null)
+		{
+			statement.setEscapeProcessing(vb);
+		}
+
+		if ((vi = this.getFetchDirection()) != null)
+		{
+			statement.setFetchDirection(vi);
+		}
+
+		if ((vi = this.getFetchSize()) != null)
+		{
+			statement.setFetchSize(vi);
+		}
+
+		if ((vi = this.getMaxFieldSize()) != null)
+		{
+			statement.setMaxFieldSize(vi);
+		}
+
+		if ((vi = this.getMaxRows()) != null)
+		{
+			statement.setMaxRows(vi);
+		}
+
+		if ((vb = this.getStatementPoolable()) != null)
+		{
+			statement.setPoolable(vb);
+		}
+
+		if ((vi = this.getQueryTimeout()) != null)
+		{
+			statement.setQueryTimeout(vi);
+		}
+
+		return statement;
+	}
+
 	protected void destroy()
 	{
 		clean();
@@ -2144,11 +2213,7 @@ public class SQLKit
 
 	public int[] executeBatch(Statement statement) throws SQLException
 	{
-		if (this.getQueryTimeout() >= 0)
-		{
-			statement.setQueryTimeout(this.getQueryTimeout());
-		}
-		return statement.executeBatch();
+		return this.decorate(statement).executeBatch();
 	}
 
 	public Map<Statement, int[]> executeBatches() throws SQLException
@@ -2170,11 +2235,7 @@ public class SQLKit
 
 	protected ResultSet executeQuery(PreparedStatement statement) throws SQLException
 	{
-		if (this.getQueryTimeout() >= 0)
-		{
-			statement.setQueryTimeout(this.getQueryTimeout());
-		}
-		return record(statement.executeQuery());
+		return record(decorate(statement).executeQuery());
 	}
 
 	protected ResultSet executeQuery(PreparedStatement statement, Iterable<?> params) throws SQLException
@@ -2184,11 +2245,7 @@ public class SQLKit
 
 	protected ResultSet executeQuery(Statement statement, String sql) throws SQLException
 	{
-		if (this.getQueryTimeout() >= 0)
-		{
-			statement.setQueryTimeout(this.getQueryTimeout());
-		}
-		return record(statement.executeQuery(sql));
+		return record(decorate(statement).executeQuery(sql));
 	}
 
 	protected Sequel executeRaw(CallableStatement statement, Iterable<?> params) throws SQLException
@@ -2205,29 +2262,17 @@ public class SQLKit
 
 	protected boolean executeStatement(PreparedStatement statement) throws SQLException
 	{
-		if (this.getQueryTimeout() >= 0)
-		{
-			statement.setQueryTimeout(this.getQueryTimeout());
-		}
-		return statement.execute();
+		return decorate(statement).execute();
 	}
 
 	protected boolean executeStatement(Statement statement, String sql) throws SQLException
 	{
-		if (this.getQueryTimeout() >= 0)
-		{
-			statement.setQueryTimeout(this.getQueryTimeout());
-		}
-		return statement.execute(sql);
+		return decorate(statement).execute(sql);
 	}
 
 	protected int executeUpdate(PreparedStatement statement) throws SQLException
 	{
-		if (this.getQueryTimeout() >= 0)
-		{
-			statement.setQueryTimeout(this.getQueryTimeout());
-		}
-		return statement.executeUpdate();
+		return decorate(statement).executeUpdate();
 	}
 
 	protected int executeUpdate(PreparedStatement statement, Iterable<?> params) throws SQLException
@@ -2237,11 +2282,7 @@ public class SQLKit
 
 	protected int executeUpdate(Statement statement, String sql) throws SQLException
 	{
-		if (this.getQueryTimeout() >= 0)
-		{
-			statement.setQueryTimeout(this.getQueryTimeout());
-		}
-		return statement.executeUpdate(sql);
+		return decorate(statement).executeUpdate(sql);
 	}
 
 	public boolean exists(PreparedStatement statement, Iterable<?> params) throws SQLException
@@ -2359,6 +2400,26 @@ public class SQLKit
 		return connection;
 	}
 
+	public String getCursorName()
+	{
+		return cursorName;
+	}
+
+	public Boolean getEscapeProcessing()
+	{
+		return escapeProcessing;
+	}
+
+	public Integer getFetchDirection()
+	{
+		return fetchDirection;
+	}
+
+	public Integer getFetchSize()
+	{
+		return fetchSize;
+	}
+
 	public ResultSet getGeneratedKeys() throws SQLException
 	{
 		return getGeneratedKeys(statement);
@@ -2372,6 +2433,16 @@ public class SQLKit
 	public ConnectionManager getManager()
 	{
 		return manager;
+	}
+
+	public Integer getMaxFieldSize()
+	{
+		return maxFieldSize;
+	}
+
+	public Integer getMaxRows()
+	{
+		return maxRows;
 	}
 
 	public List<String> getParameter(Statement statement)
@@ -2389,7 +2460,7 @@ public class SQLKit
 		return parameters;
 	}
 
-	public int getQueryTimeout()
+	public Integer getQueryTimeout()
 	{
 		return queryTimeout;
 	}
@@ -2417,6 +2488,11 @@ public class SQLKit
 	public Statement getStatement(String sql)
 	{
 		return this.getSentences().get(sql);
+	}
+
+	public Boolean getStatementPoolable()
+	{
+		return statementPoolable;
 	}
 
 	protected Map<Statement, String> getStatements()
@@ -3558,7 +3634,46 @@ public class SQLKit
 		SQLKit.reset(this.getConnection());
 		return this.optimizingAs(SQLKit.OPTIMIZING_AS_DEFAULT) //
 				.setBoundary(TextFiller.DEFAULT_BOUNDARY) //
-				.setReuseStatements(true);
+				.setReuseStatements(true) //
+				.resetStatementDecorates();
+	}
+
+	/**
+	 * Reset all decorates parameters to null which would affect the next
+	 * executing statement.
+	 * 
+	 * @return The SQLKit itself.
+	 */
+	public SQLKit resetStatementDecorates()
+	{
+		return this.resetStatementDecorates(null, null, null, null, null, null, null, null);
+	}
+
+	/**
+	 * Reset decorates parameters to given value which would affect the next
+	 * executing statement.
+	 * 
+	 * @param cursorName
+	 * @param escapeProcessing
+	 * @param fetchDirection
+	 * @param fetchSize
+	 * @param maxFieldSize
+	 * @param maxRows
+	 * @param poolable
+	 * @param queryTimeout
+	 * @return The SQLKit itself.
+	 */
+	public SQLKit resetStatementDecorates(String cursorName, Boolean escapeProcessing, Integer fetchDirection,
+			Integer fetchSize, Integer maxFieldSize, Integer maxRows, Boolean poolable, Integer queryTimeout)
+	{
+		return this.setCursorName(cursorName) //
+				.setEscapeProcessing(escapeProcessing) //
+				.setFetchDirection(fetchDirection) //
+				.setFetchSize(fetchSize) //
+				.setMaxFieldSize(maxFieldSize) //
+				.setMaxRows(maxRows) //
+				.setStatementPoolable(poolable) //
+				.setQueryTimeout(queryTimeout);
 	}
 
 	public int resultSetConcurrency()
@@ -3644,9 +3759,81 @@ public class SQLKit
 		return this;
 	}
 
+	/**
+	 * Set cursor name for next executing statement.
+	 * 
+	 * @param cursorName
+	 * @return
+	 */
+	public SQLKit setCursorName(String cursorName)
+	{
+		this.cursorName = cursorName;
+		return this;
+	}
+
+	/**
+	 * Set escape processing for next executing statement.
+	 * 
+	 * @param escapeProcessing
+	 * @return
+	 */
+	public SQLKit setEscapeProcessing(Boolean escapeProcessing)
+	{
+		this.escapeProcessing = escapeProcessing;
+		return this;
+	}
+
+	/**
+	 * Set fetch direction for next executing statement.
+	 * 
+	 * @param fetchDirection
+	 * @return
+	 */
+	public SQLKit setFetchDirection(Integer fetchDirection)
+	{
+		this.fetchDirection = fetchDirection;
+		return this;
+	}
+
+	/**
+	 * Set fetch size for next executing statement.
+	 * 
+	 * @param fetchSize
+	 * @return
+	 */
+	public SQLKit setFetchSize(Integer fetchSize)
+	{
+		this.fetchSize = fetchSize;
+		return this;
+	}
+
 	protected SQLKit setManager(ConnectionManager source)
 	{
 		this.manager = source;
+		return this;
+	}
+
+	/**
+	 * Set max field size for next executing statement.
+	 * 
+	 * @param maxFieldSize
+	 * @return
+	 */
+	public SQLKit setMaxFieldSize(Integer maxFieldSize)
+	{
+		this.maxFieldSize = maxFieldSize;
+		return this;
+	}
+
+	/**
+	 * Set max rows for next executing statement.
+	 * 
+	 * @param maxRows
+	 * @return
+	 */
+	public SQLKit setMaxRows(Integer maxRows)
+	{
+		this.maxRows = maxRows;
 		return this;
 	}
 
@@ -3656,7 +3843,13 @@ public class SQLKit
 		return this;
 	}
 
-	public SQLKit setQueryTimeout(int seconds)
+	/**
+	 * Set query timeout for next executing statement.
+	 * 
+	 * @param seconds
+	 * @return
+	 */
+	public SQLKit setQueryTimeout(Integer seconds)
 	{
 		this.queryTimeout = seconds;
 		return this;
@@ -3683,6 +3876,18 @@ public class SQLKit
 	public SQLKit setStatement(Statement statement)
 	{
 		this.statement = statement;
+		return this;
+	}
+
+	/**
+	 * Set poolable for next executing statement.
+	 * 
+	 * @param statementPoolable
+	 * @return
+	 */
+	public SQLKit setStatementPoolable(Boolean statementPoolable)
+	{
+		this.statementPoolable = statementPoolable;
 		return this;
 	}
 
