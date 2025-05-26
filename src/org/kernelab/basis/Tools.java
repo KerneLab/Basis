@@ -885,8 +885,8 @@ public class Tools
 	}
 
 	/**
-	 * To determine whether the given value satisfies:
-	 * {@code min <= val <= max}. Using
+	 * To determine whether the given value satisfies: {@code min <= val <= max}
+	 * . Using
 	 * {@link #within(Comparable, Comparable, boolean, Comparable, boolean)}
 	 * instead if you want to ignore the order of lower and upper bound.
 	 * 
@@ -918,10 +918,9 @@ public class Tools
 	}
 
 	/**
-	 * To determine whether the given value satisfies:
-	 * {@code min <= val <= max}. Using
-	 * {@link #within(Comparable, Comparable, Comparable)} instead if you want
-	 * to ignore the order of lower and upper bound.
+	 * To determine whether the given value satisfies: {@code min <= val <= max}
+	 * . Using {@link #within(Comparable, Comparable, Comparable)} instead if
+	 * you want to ignore the order of lower and upper bound.
 	 * 
 	 * @param val
 	 *            the given value.
@@ -995,11 +994,11 @@ public class Tools
 	@SuppressWarnings("unchecked")
 	public static <T> T castTo(Object obj, Class<T> cls)
 	{
-		if (obj == null)
+		if (obj == null || cls == null)
 		{
 			return null;
 		}
-		else if (cls == null)
+		else if (cls.isInstance(obj))
 		{
 			return (T) obj;
 		}

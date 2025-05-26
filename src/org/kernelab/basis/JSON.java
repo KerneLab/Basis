@@ -1829,6 +1829,74 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return attrCast(index, Function.class);
 		}
 
+		public <E> JSAN attrIfAbsent(int index, Class<E> type, Mapper<Integer, E> map)
+		{
+			E val = (E) Tools.castTo(this.attr(index), type);
+			if (val == null)
+			{
+				try
+				{
+					this.attr(index, map.map(index));
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			return this;
+		}
+
+		public <E> JSAN attrIfAbsent(int index, Mapper<Integer, E> map)
+		{
+			E val = this.attr(index);
+			if (val == null)
+			{
+				try
+				{
+					this.attr(index, map.map(index));
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			return this;
+		}
+
+		public <E> JSAN attrIfPresent(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
+		{
+			E val = (E) Tools.castTo(this.attr(index), type);
+			if (val != null)
+			{
+				try
+				{
+					this.attr(index, map.map(index, val));
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			return this;
+		}
+
+		public <E> JSAN attrIfPresent(int index, StatefulMapper<Integer, E, E> map)
+		{
+			E val = this.attr(index);
+			if (val != null)
+			{
+				try
+				{
+					this.attr(index, map.map(index, val));
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			return this;
+		}
+
 		public Integer attrInteger(int index)
 		{
 			return attrCast(index, Integer.class);
@@ -1847,6 +1915,34 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public Long attrLong(int index)
 		{
 			return attrCast(index, Long.class);
+		}
+
+		public <E> JSAN attrMerge(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
+		{
+			E val = (E) Tools.castTo(this.attr(index), type);
+			try
+			{
+				this.attr(index, map.map(index, val));
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+			return this;
+		}
+
+		public <E> JSAN attrMerge(int index, StatefulMapper<Integer, E, E> map)
+		{
+			E val = this.attr(index);
+			try
+			{
+				this.attr(index, map.map(index, val));
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+			return this;
 		}
 
 		public Object attrObject(int index)
@@ -3201,6 +3297,102 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return val == null ? new Function(defaultValue) : val;
 		}
 
+		public <E> E valIfAbsent(int index, Class<E> type, Mapper<Integer, E> map)
+		{
+			E val = (E) Tools.castTo(this.attr(index), type);
+			if (val == null)
+			{
+				try
+				{
+					if ((val = map.map(index)) != null)
+					{
+						this.attr(index, val);
+					}
+					else
+					{
+						this.remove(index);
+					}
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			return val;
+		}
+
+		public <E> E valIfAbsent(int index, Mapper<Integer, E> map)
+		{
+			E val = this.attr(index);
+			if (val == null)
+			{
+				try
+				{
+					if ((val = map.map(index)) != null)
+					{
+						this.attr(index, val);
+					}
+					else
+					{
+						this.remove(index);
+					}
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			return val;
+		}
+
+		public <E> E valIfPresent(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
+		{
+			E val = (E) Tools.castTo(this.attr(index), type);
+			if (val != null)
+			{
+				try
+				{
+					if ((val = map.map(index, val)) != null)
+					{
+						this.attr(index, val);
+					}
+					else
+					{
+						this.remove(index);
+					}
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			return val;
+		}
+
+		public <E> E valIfPresent(int index, StatefulMapper<Integer, E, E> map)
+		{
+			E val = this.attr(index);
+			if (val != null)
+			{
+				try
+				{
+					if ((val = map.map(index, val)) != null)
+					{
+						this.attr(index, val);
+					}
+					else
+					{
+						this.remove(index);
+					}
+				}
+				catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			return val;
+		}
+
 		public Integer valInteger(int index)
 		{
 			return CastToInteger(this.attr(index));
@@ -3255,6 +3447,48 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			Long val = valLong(index);
 			return val == null ? defaultValue : val;
+		}
+
+		public <E> E valMerge(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
+		{
+			E val = (E) Tools.castTo(this.attr(index), type);
+			try
+			{
+				if ((val = map.map(index, val)) != null)
+				{
+					this.attr(index, val);
+				}
+				else
+				{
+					this.remove(index);
+				}
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+			return val;
+		}
+
+		public <E> E valMerge(int index, StatefulMapper<Integer, E, E> map)
+		{
+			E val = this.attr(index);
+			try
+			{
+				if ((val = map.map(index, val)) != null)
+				{
+					this.attr(index, val);
+				}
+				else
+				{
+					this.remove(index);
+				}
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+			return val;
 		}
 
 		public Object valObject(int index)
@@ -8406,6 +8640,74 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return attrCast(key, Function.class);
 	}
 
+	public <E> JSON attrIfAbsent(String key, Class<E> type, Mapper<String, E> map)
+	{
+		E val = (E) Tools.castTo(this.attr(key), type);
+		if (val == null)
+		{
+			try
+			{
+				this.attr(key, map.map(key));
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		return this;
+	}
+
+	public <E> JSON attrIfAbsent(String key, Mapper<String, E> map)
+	{
+		E val = this.attr(key);
+		if (val == null)
+		{
+			try
+			{
+				this.attr(key, map.map(key));
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		return this;
+	}
+
+	public <E> JSON attrIfPresent(String key, Class<E> type, StatefulMapper<String, E, E> map)
+	{
+		E val = (E) Tools.castTo(this.attr(key), type);
+		if (val != null)
+		{
+			try
+			{
+				this.attr(key, map.map(key, val));
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		return this;
+	}
+
+	public <E> JSON attrIfPresent(String key, StatefulMapper<String, E, E> map)
+	{
+		E val = this.attr(key);
+		if (val != null)
+		{
+			try
+			{
+				this.attr(key, map.map(key, val));
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		return this;
+	}
+
 	public Integer attrInteger(String key)
 	{
 		return attrCast(key, Integer.class);
@@ -8424,6 +8726,34 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public Long attrLong(String key)
 	{
 		return attrCast(key, Long.class);
+	}
+
+	public <E> JSON attrMerge(String key, Class<E> type, StatefulMapper<String, E, E> map)
+	{
+		E val = (E) Tools.castTo(this.attr(key), type);
+		try
+		{
+			this.attr(key, map.map(key, val));
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
+		return this;
+	}
+
+	public <E> JSON attrMerge(String key, StatefulMapper<String, E, E> map)
+	{
+		E val = this.attr(key);
+		try
+		{
+			this.attr(key, map.map(key, val));
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
+		return this;
 	}
 
 	public Object attrObject(String key)
@@ -9853,6 +10183,102 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return val == null ? new Function(defaultValue) : val;
 	}
 
+	public <E> E valIfAbsent(String key, Class<E> type, Mapper<String, E> map)
+	{
+		E val = (E) Tools.castTo(this.attr(key), type);
+		if (val == null)
+		{
+			try
+			{
+				if ((val = map.map(key)) != null)
+				{
+					this.attr(key, val);
+				}
+				else
+				{
+					this.remove(key);
+				}
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		return val;
+	}
+
+	public <E> E valIfAbsent(String key, Mapper<String, E> map)
+	{
+		E val = this.attr(key);
+		if (val == null)
+		{
+			try
+			{
+				if ((val = map.map(key)) != null)
+				{
+					this.attr(key, val);
+				}
+				else
+				{
+					this.remove(key);
+				}
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		return val;
+	}
+
+	public <E> E valIfPresent(String key, Class<E> type, StatefulMapper<String, E, E> map)
+	{
+		E val = (E) Tools.castTo(this.attr(key), type);
+		if (val != null)
+		{
+			try
+			{
+				if ((val = map.map(key, val)) != null)
+				{
+					this.attr(key, val);
+				}
+				else
+				{
+					this.remove(key);
+				}
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		return val;
+	}
+
+	public <E> E valIfPresent(String key, StatefulMapper<String, E, E> map)
+	{
+		E val = this.attr(key);
+		if (val != null)
+		{
+			try
+			{
+				if ((val = map.map(key, val)) != null)
+				{
+					this.attr(key, val);
+				}
+				else
+				{
+					this.remove(key);
+				}
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		return val;
+	}
+
 	public Integer valInteger(String key)
 	{
 		return CastToInteger(this.attr(key));
@@ -9907,6 +10333,48 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		Long val = valLong(key);
 		return val == null ? defaultValue : val;
+	}
+
+	public <E> E valMerge(String key, Class<E> type, StatefulMapper<String, E, E> map)
+	{
+		E val = (E) Tools.castTo(this.attr(key), type);
+		try
+		{
+			if ((val = map.map(key, val)) != null)
+			{
+				this.attr(key, val);
+			}
+			else
+			{
+				this.remove(key);
+			}
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
+		return val;
+	}
+
+	public <E> E valMerge(String key, StatefulMapper<String, E, E> map)
+	{
+		E val = this.attr(key);
+		try
+		{
+			if ((val = map.map(key, val)) != null)
+			{
+				this.attr(key, val);
+			}
+			else
+			{
+				this.remove(key);
+			}
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
+		return val;
 	}
 
 	public Object valObject(String key)
