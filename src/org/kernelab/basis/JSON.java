@@ -1829,72 +1829,38 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return attrCast(index, Function.class);
 		}
 
-		public <E> JSAN attrIfAbsent(int index, Class<E> type, Mapper<Integer, E> map)
+		public <E> E attrIfAbsent(int index, Class<E> type, Mapper<Integer, E> map)
 		{
-			E val = (E) Tools.castTo(this.attr(index), type);
+			E val = this.attrCast(index, type);
 			if (val == null)
 			{
 				try
 				{
-					this.attr(index, map.map(index));
+					this.attr(index, val = map.map(index));
 				}
 				catch (Exception e)
 				{
 					throw new RuntimeException(e);
 				}
 			}
-			return this;
+			return val;
 		}
 
-		public <E> JSAN attrIfAbsent(int index, Mapper<Integer, E> map)
+		public <E> E attrIfPresent(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
 		{
-			E val = this.attr(index);
-			if (val == null)
-			{
-				try
-				{
-					this.attr(index, map.map(index));
-				}
-				catch (Exception e)
-				{
-					throw new RuntimeException(e);
-				}
-			}
-			return this;
-		}
-
-		public <E> JSAN attrIfPresent(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
-		{
-			E val = (E) Tools.castTo(this.attr(index), type);
+			E val = this.attrCast(index, type);
 			if (val != null)
 			{
 				try
 				{
-					this.attr(index, map.map(index, val));
+					this.attr(index, val = map.map(index, val));
 				}
 				catch (Exception e)
 				{
 					throw new RuntimeException(e);
 				}
 			}
-			return this;
-		}
-
-		public <E> JSAN attrIfPresent(int index, StatefulMapper<Integer, E, E> map)
-		{
-			E val = this.attr(index);
-			if (val != null)
-			{
-				try
-				{
-					this.attr(index, map.map(index, val));
-				}
-				catch (Exception e)
-				{
-					throw new RuntimeException(e);
-				}
-			}
-			return this;
+			return val;
 		}
 
 		public Integer attrInteger(int index)
@@ -1917,32 +1883,18 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return attrCast(index, Long.class);
 		}
 
-		public <E> JSAN attrMerge(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
+		public <E> E attrMerge(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
 		{
-			E val = (E) Tools.castTo(this.attr(index), type);
+			E val = this.attrCast(index, type);
 			try
 			{
-				this.attr(index, map.map(index, val));
+				this.attr(index, val = map.map(index, val));
 			}
 			catch (Exception e)
 			{
 				throw new RuntimeException(e);
 			}
-			return this;
-		}
-
-		public <E> JSAN attrMerge(int index, StatefulMapper<Integer, E, E> map)
-		{
-			E val = this.attr(index);
-			try
-			{
-				this.attr(index, map.map(index, val));
-			}
-			catch (Exception e)
-			{
-				throw new RuntimeException(e);
-			}
-			return this;
+			return val;
 		}
 
 		public Object attrObject(int index)
@@ -3221,7 +3173,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public <E> E valCast(int index, Class<E> cls)
 		{
-			return this.attrCast(index, cls);
+			return Tools.castTo(this.valObject(index), cls);
 		}
 
 		public <E> E valCast(int index, Class<E> cls, E defaultValue)
@@ -3299,43 +3251,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public <E> E valIfAbsent(int index, Class<E> type, Mapper<Integer, E> map)
 		{
-			E val = (E) Tools.castTo(this.attr(index), type);
+			E val = this.valCast(index, type);
 			if (val == null)
 			{
 				try
 				{
-					if ((val = map.map(index)) != null)
-					{
-						this.attr(index, val);
-					}
-					else
-					{
-						this.remove(index);
-					}
-				}
-				catch (Exception e)
-				{
-					throw new RuntimeException(e);
-				}
-			}
-			return val;
-		}
-
-		public <E> E valIfAbsent(int index, Mapper<Integer, E> map)
-		{
-			E val = this.attr(index);
-			if (val == null)
-			{
-				try
-				{
-					if ((val = map.map(index)) != null)
-					{
-						this.attr(index, val);
-					}
-					else
-					{
-						this.remove(index);
-					}
+					this.attr(index, val = map.map(index));
 				}
 				catch (Exception e)
 				{
@@ -3347,43 +3268,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public <E> E valIfPresent(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
 		{
-			E val = (E) Tools.castTo(this.attr(index), type);
+			E val = this.valCast(index, type);
 			if (val != null)
 			{
 				try
 				{
-					if ((val = map.map(index, val)) != null)
-					{
-						this.attr(index, val);
-					}
-					else
-					{
-						this.remove(index);
-					}
-				}
-				catch (Exception e)
-				{
-					throw new RuntimeException(e);
-				}
-			}
-			return val;
-		}
-
-		public <E> E valIfPresent(int index, StatefulMapper<Integer, E, E> map)
-		{
-			E val = this.attr(index);
-			if (val != null)
-			{
-				try
-				{
-					if ((val = map.map(index, val)) != null)
-					{
-						this.attr(index, val);
-					}
-					else
-					{
-						this.remove(index);
-					}
+					this.attr(index, val = map.map(index, val));
 				}
 				catch (Exception e)
 				{
@@ -3451,38 +3341,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public <E> E valMerge(int index, Class<E> type, StatefulMapper<Integer, E, E> map)
 		{
-			E val = (E) Tools.castTo(this.attr(index), type);
+			E val = this.valCast(index, type);
 			try
 			{
-				if ((val = map.map(index, val)) != null)
-				{
-					this.attr(index, val);
-				}
-				else
-				{
-					this.remove(index);
-				}
-			}
-			catch (Exception e)
-			{
-				throw new RuntimeException(e);
-			}
-			return val;
-		}
-
-		public <E> E valMerge(int index, StatefulMapper<Integer, E, E> map)
-		{
-			E val = this.attr(index);
-			try
-			{
-				if ((val = map.map(index, val)) != null)
-				{
-					this.attr(index, val);
-				}
-				else
-				{
-					this.remove(index);
-				}
+				this.attr(index, val = map.map(index, val));
 			}
 			catch (Exception e)
 			{
@@ -8640,72 +8502,38 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return attrCast(key, Function.class);
 	}
 
-	public <E> JSON attrIfAbsent(String key, Class<E> type, Mapper<String, E> map)
+	public <E> E attrIfAbsent(String key, Class<E> type, Mapper<String, E> map)
 	{
-		E val = (E) Tools.castTo(this.attr(key), type);
+		E val = this.attrCast(key, type);
 		if (val == null)
 		{
 			try
 			{
-				this.attr(key, map.map(key));
+				this.attr(key, val = map.map(key));
 			}
 			catch (Exception e)
 			{
 				throw new RuntimeException(e);
 			}
 		}
-		return this;
+		return val;
 	}
 
-	public <E> JSON attrIfAbsent(String key, Mapper<String, E> map)
+	public <E> E attrIfPresent(String key, Class<E> type, StatefulMapper<String, E, E> map)
 	{
-		E val = this.attr(key);
-		if (val == null)
-		{
-			try
-			{
-				this.attr(key, map.map(key));
-			}
-			catch (Exception e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-		return this;
-	}
-
-	public <E> JSON attrIfPresent(String key, Class<E> type, StatefulMapper<String, E, E> map)
-	{
-		E val = (E) Tools.castTo(this.attr(key), type);
+		E val = this.attrCast(key, type);
 		if (val != null)
 		{
 			try
 			{
-				this.attr(key, map.map(key, val));
+				this.attr(key, val = map.map(key, val));
 			}
 			catch (Exception e)
 			{
 				throw new RuntimeException(e);
 			}
 		}
-		return this;
-	}
-
-	public <E> JSON attrIfPresent(String key, StatefulMapper<String, E, E> map)
-	{
-		E val = this.attr(key);
-		if (val != null)
-		{
-			try
-			{
-				this.attr(key, map.map(key, val));
-			}
-			catch (Exception e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-		return this;
+		return val;
 	}
 
 	public Integer attrInteger(String key)
@@ -8728,32 +8556,18 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return attrCast(key, Long.class);
 	}
 
-	public <E> JSON attrMerge(String key, Class<E> type, StatefulMapper<String, E, E> map)
+	public <E> E attrMerge(String key, Class<E> type, StatefulMapper<String, E, E> map)
 	{
-		E val = (E) Tools.castTo(this.attr(key), type);
+		E val = this.attrCast(key, type);
 		try
 		{
-			this.attr(key, map.map(key, val));
+			this.attr(key, val = map.map(key, val));
 		}
 		catch (Exception e)
 		{
 			throw new RuntimeException(e);
 		}
-		return this;
-	}
-
-	public <E> JSON attrMerge(String key, StatefulMapper<String, E, E> map)
-	{
-		E val = this.attr(key);
-		try
-		{
-			this.attr(key, map.map(key, val));
-		}
-		catch (Exception e)
-		{
-			throw new RuntimeException(e);
-		}
-		return this;
+		return val;
 	}
 
 	public Object attrObject(String key)
@@ -10107,7 +9921,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public <E> E valCast(String key, Class<E> cls)
 	{
-		return this.attrCast(key, cls);
+		return Tools.castTo(this.valObject(key), cls);
 	}
 
 	public <E> E valCast(String key, Class<E> cls, E defaultValue)
@@ -10185,43 +9999,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public <E> E valIfAbsent(String key, Class<E> type, Mapper<String, E> map)
 	{
-		E val = (E) Tools.castTo(this.attr(key), type);
+		E val = this.valCast(key, type);
 		if (val == null)
 		{
 			try
 			{
-				if ((val = map.map(key)) != null)
-				{
-					this.attr(key, val);
-				}
-				else
-				{
-					this.remove(key);
-				}
-			}
-			catch (Exception e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-		return val;
-	}
-
-	public <E> E valIfAbsent(String key, Mapper<String, E> map)
-	{
-		E val = this.attr(key);
-		if (val == null)
-		{
-			try
-			{
-				if ((val = map.map(key)) != null)
-				{
-					this.attr(key, val);
-				}
-				else
-				{
-					this.remove(key);
-				}
+				this.attr(key, val = map.map(key));
 			}
 			catch (Exception e)
 			{
@@ -10233,43 +10016,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public <E> E valIfPresent(String key, Class<E> type, StatefulMapper<String, E, E> map)
 	{
-		E val = (E) Tools.castTo(this.attr(key), type);
+		E val = this.valCast(key, type);
 		if (val != null)
 		{
 			try
 			{
-				if ((val = map.map(key, val)) != null)
-				{
-					this.attr(key, val);
-				}
-				else
-				{
-					this.remove(key);
-				}
-			}
-			catch (Exception e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-		return val;
-	}
-
-	public <E> E valIfPresent(String key, StatefulMapper<String, E, E> map)
-	{
-		E val = this.attr(key);
-		if (val != null)
-		{
-			try
-			{
-				if ((val = map.map(key, val)) != null)
-				{
-					this.attr(key, val);
-				}
-				else
-				{
-					this.remove(key);
-				}
+				this.attr(key, val = map.map(key, val));
 			}
 			catch (Exception e)
 			{
@@ -10337,38 +10089,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public <E> E valMerge(String key, Class<E> type, StatefulMapper<String, E, E> map)
 	{
-		E val = (E) Tools.castTo(this.attr(key), type);
+		E val = this.valCast(key, type);
 		try
 		{
-			if ((val = map.map(key, val)) != null)
-			{
-				this.attr(key, val);
-			}
-			else
-			{
-				this.remove(key);
-			}
-		}
-		catch (Exception e)
-		{
-			throw new RuntimeException(e);
-		}
-		return val;
-	}
-
-	public <E> E valMerge(String key, StatefulMapper<String, E, E> map)
-	{
-		E val = this.attr(key);
-		try
-		{
-			if ((val = map.map(key, val)) != null)
-			{
-				this.attr(key, val);
-			}
-			else
-			{
-				this.remove(key);
-			}
+			this.attr(key, val = map.map(key, val));
 		}
 		catch (Exception e)
 		{
