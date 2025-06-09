@@ -1,8 +1,8 @@
 package org.kernelab.basis;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.LinkedList;
 
 /**
  * A chain of Comparators which is useful to compare a serials of Objects
@@ -20,7 +20,7 @@ public class ComparatorsChain<E> implements Comparator<E>
 	{
 		if (chain == null)
 		{
-			chain = new LinkedList<Comparator<E>>();
+			chain = new ArrayList<Comparator<E>>();
 		}
 		this.chain = chain;
 	}

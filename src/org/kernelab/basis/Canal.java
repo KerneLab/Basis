@@ -768,7 +768,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		protected Collection<E> newSediment()
 		{
-			return new LinkedList<E>();
+			return new ArrayList<E>();
 		}
 	}
 
@@ -1472,7 +1472,7 @@ public class Canal<D> implements Iterable<D>
 				key = kop.map(el);
 				if (!sediment.containsKey(key))
 				{
-					sediment.put(key, list = new LinkedList<V>());
+					sediment.put(key, list = new ArrayList<V>());
 				}
 				else
 				{
@@ -1809,9 +1809,9 @@ public class Canal<D> implements Iterable<D>
 
 		private List<V>					listV;
 
-		private final List<U>			emptyU	= new LinkedList<U>();
+		private final List<U>			emptyU	= new ArrayList<U>();
 
-		private final List<V>			emptyV	= new LinkedList<V>();
+		private final List<V>			emptyV	= new ArrayList<V>();
 
 		private boolean					isEmptyU;
 
@@ -3026,7 +3026,7 @@ public class Canal<D> implements Iterable<D>
 			return new Heaper<E>()
 			{
 				@Override
-				protected Collection<E> newSediment()
+				protected LinkedList<E> newSediment()
 				{
 					return new LinkedList<E>();
 				}
@@ -3175,7 +3175,7 @@ public class Canal<D> implements Iterable<D>
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public static <R extends Map<String, Object>> List<Comparator<R>> comparatorsOfItems(Item<?>... items)
 		{
-			List<Comparator<R>> list = new LinkedList<Comparator<R>>();
+			List<Comparator<R>> list = new ArrayList<Comparator<R>>();
 
 			for (Item<?> item : items)
 			{
@@ -3240,9 +3240,9 @@ public class Canal<D> implements Iterable<D>
 									@Override
 									public List<R> map(Canal<R> el) throws Exception
 									{
-										return (List<R>) el.collect(new LinkedList<R>());
+										return (List<R>) el.collect(new ArrayList<R>());
 									}
-								}).collect(new LinkedList<List<R>>());
+								}).collect(new ArrayList<List<R>>());
 
 						Collection<R> part = Canal.of(ordered).flatMap(new Mapper<List<R>, Iterable<R>>()
 						{
@@ -3251,7 +3251,7 @@ public class Canal<D> implements Iterable<D>
 							{
 								return el;
 							}
-						}).collect(new LinkedList<R>());
+						}).collect(new ArrayList<R>());
 
 						Map<String, Object>[] rows = part.toArray(new Map[0]);
 
@@ -3388,7 +3388,7 @@ public class Canal<D> implements Iterable<D>
 			{
 				LinkedList<E>	window	= null;
 
-				Collection<E>	next	= null;
+				List<E>			next	= null;
 
 				@Override
 				public boolean hasNext()
@@ -3733,7 +3733,7 @@ public class Canal<D> implements Iterable<D>
 				@Override
 				protected Collection<E> newSediment()
 				{
-					return new LinkedList<E>();
+					return new ArrayList<E>();
 				}
 
 				@Override
@@ -3766,7 +3766,7 @@ public class Canal<D> implements Iterable<D>
 				@Override
 				protected Collection<E> newSediment()
 				{
-					return new LinkedList<E>();
+					return new ArrayList<E>();
 				}
 
 				@Override
@@ -3834,7 +3834,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public void begin()
 		{
-			List<E> dat = new LinkedList<E>();
+			List<E> dat = new ArrayList<E>();
 
 			while (this.upstream().hasNext())
 			{
@@ -4845,7 +4845,7 @@ public class Canal<D> implements Iterable<D>
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <E> List<Comparator<E>> comparatorsOfOrders(Object... orders)
 	{
-		List<Comparator<E>> list = new LinkedList<Comparator<E>>();
+		List<Comparator<E>> list = new ArrayList<Comparator<E>>();
 		Comparator<E> cmp = null;
 
 		for (Object o : orders)
@@ -4924,7 +4924,7 @@ public class Canal<D> implements Iterable<D>
 			k = kop.map(el);
 			if (!map.containsKey(k))
 			{
-				map.put(k, new LinkedList<V>());
+				map.put(k, new ArrayList<V>());
 			}
 			map.get(k).add(vop.map(el));
 		}
@@ -5190,7 +5190,7 @@ public class Canal<D> implements Iterable<D>
 
 	public static <E> List<Iterable<E>> stratify(Iterable<E> data, Comparator<E> cmp)
 	{
-		List<Iterable<E>> res = new LinkedList<Iterable<E>>();
+		List<Iterable<E>> res = new ArrayList<Iterable<E>>();
 
 		E last = null;
 		int c = 0;
@@ -5205,7 +5205,7 @@ public class Canal<D> implements Iterable<D>
 
 			if (c != 0 || lvl == null)
 			{
-				lvl = new LinkedList<E>();
+				lvl = new ArrayList<E>();
 				res.add(lvl);
 			}
 

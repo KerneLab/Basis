@@ -27,6 +27,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +38,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -495,7 +495,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				String[] params = matcher.group(4).split(",");
 
-				List<String> list = new LinkedList<String>();
+				List<String> list = new ArrayList<String>(params.length);
 
 				for (String param : params)
 				{
@@ -1134,7 +1134,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 									if (keys == null)
 									{
-										keys = new LinkedList<String>();
+										keys = new ArrayList<String>();
 										map.put(index, keys);
 									}
 
@@ -1193,7 +1193,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 									if (keys == null)
 									{
-										keys = new LinkedList<String>();
+										keys = new ArrayList<String>();
 										map.put(index, keys);
 									}
 
@@ -2623,7 +2623,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			if (collection != null && !collection.isEmpty())
 			{
-				List<Object> temp = new LinkedList<Object>();
+				List<Object> temp = new ArrayList<Object>(this.size());
 				for (Object o : this)
 				{
 					if (!collection.contains(o))
@@ -2640,7 +2640,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			if (jsan != null && !jsan.isEmpty())
 			{
-				List<Object> temp = new LinkedList<Object>();
+				List<Object> temp = new ArrayList<Object>(this.size());
 				for (Object o : this)
 				{
 					if (!jsan.hasVal(o))
@@ -4638,7 +4638,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				throw new IllegalPathException(text + " must start with $");
 			}
 
-			List<Finder> res = new LinkedList<Finder>();
+			List<Finder> res = new ArrayList<Finder>();
 
 			char c = '\0', n = '\0';
 			int j = 0, len = path.length();
@@ -5148,7 +5148,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		private Transform<T>			tran;
 
-		private LinkedList<String>		keys				= new LinkedList<String>();
+		private List<String>			keys				= new ArrayList<String>();
 
 		private ListIterator<String>	iter;
 
@@ -5236,7 +5236,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return key;
 		}
 
-		protected LinkedList<String> keys()
+		protected List<String> keys()
 		{
 			return keys;
 		}
@@ -7547,7 +7547,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 		else if (paramedType != null && IsSubTypeOf(paramedType.getRawType(), Collection.class) && JSON.IsJSON(obj))
 		{ // Target class is a Collection.
-			Collection<Object> coll = (Collection<Object>) (val == null ? new LinkedList<Object>() : val);
+			Collection<Object> coll = (Collection<Object>) (val == null ? new ArrayList<Object>() : val);
 
 			Type eleType = paramedType.getActualTypeArguments()[0];
 			Class<?> eleClass = null;
@@ -10114,14 +10114,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public Collection<Object> vals()
 	{
-		return vals(new LinkedList<Object>());
+		return vals(null);
 	}
 
 	public Collection<Object> vals(Collection<Object> collection)
 	{
 		if (collection == null)
 		{
-			collection = new LinkedList<Object>();
+			collection = new ArrayList<Object>();
 		}
 
 		for (String key : keySet())

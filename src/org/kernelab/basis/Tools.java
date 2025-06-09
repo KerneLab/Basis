@@ -59,7 +59,6 @@ import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -619,7 +618,7 @@ public class Tools
 	 *            The generic type of the elements.
 	 * @param collection
 	 *            The Collection into which the elements would be added. If
-	 *            null, a new LinkedList object would be created.
+	 *            null, a new ArrayList object would be created.
 	 * @param iterable
 	 *            The Iterable object which contains the elements to be added.
 	 * @return The Collection.
@@ -630,7 +629,7 @@ public class Tools
 		{
 			if (collection == null)
 			{
-				collection = new LinkedList<T>();
+				collection = new ArrayList<T>();
 			}
 			for (T o : iterable)
 			{
@@ -1256,7 +1255,7 @@ public class Tools
 		{
 			for (T o : iterable)
 			{
-				if (contains = object == null ? o == null : object.equals(o))
+				if (contains = Tools.equals(o, object))
 				{
 					break;
 				}
@@ -3140,14 +3139,14 @@ public class Tools
 	 *            preserved if filter returns false.
 	 * @param result
 	 *            The Collection holding the result of filter. If null, an empty
-	 *            LinkedList would be created.
+	 *            ArrayList would be created.
 	 * @return The result Collection.
 	 */
 	public static <E> Collection<E> filter(Iterable<E> iterable, Filter<E> filter, Collection<E> result)
 	{
 		if (result == null)
 		{
-			result = new LinkedList<E>();
+			result = new ArrayList<E>();
 		}
 		try
 		{
@@ -4574,8 +4573,8 @@ public class Tools
 	 * @param file
 	 *            the file to be input.
 	 * @param list
-	 *            A list which would hold the result Strings. A LinkedList
-	 *            Object would be create if list is null.
+	 *            A list which would hold the result Strings. A ArrayList Object
+	 *            would be create if list is null.
 	 * @param charSetName
 	 *            the CharSet name of the file.
 	 * @return a List of String or {@code null} if file doesn't exist.
@@ -4614,8 +4613,8 @@ public class Tools
 	 * @param inputStream
 	 *            the InputStream.
 	 * @param list
-	 *            the List which holds the Strings. A new LinkedList object
-	 *            would be created if list is null.
+	 *            the List which holds the Strings. A new ArrayList object would
+	 *            be created if list is null.
 	 * @param charSetName
 	 *            the name of CharSet.
 	 * @return the List of Strings.
@@ -4624,7 +4623,7 @@ public class Tools
 	{
 		if (list == null)
 		{
-			list = new LinkedList<String>();
+			list = new ArrayList<String>();
 		}
 
 		Charset charSet = null;
@@ -4680,7 +4679,7 @@ public class Tools
 	 *            the Iterable object b.
 	 * @param result
 	 *            the Collection which holds the result. If null, a new
-	 *            LinkedList would be used.
+	 *            ArrayList would be used.
 	 * @return the Intersection of the Iterable object a and b.<br />
 	 *         Attention that the Intersection result May contains DUPLICATE
 	 *         elements. The result Collection should be a Set object to avoid
@@ -4690,7 +4689,7 @@ public class Tools
 	{
 		if (result == null)
 		{
-			result = new LinkedList<T>();
+			result = new ArrayList<T>();
 		}
 
 		Iterable<T> source = null;
@@ -5566,14 +5565,14 @@ public class Tools
 	 *            The Mapper object which defines the mapping operation.
 	 * @param result
 	 *            The Collection which holds the result of mapping operation. If
-	 *            null, an empty LinkedList would be created.
+	 *            null, an empty ArrayList would be created.
 	 * @return The mapping result.
 	 */
 	public static <K, V> Collection<V> map(Iterable<K> iterable, Mapper<K, V> mapper, Collection<V> result)
 	{
 		if (result == null)
 		{
-			result = new LinkedList<V>();
+			result = new ArrayList<V>();
 		}
 		try
 		{
@@ -6949,12 +6948,11 @@ public class Tools
 		}
 		else if (source instanceof Iterable)
 		{
-			list = new LinkedList<Object>();
+			list = new ArrayList<Object>();
 			for (Object o : (Iterable<?>) source)
 			{
 				list.add(o);
 			}
-			list = new ArrayList<Object>(list);
 		}
 
 		Map<String, Field> fields = JSON.FieldsOf(target);
@@ -7854,7 +7852,7 @@ public class Tools
 	{
 		if (collection != null && iterable != null)
 		{
-			LinkedList<T> temp = new LinkedList<T>();
+			List<T> temp = new ArrayList<T>();
 			for (T o : iterable)
 			{
 				if (collection.contains(o))
@@ -8728,7 +8726,7 @@ public class Tools
 	{
 		if (text != null)
 		{
-			List<String> splitString = new LinkedList<String>();
+			List<String> splitString = new ArrayList<String>();
 
 			int length = text.length();
 
@@ -8822,7 +8820,7 @@ public class Tools
 		{
 			String[] result = null;
 
-			LinkedList<String> splitString = new LinkedList<String>();
+			List<String> splitString = new ArrayList<String>();
 
 			split = split == null ? "" : split;
 
@@ -8948,7 +8946,7 @@ public class Tools
 	{
 		if (text != null)
 		{
-			List<String> list = new LinkedList<String>();
+			List<String> list = new ArrayList<String>();
 
 			int stringLength = text.length();
 
@@ -9038,7 +9036,7 @@ public class Tools
 	 *            the Iterable object b.
 	 * @param result
 	 *            the Collection which holds the result. If null, a new
-	 *            LinkedList would be used.
+	 *            ArrayList would be used.
 	 * @return the Subtraction of the a-b.<br />
 	 *         Attention that the Subtraction result May contains DUPLICATE
 	 *         elements. The result Collection should be a Set object to avoid
@@ -9048,7 +9046,7 @@ public class Tools
 	{
 		if (result == null)
 		{
-			result = new LinkedList<T>();
+			result = new ArrayList<T>();
 		}
 
 		if (a != null)
@@ -9195,7 +9193,7 @@ public class Tools
 	 *            The Iterable object b.
 	 * @param result
 	 *            the Collection which holds the result. If null, a new
-	 *            LinkedList would be used.
+	 *            ArrayList would be used.
 	 * @return The Union of the iterable object a and b.<br />
 	 *         Attention that the Union result May contains DUPLICATE elements.
 	 *         The result Collection should be a Set object to avoid this case.
@@ -9204,7 +9202,7 @@ public class Tools
 	{
 		if (result == null)
 		{
-			result = new LinkedList<T>();
+			result = new ArrayList<T>();
 		}
 
 		if (result != a)

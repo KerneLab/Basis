@@ -10,12 +10,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -487,7 +487,7 @@ public class SQLKit
 	 *            The parameters in form of key/value organized by JSON.
 	 * @param list
 	 *            The List&lt;Object&gt; object which holds the result list. If
-	 *            null then a new LinkedList&lt;Object&gt; would be created
+	 *            null then a new ArrayList&lt;Object&gt; would be created
 	 *            instead.
 	 * 
 	 * @return The parameters value list.
@@ -496,7 +496,7 @@ public class SQLKit
 	{
 		if (list == null)
 		{
-			list = new LinkedList<Object>();
+			list = new ArrayList<Object>();
 		}
 		else
 		{
@@ -539,7 +539,7 @@ public class SQLKit
 	 *            Map&lt;String,Object&gt;.
 	 * @param list
 	 *            The List&lt;Object&gt; object which holds the result list. If
-	 *            null then a new LinkedList&lt;Object&gt; would be created
+	 *            null then a new ArrayList&lt;Object&gt; would be created
 	 *            instead.
 	 * 
 	 * @return The parameters value list.
@@ -548,7 +548,7 @@ public class SQLKit
 	{
 		if (list == null)
 		{
-			list = new LinkedList<Object>();
+			list = new ArrayList<Object>();
 		}
 		else
 		{
@@ -958,10 +958,10 @@ public class SQLKit
 		{
 			try
 			{
-				list = new LinkedList<String>();
-
 				if (index != null)
 				{
+					list = new ArrayList<String>(index.size());
+
 					for (Integer c : index)
 					{
 						if (c != null)
@@ -973,6 +973,8 @@ public class SQLKit
 				else
 				{
 					int columns = meta.getColumnCount();
+
+					list = new ArrayList<String>(columns);
 
 					for (int c = 1; c <= columns; c++)
 					{
@@ -1316,7 +1318,7 @@ public class SQLKit
 		{
 			if (rows == null)
 			{
-				rows = new LinkedList<E>();
+				rows = new ArrayList<E>();
 			}
 			int count = 0;
 			try
@@ -3613,7 +3615,7 @@ public class SQLKit
 		if (!parameters.containsKey(sql))
 		{
 			parameters.put(sql, Collections.unmodifiableList( //
-					new LinkedList<String>(indexOfParameters(sql, getBoundary(), params).values())));
+					new ArrayList<String>(indexOfParameters(sql, getBoundary(), params).values())));
 		}
 		return this;
 	}

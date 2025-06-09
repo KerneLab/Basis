@@ -1,6 +1,6 @@
 package org.kernelab.basis;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.kernelab.basis.Canal.Producer;
@@ -19,7 +19,7 @@ public class CaseWhenMapper<D, T> implements Mapper<D, T>
 		return new CaseWhenMapper<D, T>().when(cond, then).otherwise(other);
 	}
 
-	private List<Tuple2<Filter<D>, Mapper<D, T>>>	pairs	= new LinkedList<Tuple2<Filter<D>, Mapper<D, T>>>();
+	private List<Tuple2<Filter<D>, Mapper<D, T>>>	pairs	= new ArrayList<Tuple2<Filter<D>, Mapper<D, T>>>();
 
 	private Producer<T>								other	= null;
 
