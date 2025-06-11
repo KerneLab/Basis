@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -2450,9 +2451,9 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public E get()
+		public E get() throws NoSuchElementException
 		{
-			throw new NoneValueGivenException();
+			throw new NoSuchElementException();
 		}
 
 		@Override
@@ -2540,14 +2541,6 @@ public class Canal<D> implements Iterable<D>
 		{
 			return "None";
 		}
-	}
-
-	public static class NoneValueGivenException extends RuntimeException
-	{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -124083433722347402L;
 	}
 
 	protected static interface Operator<I, O>
