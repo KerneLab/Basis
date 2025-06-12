@@ -53,10 +53,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -124,9 +126,43 @@ public class Tools
 																		}
 																	});
 
+	private static Set<Class<?>>			PRIMITIVES				= new HashSet<Class<?>>();
+
+	private static Set<Class<?>>			BOXINGS					= new HashSet<Class<?>>();
+
 	static
 	{
 		Outs.add(STD_OUT);
+
+		for (Class<?> cls : new Class<?>[] { //
+				Boolean.TYPE, //
+				Byte.TYPE, //
+				Character.TYPE, //
+				Double.TYPE, //
+				Float.TYPE, //
+				Integer.TYPE, //
+				Long.TYPE, //
+				Short.TYPE, //
+		})
+		{
+			PRIMITIVES.add(cls);
+		}
+		PRIMITIVES = Collections.unmodifiableSet(PRIMITIVES);
+
+		for (Class<?> cls : new Class<?>[] { //
+				Boolean.class, //
+				Byte.class, //
+				Character.class, //
+				Double.class, //
+				Float.class, //
+				Integer.class, //
+				Long.class, //
+				Short.class, //
+		})
+		{
+			BOXINGS.add(cls);
+		}
+		BOXINGS = Collections.unmodifiableSet(BOXINGS);
 	}
 
 	/**
@@ -3274,6 +3310,11 @@ public class Tools
 		}
 	}
 
+	public static Set<Class<?>> getBoxingTypes()
+	{
+		return BOXINGS;
+	}
+
 	/**
 	 * Get the Calendar object according to a given time in milliseconds.
 	 * 
@@ -4234,6 +4275,11 @@ public class Tools
 	{
 		String charset = getPlatformCharset();
 		return charset == null ? defaultCharset : charset;
+	}
+
+	public static Set<Class<?>> getPrimitiveTypes()
+	{
+		return PRIMITIVES;
 	}
 
 	public static RuntimeException getRuntimeException(Throwable e)
