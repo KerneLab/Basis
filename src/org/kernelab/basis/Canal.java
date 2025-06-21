@@ -3323,6 +3323,11 @@ public class Canal<D> implements Iterable<D>
 			this.iter = iter;
 		}
 
+		public Canal<E> canal()
+		{
+			return Canal.of(this);
+		}
+
 		@Override
 		public Iterator<E> iterator()
 		{
