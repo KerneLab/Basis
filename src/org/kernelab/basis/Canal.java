@@ -160,6 +160,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public abstract boolean hasNext();
 
+		@Override
 		public abstract D next();
 
 		@Override
@@ -174,6 +175,7 @@ public class Canal<D> implements Iterable<D>
 			return up;
 		}
 
+		@Override
 		public void upstream(Pond<?, U> up)
 		{
 			this.up = up;
@@ -356,6 +358,10 @@ public class Canal<D> implements Iterable<D>
 
 		public CartesianOp(Canal<B> that)
 		{
+			if (that == null)
+			{
+				throw new NullPointerException();
+			}
 			this.that = that;
 		}
 
@@ -761,6 +767,7 @@ public class Canal<D> implements Iterable<D>
 
 	protected static abstract class Desilter<E> extends Heaper<E> implements Terminal<E, Collection<E>>
 	{
+		@Override
 		public Collection<E> get()
 		{
 			return sediment;
@@ -855,6 +862,10 @@ public class Canal<D> implements Iterable<D>
 
 		public EnumerationIterator(Enumeration<E> enumer)
 		{
+			if (enumer == null)
+			{
+				throw new NullPointerException();
+			}
 			this.enumer = enumer;
 		}
 
@@ -893,6 +904,10 @@ public class Canal<D> implements Iterable<D>
 
 		protected FilterOp(Filter<E> filter)
 		{
+			if (filter == null)
+			{
+				throw new NullPointerException();
+			}
 			this.filter = filter;
 		}
 
@@ -970,6 +985,10 @@ public class Canal<D> implements Iterable<D>
 
 		public FirstOp(Filter<E> filter)
 		{
+			if (filter == null)
+			{
+				throw new NullPointerException();
+			}
 			this.filter = filter;
 		}
 
@@ -1023,6 +1042,10 @@ public class Canal<D> implements Iterable<D>
 
 		public FlatMapOp(Mapper<I, Iterable<O>> mapper)
 		{
+			if (mapper == null)
+			{
+				throw new NullPointerException();
+			}
 			this.mapper = mapper;
 		}
 
@@ -1079,6 +1102,10 @@ public class Canal<D> implements Iterable<D>
 
 		public FoldOp(R init, Reducer<E, R> folder)
 		{
+			if (folder == null)
+			{
+				throw new NullPointerException();
+			}
 			this.result = init;
 			this.folder = folder;
 		}
@@ -1131,6 +1158,10 @@ public class Canal<D> implements Iterable<D>
 
 		public FoldUntilOp(Producer<R> init, Reducer<E, R> folder, Filter<R> until)
 		{
+			if (init == null || folder == null)
+			{
+				throw new NullPointerException();
+			}
 			this.init = init;
 			this.folder = folder;
 			this.until = until;
@@ -1193,6 +1224,10 @@ public class Canal<D> implements Iterable<D>
 
 		public ForallOp(Filter<E> cond)
 		{
+			if (cond == null)
+			{
+				throw new NullPointerException();
+			}
 			this.cond = cond;
 		}
 
@@ -1253,6 +1288,10 @@ public class Canal<D> implements Iterable<D>
 
 		public ForeachOp(Action<E> action)
 		{
+			if (action == null)
+			{
+				throw new NullPointerException();
+			}
 			this.action = action;
 		}
 
@@ -1415,6 +1454,10 @@ public class Canal<D> implements Iterable<D>
 
 		public GeneratedSourcer(Producer<E> generator)
 		{
+			if (generator == null)
+			{
+				throw new NullPointerException();
+			}
 			this.generator = generator;
 		}
 
@@ -1433,6 +1476,10 @@ public class Canal<D> implements Iterable<D>
 
 		public GroupByOp(Mapper<E, K> kop, Mapper<E, V> vop)
 		{
+			if (kop == null || vop == null)
+			{
+				throw new NullPointerException();
+			}
 			this.kop = kop;
 			this.vop = vop;
 		}
@@ -1504,6 +1551,7 @@ public class Canal<D> implements Iterable<D>
 
 		private Iterator<E>				iter;
 
+		@Override
 		public void begin()
 		{
 			this.settle();
@@ -1600,6 +1648,10 @@ public class Canal<D> implements Iterable<D>
 
 		public IntersectionOp(Canal<E> that, Comparator<E> cmp)
 		{
+			if (that == null)
+			{
+				throw new NullPointerException();
+			}
 			this.that = that;
 			this.cmp = cmp;
 		}
@@ -1720,6 +1772,10 @@ public class Canal<D> implements Iterable<D>
 
 		public IterableSourcer(Iterable<E> iter)
 		{
+			if (iter == null)
+			{
+				throw new NullPointerException();
+			}
 			this.iter = iter;
 		}
 
@@ -1973,6 +2029,10 @@ public class Canal<D> implements Iterable<D>
 
 		public JoinOp(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
 		{
+			if (that == null)
+			{
+				throw new NullPointerException();
+			}
 			this.that = that;
 			this.kol = kol;
 			this.kor = kor;
@@ -2048,6 +2108,10 @@ public class Canal<D> implements Iterable<D>
 
 		public LastOp(Filter<E> filter)
 		{
+			if (filter == null)
+			{
+				throw new NullPointerException();
+			}
 			this.filter = filter;
 		}
 
@@ -2227,6 +2291,10 @@ public class Canal<D> implements Iterable<D>
 
 		public MapOp(Mapper<I, O> mapper)
 		{
+			if (mapper == null)
+			{
+				throw new NullPointerException();
+			}
 			this.mapper = mapper;
 		}
 
@@ -2284,13 +2352,17 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class MapWithStateOp<I, S, O> implements Converter<I, O>
 	{
-		protected final Producer<S>				state;
+		protected final Producer<S>				stater;
 
 		protected final StatefulMapper<I, S, O>	mapper;
 
-		public MapWithStateOp(Producer<S> state, StatefulMapper<I, S, O> mapper)
+		public MapWithStateOp(Producer<S> stater, StatefulMapper<I, S, O> mapper)
 		{
-			this.state = state;
+			if (stater == null || mapper == null)
+			{
+				throw new NullPointerException();
+			}
+			this.stater = stater;
 			this.mapper = mapper;
 		}
 
@@ -2310,7 +2382,7 @@ public class Canal<D> implements Iterable<D>
 					{
 						if (!init)
 						{
-							stat = state.produce();
+							stat = stater.produce();
 							init = true;
 						}
 						return mapper.map(upstream().next(), stat);
@@ -2336,6 +2408,10 @@ public class Canal<D> implements Iterable<D>
 
 		public MatchFindIterable(Pattern regex, CharSequence text)
 		{
+			if (regex == null || text == null)
+			{
+				throw new NullPointerException();
+			}
 			this.regex = regex;
 			this.text = text;
 		}
@@ -2869,6 +2945,10 @@ public class Canal<D> implements Iterable<D>
 
 		public PeekOp(Action<E> action)
 		{
+			if (action == null)
+			{
+				throw new NullPointerException();
+			}
 			this.action = action;
 		}
 
@@ -2903,6 +2983,7 @@ public class Canal<D> implements Iterable<D>
 	{
 		void begin() throws Exception;
 
+		@Override
 		void close() throws Exception;
 
 		void end() throws Exception;
@@ -2946,6 +3027,10 @@ public class Canal<D> implements Iterable<D>
 
 		public ReduceOp(Reducer<E, E> reducer, Filter<E> until)
 		{
+			if (reducer == null)
+			{
+				throw new NullPointerException();
+			}
 			this.reducer = reducer;
 			this.until = until;
 		}
@@ -3320,6 +3405,10 @@ public class Canal<D> implements Iterable<D>
 
 		public SingleUseIterable(Iterator<E> iter)
 		{
+			if (iter == null)
+			{
+				throw new NullPointerException();
+			}
 			this.iter = iter;
 		}
 
@@ -3782,14 +3871,17 @@ public class Canal<D> implements Iterable<D>
 
 	protected static abstract class Source<E> implements Pond<E, E>
 	{
+		@Override
 		public void begin() throws Exception
 		{
 		}
 
+		@Override
 		public void close() throws Exception
 		{
 		}
 
+		@Override
 		public void end() throws Exception
 		{
 			this.close();
@@ -3957,6 +4049,10 @@ public class Canal<D> implements Iterable<D>
 
 		public SubtractOp(Canal<E> that, Comparator<E> cmp)
 		{
+			if (that == null)
+			{
+				throw new NullPointerException();
+			}
 			this.that = that;
 			this.cmp = cmp;
 		}
@@ -4365,6 +4461,10 @@ public class Canal<D> implements Iterable<D>
 
 		public UnionOp(Canal<E> self, Canal<E> that)
 		{
+			if (self == null || that == null)
+			{
+				throw new NullPointerException();
+			}
 			this.self = self;
 			this.that = that;
 		}
@@ -4435,6 +4535,10 @@ public class Canal<D> implements Iterable<D>
 
 		public UntilOp(Filter<E> until, Option<E>[] drop)
 		{
+			if (until == null)
+			{
+				throw new NullPointerException();
+			}
 			this.until = until;
 			this.drop = drop;
 		}
@@ -4531,6 +4635,7 @@ public class Canal<D> implements Iterable<D>
 		 */
 		protected long index = 0;
 
+		@Override
 		public void begin()
 		{
 		}
@@ -4590,6 +4695,10 @@ public class Canal<D> implements Iterable<D>
 
 		public ZipOp(Canal<B> that)
 		{
+			if (that == null)
+			{
+				throw new NullPointerException();
+			}
 			this.that = that;
 		}
 
@@ -4606,6 +4715,10 @@ public class Canal<D> implements Iterable<D>
 
 		public ZipOuterOp(Canal<B> that)
 		{
+			if (that == null)
+			{
+				throw new NullPointerException();
+			}
 			this.that = that;
 		}
 
@@ -5794,15 +5907,15 @@ public class Canal<D> implements Iterable<D>
 	/**
 	 * Map each element with state.
 	 * 
-	 * @param state
+	 * @param stater
 	 *            state producer which generates a initial state.
 	 * @param mapper
 	 *            {@code (D data, S state)->V value}
 	 * @return
 	 */
-	public <S, V> Canal<V> mapWithState(Producer<S> state, StatefulMapper<D, S, V> mapper)
+	public <S, V> Canal<V> mapWithState(Producer<S> stater, StatefulMapper<D, S, V> mapper)
 	{
-		return this.follow(new MapWithStateOp<D, S, V>(state, mapper));
+		return this.follow(new MapWithStateOp<D, S, V>(stater, mapper));
 	}
 
 	@SuppressWarnings("unchecked")
