@@ -9172,6 +9172,69 @@ public class Tools
 		return c;
 	}
 
+	/**
+	 * Get the stack trace text of Throwable object into a StringBuilder.
+	 * 
+	 * @param buffer
+	 * @param ex
+	 * @param traces
+	 *            lines to trace, negative number means no limit.
+	 * @return
+	 */
+	public static StringBuilder textOf(StringBuilder buffer, Throwable ex, int traces)
+	{
+		if (ex == null)
+		{
+			return buffer;
+		}
+
+		buffer = (buffer != null ? buffer : new StringBuilder())
+				.append(ex.getClass().getName() + ": " + ex.getLocalizedMessage());
+
+		int i = 0;
+		for (StackTraceElement s : ex.getStackTrace())
+		{
+			if (traces >= 0 && i >= traces)
+			{
+				break;
+			}
+			buffer.append("\n\tat ");
+			buffer.append(s);
+			i++;
+		}
+
+		Throwable cause = ex.getCause();
+		if (cause != null)
+		{
+			buffer.append("\nCaused by: ");
+			return textOf(buffer, cause, traces);
+		}
+		else
+		{
+			return buffer;
+		}
+	}
+
+	/**
+	 * Get the stack trace text of Throwable object.
+	 * 
+	 * @param ex
+	 * @param traces
+	 *            lines to trace, negative number means no limit.
+	 * @return
+	 */
+	public static String textOf(Throwable ex, int traces)
+	{
+		if (ex == null)
+		{
+			return null;
+		}
+		else
+		{
+			return textOf(new StringBuilder(), ex, traces).toString();
+		}
+	}
+
 	public static void throwAsRuntimeException(Throwable e)
 	{
 		RuntimeException x = getRuntimeException(e);
