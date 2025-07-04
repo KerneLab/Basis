@@ -2567,7 +2567,7 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public E or(Producer<E> defaultProducer)
+		public E or(Producer<? extends E> defaultProducer)
 		{
 			try
 			{
@@ -2634,13 +2634,31 @@ public class Canal<D> implements Iterable<D>
 			return (None<T>) NONE;
 		}
 
+		/**
+		 * Please use {@link Option#Of(Object)} instead, in order to avoid
+		 * ambiguous of {@code Canal.of(...)} methods.
+		 */
+		@Deprecated
 		@SuppressWarnings("unchecked")
 		public static <T> Option<T> of(T value)
 		{
 			return value != null ? new Some<T>(value) : (None<T>) NONE;
 		}
 
-		public static <T> T or(T value, Producer<T> deft)
+		/**
+		 * Get Option object by value.
+		 * 
+		 * @param value
+		 * @return {@code None} if {@code value == null} otherwise
+		 *         {@code Some(value)} will be returned.
+		 */
+		@SuppressWarnings("unchecked")
+		public static <T> Option<T> Of(T value)
+		{
+			return value != null ? new Some<T>(value) : (None<T>) NONE;
+		}
+
+		public static <T> T or(T value, Producer<? extends T> deft)
 		{
 			try
 			{
@@ -2719,7 +2737,7 @@ public class Canal<D> implements Iterable<D>
 
 		public abstract E or(E defaultValue);
 
-		public abstract E or(Producer<E> defaultProducer);
+		public abstract E or(Producer<? extends E> defaultProducer);
 
 		public abstract Option<E> orElse(Option<E> opt);
 
@@ -3773,7 +3791,7 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public E or(Producer<E> defaultProducer)
+		public E or(Producer<? extends E> defaultProducer)
 		{
 			return value;
 		}
