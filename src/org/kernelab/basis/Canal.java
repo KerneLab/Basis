@@ -1646,13 +1646,14 @@ public class Canal<D> implements Iterable<D>
 
 		protected final Comparator<E>	cmp;
 
-		public IntersectionOp(Canal<E> that, Comparator<E> cmp)
+		@SuppressWarnings("unchecked")
+		public IntersectionOp(Canal<? extends E> that, Comparator<E> cmp)
 		{
 			if (that == null)
 			{
 				throw new NullPointerException();
 			}
-			this.that = that;
+			this.that = (Canal<E>) that;
 			this.cmp = cmp;
 		}
 
@@ -2573,36 +2574,30 @@ public class Canal<D> implements Iterable<D>
 			{
 				return defaultProducer.produce();
 			}
-			catch (RuntimeException e)
-			{
-				throw e;
-			}
 			catch (Exception e)
 			{
-				throw new RuntimeException(e);
+				throw Tools.getRuntimeException(e);
 			}
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
-		public Option<E> orElse(Option<E> opt)
+		public Option<E> orElse(Option<? extends E> opt)
 		{
-			return opt;
+			return (Option<E>) opt;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
-		public Option<E> orElse(Producer<Option<E>> opt)
+		public Option<E> orElse(Producer<Option<? extends E>> opt)
 		{
 			try
 			{
-				return opt.produce();
-			}
-			catch (RuntimeException e)
-			{
-				throw e;
+				return (Option<E>) opt.produce();
 			}
 			catch (Exception e)
 			{
-				throw new RuntimeException(e);
+				throw Tools.getRuntimeException(e);
 			}
 		}
 
@@ -2739,9 +2734,9 @@ public class Canal<D> implements Iterable<D>
 
 		public abstract E or(Producer<? extends E> defaultProducer);
 
-		public abstract Option<E> orElse(Option<E> opt);
+		public abstract Option<E> orElse(Option<? extends E> opt);
 
-		public abstract Option<E> orElse(Producer<Option<E>> opt);
+		public abstract Option<E> orElse(Producer<Option<? extends E>> opt);
 
 		public abstract E orNull();
 	}
@@ -3797,13 +3792,13 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public Option<E> orElse(Option<E> opt)
+		public Option<E> orElse(Option<? extends E> opt)
 		{
 			return this;
 		}
 
 		@Override
-		public Option<E> orElse(Producer<Option<E>> opt)
+		public Option<E> orElse(Producer<Option<? extends E>> opt)
 		{
 			return this;
 		}
@@ -4065,13 +4060,14 @@ public class Canal<D> implements Iterable<D>
 
 		protected final Comparator<E>	cmp;
 
-		public SubtractOp(Canal<E> that, Comparator<E> cmp)
+		@SuppressWarnings("unchecked")
+		public SubtractOp(Canal<? extends E> that, Comparator<E> cmp)
 		{
 			if (that == null)
 			{
 				throw new NullPointerException();
 			}
-			this.that = that;
+			this.that = (Canal<E>) that;
 			this.cmp = cmp;
 		}
 
@@ -4477,14 +4473,15 @@ public class Canal<D> implements Iterable<D>
 
 		protected final Canal<E>	that;
 
-		public UnionOp(Canal<E> self, Canal<E> that)
+		@SuppressWarnings("unchecked")
+		public UnionOp(Canal<E> self, Canal<? extends E> that)
 		{
 			if (self == null || that == null)
 			{
 				throw new NullPointerException();
 			}
 			this.self = self;
-			this.that = that;
+			this.that = (Canal<E>) that;
 		}
 
 		@Override
@@ -5740,7 +5737,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param that
 	 * @return
 	 */
-	public Canal<D> intersection(Canal<D> that)
+	public Canal<D> intersection(Canal<? extends D> that)
 	{
 		return intersection(that, null);
 	}
@@ -5752,7 +5749,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D> intersection(Canal<D> that, Comparator<D> cmp)
+	public Canal<D> intersection(Canal<? extends D> that, Comparator<D> cmp)
 	{
 		return this.follow(new IntersectionOp<D>(that, cmp));
 	}
@@ -6202,7 +6199,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param that
 	 * @return
 	 */
-	public Canal<D> subtract(Canal<D> that)
+	public Canal<D> subtract(Canal<? extends D> that)
 	{
 		return subtract(that, null);
 	}
@@ -6214,7 +6211,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D> subtract(Canal<D> that, Comparator<D> cmp)
+	public Canal<D> subtract(Canal<? extends D> that, Comparator<D> cmp)
 	{
 		return this.follow(new SubtractOp<D>(that, cmp));
 	}
@@ -6413,7 +6410,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param that
 	 * @return
 	 */
-	public Canal<D> union(Canal<D> that)
+	public Canal<D> union(Canal<? extends D> that)
 	{
 		return this.follow(new UnionOp<D>(this, that));
 	}
