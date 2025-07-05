@@ -2574,9 +2574,13 @@ public class Canal<D> implements Iterable<D>
 			{
 				return defaultProducer.produce();
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
-				throw Tools.getRuntimeException(e);
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -2595,9 +2599,13 @@ public class Canal<D> implements Iterable<D>
 			{
 				return (Option<E>) opt.produce();
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
-				throw Tools.getRuntimeException(e);
+				throw new RuntimeException(e);
 			}
 		}
 
