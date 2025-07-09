@@ -731,7 +731,7 @@ public class Graph<N, E>
 	 */
 	public TreeMap<Integer, Set<N>> stratify()
 	{
-		return stratify(new Producer<Set<N>>()
+		return stratify(new Producer<Set<? extends N>>()
 		{
 			@Override
 			public Set<N> produce() throws Exception
@@ -749,7 +749,8 @@ public class Graph<N, E>
 	 *            A producer which makes a new Set for each level.
 	 * @return
 	 */
-	public TreeMap<Integer, Set<N>> stratify(Producer<Set<N>> setMaker)
+	@SuppressWarnings("unchecked")
+	public TreeMap<Integer, Set<N>> stratify(Producer<Set<? extends N>> setMaker)
 	{
 		Map<Integer, Set<N>> res = new HashMap<Integer, Set<N>>();
 
@@ -763,7 +764,7 @@ public class Graph<N, E>
 			{
 				try
 				{
-					nodes = setMaker.produce();
+					nodes = (Set<N>) setMaker.produce();
 				}
 				catch (Exception e)
 				{
@@ -841,7 +842,7 @@ public class Graph<N, E>
 	 */
 	public List<N> topSort()
 	{
-		return topSort(new Producer<Set<N>>()
+		return topSort(new Producer<Set<? extends N>>()
 		{
 			@Override
 			public Set<N> produce() throws Exception
@@ -858,7 +859,8 @@ public class Graph<N, E>
 	 * @param setMaker
 	 * @return
 	 */
-	public List<N> topSort(Producer<Set<N>> setMaker)
+	@SuppressWarnings("unchecked")
+	public List<N> topSort(Producer<Set<? extends N>> setMaker)
 	{
 		Graph<N, Object> trace = this.toTrace();
 
@@ -867,7 +869,7 @@ public class Graph<N, E>
 		Set<N> heads;
 		try
 		{
-			heads = setMaker.produce();
+			heads = (Set<N>) setMaker.produce();
 		}
 		catch (Exception e)
 		{
@@ -902,7 +904,7 @@ public class Graph<N, E>
 			{
 				try
 				{
-					nexts = setMaker.produce();
+					nexts = (Set<N>) setMaker.produce();
 				}
 				catch (Exception e)
 				{

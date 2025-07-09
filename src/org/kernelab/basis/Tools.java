@@ -6565,7 +6565,7 @@ public class Tools
 	 * @param byDefault
 	 * @return
 	 */
-	public static <T> T or(T value, Producer<T> byDefault)
+	public static <T> T or(T value, Producer<? extends T> byDefault)
 	{
 		try
 		{
@@ -9502,7 +9502,7 @@ public class Tools
 	 *            The default producer.
 	 * @return The {@link CaseWhenMapper}.
 	 */
-	public static <D, T> CaseWhenMapper<D, T> when(Filter<D> cond, Mapper<D, T> then, Producer<T> other)
+	public static <D, T> CaseWhenMapper<D, T> when(Filter<D> cond, Mapper<D, T> then, Producer<? extends T> other)
 	{
 		return CaseWhenMapper.of(cond, then, other);
 	}

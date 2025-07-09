@@ -5183,10 +5183,11 @@ public class Canal<D> implements Iterable<D>
 		return new Canal<E>().setOperator(new ArraySourcer<E>(array, begin, until, step));
 	}
 
-	public static <E> Canal<E> of(Iterable<E> iter)
+	@SuppressWarnings("unchecked")
+	public static <E> Canal<E> of(Iterable<? extends E> iter)
 	{
 		return iter instanceof Canal ? (Canal<E>) iter //
-				: new Canal<E>().setOperator(new IterableSourcer<E>(iter));
+				: new Canal<E>().setOperator(new IterableSourcer<E>((Iterable<E>) iter));
 	}
 
 	public static PairCanal<String, Object> of(JSON json)
@@ -5222,9 +5223,10 @@ public class Canal<D> implements Iterable<D>
 		return of(iterable(regex, text));
 	}
 
-	public static <E> Canal<E> of(Producer<E> spring)
+	@SuppressWarnings("unchecked")
+	public static <E> Canal<E> of(Producer<? extends E> spring)
 	{
-		return new Canal<E>().setOperator(new GeneratedSourcer<E>(spring));
+		return new Canal<E>().setOperator(new GeneratedSourcer<E>((Producer<E>) spring));
 	}
 
 	public static <E> Option<E> option(E value)
