@@ -1767,6 +1767,27 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	protected static class IterablePairSourcer<K, V> implements Sourcer<Entry<K, V>>
+	{
+		protected final Iterable<Entry<K, V>> iter;
+
+		@SuppressWarnings("unchecked")
+		public IterablePairSourcer(Iterable<?> iter)
+		{
+			if (iter == null)
+			{
+				throw new NullPointerException();
+			}
+			this.iter = (Iterable<Entry<K, V>>) iter;
+		}
+
+		@Override
+		public Source<Entry<K, V>> newPond()
+		{
+			return new IteratorSource<Entry<K, V>>(iter.iterator());
+		}
+	}
+
 	protected static class IterableSourcer<E> implements Sourcer<E>
 	{
 		protected final Iterable<E> iter;
@@ -5204,10 +5225,10 @@ public class Canal<D> implements Iterable<D>
 				}).toPair();
 	}
 
-	public static <K, V> PairCanal<K, V> of(Map<K, V> map)
+	public static <K, V> PairCanal<K, V> of(Map<K, ? extends V> map)
 	{
 		return new Canal<Entry<K, V>>() //
-				.setOperator(new IterableSourcer<Entry<K, V>>(map.entrySet())) //
+				.setOperator(new IterablePairSourcer<K, V>(map.entrySet())) //
 				.map(new Mapper<Entry<K, V>, Tuple2<K, V>>()
 				{
 					@Override
