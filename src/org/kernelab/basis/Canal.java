@@ -5225,7 +5225,7 @@ public class Canal<D> implements Iterable<D>
 				}).toPair();
 	}
 
-	public static <K, V> PairCanal<K, V> of(Map<K, ? extends V> map)
+	public static <K, V> PairCanal<K, V> of(Map<? extends K, ? extends V> map)
 	{
 		return new Canal<Entry<K, V>>() //
 				.setOperator(new IterablePairSourcer<K, V>(map.entrySet())) //
