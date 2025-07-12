@@ -60,7 +60,7 @@ public class TestCanal
 		coll.add(3);
 		coll.add(4);
 		coll.add(5);
-
+		Tools.debug("============filter(>2)");
 		Canal<Integer> c = Canal.of(coll).filter(new Filter<Integer>()
 		{
 			@Override

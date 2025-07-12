@@ -900,9 +900,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class FilterOp<E> implements Converter<E, E>
 	{
-		protected final Filter<E> filter;
+		protected final Filter<? super E> filter;
 
-		protected FilterOp(Filter<E> filter)
+		protected FilterOp(Filter<? super E> filter)
 		{
 			if (filter == null)
 			{
@@ -981,9 +981,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class FirstOp<E> implements Evaluator<E, Option<E>>
 	{
-		protected final Filter<E> filter;
+		protected final Filter<? super E> filter;
 
-		public FirstOp(Filter<E> filter)
+		public FirstOp(Filter<? super E> filter)
 		{
 			if (filter == null)
 			{
@@ -2706,7 +2706,7 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public Option<E> filter(Filter<E> filter)
+		public Option<E> filter(Filter<? super E> filter)
 		{
 			try
 			{
@@ -5581,7 +5581,7 @@ public class Canal<D> implements Iterable<D>
 	 *            element need to be passed to the downstream.
 	 * @return
 	 */
-	public Canal<D> filter(Filter<D> filter)
+	public Canal<D> filter(Filter<? super D> filter)
 	{
 		return this.follow(new FilterOp<D>(filter));
 	}
@@ -5610,7 +5610,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data)->boolean}
 	 * @return
 	 */
-	public Option<D> first(Filter<D> filter)
+	public Option<D> first(Filter<? super D> filter)
 	{
 		return this.follow(new FirstOp<D>(filter)).evaluate();
 	}
