@@ -9,19 +9,20 @@ import org.kernelab.basis.Canal.Tuple2;
 
 public class CaseWhenMapper<D, T> implements Mapper<D, T>
 {
-	public static <D, T> CaseWhenMapper<D, T> of(Filter<D> cond, Mapper<D, T> then)
+	public static <D, T> CaseWhenMapper<D, T> of(Filter<? super D> cond, Mapper<? super D, ? extends T> then)
 	{
 		return new CaseWhenMapper<D, T>().when(cond, then);
 	}
 
-	public static <D, T> CaseWhenMapper<D, T> of(Filter<D> cond, Mapper<D, T> then, Producer<? extends T> other)
+	public static <D, T> CaseWhenMapper<D, T> of(Filter<? super D> cond, Mapper<? super D, ? extends T> then,
+			Producer<? extends T> other)
 	{
 		return new CaseWhenMapper<D, T>().when(cond, then).otherwise(other);
 	}
 
 	private List<Tuple2<Filter<D>, Mapper<D, T>>>	pairs	= new ArrayList<Tuple2<Filter<D>, Mapper<D, T>>>();
 
-	private Producer<? extends T>					other	= null;
+	private Producer<T>								other	= null;
 
 	protected Producer<? extends T> getOther()
 	{
@@ -46,13 +47,14 @@ public class CaseWhenMapper<D, T> implements Mapper<D, T>
 		return this.getOther() != null ? this.getOther().produce() : null;
 	}
 
+	@SuppressWarnings("unchecked")
 	public CaseWhenMapper<D, T> otherwise(Producer<? extends T> other)
 	{
-		this.setOther(other);
+		this.setOther((Producer<T>) other);
 		return this;
 	}
 
-	protected void setOther(Producer<? extends T> other)
+	protected void setOther(Producer<T> other)
 	{
 		this.other = other;
 	}
@@ -62,9 +64,10 @@ public class CaseWhenMapper<D, T> implements Mapper<D, T>
 		this.pairs = pairs;
 	}
 
-	public CaseWhenMapper<D, T> when(Filter<D> cond, Mapper<D, T> then)
+	@SuppressWarnings("unchecked")
+	public CaseWhenMapper<D, T> when(Filter<? super D> cond, Mapper<? super D, ? extends T> then)
 	{
-		this.getPairs().add(Tuple.of(cond, then));
+		this.getPairs().add(Tuple.of((Filter<D>) cond, (Mapper<D, T>) then));
 		return this;
 	}
 }

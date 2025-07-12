@@ -9485,7 +9485,7 @@ public class Tools
 	 *            The first branch.
 	 * @return The {@link CaseWhenMapper}.
 	 */
-	public static <D, T> CaseWhenMapper<D, T> when(Filter<D> cond, Mapper<D, T> then)
+	public static <D, T> CaseWhenMapper<D, T> when(Filter<? super D> cond, Mapper<? super D, ? extends T> then)
 	{
 		return CaseWhenMapper.of(cond, then);
 	}
@@ -9502,7 +9502,8 @@ public class Tools
 	 *            The default producer.
 	 * @return The {@link CaseWhenMapper}.
 	 */
-	public static <D, T> CaseWhenMapper<D, T> when(Filter<D> cond, Mapper<D, T> then, Producer<? extends T> other)
+	public static <D, T> CaseWhenMapper<D, T> when(Filter<? super D> cond, Mapper<? super D, ? extends T> then,
+			Producer<? extends T> other)
 	{
 		return CaseWhenMapper.of(cond, then, other);
 	}
