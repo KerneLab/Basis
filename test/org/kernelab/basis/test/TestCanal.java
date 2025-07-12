@@ -225,17 +225,17 @@ public class TestCanal
 			}
 		});
 
-		Tools.debug("============");
+		Tools.debug("============flatMap");
 		Integer[] array1 = new Integer[] { 1, 2, 3 };
-		c = Canal.of(array1).flatMap(new Mapper<Integer, Iterable<Integer>>()
+		c = Canal.of(array1).flatMap(new Mapper<Number, Iterable<Integer>>()
 		{
 			@Override
-			public Iterable<Integer> map(Integer key)
+			public Iterable<Integer> map(Number key)
 			{
 				Collection<Integer> a = new LinkedList<Integer>();
-				for (int i = 1; i < key; i++)
+				for (int i = 1; i <= key.intValue(); i++)
 				{
-					a.add(key);
+					a.add(key.intValue());
 				}
 				return a;
 			}

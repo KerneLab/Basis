@@ -1038,9 +1038,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class FlatMapOp<I, O> implements Converter<I, O>
 	{
-		protected final Mapper<I, Iterable<O>> mapper;
+		protected final Mapper<? super I, Iterable<O>> mapper;
 
-		public FlatMapOp(Mapper<I, Iterable<O>> mapper)
+		public FlatMapOp(Mapper<? super I, Iterable<O>> mapper)
 		{
 			if (mapper == null)
 			{
@@ -2309,9 +2309,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class MapOp<I, O> implements Converter<I, O>
 	{
-		protected final Mapper<I, O> mapper;
+		protected final Mapper<? super I, O> mapper;
 
-		public MapOp(Mapper<I, O> mapper)
+		public MapOp(Mapper<? super I, O> mapper)
 		{
 			if (mapper == null)
 			{
@@ -2374,11 +2374,11 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class MapWithStateOp<I, S, O> implements Converter<I, O>
 	{
-		protected final Producer<S>				stater;
+		protected final Producer<S>						stater;
 
-		protected final StatefulMapper<I, S, O>	mapper;
+		protected final StatefulMapper<? super I, S, O>	mapper;
 
-		public MapWithStateOp(Producer<S> stater, StatefulMapper<I, S, O> mapper)
+		public MapWithStateOp(Producer<S> stater, StatefulMapper<? super I, S, O> mapper)
 		{
 			if (stater == null || mapper == null)
 			{
@@ -2736,7 +2736,7 @@ public class Canal<D> implements Iterable<D>
 		public abstract boolean given();
 
 		@Override
-		public <F> Option<F> map(Mapper<E, F> mapper)
+		public <F> Option<F> map(Mapper<? super E, F> mapper)
 		{
 			if (this.given())
 			{
@@ -5622,7 +5622,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data)->Iterable<V>}
 	 * @return
 	 */
-	public <V> Canal<V> flatMap(Mapper<D, Iterable<V>> mapper)
+	public <V> Canal<V> flatMap(Mapper<? super D, Iterable<V>> mapper)
 	{
 		return this.follow(new FlatMapOp<D, V>(mapper));
 	}
@@ -5933,7 +5933,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data)->V value}
 	 * @return
 	 */
-	public <V> Canal<V> map(Mapper<D, V> mapper)
+	public <V> Canal<V> map(Mapper<? super D, V> mapper)
 	{
 		return this.follow(new MapOp<D, V>(mapper));
 	}
@@ -5945,7 +5945,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data)->(K key, V value)}
 	 * @return
 	 */
-	public <K, V> PairCanal<K, V> mapToPair(Mapper<D, Tuple2<K, V>> mapper)
+	public <K, V> PairCanal<K, V> mapToPair(Mapper<? super D, Tuple2<K, V>> mapper)
 	{
 		return this.map(mapper).toPair();
 	}
@@ -5959,7 +5959,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data, S state)->V value}
 	 * @return
 	 */
-	public <S, V> Canal<V> mapWithState(Producer<S> stater, StatefulMapper<D, S, V> mapper)
+	public <S, V> Canal<V> mapWithState(Producer<S> stater, StatefulMapper<? super D, S, V> mapper)
 	{
 		return this.follow(new MapWithStateOp<D, S, V>(stater, mapper));
 	}
