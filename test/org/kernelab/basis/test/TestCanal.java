@@ -245,12 +245,12 @@ public class TestCanal
 		Tools.debug(c.countByValue());
 
 		Tools.debug("============forall true");
-		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).forall(new Filter<Integer>()
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3 }).forall(new Filter<Number>()
 		{
 			@Override
-			public boolean filter(Integer el) throws Exception
+			public boolean filter(Number el) throws Exception
 			{
-				return el > 0;
+				return el.intValue() > 0;
 			}
 		}));
 
@@ -265,12 +265,12 @@ public class TestCanal
 		}));
 
 		Tools.debug("============range 0,4,2");
-		Canal.of(Canal.range(0, 4, 2)).foreach(new Action<Integer>()
+		Canal.of(Canal.range(0, 4, 2)).foreach(new Action<Number>()
 		{
 			@Override
-			public void action(Integer el) throws Exception
+			public void action(Number el) throws Exception
 			{
-				Tools.debug(el);
+				Tools.debug(el.intValue());
 			}
 		});
 

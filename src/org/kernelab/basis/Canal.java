@@ -1220,9 +1220,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class ForallOp<E> implements Evaluator<E, Boolean>
 	{
-		protected final Filter<E> cond;
+		protected final Filter<? super E> cond;
 
-		public ForallOp(Filter<E> cond)
+		public ForallOp(Filter<? super E> cond)
 		{
 			if (cond == null)
 			{
@@ -1240,11 +1240,11 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class ForallPond<E> extends AbstractTerminal<E, Boolean>
 	{
-		protected final Filter<E>	cond;
+		protected final Filter<? super E>	cond;
 
-		protected boolean			meet	= false;
+		protected boolean					meet	= false;
 
-		public ForallPond(Filter<E> cond)
+		public ForallPond(Filter<? super E> cond)
 		{
 			this.cond = cond;
 		}
@@ -1284,9 +1284,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class ForeachOp<E> implements Evaluator<E, Void>
 	{
-		protected final Action<E> action;
+		protected final Action<? super E> action;
 
-		public ForeachOp(Action<E> action)
+		public ForeachOp(Action<? super E> action)
 		{
 			if (action == null)
 			{
@@ -1304,9 +1304,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class ForeachPond<E> extends AbstractTerminal<E, Void>
 	{
-		protected final Action<E> action;
+		protected final Action<? super E> action;
 
-		public ForeachPond(Action<E> action)
+		public ForeachPond(Action<? super E> action)
 		{
 			this.action = action;
 		}
@@ -5670,7 +5670,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cond
 	 * @return
 	 */
-	public boolean forall(Filter<D> cond)
+	public boolean forall(Filter<? super D> cond)
 	{
 		return this.follow(new ForallOp<D>(cond)).evaluate();
 	}
@@ -5682,7 +5682,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data)->void} the action to be applied to each
 	 *            element.
 	 */
-	public void foreach(Action<D> action)
+	public void foreach(Action<? super D> action)
 	{
 		this.follow(new ForeachOp<D>(action)).evaluate();
 	}
