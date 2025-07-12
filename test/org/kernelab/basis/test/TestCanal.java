@@ -715,10 +715,10 @@ public class TestCanal
 		Tools.debug(Canal.of(new Integer[] {}).toString(",", "(", ")"));
 
 		Tools.debug("============peek");
-		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).peek(new Action<Integer>()
+		Tools.debug(Canal.of(new Integer[] { 1, 2, 3, 4, 5 }).peek(new Action<Number>()
 		{
 			@Override
-			public void action(Integer el)
+			public void action(Number el)
 			{
 				Tools.debug(">>" + el);
 			}

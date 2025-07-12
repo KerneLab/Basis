@@ -2843,7 +2843,7 @@ public class Canal<D> implements Iterable<D>
 		 * @param pred
 		 * @return
 		 */
-		public PairCanal<K, V> having(final Filter<V> pred)
+		public PairCanal<K, V> having(final Filter<? super V> pred)
 		{
 			return this.filter(new Filter<Tuple2<K, V>>()
 			{
@@ -2983,9 +2983,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class PeekOp<E> implements Converter<E, E>
 	{
-		protected final Action<E> action;
+		protected final Action<? super E> action;
 
-		public PeekOp(Action<E> action)
+		public PeekOp(Action<? super E> action)
 		{
 			if (action == null)
 			{
@@ -5986,7 +5986,7 @@ public class Canal<D> implements Iterable<D>
 	 *            element.
 	 * @return
 	 */
-	public Canal<D> peek(Action<D> action)
+	public Canal<D> peek(Action<? super D> action)
 	{
 		return this.follow(new PeekOp<D>(action));
 	}
