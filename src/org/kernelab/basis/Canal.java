@@ -782,17 +782,17 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class DistinctOp<E> implements Converter<E, E>
 	{
-		protected final Comparator<E>		cmp;
+		protected final Comparator<? super E>		cmp;
 
-		protected final HashedEquality<E>	eql;
+		protected final HashedEquality<? super E>	eql;
 
-		public DistinctOp(Comparator<E> cmp)
+		public DistinctOp(Comparator<? super E> cmp)
 		{
 			this.cmp = cmp;
 			this.eql = null;
 		}
 
-		public DistinctOp(HashedEquality<E> eql)
+		public DistinctOp(HashedEquality<? super E> eql)
 		{
 			this.cmp = null;
 			this.eql = eql;
@@ -5551,7 +5551,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D> distinct(Comparator<D> cmp)
+	public Canal<D> distinct(Comparator<? super D> cmp)
 	{
 		return this.follow(new DistinctOp<D>(cmp));
 	}
@@ -5562,7 +5562,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param eql
 	 * @return
 	 */
-	public Canal<D> distinct(HashedEquality<D> eql)
+	public Canal<D> distinct(HashedEquality<? super D> eql)
 	{
 		return this.follow(new DistinctOp<D>(eql));
 	}

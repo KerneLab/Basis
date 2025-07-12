@@ -16,24 +16,24 @@ public class WrappedHashSet<E> extends WrappedContainer<E> implements Set<E>, Se
 
 	protected final HashSet<Wrapper>	set;
 
-	public WrappedHashSet(HashedEquality<E> equal)
+	public WrappedHashSet(HashedEquality<? super E> equal)
 	{
 		this(equal, WrappedHashMap.DEFAULT_CAPACITY);
 	}
 
-	public WrappedHashSet(HashedEquality<E> equal, Collection<? extends E> c)
+	public WrappedHashSet(HashedEquality<? super E> equal, Collection<? extends E> c)
 	{
 		this(equal, Math.max((int) (c.size() / WrappedHashMap.DEFAULT_LOAD_FACTOR) + 1, //
 				WrappedHashMap.DEFAULT_CAPACITY));
 		addAll(c);
 	}
 
-	public WrappedHashSet(HashedEquality<E> equal, int initialCapacity)
+	public WrappedHashSet(HashedEquality<? super E> equal, int initialCapacity)
 	{
 		this(equal, initialCapacity, WrappedHashMap.DEFAULT_LOAD_FACTOR);
 	}
 
-	public WrappedHashSet(HashedEquality<E> equal, int initialCapacity, float loadFactor)
+	public WrappedHashSet(HashedEquality<? super E> equal, int initialCapacity, float loadFactor)
 	{
 		super(equal);
 		this.set = newHashSet(initialCapacity, loadFactor);

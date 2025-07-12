@@ -11,22 +11,22 @@ public class WrappedLinkedHashSet<E> extends WrappedHashSet<E>
 	 */
 	private static final long serialVersionUID = 1504905058400818317L;
 
-	public WrappedLinkedHashSet(HashedEquality<E> equal)
+	public WrappedLinkedHashSet(HashedEquality<? super E> equal)
 	{
 		super(equal);
 	}
 
-	public WrappedLinkedHashSet(HashedEquality<E> equal, Collection<? extends E> c)
+	public WrappedLinkedHashSet(HashedEquality<? super E> equal, Collection<? extends E> c)
 	{
 		super(equal, c);
 	}
 
-	public WrappedLinkedHashSet(HashedEquality<E> equal, int initialCapacity)
+	public WrappedLinkedHashSet(HashedEquality<? super E> equal, int initialCapacity)
 	{
 		super(equal, initialCapacity);
 	}
 
-	public WrappedLinkedHashSet(HashedEquality<E> equal, int initialCapacity, float loadFactor)
+	public WrappedLinkedHashSet(HashedEquality<? super E> equal, int initialCapacity, float loadFactor)
 	{
 		super(equal, initialCapacity, loadFactor);
 	}

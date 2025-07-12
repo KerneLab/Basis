@@ -88,9 +88,9 @@ public abstract class WrappedContainer<E>
 		}
 	}
 
-	protected final HashedEquality<E> equal;
+	protected final HashedEquality<? super E> equal;
 
-	public WrappedContainer(HashedEquality<E> equal)
+	public WrappedContainer(HashedEquality<? super E> equal)
 	{
 		this.equal = equal;
 	}
