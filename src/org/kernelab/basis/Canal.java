@@ -2126,9 +2126,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class LastOp<E> implements Evaluator<E, Option<E>>
 	{
-		protected final Filter<E> filter;
+		protected final Filter<? super E> filter;
 
-		public LastOp(Filter<E> filter)
+		public LastOp(Filter<? super E> filter)
 		{
 			if (filter == null)
 			{
@@ -5872,7 +5872,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data)->boolean}
 	 * @return
 	 */
-	public Option<D> last(Filter<D> filter)
+	public Option<D> last(Filter<? super D> filter)
 	{
 		return this.follow(new LastOp<D>(filter)).evaluate();
 	}
