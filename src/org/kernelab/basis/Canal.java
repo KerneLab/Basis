@@ -2663,10 +2663,9 @@ public class Canal<D> implements Iterable<D>
 		 * ambiguous of {@code Canal.of(...)} methods.
 		 */
 		@Deprecated
-		@SuppressWarnings("unchecked")
 		public static <T> Option<T> of(T value)
 		{
-			return value != null ? new Some<T>(value) : (None<T>) NONE;
+			return Of(value);
 		}
 
 		/**
@@ -5252,7 +5251,7 @@ public class Canal<D> implements Iterable<D>
 
 	public static <E> Option<E> option(E value)
 	{
-		return Option.of(value);
+		return Option.Of(value);
 	}
 
 	public static Item<Double> preceding(Double amount)
