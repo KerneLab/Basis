@@ -1038,9 +1038,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class FlatMapOp<I, O> implements Converter<I, O>
 	{
-		protected final Mapper<? super I, Iterable<O>> mapper;
+		protected final Mapper<? super I, ? extends Iterable<? extends O>> mapper;
 
-		public FlatMapOp(Mapper<? super I, Iterable<O>> mapper)
+		public FlatMapOp(Mapper<? super I, ? extends Iterable<? extends O>> mapper)
 		{
 			if (mapper == null)
 			{
@@ -1054,7 +1054,7 @@ public class Canal<D> implements Iterable<D>
 		{
 			return new Creek<I, O>()
 			{
-				private Iterator<O> iter;
+				private Iterator<? extends O> iter;
 
 				@Override
 				public boolean hasNext()
@@ -2309,9 +2309,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class MapOp<I, O> implements Converter<I, O>
 	{
-		protected final Mapper<? super I, O> mapper;
+		protected final Mapper<? super I, ? extends O> mapper;
 
-		public MapOp(Mapper<? super I, O> mapper)
+		public MapOp(Mapper<? super I, ? extends O> mapper)
 		{
 			if (mapper == null)
 			{
@@ -2735,13 +2735,13 @@ public class Canal<D> implements Iterable<D>
 		public abstract boolean given();
 
 		@Override
-		public <F> Option<F> map(Mapper<? super E, F> mapper)
+		public <F> Option<F> map(Mapper<? super E, ? extends F> mapper)
 		{
 			if (this.given())
 			{
 				try
 				{
-					return some(mapper.map(this.get()));
+					return some((F) mapper.map(this.get()));
 				}
 				catch (RuntimeException e)
 				{
@@ -5621,7 +5621,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data)->Iterable<V>}
 	 * @return
 	 */
-	public <V> Canal<V> flatMap(Mapper<? super D, Iterable<V>> mapper)
+	public <V> Canal<V> flatMap(Mapper<? super D, ? extends Iterable<? extends V>> mapper)
 	{
 		return this.follow(new FlatMapOp<D, V>(mapper));
 	}
@@ -5932,7 +5932,7 @@ public class Canal<D> implements Iterable<D>
 	 *            {@code (D data)->V value}
 	 * @return
 	 */
-	public <V> Canal<V> map(Mapper<? super D, V> mapper)
+	public <V> Canal<V> map(Mapper<? super D, ? extends V> mapper)
 	{
 		return this.follow(new MapOp<D, V>(mapper));
 	}
