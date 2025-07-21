@@ -182,6 +182,10 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 			{
 				return cast.map(value);
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
 				throw new RuntimeException(e);
@@ -198,7 +202,7 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 			}
 			catch (Exception e)
 			{
-				throw Tools.getRuntimeException(e);
+				throw new RuntimeException(e);
 			}
 		}
 

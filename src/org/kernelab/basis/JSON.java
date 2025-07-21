@@ -8518,9 +8518,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				this.attr(key, val = map.map(key));
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
-				throw Tools.getRuntimeException(e);
+				throw new RuntimeException(e);
 			}
 		}
 		return val;
@@ -8535,9 +8539,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				this.attr(key, val = map.map(key, val));
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
-				throw Tools.getRuntimeException(e);
+				throw new RuntimeException(e);
 			}
 		}
 		return val;
@@ -10025,9 +10033,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				this.attr(key, val = map.map(key));
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
-				throw Tools.getRuntimeException(e);
+				throw new RuntimeException(e);
 			}
 		}
 		return val;
@@ -10042,9 +10054,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				this.attr(key, val = map.map(key, val));
 			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
 			catch (Exception e)
 			{
-				throw Tools.getRuntimeException(e);
+				throw new RuntimeException(e);
 			}
 		}
 		return val;
