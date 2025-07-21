@@ -53,6 +53,8 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.kernelab.basis.Canal.Option;
+import org.kernelab.basis.Canal.PairCanal;
+import org.kernelab.basis.Canal.Tuple;
 import org.kernelab.basis.Canal.Tuple2;
 import org.kernelab.basis.JSON.Context;
 import org.kernelab.basis.io.DataReader;
@@ -1925,6 +1927,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		protected int bound(int index)
 		{
 			return Tools.limitNumber(index(index) + (index < 0 ? 1 : 0), 0, length());
+		}
+
+		public Canal<Object> canal()
+		{
+			return Canal.of(this.asIterable());
 		}
 
 		@Override
@@ -8513,7 +8520,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			catch (Exception e)
 			{
-				throw new RuntimeException(e);
+				throw Tools.getRuntimeException(e);
 			}
 		}
 		return val;
@@ -8530,7 +8537,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			catch (Exception e)
 			{
-				throw new RuntimeException(e);
+				throw Tools.getRuntimeException(e);
 			}
 		}
 		return val;
@@ -9820,6 +9827,18 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	public PairCanal<String, Object> tuples()
+	{
+		return Canal.of(this.keySet()).mapToPair(new Mapper<String, Tuple2<String, Object>>()
+		{
+			@Override
+			public Tuple2<String, Object> map(String key) throws Exception
+			{
+				return Tuple.of(key, JSON.this.val(key));
+			}
+		});
+	}
+
 	@SuppressWarnings("unchecked")
 	public <E> E val(String key)
 	{
@@ -10008,7 +10027,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			catch (Exception e)
 			{
-				throw new RuntimeException(e);
+				throw Tools.getRuntimeException(e);
 			}
 		}
 		return val;
@@ -10025,7 +10044,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			catch (Exception e)
 			{
-				throw new RuntimeException(e);
+				throw Tools.getRuntimeException(e);
 			}
 		}
 		return val;

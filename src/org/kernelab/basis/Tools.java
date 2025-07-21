@@ -87,6 +87,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import org.kernelab.basis.Canal.Producer;
+import org.kernelab.basis.Canal.Tuple;
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.io.DataReader;
 import org.kernelab.basis.io.DataWriter;
@@ -2464,6 +2465,24 @@ public class Tools
 		for (PrintStream o : Outs)
 		{
 			o.println(s);
+		}
+	}
+
+	/**
+	 * To output debug information.
+	 * 
+	 * @param t
+	 *            the Tuple information.
+	 */
+	public static void debug(Tuple t)
+	{
+		if (t != null)
+		{
+			debug(t.toString());
+		}
+		else
+		{
+			debug("null");
 		}
 	}
 
@@ -7221,8 +7240,9 @@ public class Tools
 	 * @param reader
 	 *            the Reader.
 	 * @return the StringBuilder which holds the content in the reader.
+	 * @throws IOException
 	 */
-	public static StringBuilder readerToStringBuilder(Reader reader)
+	public static StringBuilder readerToStringBuilder(Reader reader) throws IOException
 	{
 		return readerToStringBuilder(reader, null);
 	}
@@ -7236,8 +7256,9 @@ public class Tools
 	 *            a StringBuilder which would hold the read characters. If null,
 	 *            a new StringBuilder would be created instead.
 	 * @return the StringBuilder which holds the content in the reader.
+	 * @throws IOException
 	 */
-	public static StringBuilder readerToStringBuilder(Reader reader, StringBuilder result)
+	public static StringBuilder readerToStringBuilder(Reader reader, StringBuilder result) throws IOException
 	{
 		if (result == null)
 		{
@@ -7246,7 +7267,7 @@ public class Tools
 
 		int read = -1;
 
-		char[] buffer = new char[200];
+		char[] buffer = new char[1024];
 
 		try
 		{
@@ -7254,10 +7275,6 @@ public class Tools
 			{
 				result.append(buffer, 0, read);
 			}
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
 		}
 		finally
 		{

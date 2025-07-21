@@ -196,9 +196,9 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 			{
 				return Tools.readerToStringBuilder(((java.sql.Clob) value).getCharacterStream()).toString();
 			}
-			catch (SQLException e)
+			catch (Exception e)
 			{
-				throw new RuntimeException(e);
+				throw Tools.getRuntimeException(e);
 			}
 		}
 
