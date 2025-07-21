@@ -9837,12 +9837,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	public PairCanal<String, Object> tuples()
 	{
-		return Canal.of(this.keySet()).mapToPair(new Mapper<String, Tuple2<String, Object>>()
+		return Canal.of(this.entrySet()).mapToPair(new Mapper<Entry<String, Object>, Tuple2<String, Object>>()
 		{
 			@Override
-			public Tuple2<String, Object> map(String key) throws Exception
+			public Tuple2<String, Object> map(Entry<String, Object> entry) throws Exception
 			{
-				return Tuple.of(key, JSON.this.val(key));
+				return Tuple.of(entry.getKey(), entry.getValue());
 			}
 		});
 	}
