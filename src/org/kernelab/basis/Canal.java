@@ -5946,6 +5946,10 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public <V> Canal<V> mapCast(final Class<? extends V> cls)
 	{
+		if (cls == null)
+		{
+			throw new NullPointerException();
+		}
 		return this.map(new Mapper<D, V>()
 		{
 			@Override

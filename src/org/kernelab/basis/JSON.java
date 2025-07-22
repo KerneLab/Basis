@@ -1950,6 +1950,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return new JSAN().templates(this).clone(this);
 		}
 
+		public boolean contains(Object obj)
+		{
+			return this.containsValue(obj);
+		}
+
 		public boolean containsAll(Iterable<? extends Object> iterable)
 		{
 			boolean contains = false;
