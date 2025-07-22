@@ -5972,7 +5972,7 @@ public class Canal<D> implements Iterable<D>
 			{
 				return Tools.as(el, cls);
 			}
-		}).nonNull();
+		}).noNull();
 	}
 
 	/**
@@ -6020,7 +6020,7 @@ public class Canal<D> implements Iterable<D>
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public Canal<D> nonNull()
+	public Canal<D> noNull()
 	{
 		return this.filter((Filter<D>) NOT_NULL);
 	}
@@ -6418,7 +6418,7 @@ public class Canal<D> implements Iterable<D>
 					return null;
 				}
 			}
-		}).nonNull();
+		}).noNull();
 		RowCanal<R> rows = new RowCanal<R>();
 		rows.setUpstream((Canal<R>) canal.getUpstream());
 		rows.setOperator((Operator<R, R>) canal.getOperator());
