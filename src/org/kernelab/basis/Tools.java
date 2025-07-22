@@ -910,14 +910,7 @@ public class Tools
 	 */
 	public static <T> T as(Object obj, Class<T> cls)
 	{
-		if (cls.isInstance(obj))
-		{
-			return cls.cast(obj);
-		}
-		else
-		{
-			return null;
-		}
+		return cls.isInstance(obj) ? cls.cast(obj) : null;
 	}
 
 	/**
@@ -9305,6 +9298,25 @@ public class Tools
 	public static String transPlatformEncoding(String string, String targetCSN) throws UnsupportedEncodingException
 	{
 		return transEncoding(string, targetCSN, getPlatformCharset());
+	}
+
+	/**
+	 * Trim string or null if the string is white.
+	 * 
+	 * @param str
+	 * @return trim string or null if the string is white.
+	 */
+	public static String trim(String str)
+	{
+		if (str == null)
+		{
+			return null;
+		}
+		else
+		{
+			str = str.trim();
+			return str.isEmpty() ? null : str;
+		}
 	}
 
 	/**

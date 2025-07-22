@@ -5938,6 +5938,44 @@ public class Canal<D> implements Iterable<D>
 	}
 
 	/**
+	 * Cast each element to the given class or null if not instance of target
+	 * class.
+	 * 
+	 * @param cls
+	 * @return
+	 */
+	public <V> Canal<V> mapCast(final Class<? extends V> cls)
+	{
+		return this.map(new Mapper<D, V>()
+		{
+			@Override
+			public V map(D el) throws Exception
+			{
+				return Tools.as(el, cls);
+			}
+		});
+	}
+
+	/**
+	 * Cast each element to the given class and filter out the elements that
+	 * could not be casted to the target class.
+	 * 
+	 * @param cls
+	 * @return
+	 */
+	public <V> Canal<V> mapCasted(final Class<? extends V> cls)
+	{
+		return this.map(new Mapper<D, V>()
+		{
+			@Override
+			public V map(D el) throws Exception
+			{
+				return Tools.as(el, cls);
+			}
+		}).nonNull();
+	}
+
+	/**
 	 * Map each element to pair and convert result Canal to PairCanal.
 	 * 
 	 * @param mapper
@@ -5974,6 +6012,17 @@ public class Canal<D> implements Iterable<D>
 		{
 			return this.getOperator().newPond();
 		}
+	}
+
+	/**
+	 * Pass all the elements that non-null to downstream.
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public Canal<D> nonNull()
+	{
+		return this.filter((Filter<D>) NOT_NULL);
 	}
 
 	/**
@@ -6369,14 +6418,7 @@ public class Canal<D> implements Iterable<D>
 					return null;
 				}
 			}
-		}).filter(new Filter<R>()
-		{
-			@Override
-			public boolean filter(R el) throws Exception
-			{
-				return el != null;
-			}
-		});
+		}).nonNull();
 		RowCanal<R> rows = new RowCanal<R>();
 		rows.setUpstream((Canal<R>) canal.getUpstream());
 		rows.setOperator((Operator<R, R>) canal.getOperator());

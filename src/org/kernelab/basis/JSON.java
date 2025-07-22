@@ -1929,11 +1929,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return Tools.limitNumber(index(index) + (index < 0 ? 1 : 0), 0, length());
 		}
 
-		public Canal<Object> canal()
-		{
-			return Canal.of(this.asIterable());
-		}
-
 		@Override
 		public JSAN clean()
 		{
@@ -8608,6 +8603,11 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	public Timestamp attrTimestamp(String key)
 	{
 		return attrCast(key, Timestamp.class);
+	}
+
+	public Canal<Object> canal()
+	{
+		return Canal.of(this.asIterable());
 	}
 
 	public JSON clean()
