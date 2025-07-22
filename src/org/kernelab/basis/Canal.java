@@ -2772,6 +2772,28 @@ public class Canal<D> implements Iterable<D>
 	public static class PairCanal<K, V> extends Canal<Tuple2<K, V>>
 	{
 		/**
+		 * Choose the tuples that should be passed to downstream.
+		 * 
+		 * @param chooser
+		 * @return
+		 */
+		public PairCanal<K, V> choose(final StatefulMapper<K, V, Boolean> chooser)
+		{
+			if (chooser == null)
+			{
+				throw new NullPointerException();
+			}
+			return this.filter(new Filter<Tuple2<K, V>>()
+			{
+				@Override
+				public boolean filter(Tuple2<K, V> el) throws Exception
+				{
+					return chooser.map(el._1, el._2);
+				}
+			}).toPair();
+		}
+
+		/**
 		 * Collect elements into map.<br />
 		 * It assumes that the upstream is a pair Canal.<br />
 		 * In order to indicate the key/value type <br />
@@ -2804,6 +2826,10 @@ public class Canal<D> implements Iterable<D>
 		 */
 		public <W> PairCanal<K, W> foldByKey(final Producer<W> initiator, final Reducer<V, W> folder)
 		{
+			if (initiator == null || folder == null)
+			{
+				throw new NullPointerException();
+			}
 			return this.groupByKey().mapValues(new Mapper<Canal<V>, W>()
 			{
 				@Override
@@ -2844,6 +2870,10 @@ public class Canal<D> implements Iterable<D>
 		 */
 		public PairCanal<K, V> having(final Filter<? super V> pred)
 		{
+			if (pred == null)
+			{
+				throw new NullPointerException();
+			}
 			return this.filter(new Filter<Tuple2<K, V>>()
 			{
 				@Override
@@ -2896,6 +2926,10 @@ public class Canal<D> implements Iterable<D>
 		 */
 		public <W> PairCanal<K, W> mapValues(final Mapper<V, W> mapper)
 		{
+			if (mapper == null)
+			{
+				throw new NullPointerException();
+			}
 			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>()
 			{
 				@Override
@@ -2915,6 +2949,10 @@ public class Canal<D> implements Iterable<D>
 		 */
 		public <W> PairCanal<K, W> mapValues(final StatefulMapper<V, K, W> mapper)
 		{
+			if (mapper == null)
+			{
+				throw new NullPointerException();
+			}
 			return this.map(new Mapper<Tuple2<K, V>, Tuple2<K, W>>()
 			{
 				@Override
@@ -2933,6 +2971,10 @@ public class Canal<D> implements Iterable<D>
 		 */
 		public PairCanal<K, V> reduceByKey(final Reducer<V, V> reducer)
 		{
+			if (reducer == null)
+			{
+				throw new NullPointerException();
+			}
 			return this.groupByKey().mapValues(new Mapper<Canal<V>, V>()
 			{
 				@Override
@@ -5969,14 +6011,7 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public <V> Canal<V> mapCasted(final Class<? extends V> cls)
 	{
-		return this.map(new Mapper<D, V>()
-		{
-			@Override
-			public V map(D el) throws Exception
-			{
-				return Tools.as(el, cls);
-			}
-		}).noNull();
+		return this.mapCast(cls).noNull();
 	}
 
 	/**
