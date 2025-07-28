@@ -2161,6 +2161,26 @@ public class Tools
 	}
 
 	/**
+	 * To output debug information of an Canal object.
+	 * 
+	 * @param <E>
+	 *            The generic type of elements in the Canal object.
+	 * @param iterable
+	 *            The Canal object to be output.
+	 */
+	public static <E> void debug(Canal<E> canal)
+	{
+		if (canal != null)
+		{
+			debug(canal.toString());
+		}
+		else
+		{
+			debug("null");
+		}
+	}
+
+	/**
 	 * To output debug information.
 	 * 
 	 * @param c
@@ -5791,6 +5811,26 @@ public class Tools
 	}
 
 	/**
+	 * To output debug information of an Canal object without line wrapper.
+	 * 
+	 * @param <E>
+	 *            The generic type of elements in the Canal object.
+	 * @param iterable
+	 *            The Canal object to be output.
+	 */
+	public static <E> void mark(Canal<E> canal)
+	{
+		if (canal != null)
+		{
+			mark(canal.toString());
+		}
+		else
+		{
+			mark("null");
+		}
+	}
+
+	/**
 	 * To output debug information without line wrapper.
 	 * 
 	 * @param c
@@ -6222,6 +6262,24 @@ public class Tools
 				mark(split);
 			}
 			mark(ss[i]);
+		}
+	}
+
+	/**
+	 * To output debug information without line wrapper.
+	 * 
+	 * @param o
+	 *            the Tuple information.
+	 */
+	public static void mark(Tuple t)
+	{
+		if (t != null)
+		{
+			mark(t.toString());
+		}
+		else
+		{
+			mark("null");
 		}
 	}
 
@@ -9301,12 +9359,23 @@ public class Tools
 	}
 
 	/**
+	 * Trim string or null if the string is null.
+	 * 
+	 * @param str
+	 * @return trim string or null if the string is null.
+	 */
+	public static String trim(String str)
+	{
+		return str == null ? null : str.trim();
+	}
+
+	/**
 	 * Trim string or null if the string is white.
 	 * 
 	 * @param str
 	 * @return trim string or null if the string is white.
 	 */
-	public static String trim(String str)
+	public static String trimNull(String str)
 	{
 		if (str == null)
 		{
