@@ -785,6 +785,30 @@ public class TestCanal
 		Tools.debug("============sortWith");
 		Tools.debug(Canal.of(new Integer[] { 5, 3, 2, 5, 1 }).sortWith(false).collect());
 
+		Tools.debug("============sortByKey");
+		Canal.of(new Integer[] { 1, 4, 2, 3, 5 }).keyBy(new Mapper<Integer, Integer>()
+		{
+			@Override
+			public Integer map(Integer el) throws Exception
+			{
+				return el % 3;
+			}
+		}).sortBy(new Mapper<Tuple2<Integer, Integer>, Integer>()
+		{
+			@Override
+			public Integer map(Tuple2<Integer, Integer> el) throws Exception
+			{
+				return el._1;
+			}
+		}, true).values().foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
 		Tools.debug("============of(Map)");
 		Map<Integer, String> map1 = new LinkedHashMap<Integer, String>();
 		map1.put(2, "two");

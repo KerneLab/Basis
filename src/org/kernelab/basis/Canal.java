@@ -1642,12 +1642,12 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class IntersectionOp<E> implements Converter<E, E>
 	{
-		protected final Canal<E>		that;
+		protected final Canal<E>				that;
 
-		protected final Comparator<E>	cmp;
+		protected final Comparator<? super E>	cmp;
 
 		@SuppressWarnings("unchecked")
-		public IntersectionOp(Canal<? extends E> that, Comparator<E> cmp)
+		public IntersectionOp(Canal<? extends E> that, Comparator<? super E> cmp)
 		{
 			if (that == null)
 			{
@@ -1666,13 +1666,13 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class IntersectionPond<E> extends Dam<E, E, E>
 	{
-		protected final Comparator<E>	cmp;
+		protected final Comparator<? super E>	cmp;
 
-		private Set<E>					there;
+		private Set<E>							there;
 
-		private E						here;
+		private E								here;
 
-		public IntersectionPond(Canal<E> that, Comparator<E> cmp)
+		public IntersectionPond(Canal<E> that, Comparator<? super E> cmp)
 		{
 			super(that);
 			this.cmp = cmp;
@@ -1707,9 +1707,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class InverseComparator<E> implements Comparator<E>
 	{
-		protected final Comparator<E> cmp;
+		protected final Comparator<? super E> cmp;
 
-		public InverseComparator(Comparator<E> cmp)
+		public InverseComparator(Comparator<? super E> cmp)
 		{
 			this.cmp = cmp;
 		}
@@ -2817,6 +2817,30 @@ public class Canal<D> implements Iterable<D>
 			return countByKey(null);
 		}
 
+		@Override
+		public PairCanal<K, V> distinct()
+		{
+			return super.distinct().toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> distinct(Comparator<? super Tuple2<K, V>> cmp)
+		{
+			return super.distinct(cmp).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> distinct(HashedEquality<? super Tuple2<K, V>> eql)
+		{
+			return super.distinct(eql).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> filter(Filter<? super Tuple2<K, V>> pred)
+		{
+			return super.filter(pred).toPair();
+		}
+
 		/**
 		 * Folder each value within same group.
 		 * 
@@ -2884,6 +2908,18 @@ public class Canal<D> implements Iterable<D>
 			}).toPair();
 		}
 
+		@Override
+		public PairCanal<K, V> intersection(Canal<? extends Tuple2<K, V>> that)
+		{
+			return super.intersection(that).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> intersection(Canal<? extends Tuple2<K, V>> that, Comparator<? super Tuple2<K, V>> cmp)
+		{
+			return super.intersection(that, cmp).toPair();
+		}
+
 		/**
 		 * Inner join with another Canal.
 		 * 
@@ -2916,6 +2952,12 @@ public class Canal<D> implements Iterable<D>
 		{
 			return leftJoin(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
 					.<K, Tuple2<V, Option<W>>> toPair().toJoin();
+		}
+
+		@Override
+		public PairCanal<K, V> limit(int limit)
+		{
+			return super.limit(limit).toPair();
 		}
 
 		/**
@@ -2985,6 +3027,12 @@ public class Canal<D> implements Iterable<D>
 			});
 		}
 
+		@Override
+		public PairCanal<K, V> reverse()
+		{
+			return super.reverse().toPair();
+		}
+
 		/**
 		 * Right join with another Canal.
 		 * 
@@ -2995,6 +3043,54 @@ public class Canal<D> implements Iterable<D>
 		{
 			return rightJoin(that, new DefaultKop<Tuple2<K, V>, K>(), new DefaultKop<Tuple2<K, W>, K>())
 					.<K, Tuple2<Option<V>, W>> toPair().toJoin();
+		}
+
+		@Override
+		public PairCanal<K, V> skip(int offset)
+		{
+			return super.skip(offset).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> sortBy(Object... orders)
+		{
+			return super.sortBy(orders).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> sortWith()
+		{
+			return super.sortWith().toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> sortWith(boolean ascend)
+		{
+			return super.sortWith(ascend).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> sortWith(Comparator<? super Tuple2<K, V>> cmp)
+		{
+			return super.sortWith(cmp).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> sortWith(Comparator<? super Tuple2<K, V>> cmp, boolean ascend)
+		{
+			return super.sortWith(cmp, ascend).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> subtract(Canal<? extends Tuple2<K, V>> that)
+		{
+			return super.subtract(that).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> subtract(Canal<? extends Tuple2<K, V>> that, Comparator<? super Tuple2<K, V>> cmp)
+		{
+			return super.subtract(that, cmp).toPair();
 		}
 
 		@SuppressWarnings("unchecked")
@@ -3009,6 +3105,12 @@ public class Canal<D> implements Iterable<D>
 							return (Tuple2<K, Tuple2<L, R>>) el;
 						}
 					}));
+		}
+
+		@Override
+		public PairCanal<K, V> union(Canal<? extends Tuple2<K, V>> that)
+		{
+			return super.union(that).toPair();
 		}
 
 		/**
@@ -3334,9 +3436,9 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
-		public static <R extends Map<String, Object>> List<Comparator<R>> comparatorsOfItems(Item<?>... items)
+		public static <R extends Map<String, Object>> List<Comparator<? super R>> comparatorsOfItems(Item<?>... items)
 		{
-			List<Comparator<R>> list = new ArrayList<Comparator<R>>();
+			List<Comparator<? super R>> list = new ArrayList<Comparator<? super R>>();
 
 			for (Item<?> item : items)
 			{
@@ -3378,7 +3480,7 @@ public class Canal<D> implements Iterable<D>
 		@SuppressWarnings("unchecked")
 		public Canal<Canal<R>> stratifyBy(Item<?>... items)
 		{
-			return this.stratifyWith((Comparator<R>) comparator(comparatorsOfItems(items)));
+			return this.stratifyWith((Comparator<? super R>) comparator(comparatorsOfItems(items)));
 		}
 
 		@SuppressWarnings("unchecked")
@@ -3509,11 +3611,11 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class SkipOp<E> implements Converter<E, E>
 	{
-		protected final int skip;
+		protected final int offset;
 
-		public SkipOp(int skip)
+		public SkipOp(int offset)
 		{
-			this.skip = skip;
+			this.offset = offset;
 		}
 
 		@Override
@@ -3524,7 +3626,7 @@ public class Canal<D> implements Iterable<D>
 				@Override
 				public void begin()
 				{
-					while (index++ < skip && upstream().hasNext())
+					while (index++ < offset && upstream().hasNext())
 					{
 						upstream().next();
 					}
@@ -3888,9 +3990,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class SortByOp<E> implements Converter<E, E>
 	{
-		protected final Comparator<E> cmps;
+		protected final Comparator<? super E> cmps;
 
-		public SortByOp(List<Comparator<E>> cmps)
+		public SortByOp(List<Comparator<? super E>> cmps)
 		{
 			this.cmps = comparator(cmps);
 		}
@@ -3921,11 +4023,12 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class SortWithOp<E> implements Converter<E, E>
 	{
-		protected final Comparator<E> cmp;
+		protected final Comparator<? super E> cmp;
 
-		public SortWithOp(final Comparator<E> cmp, boolean ascend)
+		@SuppressWarnings("unchecked")
+		public SortWithOp(final Comparator<? super E> cmp, boolean ascend)
 		{
-			this.cmp = ascend ? cmp : inverse(cmp);
+			this.cmp = (Comparator<? super E>) (ascend ? cmp : inverse(cmp));
 		}
 
 		@Override
@@ -3995,11 +4098,11 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class StratifyPond<E> extends AbstractPond<E, Canal<E>>
 	{
-		protected final Comparator<E>	cmp;
+		protected final Comparator<? super E>	cmp;
 
-		private Iterator<Iterable<E>>	res;
+		private Iterator<Iterable<E>>			res;
 
-		public StratifyPond(Comparator<E> cmp)
+		public StratifyPond(Comparator<? super E> cmp)
 		{
 			this.cmp = cmp;
 		}
@@ -4032,9 +4135,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class StratifyWithOp<E> implements Converter<E, Canal<E>>
 	{
-		protected final Comparator<E> cmp;
+		protected final Comparator<? super E> cmp;
 
-		public StratifyWithOp(Comparator<E> cmp)
+		public StratifyWithOp(Comparator<? super E> cmp)
 		{
 			this.cmp = cmp;
 		}
@@ -4126,12 +4229,12 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class SubtractOp<E> implements Converter<E, E>
 	{
-		protected final Canal<E>		that;
+		protected final Canal<E>				that;
 
-		protected final Comparator<E>	cmp;
+		protected final Comparator<? super E>	cmp;
 
 		@SuppressWarnings("unchecked")
-		public SubtractOp(Canal<? extends E> that, Comparator<E> cmp)
+		public SubtractOp(Canal<? extends E> that, Comparator<? super E> cmp)
 		{
 			if (that == null)
 			{
@@ -4150,13 +4253,13 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class SubtractPond<E> extends Dam<E, E, E>
 	{
-		protected final Comparator<E>	cmp;
+		protected final Comparator<? super E>	cmp;
 
-		private Set<E>					there;
+		private Set<E>							there;
 
-		private E						here;
+		private E								here;
 
-		public SubtractPond(Canal<E> that, Comparator<E> cmp)
+		public SubtractPond(Canal<E> that, Comparator<? super E> cmp)
 		{
 			super(that);
 			this.cmp = cmp;
@@ -5017,12 +5120,12 @@ public class Canal<D> implements Iterable<D>
 		return pond;
 	}
 
-	public static <E> Comparator<E> comparator(List<Comparator<E>> cmps)
+	public static <E> Comparator<E> comparator(List<Comparator<? super E>> cmps)
 	{
 		return new ComparatorsChain<E>(cmps);
 	}
 
-	public static <E, M extends Comparable<M>> Comparator<E> comparator(Mapper<E, M> mapper)
+	public static <E, M extends Comparable<M>> Comparator<? super E> comparator(Mapper<E, M> mapper)
 	{
 		return new MappedComparator<E, M>(mapper);
 	}
@@ -5039,16 +5142,16 @@ public class Canal<D> implements Iterable<D>
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static <E> List<Comparator<E>> comparatorsOfOrders(Object... orders)
+	public static <E> List<Comparator<? super E>> comparatorsOfOrders(Object... orders)
 	{
-		List<Comparator<E>> list = new ArrayList<Comparator<E>>();
-		Comparator<E> cmp = null;
+		List<Comparator<? super E>> list = new ArrayList<Comparator<? super E>>();
+		Comparator<? super E> cmp = null;
 
 		for (Object o : orders)
 		{
 			if (o instanceof Item<?>)
 			{
-				cmp = (Comparator<E>) new RowCanal.ItemComparator((Item<?>) o);
+				cmp = new RowCanal.ItemComparator((Item<?>) o);
 			}
 			else if (o instanceof Mapper<?, ?>)
 			{
@@ -5063,7 +5166,7 @@ public class Canal<D> implements Iterable<D>
 				if (cmp != null)
 				{
 					boolean asc = (Boolean) o;
-					list.add(asc ? cmp : inverse(cmp));
+					list.add((Comparator<? super E>) (asc ? cmp : inverse(cmp)));
 					cmp = null;
 				}
 			}
@@ -5127,7 +5230,7 @@ public class Canal<D> implements Iterable<D>
 		return map;
 	}
 
-	public static <E> Comparator<E> inverse(Comparator<E> cmp)
+	public static <E> Comparator<? super E> inverse(Comparator<? super E> cmp)
 	{
 		return new InverseComparator<E>(cmp);
 	}
@@ -5386,7 +5489,7 @@ public class Canal<D> implements Iterable<D>
 		return Option.some(value);
 	}
 
-	public static <E> List<Iterable<E>> stratify(Iterable<E> data, Comparator<E> cmp)
+	public static <E> List<Iterable<E>> stratify(Iterable<E> data, Comparator<? super E> cmp)
 	{
 		List<Iterable<E>> res = new ArrayList<Iterable<E>>();
 
@@ -5617,14 +5720,14 @@ public class Canal<D> implements Iterable<D>
 	/**
 	 * Filter the elements.
 	 * 
-	 * @param filter
+	 * @param pred
 	 *            {@code (D data)->boolean} returns true if and only if the
 	 *            element need to be passed to the downstream.
 	 * @return
 	 */
-	public Canal<D> filter(Filter<? super D> filter)
+	public Canal<D> filter(Filter<? super D> pred)
 	{
-		return this.follow(new FilterOp<D>(filter));
+		return this.follow(new FilterOp<D>(pred));
 	}
 
 	/**
@@ -5821,7 +5924,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D> intersection(Canal<? extends D> that, Comparator<D> cmp)
+	public Canal<D> intersection(Canal<? extends D> that, Comparator<? super D> cmp)
 	{
 		return this.follow(new IntersectionOp<D>(that, cmp));
 	}
@@ -6168,12 +6271,12 @@ public class Canal<D> implements Iterable<D>
 	/**
 	 * Skip at most {@code skip} elements and pass the rests to downstream.
 	 * 
-	 * @param skip
+	 * @param offset
 	 * @return
 	 */
-	public Canal<D> skip(int skip)
+	public Canal<D> skip(int offset)
 	{
-		return this.follow(new SkipOp<D>(skip));
+		return this.follow(new SkipOp<D>(offset));
 	}
 
 	/**
@@ -6247,7 +6350,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D> sortWith(Comparator<D> cmp)
+	public Canal<D> sortWith(Comparator<? super D> cmp)
 	{
 		return sortWith(cmp, true);
 	}
@@ -6259,7 +6362,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<D> sortWith(Comparator<D> cmp, boolean ascend)
+	public Canal<D> sortWith(Comparator<? super D> cmp, boolean ascend)
 	{
 		if (cmp == null && !ascend)
 		{
@@ -6293,7 +6396,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<Canal<D>> stratifyWith(Comparator<D> cmp)
+	public Canal<Canal<D>> stratifyWith(Comparator<? super D> cmp)
 	{
 		return this.follow(new StratifyWithOp<D>(cmp));
 	}
@@ -6306,9 +6409,10 @@ public class Canal<D> implements Iterable<D>
 	 * @param ascend
 	 * @return
 	 */
-	public Canal<Canal<D>> stratifyWith(Comparator<D> cmp, boolean ascend)
+	@SuppressWarnings("unchecked")
+	public Canal<Canal<D>> stratifyWith(Comparator<? super D> cmp, boolean ascend)
 	{
-		return this.stratifyWith(ascend ? cmp : inverse(cmp));
+		return this.stratifyWith((Comparator<? super D>) (ascend ? cmp : inverse(cmp)));
 	}
 
 	/**
@@ -6329,7 +6433,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cmp
 	 * @return
 	 */
-	public Canal<D> subtract(Canal<? extends D> that, Comparator<D> cmp)
+	public Canal<D> subtract(Canal<? extends D> that, Comparator<? super D> cmp)
 	{
 		return this.follow(new SubtractOp<D>(that, cmp));
 	}

@@ -14,13 +14,13 @@ import java.util.Comparator;
  */
 public class ComparatorsChain<E> implements Comparator<E>
 {
-	private Collection<Comparator<E>> chain;
+	private Collection<Comparator<? super E>> chain;
 
-	public ComparatorsChain(Collection<Comparator<E>> chain)
+	public ComparatorsChain(Collection<Comparator<? super E>> chain)
 	{
 		if (chain == null)
 		{
-			chain = new ArrayList<Comparator<E>>();
+			chain = new ArrayList<Comparator<? super E>>();
 		}
 		this.chain = chain;
 	}
@@ -38,7 +38,7 @@ public class ComparatorsChain<E> implements Comparator<E>
 	{
 		int result = 0;
 
-		for (Comparator<E> c : chain)
+		for (Comparator<? super E> c : chain)
 		{
 			if ((result = c.compare(o1, o2)) != 0)
 			{
@@ -49,12 +49,12 @@ public class ComparatorsChain<E> implements Comparator<E>
 		return 0;
 	}
 
-	public Collection<Comparator<E>> getChain()
+	public Collection<Comparator<? super E>> getChain()
 	{
 		return chain;
 	}
 
-	public void setChain(Collection<Comparator<E>> chain)
+	public void setChain(Collection<Comparator<? super E>> chain)
 	{
 		this.chain = chain;
 	}
