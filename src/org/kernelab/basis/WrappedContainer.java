@@ -38,7 +38,7 @@ public abstract class WrappedContainer<E>
 		/**
 		 * 
 		 */
-		private static final long	serialVersionUID	= 3271723451436581968L;
+		private static final long	serialVersionUID	= 1L;
 
 		protected final E			data;
 
@@ -84,7 +84,7 @@ public abstract class WrappedContainer<E>
 		@Override
 		public int hashCode()
 		{
-			return data == null ? 0 : equal.hashCode(data);
+			return data != null ? equal.hashCode(data) : 0;
 		}
 	}
 

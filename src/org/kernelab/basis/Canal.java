@@ -4437,7 +4437,14 @@ public class Canal<D> implements Iterable<D>
 
 		public static int compare(Tuple t1, Tuple t2)
 		{
-			return t1.size() != t2.size() ? t1.size() - t2.size() : t1.compare(t2);
+			if (t1 == t2)
+			{
+				return 0;
+			}
+			else
+			{
+				return t1.size() != t2.size() ? t1.size() - t2.size() : t1.compare(t2);
+			}
 		}
 
 		public static <E1> Tuple1<E1> of(E1 _1)
@@ -4493,6 +4500,10 @@ public class Canal<D> implements Iterable<D>
 			if (o == null || !this.getClass().equals(o.getClass()))
 			{
 				return false;
+			}
+			else if (this == o)
+			{
+				return true;
 			}
 			else
 			{

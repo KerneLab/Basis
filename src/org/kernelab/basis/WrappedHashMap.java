@@ -85,22 +85,19 @@ public class WrappedHashMap<K, V> extends WrappedContainer<K> implements Map<K, 
 			{
 				return true;
 			}
-			if (obj instanceof Map.Entry)
+
+			if (!(obj instanceof Map.Entry))
 			{
-				try
-				{
-					Map.Entry<Wrapper, V> other = (Map.Entry<Wrapper, V>) obj;
-					if (equal.equals(entry.getKey().data, other.getKey().data) //
-							&& Tools.equals(entry.getValue(), other.getValue()))
-					{
-						return true;
-					}
-				}
-				catch (Exception e)
-				{
-				}
+				return false;
 			}
-			return false;
+
+			Map.Entry<Wrapper, V> other = (Map.Entry<Wrapper, V>) obj;
+
+			K ka = entry.getKey() != null ? entry.getKey().data : null;
+			K kb = other.getKey() != null ? other.getKey().data : null;
+
+			return (ka == kb || (ka != null && kb != null && equal.equals(ka, kb))) //
+					&& Tools.equals(entry.getValue(), other.getValue());
 		}
 
 		@Override
