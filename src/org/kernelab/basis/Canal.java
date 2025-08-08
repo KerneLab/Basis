@@ -3005,6 +3005,12 @@ public class Canal<D> implements Iterable<D>
 			}).toPair();
 		}
 
+		@Override
+		public PairCanal<K, V> peek(Action<? super Tuple2<K, V>> action)
+		{
+			return super.peek(action).toPair();
+		}
+
 		/**
 		 * Reduce each value within same group.
 		 * 
