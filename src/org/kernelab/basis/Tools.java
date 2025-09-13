@@ -108,7 +108,7 @@ public class Tools
 	public static final int					BUFFER_SIZE				= 1024;
 
 	public static final Pattern				REGEX_VARIABLE			= Pattern
-			.compile("\\$(?:(\\w+?)\\b|\\{([^}]+?)\\})");
+			.compile("\\$(?:(\\w+?)\\b|\\{(\\w+?)\\})");
 
 	protected static final Calendar			CALENDAR				= new GregorianCalendar();
 
