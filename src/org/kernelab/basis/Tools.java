@@ -107,6 +107,9 @@ public class Tools
 
 	public static final int					BUFFER_SIZE				= 1024;
 
+	public static final Pattern				REGEX_VARIABLE			= Pattern
+			.compile("\\$(?:(\\w+?)\\b|\\{([^}]+?)\\})");
+
 	protected static final Calendar			CALENDAR				= new GregorianCalendar();
 
 	public static final String				LOCAL_DATETIME_FORMAT	= "yyyy-MM-dd HH:mm:ss";
@@ -7930,6 +7933,96 @@ public class Tools
 			w.append(s);
 		}
 		return w;
+	}
+
+	/**
+	 * Replace each variable placeholder (like ${NAME}) by the value given in
+	 * the dict. A placeholder would be left unchanged in the text if its value
+	 * == null in the dict.
+	 * 
+	 * @param text
+	 *            The text to be replaced.
+	 * @param dict
+	 *            The dict which defines the variables' value.
+	 * @return The replaced text.
+	 */
+	public static String replaceVariables(CharSequence text, Map<?, ?> dict)
+	{
+		if (text == null || text.length() == 0 || dict == null || dict.isEmpty())
+		{
+			return text != null ? text.toString() : null;
+		}
+
+		Matcher m = REGEX_VARIABLE.matcher(text);
+		StringBuffer b = new StringBuffer(text.length() * 2);
+		String key = null;
+		Object val = null;
+		while (m.find())
+		{
+			key = m.group(1);
+			if (key == null)
+			{
+				key = m.group(2);
+			}
+			val = dict.get(key);
+			if (val != null)
+			{
+				m.appendReplacement(b, Matcher.quoteReplacement(val.toString()));
+			}
+		}
+		m.appendTail(b);
+		return b.toString();
+	}
+
+	/**
+	 * Replace each variable placeholder (defined by matcher and keyer) by the
+	 * value given in the dict. A placeholder would be left unchanged in the
+	 * text if its value == null in the dict.
+	 * 
+	 * @param text
+	 *            The text to be replaced.
+	 * @param regex
+	 *            Variable placeholder definer which gives the Matcher matches
+	 *            each placeholder in the text.
+	 * @param keyer
+	 *            A Mapper which extracts the placeholder's name from each
+	 *            Matcher.
+	 * @param dict
+	 *            The dict which defines the variables' value.
+	 * @return The replaced text.
+	 */
+	public static String replaceVariables(CharSequence text, Mapper<CharSequence, Matcher> regex,
+			Mapper<Matcher, String> keyer, Map<?, ?> dict)
+	{
+		if (text == null || text.length() == 0 || regex == null || keyer == null || dict == null || dict.isEmpty())
+		{
+			return text != null ? text.toString() : null;
+		}
+
+		try
+		{
+			Matcher m = regex.map(text);
+			StringBuffer b = new StringBuffer(text.length() * 2);
+			Object val = null;
+			while (m.find())
+			{
+				val = dict.get(keyer.map(m));
+				if (val != null)
+				{
+					m.appendReplacement(b, Matcher.quoteReplacement(val.toString()));
+				}
+			}
+			m.appendTail(b);
+			return b.toString();
+		}
+		catch (RuntimeException e)
+		{
+			throw e;
+		}
+		catch (Exception e)
+		{
+			throw Tools.getRuntimeException(e);
+		}
 	}
 
 	/**
