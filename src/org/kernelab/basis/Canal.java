@@ -3058,6 +3058,12 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
+		public <M extends Comparable<M>> PairCanal<K, V> sortBy(Mapper<? super Tuple2<K, V>, M> cmp)
+		{
+			return super.sortBy(cmp).toPair();
+		}
+
+		@Override
 		public PairCanal<K, V> sortBy(Object... orders)
 		{
 			return super.sortBy(orders).toPair();
@@ -3284,6 +3290,22 @@ public class Canal<D> implements Iterable<D>
 					return empty ? Canal.<E> none() : Canal.some(result);
 				}
 			};
+		}
+	}
+
+	protected static class ReverseComparable<D extends Comparable<D>> implements Comparable<ReverseComparable<D>>
+	{
+		protected final D data;
+
+		public ReverseComparable(D data)
+		{
+			this.data = data;
+		}
+
+		@Override
+		public int compareTo(ReverseComparable<D> o)
+		{
+			return o.data.compareTo(this.data);
 		}
 	}
 
@@ -5620,6 +5642,18 @@ public class Canal<D> implements Iterable<D>
 		return new RANK();
 	}
 
+	/**
+	 * To generate a Comparable object which has reverse ordering.
+	 * 
+	 * @param data
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <D extends Comparable<D>> Comparable<D> reverse(D data)
+	{
+		return (Comparable<D>) new ReverseComparable<D>(data);
+	}
+
 	public static Aggregator<Integer> ROW_NUMBER()
 	{
 		return new ROW_NUMBER();
@@ -6449,7 +6483,20 @@ public class Canal<D> implements Iterable<D>
 	}
 
 	/**
-	 * Sort each element in this Canal by given
+	 * Sort each element in this Canal by given Comparable extractor.
+	 * 
+	 * @param cmp
+	 *            The Comparable extractor.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <M extends Comparable<M>> Canal<D> sortBy(Mapper<? super D, M> cmp)
+	{
+		return this.follow(new SortByOp<D>(Tools.listOfArray(new ArrayList<Comparator<? super D>>(), comparator(cmp))));
+	}
+
+	/**
+	 * Sort each element in this Canal by given orders.
 	 * 
 	 * @param orders
 	 *            Either Mapper or Boolean.<br />

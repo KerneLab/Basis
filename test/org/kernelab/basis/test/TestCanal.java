@@ -758,29 +758,52 @@ public class TestCanal
 		Canal.of(new Integer[][] { //
 				new Integer[] { 1, 2 }, //
 				new Integer[] { 1, 1 }, //
-				new Integer[] { 2, 3 } }) //
-				.sortBy(new Mapper<Integer[], Integer>()
-				{
-					@Override
-					public Integer map(Integer[] el)
-					{
-						return el[0];
-					}
-				}, false, new Mapper<Integer[], Integer>()
-				{
-					@Override
-					public Integer map(Integer[] el)
-					{
-						return el[1];
-					}
-				}, false).foreach(new Canal.Action<Integer[]>()
-				{
-					@Override
-					public void action(Integer[] el)
-					{
-						Tools.debug(el[0] + "," + el[1]);
-					}
-				});
+				new Integer[] { 2, 3 } //
+		}).sortBy(new Mapper<Integer[], Integer>()
+		{
+			@Override
+			public Integer map(Integer[] el)
+			{
+				return el[0];
+			}
+		}, false, new Mapper<Integer[], Integer>()
+		{
+			@Override
+			public Integer map(Integer[] el)
+			{
+				return el[1];
+			}
+		}, false).foreach(new Canal.Action<Integer[]>()
+		{
+			@Override
+			public void action(Integer[] el)
+			{
+				Tools.debug(el[0] + "," + el[1]);
+			}
+		});
+
+		Tools.debug("============sortBy reverse");
+		Canal.of(new Integer[][] { //
+				new Integer[] { 1, 2 }, //
+				new Integer[] { 1, 1 }, //
+				new Integer[] { 2, 3 }, //
+				new Integer[] { 2, 2 }, //
+				new Integer[] { 3, 1 }, //
+		}).sortBy(new Mapper<Integer[], Tuple2<Comparable<Integer>, Integer>>()
+		{
+			@Override
+			public Tuple2<Comparable<Integer>, Integer> map(Integer[] el)
+			{
+				return Tuple.of(Canal.reverse(el[0]), el[1]);
+			}
+		}).foreach(new Canal.Action<Integer[]>()
+		{
+			@Override
+			public void action(Integer[] el)
+			{
+				Tools.debug(el[0] + "," + el[1]);
+			}
+		});
 
 		Tools.debug("============sortWith");
 		Tools.debug(Canal.of(new Integer[] { 5, 3, 2, 5, 1 }).sortWith(false).collect());
