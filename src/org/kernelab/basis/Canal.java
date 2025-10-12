@@ -2345,15 +2345,17 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
-	protected static class MappedComparator<O, M extends Comparable<M>> implements Comparator<O>
+	@SuppressWarnings("rawtypes")
+	protected static class MappedComparator<O> implements Comparator<O>
 	{
-		protected final Mapper<O, M> mapper;
+		protected final Mapper<O, Comparable> mapper;
 
-		public MappedComparator(Mapper<O, M> mapper)
+		public MappedComparator(Mapper<O, Comparable> mapper)
 		{
 			this.mapper = mapper;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public int compare(O o1, O o2)
 		{
@@ -3058,9 +3060,17 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public <M extends Comparable<M>> PairCanal<K, V> sortBy(Mapper<? super Tuple2<K, V>, M> cmp)
+		@SuppressWarnings("rawtypes")
+		public PairCanal<K, V> sortBy(Mapper<? super Tuple2<K, V>, Comparable> cmp)
 		{
 			return super.sortBy(cmp).toPair();
+		}
+
+		@Override
+		@SuppressWarnings("rawtypes")
+		public PairCanal<K, V> sortBy(Mapper<? super Tuple2<K, V>, Comparable>... cmps)
+		{
+			return super.sortBy(cmps).toPair();
 		}
 
 		@Override
@@ -3293,7 +3303,7 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
-	protected static class ReverseComparable<D extends Comparable<D>> implements Comparable<ReverseComparable<D>>
+	protected static class ReverseComparable<D extends Comparable<D>> implements Comparable<D>
 	{
 		protected final D data;
 
@@ -3303,9 +3313,9 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public int compareTo(ReverseComparable<D> o)
+		public int compareTo(D o)
 		{
-			return o.data.compareTo(this.data);
+			return ((ReverseComparable<D>) o).data.compareTo(this.data);
 		}
 	}
 
@@ -5288,9 +5298,10 @@ public class Canal<D> implements Iterable<D>
 		return new ComparatorsChain<E>(cmps);
 	}
 
-	public static <E, M extends Comparable<M>> Comparator<? super E> comparator(Mapper<E, M> mapper)
+	@SuppressWarnings("rawtypes")
+	public static <E> Comparator<? super E> comparator(Mapper<E, Comparable> mapper)
 	{
-		return new MappedComparator<E, M>(mapper);
+		return new MappedComparator<E>(mapper);
 	}
 
 	/**
@@ -5648,10 +5659,10 @@ public class Canal<D> implements Iterable<D>
 	 * @param data
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public static <D extends Comparable<D>> Comparable<D> reverse(D data)
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static Comparable<?> reverse(Comparable<?> data)
 	{
-		return (Comparable<D>) new ReverseComparable<D>(data);
+		return new ReverseComparable(data);
 	}
 
 	public static Aggregator<Integer> ROW_NUMBER()
@@ -6489,10 +6500,32 @@ public class Canal<D> implements Iterable<D>
 	 *            The Comparable extractor.
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public <M extends Comparable<M>> Canal<D> sortBy(Mapper<? super D, M> cmp)
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public Canal<D> sortBy(Mapper<? super D, Comparable> cmp)
 	{
 		return this.follow(new SortByOp<D>(Tools.listOfArray(new ArrayList<Comparator<? super D>>(), comparator(cmp))));
+	}
+
+	/**
+	 * Sort each element in this Canal by given Comparable extractors.
+	 * 
+	 * @param cmps
+	 *            The Comparable extractors.
+	 * @return
+	 */
+	@SuppressWarnings("rawtypes")
+	public Canal<D> sortBy(Mapper<? super D, Comparable>... cmps)
+	{
+		List<Comparator<? super D>> cmp = (List<Comparator<? super D>>) Canal.of(cmps)
+				.map(new Mapper<Mapper<? super D, Comparable>, Comparator<? super D>>()
+				{
+					@Override
+					public Comparator<? super D> map(Mapper<? super D, Comparable> el) throws Exception
+					{
+						return comparator(el);
+					}
+				}).collect();
+		return this.follow(new SortByOp<D>(cmp));
 	}
 
 	/**

@@ -789,10 +789,10 @@ public class TestCanal
 				new Integer[] { 2, 3 }, //
 				new Integer[] { 2, 2 }, //
 				new Integer[] { 3, 1 }, //
-		}).sortBy(new Mapper<Integer[], Tuple2<Comparable<Integer>, Integer>>()
+		}).sortBy(new Mapper<Integer[], Comparable<?>>()
 		{
 			@Override
-			public Tuple2<Comparable<Integer>, Integer> map(Integer[] el)
+			public Comparable<?> map(Integer[] el)
 			{
 				return Tuple.of(Canal.reverse(el[0]), el[1]);
 			}
