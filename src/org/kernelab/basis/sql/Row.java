@@ -214,14 +214,11 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return null;
 	}
 
-	/**
-	 * UnsupportedOperation
-	 */
 	@Override
-	@Deprecated
 	public void clear()
 	{
-		throw new UnsupportedOperationException();
+		this.resetCols();
+		this.getData().clear();
 	}
 
 	@Override
@@ -275,6 +272,8 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 			return this;
 		}
 
+		this.resetCols();
+
 		for (String col : cols)
 		{
 			this.getData().remove(col);
@@ -295,6 +294,8 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		{
 			return this;
 		}
+
+		this.resetCols();
 
 		for (String col : cols)
 		{
@@ -982,24 +983,18 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		}
 	}
 
-	/**
-	 * UnsupportedOperation
-	 */
 	@Override
-	@Deprecated
 	public Object put(String key, Object value)
 	{
-		throw new UnsupportedOperationException();
+		this.resetCols();
+		return this.putting(key, value);
 	}
 
-	/**
-	 * UnsupportedOperation
-	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	@Deprecated
 	public void putAll(Map<? extends String, ?> m)
 	{
-		throw new UnsupportedOperationException();
+		this.set((Map<String, ?>) m);
 	}
 
 	protected Object putting(String col, Object value)
@@ -1007,14 +1002,11 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return this.getData().put(col, this.cast(value));
 	}
 
-	/**
-	 * UnsupportedOperation
-	 */
 	@Override
-	@Deprecated
 	public Object remove(Object key)
 	{
-		throw new UnsupportedOperationException();
+		this.resetCols();
+		return this.getData().remove(key != null ? key.toString() : null);
 	}
 
 	protected Row resetCols()
