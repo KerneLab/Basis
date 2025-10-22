@@ -1,6 +1,7 @@
 package org.kernelab.basis;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -107,6 +108,46 @@ public class Canal<D> implements Iterable<D>
 			return this;
 		}
 
+		// @SuppressWarnings({ "rawtypes", "unchecked" })
+		// @Override
+		// public Aggregator<I, O> orderBy(final Mapper<I, Comparable> key)
+		// {
+		// this.orderBy = key != null ? new Expr[] { new Expr() {
+		// @Override
+		// public Object map(Object el) throws Exception
+		// {
+		// return key.map((I) el);
+		// }
+		// } } : null;
+		// return this;
+		// }
+		//
+		// @SuppressWarnings({ "rawtypes", "unchecked" })
+		// @Override
+		// public Aggregator<I, O> orderBy(final Mapper<I, Comparable>... keys)
+		// {
+		// if (keys != null)
+		// {
+		// this.orderBy = new Expr[keys.length];
+		// for (int i = 0; i < keys.length; i++)
+		// {
+		// final Mapper<I, Comparable> key = keys[i];
+		// this.orderBy[i] = new Expr() {
+		// @Override
+		// public Object map(Object el) throws Exception
+		// {
+		// return key.map((I) el);
+		// }
+		// };
+		// }
+		// }
+		// else
+		// {
+		// this.orderBy = null;
+		// }
+		// return this;
+		// }
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public Expr<I, ?>[] partBy()
@@ -120,6 +161,46 @@ public class Canal<D> implements Iterable<D>
 			this.partBy = keys;
 			return this;
 		}
+
+		// @SuppressWarnings({ "rawtypes", "unchecked" })
+		// @Override
+		// public Aggregator<I, O> partBy(final Mapper<I, Comparable> key)
+		// {
+		// this.partBy = key != null ? new Expr[] { new Expr() {
+		// @Override
+		// public Object map(Object el) throws Exception
+		// {
+		// return key.map((I) el);
+		// }
+		// } } : null;
+		// return this;
+		// }
+		//
+		// @SuppressWarnings({ "rawtypes", "unchecked" })
+		// @Override
+		// public Aggregator<I, O> partBy(Mapper<I, Comparable>... keys)
+		// {
+		// if (keys != null)
+		// {
+		// this.partBy = new Expr[keys.length];
+		// for (int i = 0; i < keys.length; i++)
+		// {
+		// final Mapper<I, Comparable> key = keys[i];
+		// this.partBy[i] = new Expr() {
+		// @Override
+		// public Object map(Object el) throws Exception
+		// {
+		// return key.map((I) el);
+		// }
+		// };
+		// }
+		// }
+		// else
+		// {
+		// this.partBy = null;
+		// }
+		// return this;
+		// }
 
 		@Override
 		public Aggregator<I, O> range()
@@ -227,13 +308,62 @@ public class Canal<D> implements Iterable<D>
 
 		public Aggregator<I, O> orderBy(Expr<I, ?>... keys);
 
+		// @SuppressWarnings("rawtypes")
+		// public Aggregator<I, O> orderBy(Mapper<I, Comparable> key);
+		//
+		// @SuppressWarnings("rawtypes")
+		// public Aggregator<I, O> orderBy(Mapper<I, Comparable>... keys);
+
 		public Aggregator<I, O> partBy(Expr<I, ?>... keys);
+
+		// @SuppressWarnings("rawtypes")
+		// public Aggregator<I, O> partBy(Mapper<I, Comparable> key);
+		//
+		// @SuppressWarnings("rawtypes")
+		// public Aggregator<I, O> partBy(Mapper<I, Comparable>... keys);
 
 		public Aggregator<I, O> range();
 
 		public Aggregator<I, O> rows();
 
 		public Object update(Object gather, I[] rows, int winFrom, int winTo) throws Exception;
+	}
+
+	public static class ArrayCanal extends Canal<Object[]>
+	{
+		public static <T extends Comparable<T>> Expr<Object[], T> $(final int idx)
+		{
+			return new Expr<Object[], T>()
+			{
+				@SuppressWarnings("unchecked")
+				@Override
+				public T map(Object[] el) throws Exception
+				{
+					return (T) el[idx];
+				}
+			};
+		}
+
+		public ArrayCanal window(final Aggregator<Object[], ?>... aggrs)
+		{
+			return super.window(new StatefulMapper<Object[], Aggregator<Object[], ?>[], Object[]>()
+			{
+				@Override
+				public Object[] map(Object[] el, Aggregator<Object[], ?>[] st) throws Exception
+				{
+					Object[] dst = (Object[]) Array.newInstance(Object.class, el.length + st.length);
+					System.arraycopy(el, 0, dst, 0, el.length);
+					return dst;
+				}
+			}, new WindowFunctionResultSetter<Object[]>()
+			{
+				@Override
+				public void set(Object[] row, int idx, Aggregator<Object[], ?> agg, Object res) throws Exception
+				{
+					row[row.length - aggrs.length + idx] = res;
+				}
+			}, aggrs).toArrays();
+		}
 	}
 
 	protected static class ArraySource<E> extends Source<E>
@@ -3462,8 +3592,8 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class SlidingRangeWindowRanger<I> implements WindowRanger<I>
 	{
-		protected static <I> int find(Mapper<I, ?> expr, I[] rows, int from, boolean toTail, boolean gt, Number bound)
-				throws Exception
+		protected static <I> int find(Mapper<I, ?> expr, I[] rows, int from, boolean toTail, boolean gt, boolean last,
+				Number bound) throws Exception
 		{
 			int i = toTail ? from + 1 : from - 1;
 
@@ -3471,16 +3601,36 @@ public class Canal<D> implements Iterable<D>
 			{
 				if (gt)
 				{
-					if (((Number) expr.map(rows[i])).doubleValue() > bound.doubleValue())
+					if (last)
 					{
-						break;
+						if (((Number) expr.map(rows[i])).doubleValue() > bound.doubleValue())
+						{
+							break;
+						}
+					}
+					else
+					{
+						if (((Number) expr.map(rows[i])).doubleValue() >= bound.doubleValue())
+						{
+							break;
+						}
 					}
 				}
 				else
 				{
-					if (((Number) expr.map(rows[i])).doubleValue() < bound.doubleValue())
+					if (last)
 					{
-						break;
+						if (((Number) expr.map(rows[i])).doubleValue() < bound.doubleValue())
+						{
+							break;
+						}
+					}
+					else
+					{
+						if (((Number) expr.map(rows[i])).doubleValue() <= bound.doubleValue())
+						{
+							break;
+						}
 					}
 				}
 
@@ -3494,7 +3644,7 @@ public class Canal<D> implements Iterable<D>
 				}
 			}
 
-			return toTail ? i - 1 : i + 1;
+			return last ? (toTail ? i - 1 : i + 1) : i;
 		}
 
 		protected final Expr<I, ?>		expr;
@@ -3529,13 +3679,13 @@ public class Canal<D> implements Iterable<D>
 				Double bound = ((Number) expr.map(rows[from])).doubleValue() + (expr.isAscend() ? 1 : -1) * aVal;
 				if (expr.isAscend())
 				{
-					range[0] = find(expr, rows, aVal < 0 ? levelBegin : levelEnd - 1, aVal > 0, aVal > 0, bound)
-							+ (aVal > 0 ? 1 : 0);
+					range[0] = find(expr, rows, aVal < 0 ? levelBegin : levelEnd - 1, aVal > 0, aVal > 0, aVal < 0,
+							bound);
 				}
 				else
 				{
-					range[0] = find(expr, rows, aVal < 0 ? levelBegin : levelEnd - 1, aVal > 0, aVal < 0, bound)
-							+ (aVal > 0 ? 1 : 0);
+					range[0] = find(expr, rows, aVal < 0 ? levelBegin : levelEnd - 1, aVal > 0, aVal < 0, aVal < 0,
+							bound);
 				}
 			}
 
@@ -3552,13 +3702,13 @@ public class Canal<D> implements Iterable<D>
 				Double bound = ((Number) expr.map(rows[from])).doubleValue() + (expr.isAscend() ? 1 : -1) * bVal;
 				if (expr.isAscend())
 				{
-					range[1] = find(expr, rows, bVal > 0 ? levelEnd - 1 : levelBegin, bVal > 0, bVal > 0, bound)
-							+ (bVal < 0 ? -1 : 0) + 1;
+					range[1] = find(expr, rows, bVal > 0 ? levelEnd - 1 : levelBegin, bVal > 0, bVal > 0, bVal > 0,
+							bound) + 1;
 				}
 				else
 				{
-					range[1] = find(expr, rows, bVal > 0 ? levelEnd - 1 : levelBegin, bVal > 0, bVal < 0, bound)
-							+ (bVal < 0 ? -1 : 0) + 1;
+					range[1] = find(expr, rows, bVal > 0 ? levelEnd - 1 : levelBegin, bVal > 0, bVal < 0, bVal > 0,
+							bound) + 1;
 				}
 			}
 		}
@@ -4746,7 +4896,7 @@ public class Canal<D> implements Iterable<D>
 			}
 		}
 
-		protected abstract class Item<O extends Comparable<O>> extends Expr<I, O>
+		public abstract class Item<O extends Comparable<O>> extends Expr<I, O>
 		{
 			@Override
 			public Item<O> asc()
@@ -4971,17 +5121,25 @@ public class Canal<D> implements Iterable<D>
 					{
 						if (sum == null)
 						{
-							if (d instanceof Integer || d instanceof Long || d instanceof Short || d instanceof Byte)
+							if (d instanceof Integer || d instanceof Short || d instanceof Byte)
 							{
-								sum = 0L;
+								sum = 0;
 							}
-							else if (d instanceof Double || d instanceof Float)
+							else if (d instanceof Double)
 							{
 								sum = 0.0;
 							}
 							else if (d instanceof BigDecimal)
 							{
 								sum = BigDecimal.ZERO;
+							}
+							else if (d instanceof Long)
+							{
+								sum = 0L;
+							}
+							else if (d instanceof Float)
+							{
+								sum = 0f;
 							}
 							else if (d instanceof BigInteger)
 							{
@@ -4993,9 +5151,9 @@ public class Canal<D> implements Iterable<D>
 							}
 						}
 
-						if (sum instanceof Long)
+						if (sum instanceof Integer)
 						{
-							sum = sum.longValue() + d.longValue();
+							sum = sum.intValue() + d.intValue();
 						}
 						else if (sum instanceof Double)
 						{
@@ -5004,6 +5162,14 @@ public class Canal<D> implements Iterable<D>
 						else if (sum instanceof BigDecimal)
 						{
 							sum = ((BigDecimal) sum).add((BigDecimal) d);
+						}
+						else if (sum instanceof Long)
+						{
+							sum = sum.longValue() + d.longValue();
+						}
+						else if (sum instanceof Float)
+						{
+							sum = sum.floatValue() + d.floatValue();
 						}
 						else if (sum instanceof BigInteger)
 						{
@@ -5016,14 +5182,37 @@ public class Canal<D> implements Iterable<D>
 			}
 		}
 
-		public final Expr<I, Double> CURRENT_ROW = new Expr<I, Double>()
+		public final Expr<I, Double>	CURRENT_ROW	= new Expr<I, Double>()
+													{
+														@Override
+														public Double map(I el) throws Exception
+														{
+															return 0.0;
+														}
+													};
+
+		public final Expr<I, Double>	NULL		= new Expr<I, Double>()
+													{
+														@Override
+														public Double map(Object el) throws Exception
+														{
+															return null;
+														}
+													};
+
+		@SuppressWarnings("rawtypes")
+		public <T extends Comparable> Item $(final Mapper<I, T> mapper)
 		{
-			@Override
-			public Double map(I el) throws Exception
+			return new Item()
 			{
-				return 0.0;
-			}
-		};
+				@SuppressWarnings("unchecked")
+				@Override
+				public Object map(Object el) throws Exception
+				{
+					return mapper.map((I) el);
+				}
+			};
+		}
 
 		public Aggregator<I, Integer> COUNT(Mapper<I, ?> vop)
 		{
@@ -5053,18 +5242,6 @@ public class Canal<D> implements Iterable<D>
 		public Expr<I, Double> following(Integer amount)
 		{
 			return expr(amount == null ? null : (1.0 * Math.abs(amount)));
-		}
-
-		public <O extends Comparable<O>> Item<O> item(final Mapper<I, O> mapper)
-		{
-			return new Item<O>()
-			{
-				@Override
-				public O map(I el) throws Exception
-				{
-					return mapper.map(el);
-				}
-			};
 		}
 
 		public <T extends Comparable<T>> Item<T> item(final T t)
@@ -5398,6 +5575,13 @@ public class Canal<D> implements Iterable<D>
 																			};
 
 	public static final WindowFunctions<Map<String, Object>>	wf			= new WindowFunctions<Map<String, Object>>();
+
+	public static final WindowFunctions<Object[]>				wfa			= new WindowFunctions<Object[]>();
+
+	public static <T extends Comparable<T>> Expr<Object[], T> $(final int idx)
+	{
+		return ArrayCanal.$(idx);
+	}
 
 	public static <T extends Comparable<T>> Expr<Map<String, Object>, T> $(final String key)
 	{
@@ -6764,6 +6948,30 @@ public class Canal<D> implements Iterable<D>
 		return this.follow(new TakeOp<D>(limit, result)).evaluate();
 	}
 
+	@SuppressWarnings("unchecked")
+	public ArrayCanal toArrays()
+	{
+		Canal<D> canal = this.filter(new Filter<D>()
+		{
+			@Override
+			public boolean filter(D el) throws Exception
+			{
+				try
+				{
+					return el != null && el.getClass().isArray();
+				}
+				catch (Exception e)
+				{
+					return false;
+				}
+			}
+		});
+		ArrayCanal arrs = new ArrayCanal();
+		arrs.setUpstream((Canal<?>) canal.getUpstream());
+		arrs.setOperator((Operator<Object[], Object[]>) canal.getOperator());
+		return arrs;
+	}
+
 	/**
 	 * Convert this Canal to PairCanal.<br />
 	 * The elements' type in this Canal MUST be {@code Tuple2<K,V>}.
@@ -6972,12 +7180,11 @@ public class Canal<D> implements Iterable<D>
 			}
 		});
 
-		final Variable<Integer> idx = new Variable<Integer>(0);
-
+		int idx = 0;
 		for (final Aggregator<?, ?> aggr : aggrs)
 		{
 			final Aggregator<V, ?> agg = (Aggregator<V, ?>) aggr;
-
+			final int idn = idx++;
 			final WindowRanger<V> ranger = getWindowRanger(agg);
 
 			canal = canal.stratifyBy((Object[]) agg.partBy()).flatMap(new Mapper<Canal<V>, Iterable<V>>()
@@ -7030,7 +7237,7 @@ public class Canal<D> implements Iterable<D>
 
 							for (i = from; i < to && i < levelTo; i++)
 							{
-								setter.set(rows[i], idx.value, agg, (Object) (range[0] >= range[1] ? null
+								setter.set(rows[i], idn, agg, (Object) (range[0] >= range[1] ? null
 										: agg.express(i, update, rows, range[0], range[1])));
 							}
 
@@ -7041,8 +7248,6 @@ public class Canal<D> implements Iterable<D>
 					return part;
 				}
 			});
-
-			idx.value++;
 		}
 
 		return canal;
