@@ -56,14 +56,14 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public Mapper<I, Number>[] between()
+		public Mapper<? super I, ? extends Number>[] between()
 		{
 			return between;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public Aggregator<I, O> between(Mapper<I, Number> a, Mapper<I, Number> b)
+		public Aggregator<I, O> between(Mapper<? super I, Number> a, Mapper<? super I, Number> b)
 		{
 			this.between = new Mapper[] { a, b };
 			return this;
@@ -89,21 +89,21 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public boolean isByRow()
+		public boolean isByRows()
 		{
 			return byRows;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public Expr<I, ?>[] orderBy()
+		public Expr<? super I, ?>[] orderBy()
 		{
 			return orderBy != null && orderBy.length > 0 ? orderBy : new Expr[] { NULL };
 		}
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		@Override
-		public Aggregator<I, O> orderBy(final Mapper<I, ? extends Comparable> key)
+		public Aggregator<I, O> orderBy(final Mapper<? super I, ? extends Comparable> key)
 		{
 			this.orderBy = key != null ? new Expr[] { key instanceof Expr ? (Expr) key : new Expr()
 			{
@@ -118,14 +118,14 @@ public class Canal<D> implements Iterable<D>
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		@Override
-		public Aggregator<I, O> orderBy(final Mapper<I, ? extends Comparable>... keys)
+		public Aggregator<I, O> orderBy(final Mapper<? super I, ? extends Comparable>... keys)
 		{
 			if (keys != null)
 			{
 				this.orderBy = new Expr[keys.length];
 				for (int i = 0; i < keys.length; i++)
 				{
-					final Mapper<I, ? extends Comparable> key = keys[i];
+					final Mapper<? super I, ? extends Comparable> key = keys[i];
 					this.orderBy[i] = key instanceof Expr ? (Expr) key : new Expr()
 					{
 						@Override
@@ -145,14 +145,14 @@ public class Canal<D> implements Iterable<D>
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public Expr<I, ?>[] partBy()
+		public Expr<? super I, ?>[] partBy()
 		{
 			return partBy != null && partBy.length > 0 ? partBy : new Expr[] { NULL };
 		}
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		@Override
-		public Aggregator<I, O> partBy(final Mapper<I, ? extends Comparable> key)
+		public Aggregator<I, O> partBy(final Mapper<? super I, ? extends Comparable> key)
 		{
 			this.partBy = key != null ? new Expr[] { key instanceof Expr ? (Expr) key : new Expr()
 			{
@@ -167,14 +167,14 @@ public class Canal<D> implements Iterable<D>
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		@Override
-		public Aggregator<I, O> partBy(Mapper<I, ? extends Comparable>... keys)
+		public Aggregator<I, O> partBy(Mapper<? super I, ? extends Comparable>... keys)
 		{
 			if (keys != null)
 			{
 				this.partBy = new Expr[keys.length];
 				for (int i = 0; i < keys.length; i++)
 				{
-					final Mapper<I, ? extends Comparable> key = keys[i];
+					final Mapper<? super I, ? extends Comparable> key = keys[i];
 					this.partBy[i] = key instanceof Expr ? (Expr) key : new Expr()
 					{
 						@Override
@@ -288,7 +288,7 @@ public class Canal<D> implements Iterable<D>
 
 		public Aggregator<I, O> as(Object alias);
 
-		public Aggregator<I, O> between(Mapper<I, Number> a, Mapper<I, Number> b);
+		public Aggregator<I, O> between(Mapper<? super I, Number> a, Mapper<? super I, Number> b);
 
 		public O express(int pos, Object gather, I[] rows, int winFrom, int winTo) throws Exception;
 
@@ -297,16 +297,16 @@ public class Canal<D> implements Iterable<D>
 		public Object initial() throws Exception;
 
 		@SuppressWarnings("rawtypes")
-		public Aggregator<I, O> orderBy(Mapper<I, ? extends Comparable> key);
+		public Aggregator<I, O> orderBy(Mapper<? super I, ? extends Comparable> key);
 
 		@SuppressWarnings("rawtypes")
-		public Aggregator<I, O> orderBy(Mapper<I, ? extends Comparable>... keys);
+		public Aggregator<I, O> orderBy(Mapper<? super I, ? extends Comparable>... keys);
 
 		@SuppressWarnings("rawtypes")
-		public Aggregator<I, O> partBy(Mapper<I, ? extends Comparable> key);
+		public Aggregator<I, O> partBy(Mapper<? super I, ? extends Comparable> key);
 
 		@SuppressWarnings("rawtypes")
-		public Aggregator<I, O> partBy(Mapper<I, ? extends Comparable>... keys);
+		public Aggregator<I, O> partBy(Mapper<? super I, ? extends Comparable>... keys);
 
 		public Aggregator<I, O> range();
 
@@ -3633,18 +3633,18 @@ public class Canal<D> implements Iterable<D>
 			return last ? (toTail ? i - 1 : i + 1) : i;
 		}
 
-		protected final Expr<I, ?>			expr;
+		protected final Expr<? super I, ?>					expr;
 
-		protected final Mapper<I, Number>	a;
+		protected final Mapper<? super I, ? extends Number>	a;
 
-		protected final Mapper<I, Number>	b;
+		protected final Mapper<? super I, ? extends Number>	b;
 
 		@SuppressWarnings("unchecked")
-		public SlidingRangeWindowRanger(Expr<I, ?> expr, Mapper<I, Number>[] between)
+		public SlidingRangeWindowRanger(Expr<? super I, ?> expr, Mapper<? super I, ? extends Number>[] between)
 		{
 			this.expr = expr;
-			this.a = (Mapper<I, Number>) (between[0] == null ? NULL : between[0]);
-			this.b = (Mapper<I, Number>) (between[1] == null ? NULL : between[1]);
+			this.a = (Mapper<? super I, ? extends Number>) (between[0] == null ? NULL : between[0]);
+			this.b = (Mapper<? super I, ? extends Number>) (between[1] == null ? NULL : between[1]);
 		}
 
 		@Override
@@ -3716,15 +3716,15 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class SlidingRowsWindowRanger<I> implements WindowRanger<I>
 	{
-		protected final Mapper<I, Number>	a;
+		protected final Mapper<? super I, ? extends Number>	a;
 
-		protected final Mapper<I, Number>	b;
+		protected final Mapper<? super I, ? extends Number>	b;
 
 		@SuppressWarnings("unchecked")
-		public SlidingRowsWindowRanger(Mapper<I, Number>[] between)
+		public SlidingRowsWindowRanger(Mapper<? super I, ? extends Number>[] between)
 		{
-			this.a = (Mapper<I, Number>) (between[0] == null ? NULL : between[0]);
-			this.b = (Mapper<I, Number>) (between[1] == null ? NULL : between[1]);
+			this.a = (Mapper<? super I, ? extends Number>) (between[0] == null ? NULL : between[0]);
+			this.b = (Mapper<? super I, ? extends Number>) (between[1] == null ? NULL : between[1]);
 		}
 
 		@Override
@@ -4828,13 +4828,13 @@ public class Canal<D> implements Iterable<D>
 
 	public static interface Window<R>
 	{
-		public Mapper<R, Number>[] between();
+		public Mapper<? super R, ? extends Number>[] between();
 
-		public boolean isByRow();
+		public boolean isByRows();
 
-		public Expr<R, ?>[] orderBy();
+		public Expr<? super R, ?>[] orderBy();
 
-		public Expr<R, ?>[] partBy();
+		public Expr<? super R, ?>[] partBy();
 	}
 
 	public static interface WindowFunctionResultSetter<R>
@@ -4891,11 +4891,11 @@ public class Canal<D> implements Iterable<D>
 
 		protected static class FIRST_VALUE<I, O> extends AbstractAggregator<I, O>
 		{
-			protected final Mapper<I, O>	vop;
+			protected final Mapper<I, ? extends O>	vop;
 
-			protected final boolean			ignoreNulls;
+			protected final boolean					ignoreNulls;
 
-			public FIRST_VALUE(Mapper<I, O> vop, boolean ignoreNulls)
+			public FIRST_VALUE(Mapper<I, ? extends O> vop, boolean ignoreNulls)
 			{
 				this.vop = vop;
 				this.ignoreNulls = ignoreNulls;
@@ -4949,13 +4949,13 @@ public class Canal<D> implements Iterable<D>
 
 		protected static class LAG<I, O> extends AbstractAggregator<I, O>
 		{
-			protected final Mapper<I, O>	vop;
+			protected final Mapper<I, ? extends O>	vop;
 
-			protected final int				offset;
+			protected final int						offset;
 
-			protected final O				deft;
+			protected final O						deft;
 
-			public LAG(Mapper<I, O> vop, int offset, O deft)
+			public LAG(Mapper<I, ? extends O> vop, int offset, O deft)
 			{
 				this.vop = vop;
 				this.offset = Math.abs(offset);
@@ -4978,11 +4978,11 @@ public class Canal<D> implements Iterable<D>
 
 		protected static class LAST_VALUE<I, O> extends AbstractAggregator<I, O>
 		{
-			protected final Mapper<I, O>	vop;
+			protected final Mapper<I, ? extends O>	vop;
 
-			protected final boolean			ignoreNulls;
+			protected final boolean					ignoreNulls;
 
-			public LAST_VALUE(Mapper<I, O> vop, boolean ignoreNulls)
+			public LAST_VALUE(Mapper<I, ? extends O> vop, boolean ignoreNulls)
 			{
 				this.vop = vop;
 				this.ignoreNulls = ignoreNulls;
@@ -5005,13 +5005,13 @@ public class Canal<D> implements Iterable<D>
 
 		protected static class LEAD<I, O> extends AbstractAggregator<I, O>
 		{
-			protected final Mapper<I, O>	vop;
+			protected final Mapper<I, ? extends O>	vop;
 
-			protected final int				offset;
+			protected final int						offset;
 
-			protected final O				deft;
+			protected final O						deft;
 
-			public LEAD(Mapper<I, O> vop, int offset, O deft)
+			public LEAD(Mapper<I, ? extends O> vop, int offset, O deft)
 			{
 				this.vop = vop;
 				this.offset = Math.abs(offset);
@@ -5034,9 +5034,9 @@ public class Canal<D> implements Iterable<D>
 
 		protected static class MAX<I, O extends Comparable<O>> extends AbstractAggregator<I, O>
 		{
-			protected final Expr<I, O> vop;
+			protected final Expr<I, ? extends O> vop;
 
-			public MAX(Expr<I, O> vop)
+			public MAX(Expr<I, ? extends O> vop)
 			{
 				this.vop = vop;
 			}
@@ -5061,9 +5061,9 @@ public class Canal<D> implements Iterable<D>
 
 		protected static class MIN<I, O extends Comparable<O>> extends AbstractAggregator<I, O>
 		{
-			protected final Expr<I, O> vop;
+			protected final Expr<I, ? extends O> vop;
 
-			public MIN(Expr<I, O> vop)
+			public MIN(Expr<I, ? extends O> vop)
 			{
 				this.vop = vop;
 			}
@@ -5253,14 +5253,19 @@ public class Canal<D> implements Iterable<D>
 			return new DENSE_RANK<I>();
 		}
 
-		public <O> Aggregator<I, O> FIRST_VALUE(Mapper<I, O> vop)
+		public <O> Aggregator<I, O> FIRST_VALUE(Mapper<I, ? extends O> vop)
 		{
 			return FIRST_VALUE(vop, false);
 		}
 
-		public <O> Aggregator<I, O> FIRST_VALUE(Mapper<I, O> vop, boolean ignoreNulls)
+		public <O> Aggregator<I, O> FIRST_VALUE(Mapper<I, ? extends O> vop, boolean ignoreNulls)
 		{
 			return new FIRST_VALUE<I, O>(vop, ignoreNulls);
+		}
+
+		public Mapper<I, Number> following(final BigDecimal amount)
+		{
+			return following(amount != null ? amount.doubleValue() : null);
 		}
 
 		public Mapper<I, Number> following(final Double amount)
@@ -5299,54 +5304,59 @@ public class Canal<D> implements Iterable<D>
 			};
 		}
 
-		public <O> Aggregator<I, O> LAG(Mapper<I, O> vop)
+		public <O> Aggregator<I, O> LAG(Mapper<I, ? extends O> vop)
 		{
 			return LAG(vop, 1);
 		}
 
-		public <O> Aggregator<I, O> LAG(Mapper<I, O> vop, int offset)
+		public <O> Aggregator<I, O> LAG(Mapper<I, ? extends O> vop, int offset)
 		{
 			return LAG(vop, offset, null);
 		}
 
-		public <O> Aggregator<I, O> LAG(Mapper<I, O> vop, int offset, O deft)
+		public <O> Aggregator<I, O> LAG(Mapper<I, ? extends O> vop, int offset, O deft)
 		{
 			return new LAG<I, O>(vop, offset, deft);
 		}
 
-		public <O> Aggregator<I, O> LAST_VALUE(Mapper<I, O> vop)
+		public <O> Aggregator<I, O> LAST_VALUE(Mapper<I, ? extends O> vop)
 		{
 			return LAST_VALUE(vop, false);
 		}
 
-		public <O> Aggregator<I, O> LAST_VALUE(Mapper<I, O> vop, boolean ignoreNulls)
+		public <O> Aggregator<I, O> LAST_VALUE(Mapper<I, ? extends O> vop, boolean ignoreNulls)
 		{
 			return new LAST_VALUE<I, O>(vop, ignoreNulls);
 		}
 
-		public <O> Aggregator<I, O> LEAD(Mapper<I, O> vop)
+		public <O> Aggregator<I, O> LEAD(Mapper<I, ? extends O> vop)
 		{
 			return LEAD(vop, 1);
 		}
 
-		public <O> Aggregator<I, O> LEAD(Mapper<I, O> vop, int offset)
+		public <O> Aggregator<I, O> LEAD(Mapper<I, ? extends O> vop, int offset)
 		{
 			return LEAD(vop, offset, null);
 		}
 
-		public <O> Aggregator<I, O> LEAD(Mapper<I, O> vop, int offset, O deft)
+		public <O> Aggregator<I, O> LEAD(Mapper<I, ? extends O> vop, int offset, O deft)
 		{
 			return new LEAD<I, O>(vop, offset, deft);
 		}
 
-		public <O extends Comparable<O>> Aggregator<I, O> MAX(Expr<I, O> vop)
+		public <O extends Comparable<O>> Aggregator<I, O> MAX(Expr<I, ? extends O> vop)
 		{
 			return new MAX<I, O>(vop);
 		}
 
-		public <O extends Comparable<O>> Aggregator<I, O> MIN(Expr<I, O> vop)
+		public <O extends Comparable<O>> Aggregator<I, O> MIN(Expr<I, ? extends O> vop)
 		{
 			return new MIN<I, O>(vop);
+		}
+
+		public Mapper<I, Number> preceding(final BigDecimal amount)
+		{
+			return preceding(amount != null ? amount.doubleValue() : null);
 		}
 
 		public Mapper<I, Number> preceding(final Double amount)
@@ -5733,7 +5743,7 @@ public class Canal<D> implements Iterable<D>
 	{
 		if (window.between() != null)
 		{
-			if (window.isByRow())
+			if (window.isByRows())
 			{
 				return new SlidingRowsWindowRanger<R>(window.between());
 			}

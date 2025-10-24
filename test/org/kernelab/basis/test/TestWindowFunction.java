@@ -66,7 +66,7 @@ public class TestWindowFunction
 	last_value(t.name) over(PARTITION BY t.gender ORDER BY t.age) las2,
 	last_value(t.name) over(PARTITION BY t.gender ORDER BY t.age ROWS BETWEEN CURRENT ROW AND 1 following) las3
 	FROM
-	(SELECT r.* FROM some_table r ORDER BY r.id) t
+	(SELECT * FROM jdl_test_tab t ORDER BY t.id) t
 	) s ORDER BY s.id
 	 * </pre>
 	 */
