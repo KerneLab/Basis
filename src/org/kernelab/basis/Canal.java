@@ -853,73 +853,12 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
-	protected static class DistinctByMapperOp<E> implements Converter<E, E>
-	{
-		protected final Mapper<? super E, ?> mapper;
-
-		public DistinctByMapperOp(Mapper<? super E, ?> mapper)
-		{
-			this.mapper = mapper;
-		}
-
-		@Override
-		public Pond<E, E> newPond()
-		{
-			return new Heaper<E>()
-			{
-				Set<Object> set = null;
-
-				@Override
-				protected Collection<E> newSediment()
-				{
-					set = new HashSet<Object>();
-					return new LinkedHashSet<E>();
-				}
-
-				@Override
-				protected void settle()
-				{
-					while (upstream().hasNext())
-					{
-						E el = upstream().next();
-						try
-						{
-							Object d = mapper.map(el);
-							if (!set.contains(d))
-							{
-								sediment.add(el);
-								set.add(d);
-							}
-						}
-						catch (RuntimeException e)
-						{
-							throw e;
-						}
-						catch (Exception e)
-						{
-							throw new RuntimeException(e);
-						}
-					}
-				}
-			};
-		}
-	}
-
 	protected static class DistinctOp<E> implements Converter<E, E>
 	{
-		protected final Comparator<? super E>		cmp;
-
-		protected final HashedEquality<? super E>	eql;
-
-		public DistinctOp(Comparator<? super E> cmp)
-		{
-			this.cmp = cmp;
-			this.eql = null;
-		}
+		protected final HashedEquality<? super E> eql;
 
 		public DistinctOp(HashedEquality<? super E> eql)
 		{
-			this.cmp = null;
 			this.eql = eql;
 		}
 
@@ -931,11 +870,7 @@ public class Canal<D> implements Iterable<D>
 				@Override
 				protected Collection<E> newSediment()
 				{
-					if (cmp != null)
-					{
-						return new TreeSet<E>(cmp);
-					}
-					else if (eql != null)
+					if (eql != null)
 					{
 						return new WrappedLinkedHashSet<E>(eql);
 					}
@@ -2840,12 +2775,6 @@ public class Canal<D> implements Iterable<D>
 		public PairCanal<K, V> distinct()
 		{
 			return super.distinct().toPair();
-		}
-
-		@Override
-		public PairCanal<K, V> distinct(Comparator<? super Tuple2<K, V>> cmp)
-		{
-			return super.distinct(cmp).toPair();
 		}
 
 		@Override
@@ -6247,18 +6176,7 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public Canal<D> distinct()
 	{
-		return this.distinct((Comparator<D>) null);
-	}
-
-	/**
-	 * Remove duplicate elements with a given {@link Comparator}.
-	 * 
-	 * @param cmp
-	 * @return
-	 */
-	public Canal<D> distinct(Comparator<? super D> cmp)
-	{
-		return this.follow(new DistinctOp<D>(cmp));
+		return this.distinct((HashedEquality<D>) null);
 	}
 
 	/**
@@ -6270,18 +6188,6 @@ public class Canal<D> implements Iterable<D>
 	public Canal<D> distinct(HashedEquality<? super D> eql)
 	{
 		return this.follow(new DistinctOp<D>(eql));
-	}
-
-	/**
-	 * Remove duplicate elements according to the uniqueness defined by the
-	 * mapper.
-	 * 
-	 * @param mapper
-	 * @return
-	 */
-	public Canal<D> distinct(Mapper<? super D, ?> mapper)
-	{
-		return this.follow(new DistinctByMapperOp<D>(mapper));
 	}
 
 	@SuppressWarnings("unchecked")
