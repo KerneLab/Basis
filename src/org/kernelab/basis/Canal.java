@@ -5354,6 +5354,42 @@ public class Canal<D> implements Iterable<D>
 			return new MIN<I, O>(vop);
 		}
 
+		public Mapper<I, Number> offset(final BigDecimal amount)
+		{
+			return new Mapper<I, Number>()
+			{
+				@Override
+				public Number map(I el) throws Exception
+				{
+					return amount;
+				}
+			};
+		}
+
+		public Mapper<I, Number> offset(final Double amount)
+		{
+			return new Mapper<I, Number>()
+			{
+				@Override
+				public Number map(I el) throws Exception
+				{
+					return amount;
+				}
+			};
+		}
+
+		public Mapper<I, Number> offset(final Integer amount)
+		{
+			return new Mapper<I, Number>()
+			{
+				@Override
+				public Number map(I el) throws Exception
+				{
+					return amount;
+				}
+			};
+		}
+
 		public Mapper<I, Number> preceding(final BigDecimal amount)
 		{
 			return preceding(amount != null ? amount.doubleValue() : null);
