@@ -4872,25 +4872,48 @@ public class Canal<D> implements Iterable<D>
 	{
 		protected static class COUNT<I> extends AbstractAggregator<I, Integer>
 		{
-			protected final Mapper<I, ?> vop;
+			protected final boolean			distinct;
 
-			public COUNT(Mapper<I, ?> vop)
+			protected final Mapper<I, ?>	vop;
+
+			public COUNT(boolean distinct, Mapper<I, ?> vop)
 			{
+				if (vop == null)
+				{
+					throw new NullPointerException();
+				}
+				this.distinct = distinct;
 				this.vop = vop;
 			}
 
 			@Override
 			public Integer update(Object gather, I[] rows, int winFrom, int winTo) throws Exception
 			{
-				int count = 0;
-				for (int i = winFrom; i < winTo; i++)
+				if (distinct)
 				{
-					if (vop.map(rows[i]) != null)
+					Set<Object> set = new HashSet<Object>();
+					Object val = null;
+					for (int i = winFrom; i < winTo; i++)
 					{
-						count++;
+						if ((val = vop.map(rows[i])) != null)
+						{
+							set.add(val);
+						}
 					}
+					return set.size();
 				}
-				return count;
+				else
+				{
+					int count = 0;
+					for (int i = winFrom; i < winTo; i++)
+					{
+						if (vop.map(rows[i]) != null)
+						{
+							count++;
+						}
+					}
+					return count;
+				}
 			}
 		}
 
@@ -4923,6 +4946,10 @@ public class Canal<D> implements Iterable<D>
 
 			public FIRST_VALUE(Mapper<I, ? extends O> vop, boolean ignoreNulls)
 			{
+				if (vop == null)
+				{
+					throw new NullPointerException();
+				}
 				this.vop = vop;
 				this.ignoreNulls = ignoreNulls;
 			}
@@ -4983,6 +5010,10 @@ public class Canal<D> implements Iterable<D>
 
 			public LAG(Mapper<I, ? extends O> vop, int offset, O deft)
 			{
+				if (vop == null)
+				{
+					throw new NullPointerException();
+				}
 				this.vop = vop;
 				this.offset = Math.abs(offset);
 				this.deft = deft;
@@ -5010,6 +5041,10 @@ public class Canal<D> implements Iterable<D>
 
 			public LAST_VALUE(Mapper<I, ? extends O> vop, boolean ignoreNulls)
 			{
+				if (vop == null)
+				{
+					throw new NullPointerException();
+				}
 				this.vop = vop;
 				this.ignoreNulls = ignoreNulls;
 			}
@@ -5039,6 +5074,10 @@ public class Canal<D> implements Iterable<D>
 
 			public LEAD(Mapper<I, ? extends O> vop, int offset, O deft)
 			{
+				if (vop == null)
+				{
+					throw new NullPointerException();
+				}
 				this.vop = vop;
 				this.offset = Math.abs(offset);
 				this.deft = deft;
@@ -5064,6 +5103,10 @@ public class Canal<D> implements Iterable<D>
 
 			public MAX(Expr<I, ? extends O> vop)
 			{
+				if (vop == null)
+				{
+					throw new NullPointerException();
+				}
 				this.vop = vop;
 			}
 
@@ -5091,6 +5134,10 @@ public class Canal<D> implements Iterable<D>
 
 			public MIN(Expr<I, ? extends O> vop)
 			{
+				if (vop == null)
+				{
+					throw new NullPointerException();
+				}
 				this.vop = vop;
 			}
 
@@ -5154,6 +5201,10 @@ public class Canal<D> implements Iterable<D>
 
 			public SUM(Mapper<I, T> vop)
 			{
+				if (vop == null)
+				{
+					throw new NullPointerException();
+				}
 				this.vop = vop;
 			}
 
@@ -5269,9 +5320,14 @@ public class Canal<D> implements Iterable<D>
 			};
 		}
 
+		public Aggregator<I, Integer> COUNT(boolean distinct, Mapper<I, ?> vop)
+		{
+			return new COUNT<I>(distinct, vop);
+		}
+
 		public Aggregator<I, Integer> COUNT(Mapper<I, ?> vop)
 		{
-			return new COUNT<I>(vop);
+			return COUNT(false, vop);
 		}
 
 		public Aggregator<I, Integer> DENSE_RANK()
