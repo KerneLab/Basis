@@ -330,6 +330,25 @@ public class Canal<D> implements Iterable<D>
 			};
 		}
 
+		@Override
+		public ArrayCanal distinct()
+		{
+			return super.distinct(new HashedEquality<Object[]>()
+			{
+				@Override
+				public boolean equals(Object[] a, Object[] b)
+				{
+					return Tools.equals(a, b);
+				}
+
+				@Override
+				public int hashCode(Object[] obj)
+				{
+					return Tools.hashCode(obj);
+				}
+			}).toArrays();
+		}
+
 		public ArrayCanal window(final Aggregator<Object[], ?>... aggrs)
 		{
 			return super.window(new StatefulMapper<Object[], Aggregator<Object[], ?>[], Object[]>()
@@ -3349,6 +3368,32 @@ public class Canal<D> implements Iterable<D>
 					return (T) el.get(key);
 				}
 			};
+		}
+
+		@Override
+		public RowCanal<R> distinct()
+		{
+			return super.distinct(new HashedEquality<R>()
+			{
+				@Override
+				public boolean equals(R a, R b)
+				{
+					return Tools.equals(a, b);
+				}
+
+				@Override
+				public int hashCode(R obj)
+				{
+					if (obj == null)
+					{
+						return 0;
+					}
+					else
+					{
+						return Tools.hashCode(obj.values());
+					}
+				}
+			}).toRows();
 		}
 
 		public RowCanal<R> window(final Aggregator<? extends Map<String, Object>, ?>... aggrs)

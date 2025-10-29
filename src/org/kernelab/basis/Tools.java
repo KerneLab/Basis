@@ -3004,8 +3004,8 @@ public class Tools
 	}
 
 	/**
-	 * To decide whether two Map is equal or not. Return true if and only if the
-	 * keys and corresponding values in both Map are equal.
+	 * To decide whether two Map are equal or not. Return true if and only if
+	 * the keys and corresponding values in both Map are equal.
 	 * 
 	 * @param a
 	 * @param b
@@ -3041,8 +3041,8 @@ public class Tools
 	}
 
 	/**
-	 * To decide whether two object is equal or not. It would also be recognized
-	 * as equal if two parameter are both null.
+	 * To decide whether two object are equal or not. It would also be
+	 * recognized as equal if two parameter are both null.
 	 * 
 	 * @param a
 	 *            one object.
@@ -3091,6 +3091,41 @@ public class Tools
 		else
 		{
 			return false;
+		}
+	}
+
+	/**
+	 * To decide whether two array are equal or not. It would also be recognized
+	 * as equal if two parameter are both null.
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static <T> boolean equals(T[] a, T[] b)
+	{
+		if (a == b)
+		{
+			return true;
+		}
+		else if (a == null || b == null)
+		{
+			return false;
+		}
+		else if (a.length != b.length)
+		{
+			return false;
+		}
+		else
+		{
+			for (int i = 0; i < a.length; i++)
+			{
+				if (!Tools.equals(a[i], b[i]))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 	}
 
@@ -4497,6 +4532,48 @@ public class Tools
 	public static AlphaComposite graphicsTranslucentComposite(float alpha)
 	{
 		return AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
+	}
+
+	/**
+	 * Calculate hash code of a series values.
+	 * 
+	 * @param values
+	 * @return
+	 */
+	public static int hashCode(Iterable<?> values)
+	{
+		if (values == null)
+		{
+			return 0;
+		}
+
+		int hash = 1;
+		for (Object value : values)
+		{
+			hash = hash * 31 + (value != null ? value.hashCode() : 0);
+		}
+		return hash;
+	}
+
+	/**
+	 * Calculate hash code of a series values.
+	 * 
+	 * @param values
+	 * @return
+	 */
+	public static int hashCode(Object... values)
+	{
+		if (values == null)
+		{
+			return 0;
+		}
+
+		int hash = 1;
+		for (Object value : values)
+		{
+			hash = hash * 31 + (value != null ? value.hashCode() : 0);
+		}
+		return hash;
 	}
 
 	/**
