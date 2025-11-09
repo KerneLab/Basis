@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -347,6 +346,134 @@ public class Canal<D> implements Iterable<D>
 					return Tools.hashCode(obj);
 				}
 			}).toArrays();
+		}
+
+		@Override
+		public ArrayCanal distinct(HashedEquality<? super Object[]> eql)
+		{
+			return super.distinct(eql).toArrays();
+		}
+
+		@Override
+		public ArrayCanal distinct(Mapper<? super Object[], ?> xtr)
+		{
+			return super.distinct(xtr).toArrays();
+		}
+
+		@Override
+		public ArrayCanal filter(Filter<? super Object[]> pred)
+		{
+			return super.filter(pred).toArrays();
+		}
+
+		@Override
+		public ArrayCanal intersection(Canal<? extends Object[]> that)
+		{
+			return super.intersection(that).toArrays();
+		}
+
+		@Override
+		public ArrayCanal intersection(Canal<? extends Object[]> that, HashedEquality<? super Object[]> cmp)
+		{
+			return super.intersection(that, cmp).toArrays();
+		}
+
+		@Override
+		public ArrayCanal intersection(Canal<? extends Object[]> that, Mapper<? super Object[], ?> xtr)
+		{
+			return super.intersection(that, xtr).toArrays();
+		}
+
+		@Override
+		public ArrayCanal limit(int limit)
+		{
+			return super.limit(limit).toArrays();
+		}
+
+		@Override
+		public ArrayCanal peek(Action<? super Object[]> action)
+		{
+			return super.peek(action).toArrays();
+		}
+
+		@Override
+		public ArrayCanal reverse()
+		{
+			return super.reverse().toArrays();
+		}
+
+		@Override
+		public ArrayCanal skip(int offset)
+		{
+			return super.skip(offset).toArrays();
+		}
+
+		@Override
+		@SuppressWarnings("rawtypes")
+		public ArrayCanal sortBy(Mapper<? super Object[], Comparable> cmp)
+		{
+			return super.sortBy(cmp).toArrays();
+		}
+
+		@Override
+		@SuppressWarnings("rawtypes")
+		public ArrayCanal sortBy(Mapper<? super Object[], Comparable>... cmps)
+		{
+			return super.sortBy(cmps).toArrays();
+		}
+
+		@Override
+		public ArrayCanal sortBy(Object... orders)
+		{
+			return super.sortBy(orders).toArrays();
+		}
+
+		@Override
+		public ArrayCanal sortWith()
+		{
+			return super.sortWith().toArrays();
+		}
+
+		@Override
+		public ArrayCanal sortWith(boolean ascend)
+		{
+			return super.sortWith(ascend).toArrays();
+		}
+
+		@Override
+		public ArrayCanal sortWith(Comparator<? super Object[]> cmp)
+		{
+			return super.sortWith(cmp).toArrays();
+		}
+
+		@Override
+		public ArrayCanal sortWith(Comparator<? super Object[]> cmp, boolean ascend)
+		{
+			return super.sortWith(cmp, ascend).toArrays();
+		}
+
+		@Override
+		public ArrayCanal subtract(Canal<? extends Object[]> that)
+		{
+			return super.subtract(that).toArrays();
+		}
+
+		@Override
+		public ArrayCanal subtract(Canal<? extends Object[]> that, HashedEquality<? super Object[]> cmp)
+		{
+			return super.subtract(that, cmp).toArrays();
+		}
+
+		@Override
+		public ArrayCanal subtract(Canal<? extends Object[]> that, Mapper<? super Object[], ?> xtr)
+		{
+			return super.subtract(that, xtr).toArrays();
+		}
+
+		@Override
+		public ArrayCanal union(Canal<? extends Object[]> that)
+		{
+			return super.union(that).toArrays();
 		}
 
 		public ArrayCanal window(final Aggregator<Object[], ?>... aggrs)
@@ -1781,46 +1908,46 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class IntersectionOp<E> implements Converter<E, E>
 	{
-		protected final Canal<E>				that;
+		protected final Canal<E>					that;
 
-		protected final Comparator<? super E>	cmp;
+		protected final HashedEquality<? super E>	eql;
 
 		@SuppressWarnings("unchecked")
-		public IntersectionOp(Canal<? extends E> that, Comparator<? super E> cmp)
+		public IntersectionOp(Canal<? extends E> that, HashedEquality<? super E> eql)
 		{
 			if (that == null)
 			{
 				throw new NullPointerException();
 			}
 			this.that = (Canal<E>) that;
-			this.cmp = cmp;
+			this.eql = eql;
 		}
 
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new IntersectionPond<E>(that, cmp);
+			return new IntersectionPond<E>(that, eql);
 		}
 	}
 
 	protected static class IntersectionPond<E> extends Dam<E, E, E>
 	{
-		protected final Comparator<? super E>	cmp;
+		protected final HashedEquality<? super E>	eql;
 
-		private Set<E>							there;
+		private Set<E>								there;
 
-		private E								here;
+		private E									here;
 
-		public IntersectionPond(Canal<E> that, Comparator<? super E> cmp)
+		public IntersectionPond(Canal<E> that, HashedEquality<? super E> eql)
 		{
 			super(that);
-			this.cmp = cmp;
+			this.eql = eql;
 		}
 
 		@Override
 		public void begin()
 		{
-			there = (Set<E>) that.collect(cmp == null ? new HashSet<E>() : new TreeSet<E>(cmp));
+			there = (Set<E>) that.collect(eql == null ? new HashSet<E>() : new WrappedHashSet<E>(eql));
 		}
 
 		@Override
@@ -2803,6 +2930,12 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
+		public PairCanal<K, V> distinct(Mapper<? super Tuple2<K, V>, ?> xtr)
+		{
+			return super.distinct(xtr).toPair();
+		}
+
+		@Override
 		public PairCanal<K, V> filter(Filter<? super Tuple2<K, V>> pred)
 		{
 			return super.filter(pred).toPair();
@@ -2882,9 +3015,16 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public PairCanal<K, V> intersection(Canal<? extends Tuple2<K, V>> that, Comparator<? super Tuple2<K, V>> cmp)
+		public PairCanal<K, V> intersection(Canal<? extends Tuple2<K, V>> that,
+				HashedEquality<? super Tuple2<K, V>> cmp)
 		{
 			return super.intersection(that, cmp).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> intersection(Canal<? extends Tuple2<K, V>> that, Mapper<? super Tuple2<K, V>, ?> xtr)
+		{
+			return super.intersection(that, xtr).toPair();
 		}
 
 		/**
@@ -3075,9 +3215,15 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public PairCanal<K, V> subtract(Canal<? extends Tuple2<K, V>> that, Comparator<? super Tuple2<K, V>> cmp)
+		public PairCanal<K, V> subtract(Canal<? extends Tuple2<K, V>> that, HashedEquality<? super Tuple2<K, V>> cmp)
 		{
 			return super.subtract(that, cmp).toPair();
+		}
+
+		@Override
+		public PairCanal<K, V> subtract(Canal<? extends Tuple2<K, V>> that, Mapper<? super Tuple2<K, V>, ?> xtr)
+		{
+			return super.subtract(that, xtr).toPair();
 		}
 
 		@SuppressWarnings("unchecked")
@@ -3394,6 +3540,134 @@ public class Canal<D> implements Iterable<D>
 					}
 				}
 			}).toRows();
+		}
+
+		@Override
+		public RowCanal<R> distinct(HashedEquality<? super R> eql)
+		{
+			return super.distinct(eql).toRows();
+		}
+
+		@Override
+		public RowCanal<R> distinct(Mapper<? super R, ?> xtr)
+		{
+			return super.distinct(xtr).toRows();
+		}
+
+		@Override
+		public RowCanal<R> filter(Filter<? super R> pred)
+		{
+			return super.filter(pred).toRows();
+		}
+
+		@Override
+		public RowCanal<R> intersection(Canal<? extends R> that)
+		{
+			return super.intersection(that).toRows();
+		}
+
+		@Override
+		public RowCanal<R> intersection(Canal<? extends R> that, HashedEquality<? super R> cmp)
+		{
+			return super.intersection(that, cmp).toRows();
+		}
+
+		@Override
+		public RowCanal<R> intersection(Canal<? extends R> that, Mapper<? super R, ?> xtr)
+		{
+			return super.intersection(that, xtr).toRows();
+		}
+
+		@Override
+		public RowCanal<R> limit(int limit)
+		{
+			return super.limit(limit).toRows();
+		}
+
+		@Override
+		public RowCanal<R> peek(Action<? super R> action)
+		{
+			return super.peek(action).toRows();
+		}
+
+		@Override
+		public RowCanal<R> reverse()
+		{
+			return super.reverse().toRows();
+		}
+
+		@Override
+		public RowCanal<R> skip(int offset)
+		{
+			return super.skip(offset).toRows();
+		}
+
+		@Override
+		@SuppressWarnings("rawtypes")
+		public RowCanal<R> sortBy(Mapper<? super R, Comparable> cmp)
+		{
+			return super.sortBy(cmp).toRows();
+		}
+
+		@Override
+		@SuppressWarnings("rawtypes")
+		public RowCanal<R> sortBy(Mapper<? super R, Comparable>... cmps)
+		{
+			return super.sortBy(cmps).toRows();
+		}
+
+		@Override
+		public RowCanal<R> sortBy(Object... orders)
+		{
+			return super.sortBy(orders).toRows();
+		}
+
+		@Override
+		public RowCanal<R> sortWith()
+		{
+			return super.sortWith().toRows();
+		}
+
+		@Override
+		public RowCanal<R> sortWith(boolean ascend)
+		{
+			return super.sortWith(ascend).toRows();
+		}
+
+		@Override
+		public RowCanal<R> sortWith(Comparator<? super R> cmp)
+		{
+			return super.sortWith(cmp).toRows();
+		}
+
+		@Override
+		public RowCanal<R> sortWith(Comparator<? super R> cmp, boolean ascend)
+		{
+			return super.sortWith(cmp, ascend).toRows();
+		}
+
+		@Override
+		public RowCanal<R> subtract(Canal<? extends R> that)
+		{
+			return super.subtract(that).toRows();
+		}
+
+		@Override
+		public RowCanal<R> subtract(Canal<? extends R> that, HashedEquality<? super R> cmp)
+		{
+			return super.subtract(that, cmp).toRows();
+		}
+
+		@Override
+		public RowCanal<R> subtract(Canal<? extends R> that, Mapper<? super R, ?> xtr)
+		{
+			return super.subtract(that, xtr).toRows();
+		}
+
+		@Override
+		public RowCanal<R> union(Canal<? extends R> that)
+		{
+			return super.union(that).toRows();
 		}
 
 		public RowCanal<R> window(final Aggregator<? extends Map<String, Object>, ?>... aggrs)
@@ -4138,46 +4412,46 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class SubtractOp<E> implements Converter<E, E>
 	{
-		protected final Canal<E>				that;
+		protected final Canal<E>					that;
 
-		protected final Comparator<? super E>	cmp;
+		protected final HashedEquality<? super E>	eql;
 
 		@SuppressWarnings("unchecked")
-		public SubtractOp(Canal<? extends E> that, Comparator<? super E> cmp)
+		public SubtractOp(Canal<? extends E> that, HashedEquality<? super E> eql)
 		{
 			if (that == null)
 			{
 				throw new NullPointerException();
 			}
 			this.that = (Canal<E>) that;
-			this.cmp = cmp;
+			this.eql = eql;
 		}
 
 		@Override
 		public Pond<E, E> newPond()
 		{
-			return new SubtractPond<E>(that, cmp);
+			return new SubtractPond<E>(that, eql);
 		}
 	}
 
 	protected static class SubtractPond<E> extends Dam<E, E, E>
 	{
-		protected final Comparator<? super E>	cmp;
+		protected final HashedEquality<? super E>	eql;
 
-		private Set<E>							there;
+		private Set<E>								there;
 
-		private E								here;
+		private E									here;
 
-		public SubtractPond(Canal<E> that, Comparator<? super E> cmp)
+		public SubtractPond(Canal<E> that, HashedEquality<? super E> eql)
 		{
 			super(that);
-			this.cmp = cmp;
+			this.eql = eql;
 		}
 
 		@Override
 		public void begin()
 		{
-			there = (Set<E>) that.collect(cmp == null ? new HashSet<E>() : new TreeSet<E>(cmp));
+			there = (Set<E>) that.collect(eql == null ? new HashSet<E>() : new WrappedHashSet<E>(eql));
 		}
 
 		@Override
@@ -6291,6 +6565,19 @@ public class Canal<D> implements Iterable<D>
 		return this.follow(new DistinctOp<D>(eql));
 	}
 
+	/**
+	 * Remove duplicate elements with a HashedEquality against the value defined
+	 * by the extractor.
+	 * 
+	 * @param xtr
+	 *            value extractor.
+	 * @return
+	 */
+	public Canal<D> distinct(Mapper<? super D, ?> xtr)
+	{
+		return this.distinct((HashedEquality<? super D>) DefaultHashedEquality.of(xtr));
+	}
+
 	@SuppressWarnings("unchecked")
 	protected <T> T evaluate()
 	{
@@ -6494,19 +6781,31 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public Canal<D> intersection(Canal<? extends D> that)
 	{
-		return intersection(that, null);
+		return intersection(that, (HashedEquality<? super D>) null);
 	}
 
 	/**
 	 * Pass the element that both in this and that Canal to the downstream.
 	 * 
 	 * @param that
-	 * @param cmp
+	 * @param eql
 	 * @return
 	 */
-	public Canal<D> intersection(Canal<? extends D> that, Comparator<? super D> cmp)
+	public Canal<D> intersection(Canal<? extends D> that, HashedEquality<? super D> eql)
 	{
-		return this.follow(new IntersectionOp<D>(that, cmp));
+		return this.follow(new IntersectionOp<D>(that, eql));
+	}
+
+	/**
+	 * Pass the element that both in this and that Canal to the downstream.
+	 * 
+	 * @param that
+	 * @param xtr
+	 * @return
+	 */
+	public Canal<D> intersection(Canal<? extends D> that, Mapper<? super D, ?> xtr)
+	{
+		return this.intersection(that, (HashedEquality<? super D>) DefaultHashedEquality.of(xtr));
 	}
 
 	@Override
@@ -7073,19 +7372,31 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public Canal<D> subtract(Canal<? extends D> that)
 	{
-		return subtract(that, null);
+		return subtract(that, (HashedEquality<? super D>) null);
 	}
 
 	/**
 	 * Pass the elements in this Canal but not in that Canal to the downstream.
 	 * 
 	 * @param that
-	 * @param cmp
+	 * @param eql
 	 * @return
 	 */
-	public Canal<D> subtract(Canal<? extends D> that, Comparator<? super D> cmp)
+	public Canal<D> subtract(Canal<? extends D> that, HashedEquality<? super D> eql)
 	{
-		return this.follow(new SubtractOp<D>(that, cmp));
+		return this.follow(new SubtractOp<D>(that, eql));
+	}
+
+	/**
+	 * Pass the elements in this Canal but not in that Canal to the downstream.
+	 * 
+	 * @param that
+	 * @param xtr
+	 * @return
+	 */
+	public Canal<D> subtract(Canal<? extends D> that, Mapper<? super D, ?> xtr)
+	{
+		return this.subtract(that, (HashedEquality<? super D>) DefaultHashedEquality.of(xtr));
 	}
 
 	/**
