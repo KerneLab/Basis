@@ -1,15 +1,15 @@
 package org.kernelab.basis;
 
-public class DefaultHashedEquality<T, V> implements HashedEquality<T>, Mapper<T, V>
+public class PartialHashedEquality<T, V> implements HashedEquality<T>
 {
-	public static <T, V> DefaultHashedEquality<T, V> of(Mapper<? super T, ? extends V> mapper)
+	public static <T, V> PartialHashedEquality<T, V> of(Mapper<? super T, ? extends V> mapper)
 	{
-		return new DefaultHashedEquality<T, V>(mapper);
+		return new PartialHashedEquality<T, V>(mapper);
 	}
 
 	protected final Mapper<? super T, ? extends V> mapper;
 
-	public DefaultHashedEquality(Mapper<? super T, ? extends V> mapper)
+	public PartialHashedEquality(Mapper<? super T, ? extends V> mapper)
 	{
 		if (mapper == null)
 		{
@@ -53,8 +53,7 @@ public class DefaultHashedEquality<T, V> implements HashedEquality<T>, Mapper<T,
 		}
 	}
 
-	@Override
-	public V map(T el) throws Exception
+	protected V map(T el) throws Exception
 	{
 		return mapper.map(el);
 	}

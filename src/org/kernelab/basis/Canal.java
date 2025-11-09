@@ -6575,7 +6575,7 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public Canal<D> distinct(Mapper<? super D, ?> xtr)
 	{
-		return this.distinct((HashedEquality<? super D>) DefaultHashedEquality.of(xtr));
+		return this.distinct(PartialHashedEquality.of(xtr));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -6805,7 +6805,7 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public Canal<D> intersection(Canal<? extends D> that, Mapper<? super D, ?> xtr)
 	{
-		return this.intersection(that, (HashedEquality<? super D>) DefaultHashedEquality.of(xtr));
+		return this.intersection(that, PartialHashedEquality.of(xtr));
 	}
 
 	@Override
@@ -7396,7 +7396,7 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public Canal<D> subtract(Canal<? extends D> that, Mapper<? super D, ?> xtr)
 	{
-		return this.subtract(that, (HashedEquality<? super D>) DefaultHashedEquality.of(xtr));
+		return this.subtract(that, PartialHashedEquality.of(xtr));
 	}
 
 	/**
