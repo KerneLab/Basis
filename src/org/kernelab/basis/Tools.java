@@ -3004,8 +3004,7 @@ public class Tools
 	}
 
 	/**
-	 * To decide whether two Map are equal or not. Return true if and only if
-	 * the keys and corresponding values in both Map are equal.
+	 * To decide whether two Map are equal or not.
 	 * 
 	 * @param a
 	 * @param b
@@ -3013,14 +3012,14 @@ public class Tools
 	 */
 	public static <K, V> boolean equals(Map<K, V> a, Map<K, V> b)
 	{
-		if (a == null || b == null)
-		{
-			return false;
-		}
-
 		if (a == b)
 		{
 			return true;
+		}
+
+		if (a == null || b == null)
+		{
+			return false;
 		}
 
 		if (a.size() != b.size())
