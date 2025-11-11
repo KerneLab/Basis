@@ -316,6 +316,21 @@ public class Canal<D> implements Iterable<D>
 
 	public static class ArrayCanal extends Canal<Object[]>
 	{
+		protected static final HashedEquality<Object[]> EQL = new HashedEquality<Object[]>()
+		{
+			@Override
+			public boolean equals(Object[] a, Object[] b)
+			{
+				return Tools.equals(a, b);
+			}
+
+			@Override
+			public int hashCode(Object[] obj)
+			{
+				return Tools.hashCode(obj);
+			}
+		};
+
 		public static <T extends Comparable<T>> Expr<Object[], T> $(final int idx)
 		{
 			return new Expr<Object[], T>()
@@ -332,20 +347,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public ArrayCanal distinct()
 		{
-			return super.distinct(new HashedEquality<Object[]>()
-			{
-				@Override
-				public boolean equals(Object[] a, Object[] b)
-				{
-					return Tools.equals(a, b);
-				}
-
-				@Override
-				public int hashCode(Object[] obj)
-				{
-					return Tools.hashCode(obj);
-				}
-			}).toArrays();
+			return this.distinct(EQL);
 		}
 
 		@Override
@@ -369,7 +371,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public ArrayCanal intersection(Canal<? extends Object[]> that)
 		{
-			return super.intersection(that).toArrays();
+			return this.intersection(that, EQL);
 		}
 
 		@Override
@@ -455,7 +457,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public ArrayCanal subtract(Canal<? extends Object[]> that)
 		{
-			return super.subtract(that).toArrays();
+			return this.subtract(that, EQL);
 		}
 
 		@Override
@@ -3519,7 +3521,24 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public RowCanal<R> distinct()
 		{
-			return super.distinct(new HashedEquality<R>()
+			return this.distinct(eql());
+		}
+
+		@Override
+		public RowCanal<R> distinct(HashedEquality<? super R> eql)
+		{
+			return super.distinct(eql).toRows();
+		}
+
+		@Override
+		public RowCanal<R> distinct(Mapper<? super R, ?> xtr)
+		{
+			return super.distinct(xtr).toRows();
+		}
+
+		protected HashedEquality<R> eql()
+		{
+			return new HashedEquality<R>()
 			{
 				@Override
 				public boolean equals(R a, R b)
@@ -3539,19 +3558,7 @@ public class Canal<D> implements Iterable<D>
 						return Tools.hashCode(obj.values());
 					}
 				}
-			}).toRows();
-		}
-
-		@Override
-		public RowCanal<R> distinct(HashedEquality<? super R> eql)
-		{
-			return super.distinct(eql).toRows();
-		}
-
-		@Override
-		public RowCanal<R> distinct(Mapper<? super R, ?> xtr)
-		{
-			return super.distinct(xtr).toRows();
+			};
 		}
 
 		@Override
@@ -3563,7 +3570,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public RowCanal<R> intersection(Canal<? extends R> that)
 		{
-			return super.intersection(that).toRows();
+			return this.intersection(that, eql());
 		}
 
 		@Override
@@ -3649,7 +3656,7 @@ public class Canal<D> implements Iterable<D>
 		@Override
 		public RowCanal<R> subtract(Canal<? extends R> that)
 		{
-			return super.subtract(that).toRows();
+			return this.subtract(that, eql());
 		}
 
 		@Override
