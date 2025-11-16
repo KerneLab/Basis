@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 
 import org.kernelab.basis.JSON.JSAN;
 import org.kernelab.basis.JSON.Pair;
-import org.kernelab.basis.sql.Row;
 
 public class Canal<D> implements Iterable<D>
 {
@@ -214,7 +213,7 @@ public class Canal<D> implements Iterable<D>
 
 	protected static abstract class AbstractPond<U, D> implements Pond<U, D>
 	{
-		private Pond<?, U> up;
+		protected Pond<?, U> up;
 
 		@Override
 		public void close() throws Exception
@@ -345,6 +344,12 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
+		public ArrayCanal cache()
+		{
+			return super.cache().toArrays();
+		}
+
+		@Override
 		public ArrayCanal distinct()
 		{
 			return this.distinct(EQL);
@@ -470,6 +475,12 @@ public class Canal<D> implements Iterable<D>
 		public ArrayCanal subtract(Canal<? extends Object[]> that, Mapper<? super Object[], ?> xtr)
 		{
 			return super.subtract(that, xtr).toArrays();
+		}
+
+		@Override
+		public ArrayCanal uncache()
+		{
+			return super.uncache().toArrays();
 		}
 
 		@Override
@@ -615,6 +626,77 @@ public class Canal<D> implements Iterable<D>
 		public Source<E> newPond()
 		{
 			return new ArraySource<E>(array, begin, until, step);
+		}
+	}
+
+	protected static class CacheOp<D> implements Converter<D, D>
+	{
+		protected final ArrayList<D>	cache	= new ArrayList<D>();
+
+		protected final Pond<D, D>		pond	= new CachePond<D>(cache);
+
+		@Override
+		public Pond<D, D> newPond()
+		{
+			if (pond.upstream() == null)
+			{
+				return pond;
+			}
+			else
+			{
+				Pond<D, D> p = new CachePond<D>(cache);
+				p.upstream(pond.upstream());
+				return p;
+			}
+		}
+	}
+
+	protected static class CachePond<D> extends AbstractPond<D, D>
+	{
+		protected final ArrayList<D>	cache;
+
+		protected int					index;
+
+		public CachePond(ArrayList<D> cache)
+		{
+			this.cache = cache;
+		}
+
+		@Override
+		public void begin() throws Exception
+		{
+			this.index = 0;
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return index < cache.size() || upstream().hasNext();
+		}
+
+		@Override
+		public D next()
+		{
+			if (index < cache.size())
+			{
+				return cache.get(index++);
+			}
+			else
+			{
+				D next = upstream().next();
+				cache.add(next);
+				index++;
+				return next;
+			}
+		}
+
+		@Override
+		public void upstream(Pond<?, D> up)
+		{
+			if (this.up == null)
+			{
+				this.up = up;
+			}
 		}
 	}
 
@@ -2873,6 +2955,12 @@ public class Canal<D> implements Iterable<D>
 
 	public static class PairCanal<K, V> extends Canal<Tuple2<K, V>>
 	{
+		@Override
+		public PairCanal<K, V> cache()
+		{
+			return super.cache().toPair();
+		}
+
 		/**
 		 * Choose the tuples that should be passed to downstream.
 		 * 
@@ -3243,6 +3331,12 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
+		public PairCanal<K, V> uncache()
+		{
+			return super.uncache().toPair();
+		}
+
+		@Override
 		public PairCanal<K, V> union(Canal<? extends Tuple2<K, V>> that)
 		{
 			return super.union(that).toPair();
@@ -3519,6 +3613,12 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
+		public RowCanal<R> cache()
+		{
+			return super.cache().toRows();
+		}
+
+		@Override
 		public RowCanal<R> distinct()
 		{
 			return this.distinct(eql());
@@ -3669,6 +3769,12 @@ public class Canal<D> implements Iterable<D>
 		public RowCanal<R> subtract(Canal<? extends R> that, Mapper<? super R, ?> xtr)
 		{
 			return super.subtract(that, xtr).toRows();
+		}
+
+		@Override
+		public RowCanal<R> uncache()
+		{
+			return super.uncache().toRows();
 		}
 
 		@Override
@@ -6423,6 +6529,11 @@ public class Canal<D> implements Iterable<D>
 		return pond;
 	}
 
+	public Canal<D> cache()
+	{
+		return this.follow(new CacheOp<D>());
+	}
+
 	/**
 	 * Make Cartesian product result against another given {@code Canal<?,N>}.
 	 * 
@@ -7433,25 +7544,8 @@ public class Canal<D> implements Iterable<D>
 	@SuppressWarnings("unchecked")
 	public ArrayCanal toArrays()
 	{
-		Canal<D> canal = this.filter(new Filter<D>()
-		{
-			@Override
-			public boolean filter(D el) throws Exception
-			{
-				try
-				{
-					return el != null && el.getClass().isArray();
-				}
-				catch (Exception e)
-				{
-					return false;
-				}
-			}
-		});
-		ArrayCanal arrs = new ArrayCanal();
-		arrs.setUpstream((Canal<?>) canal.getUpstream());
-		arrs.setOperator((Operator<Object[], Object[]>) canal.getOperator());
-		return arrs;
+		return (ArrayCanal) new ArrayCanal().setUpstream((Canal<?>) this.getUpstream())
+				.setOperator((Operator<Object[], Object[]>) this.getOperator());
 	}
 
 	/**
@@ -7477,87 +7571,8 @@ public class Canal<D> implements Iterable<D>
 	@SuppressWarnings("unchecked")
 	public <R extends Map<String, Object>> RowCanal<R> toRows()
 	{
-		Canal<D> canal = this.filter(new Filter<D>()
-		{
-			@Override
-			public boolean filter(D el) throws Exception
-			{
-				try
-				{
-					R r = (R) el;
-					return r != null;
-				}
-				catch (Exception e)
-				{
-					return false;
-				}
-			}
-		});
-		RowCanal<R> rows = new RowCanal<R>();
-		rows.setUpstream((Canal<R>) canal.getUpstream());
-		rows.setOperator((Operator<R, R>) canal.getOperator());
-		return rows;
-	}
-
-	/**
-	 * Convert this Canal to RowCanal.<br />
-	 * Only the elements' type of {@code Map<String,Object>} will be converted
-	 * to the target class and taken into the downstream.
-	 * 
-	 * @param cls
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public <R extends Map<String, Object>> RowCanal<R> toRows(final Class<R> cls)
-	{
-		Canal<R> canal = this.map(new Mapper<D, R>()
-		{
-			@Override
-			public R map(D el) throws Exception
-			{
-				if (el instanceof Map<?, ?>)
-				{
-					try
-					{
-						Map<String, Object> m = (Map<String, Object>) el;
-						if (cls == Map.class)
-						{
-							return (R) m;
-						}
-						else if (cls.isInstance(m))
-						{
-							return (R) m;
-						}
-						else if (cls == Row.class)
-						{
-							return (R) Row.of(m);
-						}
-						else if (cls == JSON.class)
-						{
-							return (R) JSON.Of(m);
-						}
-						else
-						{
-							R r = cls.newInstance();
-							r.putAll(m);
-							return r;
-						}
-					}
-					catch (Exception e)
-					{
-						return null;
-					}
-				}
-				else
-				{
-					return null;
-				}
-			}
-		}).noNull();
-		RowCanal<R> rows = new RowCanal<R>();
-		rows.setUpstream((Canal<R>) canal.getUpstream());
-		rows.setOperator((Operator<R, R>) canal.getOperator());
-		return rows;
+		return (RowCanal<R>) new RowCanal<R>().setUpstream((Canal<R>) this.getUpstream())
+				.setOperator((Operator<R, R>) this.getOperator());
 	}
 
 	/**
@@ -7609,6 +7624,19 @@ public class Canal<D> implements Iterable<D>
 	public String toString(CharSequence delimiter, CharSequence prefix, CharSequence suffix, boolean emptyWrap)
 	{
 		return this.follow(new StringConcater<D>(delimiter, prefix, suffix, emptyWrap)).evaluate();
+	}
+
+	public Canal<D> uncache()
+	{
+		if (this.getOperator() instanceof CacheOp)
+		{
+			((CacheOp<?>) this.getOperator()).cache.clear();
+			return this.getUpstream();
+		}
+		else
+		{
+			return this;
+		}
 	}
 
 	/**

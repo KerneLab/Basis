@@ -83,7 +83,7 @@ public class TestWindowFunction
 
 		// Tools.debug(Canal.of(data).toRows().stratifyBy(Canal.Canal.$("gender")).collectAsJSAN().toString(0));
 
-		Canal.of(data).toRows(Row.class).window(Canal.wf.COUNT(Canal.wf.item(1)).partBy(Canal.$("gender")).as("cnt"), //
+		Canal.of(data).<Row> toRows().window(Canal.wf.COUNT(Canal.wf.item(1)).partBy(Canal.$("gender")).as("cnt"), //
 				Canal.wf.ROW_NUMBER().partBy(Canal.$("gender")).orderBy(Canal.$("age")).as("rn"), //
 				Canal.wf.LEAD(Canal.$("name")).partBy(Canal.$("gender")).orderBy(Canal.$("age")).as("lea2"), //
 				Canal.wf.LAG(Canal.$("name")).partBy(Canal.$("gender")).orderBy(Canal.$("age")).as("lag2"), //
