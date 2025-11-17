@@ -80,7 +80,7 @@ public class TestCanalCache
 				Tools.debug(el);
 			}
 		});
-		
+
 		Tools.debug("=============");
 
 		c.uncache().foreach(new Action<Double>()

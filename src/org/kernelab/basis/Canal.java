@@ -213,7 +213,9 @@ public class Canal<D> implements Iterable<D>
 
 	protected static abstract class AbstractPond<U, D> implements Pond<U, D>
 	{
-		protected Pond<?, U> up;
+		private boolean			begun	= false;
+
+		protected Pond<?, U>	up;
 
 		@Override
 		public void close() throws Exception
@@ -231,6 +233,12 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
+		public boolean hasBegun()
+		{
+			return begun;
+		}
+
+		@Override
 		public abstract boolean hasNext();
 
 		@Override
@@ -240,6 +248,12 @@ public class Canal<D> implements Iterable<D>
 		public void remove()
 		{
 			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setBegun()
+		{
+			this.begun = true;
 		}
 
 		@Override
@@ -3402,6 +3416,10 @@ public class Canal<D> implements Iterable<D>
 
 		void end() throws Exception;
 
+		boolean hasBegun();
+
+		void setBegun();
+
 		Pond<?, I> upstream();
 
 		void upstream(Pond<?, I> up);
@@ -4353,6 +4371,8 @@ public class Canal<D> implements Iterable<D>
 
 	protected static abstract class Source<E> implements Pond<E, E>
 	{
+		private boolean begun = false;
+
 		@Override
 		public void begin() throws Exception
 		{
@@ -4370,9 +4390,21 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
+		public boolean hasBegun()
+		{
+			return begun;
+		}
+
+		@Override
 		public void remove()
 		{
 			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setBegun()
+		{
+			this.begun = true;
 		}
 
 		@Override
@@ -6158,7 +6190,11 @@ public class Canal<D> implements Iterable<D>
 		}
 		try
 		{
-			pond.begin();
+			if (!pond.hasBegun())
+			{
+				pond.begin();
+				pond.setBegun();
+			}
 		}
 		catch (RuntimeException e)
 		{
@@ -6520,8 +6556,10 @@ public class Canal<D> implements Iterable<D>
 			down.upstream(pond);
 		}
 
-		// The upstream of source is null
-		if (this.getUpstream() != null)
+		if (this.getUpstream() != null // The upstream of source is null
+				&& (down == null //
+						|| down.upstream() == pond // CachePond keep upstream
+				))
 		{
 			this.<U> getUpstream().build(pond);
 		}
