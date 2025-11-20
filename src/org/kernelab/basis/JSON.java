@@ -1723,11 +1723,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return this;
 		}
 
-		public JSAN asJSAN()
-		{
-			return this;
-		}
-
 		@SuppressWarnings("unchecked")
 		public <E> E attr(int index)
 		{

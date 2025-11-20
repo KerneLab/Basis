@@ -3216,6 +3216,51 @@ public class Canal<D> implements Iterable<D>
 			}).toPair();
 		}
 
+		public <W> PairCanal<K, W> mapValuesCast(final Class<W> cls)
+		{
+			if (cls == null)
+			{
+				throw new NullPointerException();
+			}
+			return this.mapValues(new Mapper<V, W>()
+			{
+				@Override
+				public W map(V el) throws Exception
+				{
+					return Tools.as(el, cls);
+				}
+			});
+		}
+
+		public <W> PairCanal<K, W> mapValuesCasted(Class<W> cls)
+		{
+			return this.mapValuesCast(cls).noNullValue();
+		}
+
+		public PairCanal<K, V> noNullKey()
+		{
+			return this.filter(new Filter<Tuple2<K, V>>()
+			{
+				@Override
+				public boolean filter(Tuple2<K, V> el) throws Exception
+				{
+					return el._1 != null;
+				}
+			});
+		}
+
+		public PairCanal<K, V> noNullValue()
+		{
+			return this.filter(new Filter<Tuple2<K, V>>()
+			{
+				@Override
+				public boolean filter(Tuple2<K, V> el) throws Exception
+				{
+					return el._2 != null;
+				}
+			});
+		}
+
 		@Override
 		public PairCanal<K, V> peek(Action<? super Tuple2<K, V>> action)
 		{
