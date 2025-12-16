@@ -1,5 +1,6 @@
 package org.kernelab.basis;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,8 +10,7 @@ import java.util.concurrent.Callable;
 
 import org.kernelab.basis.io.StreamTransfer;
 
-public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> implements Callable<ProcessHandler>,
-		Runnable
+public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> implements Callable<ProcessHandler>, Runnable
 {
 	/**
 	 * @param args
@@ -45,6 +45,12 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	private InputStream		pes;
 
 	/**
+	 * Whether throws RuntimeException on exit with fail status. If enable this
+	 * feature, the errorStream would be overridden.
+	 */
+	private boolean			throwsOnFail	= false;
+
+	/**
 	 * Streams of delegation.
 	 */
 	private OutputStream	outputStream;
@@ -61,6 +67,7 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		processBuilder = new ProcessBuilder(cmd);
 	}
 
+	@Override
 	public ProcessHandler call() throws Exception
 	{
 		synchronized (this)
@@ -70,11 +77,15 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 			terminated = false;
 		}
 
+		final boolean redirect = processBuilder.redirectErrorStream();
+		ByteArrayOutputStream catchStream = null;
 		result = null;
 
 		try
 		{
 			process = processBuilder.start();
+
+			catchStream = this.isThrowsOnFail() ? new ByteArrayOutputStream() : null;
 
 			pos = process.getOutputStream();
 
@@ -82,12 +93,12 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 
 			pes = process.getErrorStream();
 
-			tos = new StreamTransfer(pis, outputStream);
+			tos = new StreamTransfer(pis, redirect && catchStream != null ? catchStream : outputStream);
 			tos.start(true);
 
-			if (!processBuilder.redirectErrorStream())
+			if (!redirect)
 			{
-				tes = new StreamTransfer(pes, errorStream);
+				tes = new StreamTransfer(pes, catchStream != null ? catchStream : errorStream);
 				tes.start(true);
 			}
 		}
@@ -148,6 +159,10 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 			}
 			catch (InterruptedException e)
 			{
+				if (exception == null)
+				{
+					exception = e;
+				}
 			}
 		}
 
@@ -156,6 +171,11 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		this.destroy();
 
 		this.accomplished();
+
+		if (result != null && !Tools.equals(result, 0) && catchStream != null)
+		{
+			exception = new RuntimeException(catchStream.toString());
+		}
 
 		if (exception != null)
 		{
@@ -261,6 +281,12 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 		return terminated;
 	}
 
+	public boolean isThrowsOnFail()
+	{
+		return throwsOnFail;
+	}
+
+	@Override
 	public void run()
 	{
 		try
@@ -305,6 +331,12 @@ public class ProcessHandler extends AbstractAccomplishable<ProcessHandler> imple
 	public ProcessHandler setRedirectErrorStream(boolean redirect)
 	{
 		processBuilder.redirectErrorStream(redirect);
+		return this;
+	}
+
+	public ProcessHandler setThrowsOnFail(boolean throwsOnFail)
+	{
+		this.throwsOnFail = throwsOnFail;
 		return this;
 	}
 
