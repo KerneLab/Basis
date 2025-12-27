@@ -1584,21 +1584,24 @@ public class Canal<D> implements Iterable<D>
 
 	protected static class ForallOp<E> implements Evaluator<E, Boolean>
 	{
-		protected final Filter<? super E> cond;
+		protected final Filter<? super E>	cond;
 
-		public ForallOp(Filter<? super E> cond)
+		protected final boolean				allowEmpty;
+
+		public ForallOp(Filter<? super E> cond, boolean allowEmpty)
 		{
 			if (cond == null)
 			{
 				throw new NullPointerException();
 			}
 			this.cond = cond;
+			this.allowEmpty = allowEmpty;
 		}
 
 		@Override
 		public Terminal<E, Boolean> newPond()
 		{
-			return new ForallPond<E>(cond);
+			return new ForallPond<E>(cond, allowEmpty);
 		}
 	}
 
@@ -1606,11 +1609,14 @@ public class Canal<D> implements Iterable<D>
 	{
 		protected final Filter<? super E>	cond;
 
+		protected final boolean				allowEmpty;
+
 		protected boolean					meet	= false;
 
-		public ForallPond(Filter<? super E> cond)
+		public ForallPond(Filter<? super E> cond, boolean allowEmpty)
 		{
 			this.cond = cond;
+			this.allowEmpty = allowEmpty;
 		}
 
 		@Override
@@ -1618,9 +1624,28 @@ public class Canal<D> implements Iterable<D>
 		{
 			try
 			{
-				while (upstream().hasNext())
+				if (allowEmpty)
 				{
-					if (!cond.filter(upstream().next()))
+					while (upstream().hasNext())
+					{
+						if (!cond.filter(upstream().next()))
+						{
+							return;
+						}
+					}
+				}
+				else
+				{
+					boolean empty = true;
+					while (upstream().hasNext())
+					{
+						empty = false;
+						if (!cond.filter(upstream().next()))
+						{
+							return;
+						}
+					}
+					if (empty)
 					{
 						return;
 					}
@@ -6877,14 +6902,29 @@ public class Canal<D> implements Iterable<D>
 	}
 
 	/**
-	 * Determine whether all the data meet the condition.
+	 * Determine whether all the data meet the condition. {@code true} will be
+	 * returned if this Canal was empty.
 	 * 
 	 * @param cond
 	 * @return
 	 */
 	public boolean forall(Filter<? super D> cond)
 	{
-		return this.follow(new ForallOp<D>(cond)).evaluate();
+		return this.forall(cond, true);
+	}
+
+	/**
+	 * Determine whether all the data meet the condition. If {@code allowEmpty}
+	 * parameter was {@code false} and this Canal was empty, then {@code false}
+	 * will be returned.
+	 * 
+	 * @param cond
+	 * @param allowEmpty
+	 * @return
+	 */
+	public boolean forall(Filter<? super D> cond, boolean allowEmpty)
+	{
+		return this.follow(new ForallOp<D>(cond, allowEmpty)).evaluate();
 	}
 
 	/**
@@ -7007,6 +7047,30 @@ public class Canal<D> implements Iterable<D>
 	public Canal<D> intersection(Canal<? extends D> that, Mapper<? super D, ?> xtr)
 	{
 		return this.intersection(that, PartialHashedEquality.of(xtr));
+	}
+
+	/**
+	 * To determine whether this Canal meet the condition or not. Return
+	 * {@code Option.some(this)} if meet, otherwise {@code Option.none()} will
+	 * be returned.
+	 * 
+	 * @param cond
+	 * @return
+	 */
+	public Option<Canal<D>> is(Filter<Canal<D>> cond)
+	{
+		try
+		{
+			return cond.filter(this) ? Option.some(this) : Option.<Canal<D>> none();
+		}
+		catch (RuntimeException e)
+		{
+			throw e;
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
