@@ -7057,7 +7057,7 @@ public class Canal<D> implements Iterable<D>
 	 * @param cond
 	 * @return
 	 */
-	public Option<Canal<D>> is(Filter<Canal<D>> cond)
+	public Option<Canal<D>> is(Filter<? super Canal<D>> cond)
 	{
 		try
 		{
