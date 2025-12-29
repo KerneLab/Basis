@@ -4565,10 +4565,9 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			JSON json = JSON.Parse("{\"a\":1, \"b\":true, \"c\":[1,2,3,\"xyz\"], \"d\":{\"a\":true}}");
 			try
 			{
-				Path path = Path.parse("$.d.b");
+				Path path = Path.parse("$.d.a");
 
 				Tools.debug(path.find(json));
-
 			}
 			catch (Exception e)
 			{
@@ -4738,13 +4737,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			this.finders = finders;
 		}
 
-		public Iterable<Object> find(final Object data)
+		public Canal<Object> find(final Object data)
 		{
-			Iterable<Object> last = Option.some(data);
+			Canal<Object> last = Option.some(data);
 
 			for (final Finder finder : finders)
 			{
-				last = Canal.of(last).filter(new Filter<Object>()
+				last = last.filter(new Filter<Object>()
 				{
 					@Override
 					public boolean filter(Object el) throws Exception
@@ -8742,12 +8741,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		super.finalize();
 	}
 
-	public Iterable<Object> find(JSON.Path path)
+	public Canal<Object> find(JSON.Path path)
 	{
 		return path.find(this);
 	}
 
-	public Iterable<Object> find(String path)
+	public Canal<Object> find(String path)
 	{
 		return this.find(Path(path));
 	}
