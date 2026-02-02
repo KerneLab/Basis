@@ -3006,7 +3006,7 @@ public class Canal<D> implements Iterable<D>
 		 * @param chooser
 		 * @return
 		 */
-		public PairCanal<K, V> choose(final StatefulMapper<K, V, Boolean> chooser)
+		public PairCanal<K, V> choose(final StatefulMapper<? super K, ? super V, Boolean> chooser)
 		{
 			if (chooser == null)
 			{
@@ -3196,13 +3196,29 @@ public class Canal<D> implements Iterable<D>
 			return super.limit(limit).toPair();
 		}
 
+		public <L> PairCanal<L, V> mapKey(final Mapper<? super K, ? extends L> mapper)
+		{
+			if (mapper == null)
+			{
+				throw new NullPointerException();
+			}
+			return this.map(new Mapper<Tuple2<K, V>, Tuple2<L, V>>()
+			{
+				@Override
+				public Tuple2<L, V> map(Tuple2<K, V> el) throws Exception
+				{
+					return Tuple.of((L) mapper.map(el._1), el._2);
+				}
+			}).toPair();
+		}
+
 		/**
 		 * Map each value in pair into a new value.
 		 * 
 		 * @param mapper
 		 * @return
 		 */
-		public <W> PairCanal<K, W> mapValues(final Mapper<V, W> mapper)
+		public <W> PairCanal<K, W> mapValues(final Mapper<? super V, ? extends W> mapper)
 		{
 			if (mapper == null)
 			{
@@ -3213,7 +3229,7 @@ public class Canal<D> implements Iterable<D>
 				@Override
 				public Tuple2<K, W> map(Tuple2<K, V> el) throws Exception
 				{
-					return Tuple.of(el._1, mapper.map(el._2));
+					return Tuple.of(el._1, (W) mapper.map(el._2));
 				}
 			}).toPair();
 		}
@@ -3225,7 +3241,7 @@ public class Canal<D> implements Iterable<D>
 		 *            {@code (V,K) -> W}
 		 * @return
 		 */
-		public <W> PairCanal<K, W> mapValues(final StatefulMapper<V, K, W> mapper)
+		public <W> PairCanal<K, W> mapValues(final StatefulMapper<? super V, ? super K, ? extends W> mapper)
 		{
 			if (mapper == null)
 			{
@@ -3236,7 +3252,7 @@ public class Canal<D> implements Iterable<D>
 				@Override
 				public Tuple2<K, W> map(Tuple2<K, V> el) throws Exception
 				{
-					return Tuple.of(el._1, mapper.map(el._2, el._1));
+					return Tuple.of(el._1, (W) mapper.map(el._2, el._1));
 				}
 			}).toPair();
 		}
@@ -6925,6 +6941,17 @@ public class Canal<D> implements Iterable<D>
 	public boolean forall(Filter<? super D> cond, boolean allowEmpty)
 	{
 		return this.follow(new ForallOp<D>(cond, allowEmpty)).evaluate();
+	}
+
+	/**
+	 * Determine whether any data in this Canal meet the condition.
+	 * 
+	 * @param cond
+	 * @return
+	 */
+	public boolean forany(Filter<? super D> cond)
+	{
+		return this.first(cond).given();
 	}
 
 	/**
