@@ -1369,6 +1369,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return Sort(source, new LinkedHashSet<Object>(), target);
 		}
 
+		public static JSAN Unmodifiable(JSAN jsan)
+		{
+			if (jsan == null)
+			{
+				return null;
+			}
+			else
+			{
+				return (JSAN) new JSAN() //
+						.array(Collections.unmodifiableMap(jsan.array())) //
+						.object(Collections.unmodifiableMap(jsan.object())) //
+						.templates(jsan);
+			}
+		}
+
 		private Map<String, Object>	array;
 
 		private int					length	= 0;
@@ -8332,6 +8347,24 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		else
 		{
 			return value.toString();
+		}
+	}
+
+	public static JSON Unmodifiable(JSON json)
+	{
+		if (json == null)
+		{
+			return null;
+		}
+		else if (json instanceof JSAN)
+		{
+			return JSAN.Unmodifiable((JSAN) json);
+		}
+		else
+		{
+			return new JSON() //
+					.object(Collections.unmodifiableMap(json.object())) //
+					.templates(json);
 		}
 	}
 
