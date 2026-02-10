@@ -1369,21 +1369,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return Sort(source, new LinkedHashSet<Object>(), target);
 		}
 
-		public static JSAN Unmodifiable(JSAN jsan)
-		{
-			if (jsan == null)
-			{
-				return null;
-			}
-			else
-			{
-				return (JSAN) new JSAN() //
-						.array(Collections.unmodifiableMap(jsan.array())) //
-						.object(Collections.unmodifiableMap(jsan.object())) //
-						.templates(jsan);
-			}
-		}
-
 		private Map<String, Object>	array;
 
 		private int					length	= 0;
@@ -1731,11 +1716,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		protected JSAN array(Map<String, Object> array)
 		{
-			if (array != null)
+			if (array == null)
+			{
+				throw new NullPointerException();
+			}
+			else
 			{
 				this.array = array;
+				return this;
 			}
-			return this;
 		}
 
 		@SuppressWarnings("unchecked")
@@ -2430,6 +2419,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				this.put((String) entry.getKey(), entry.getValue());
 			}
+		}
+
+		@Override
+		public JSAN readonly()
+		{
+			for (Object o : this.array().values())
+			{
+				if (o instanceof JSON)
+				{
+					((JSON) o).readonly();
+				}
+			}
+			return ((JSAN) super.readonly()).array(Collections.unmodifiableMap(this.array()));
 		}
 
 		@Override
@@ -8350,24 +8352,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
-	public static JSON Unmodifiable(JSON json)
-	{
-		if (json == null)
-		{
-			return null;
-		}
-		else if (json instanceof JSAN)
-		{
-			return JSAN.Unmodifiable((JSAN) json);
-		}
-		else
-		{
-			return new JSON() //
-					.object(Collections.unmodifiableMap(json.object())) //
-					.templates(json);
-		}
-	}
-
 	public static Object ValueOf(Object object)
 	{
 		return ValueOf(object, null);
@@ -8938,11 +8922,15 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 	protected JSON object(Map<String, Object> object)
 	{
-		if (object != null)
+		if (object == null)
+		{
+			throw new NullPointerException();
+		}
+		else
 		{
 			this.object = object;
+			return this;
 		}
-		return this;
 	}
 
 	@Override
@@ -9372,6 +9360,23 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 		quote += Quotation.NESTED_ATTRIBUTE_END;
 		return new Quotation(quote).outer(this).entry(entry);
+	}
+
+	/**
+	 * Make this JSON readonly and return this JSON.
+	 * 
+	 * @return
+	 */
+	public JSON readonly()
+	{
+		for (Object o : this.object().values())
+		{
+			if (o instanceof JSON)
+			{
+				((JSON) o).readonly();
+			}
+		}
+		return this.object(Collections.unmodifiableMap(this.object()));
 	}
 
 	public JSON reflect(Object object)
