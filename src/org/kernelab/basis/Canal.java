@@ -6325,6 +6325,10 @@ public class Canal<D> implements Iterable<D>
 		{
 			if (o instanceof Expr<?, ?>)
 			{
+				if (cmp != null)
+				{
+					list.add(cmp);
+				}
 				cmp = new ExprComparator((Expr<?, ?>) o);
 			}
 			else if (o instanceof Mapper<?, ?>)
