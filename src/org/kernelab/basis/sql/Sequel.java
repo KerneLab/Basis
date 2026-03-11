@@ -525,7 +525,7 @@ public class Sequel implements Iterable<ResultSet>
 		return new Sequel(this.getStatement().getGeneratedKeys());
 	}
 
-	protected SQLKit getKit()
+	public SQLKit getKit()
 	{
 		return kit;
 	}
