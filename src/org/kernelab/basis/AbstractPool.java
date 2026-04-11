@@ -6,19 +6,26 @@ import java.util.Queue;
 
 public abstract class AbstractPool<E> implements Pool<E>
 {
-	public static final int	DEFAULT_INTERVAL	= 100;
+	public static interface ExceptionHandler
+	{
+		public void handle(int retried, Exception e) throws Exception;
+	}
 
-	private Collection<E>	elements			= new LinkedList<E>();
+	public static final int		DEFAULT_INTERVAL	= 100;
 
-	private Queue<E>		queue;
+	private Collection<E>		elements			= new LinkedList<E>();
 
-	private int				trace;
+	private Queue<E>			queue;
 
-	private int				limit;
+	private int					trace;
 
-	private int				init				= -1;
+	private int					limit;
 
-	private boolean			closed;
+	private int					init				= -1;
+
+	private boolean				closed;
+
+	private ExceptionHandler	handler;
 
 	public AbstractPool(int limit)
 	{
@@ -30,9 +37,14 @@ public abstract class AbstractPool<E> implements Pool<E>
 		this(new LinkedList<E>(), limit, init);
 	}
 
-	protected AbstractPool(Queue<E> pool, int limit, int init)
+	public AbstractPool(Queue<E> pool, int limit, int init)
 	{
-		this.setClosed(false).setQueue(pool).setTrace(0).setLimit(limit).setInit(init);
+		this(pool, limit, init, null);
+	}
+
+	public AbstractPool(Queue<E> pool, int limit, int init, ExceptionHandler handler)
+	{
+		this.setClosed(false).setQueue(pool).setTrace(0).setLimit(limit).setInit(init).setExceptionHandler(handler);
 	}
 
 	/**
@@ -49,6 +61,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 		}
 	}
 
+	@Override
 	public void discard(E element)
 	{
 		if (element != null)
@@ -72,6 +85,11 @@ public abstract class AbstractPool<E> implements Pool<E>
 	protected Collection<E> getElements()
 	{
 		return elements;
+	}
+
+	public ExceptionHandler getExceptionHandler()
+	{
+		return handler;
 	}
 
 	public int getInit()
@@ -123,66 +141,85 @@ public abstract class AbstractPool<E> implements Pool<E>
 	 */
 	protected abstract E newElement(long timeout) throws Exception;
 
+	@Override
 	public E provide(long timeout) throws Exception
 	{
 		E element = null;
+		int retry = 1;
+		ExceptionHandler handler = this.getExceptionHandler();
 
 		synchronized (queue)
 		{
 			do
 			{
-				while (queue.isEmpty() && !isClosed())
+				try
 				{
-					if (trace < limit)
+					while (queue.isEmpty() && !isClosed())
 					{
-						supplyElement(timeout);
-					}
-					else
-					{
-						try
+						if (trace < limit)
 						{
-							if (timeout > 0)
+							supplyElement(timeout);
+						}
+						else
+						{
+							try
 							{
-								queue.wait(timeout);
+								if (timeout > 0)
+								{
+									queue.wait(timeout);
+								}
+								else if (timeout == 0)
+								{
+									queue.wait(DEFAULT_INTERVAL);
+								}
+								else
+								{
+									queue.wait(-timeout);
+								}
 							}
-							else if (timeout == 0)
+							catch (InterruptedException e)
 							{
-								queue.wait(DEFAULT_INTERVAL);
-							}
-							else
-							{
-								queue.wait(-timeout);
 							}
 						}
-						catch (InterruptedException e)
+
+						if (timeout > 0)
 						{
+							break;
 						}
 					}
 
-					if (timeout > 0)
+					element = queue.poll();
+
+					if (element == null && timeout > 0)
 					{
 						break;
 					}
-				}
-
-				element = queue.poll();
-
-				if (element == null && timeout > 0)
-				{
-					break;
-				}
-				else if (element != null)
-				{
-					if (isValid(element))
+					else if (element != null)
 					{
-						break;
+						if (isValid(element))
+						{
+							break;
+						}
+						else
+						{
+							discard(element);
+							element = null;
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					if (handler != null)
+					{
+						handler.handle(retry, e);
 					}
 					else
 					{
-						discard(element);
-						element = null;
+						throw e;
 					}
 				}
+
+				retry++;
 			}
 			while (!isClosed());
 		}
@@ -190,6 +227,7 @@ public abstract class AbstractPool<E> implements Pool<E>
 		return element;
 	}
 
+	@Override
 	public void recycle(E element)
 	{
 		if (element != null)
@@ -232,6 +270,12 @@ public abstract class AbstractPool<E> implements Pool<E>
 	private AbstractPool<E> setClosed(boolean closed)
 	{
 		this.closed = closed;
+		return Tools.cast(this);
+	}
+
+	public AbstractPool<E> setExceptionHandler(ExceptionHandler handler)
+	{
+		this.handler = handler;
 		return Tools.cast(this);
 	}
 
