@@ -6657,6 +6657,11 @@ public class Canal<D> implements Iterable<D>
 		return pond;
 	}
 
+	/**
+	 * Cache the elements passed by this operator.
+	 * 
+	 * @return
+	 */
 	public Canal<D> cache()
 	{
 		return this.follow(new CacheOp<D>());
@@ -6695,14 +6700,48 @@ public class Canal<D> implements Iterable<D>
 		return this.follow(new CollectOp<D>(result)).evaluate();
 	}
 
+	/**
+	 * Collect elements into a JSAN.
+	 * 
+	 * @return
+	 */
 	public JSAN collectAsJSAN()
 	{
 		return this.collectAsJSAN(new JSAN());
 	}
 
+	/**
+	 * Collect elements into a given JSAN.
+	 * 
+	 * @param jsan
+	 *            The result JSAN.
+	 * @return
+	 */
 	public JSAN collectAsJSAN(final JSAN jsan)
 	{
 		return jsan.addAll(this);
+	}
+
+	/**
+	 * Collect elements into a List.
+	 * 
+	 * @return
+	 */
+	public List<D> collectAsList()
+	{
+		return this.collectAsList(null);
+	}
+
+	/**
+	 * Collect elements into a given List.
+	 * 
+	 * @param list
+	 *            The result List.
+	 * @return
+	 */
+	public List<D> collectAsList(List<D> list)
+	{
+		return (List<D>) this.collect(list != null ? list : new ArrayList<D>());
 	}
 
 	/**
@@ -6715,7 +6754,7 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public <K, V> Map<K, V> collectAsMap(Map<K, V> result)
 	{
-		return collectAsMap(result, null, null);
+		return this.collectAsMap(result, null, null);
 	}
 
 	/**
@@ -6732,6 +6771,28 @@ public class Canal<D> implements Iterable<D>
 	public <K, V> Map<K, V> collectAsMap(Map<K, V> result, Mapper<D, K> kop, Mapper<D, V> vop)
 	{
 		return this.follow(new CollectAsMapOp<D, K, V>(result, kop, vop)).evaluate();
+	}
+
+	/**
+	 * Collect elements into a Set.
+	 * 
+	 * @return
+	 */
+	public Set<D> collectAsSet()
+	{
+		return this.collectAsSet(null);
+	}
+
+	/**
+	 * Collect elements into a given Set.
+	 * 
+	 * @param set
+	 *            The result Set.
+	 * @return
+	 */
+	public Set<D> collectAsSet(Set<D> set)
+	{
+		return (Set<D>) this.collect(set != null ? set : new LinkedHashSet<D>());
 	}
 
 	/**
