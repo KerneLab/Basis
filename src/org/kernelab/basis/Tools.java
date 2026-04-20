@@ -1187,6 +1187,24 @@ public class Tools
 	}
 
 	/**
+	 * Coalesce the values return the first non-null value.
+	 * 
+	 * @param values
+	 * @return
+	 */
+	public static <E> E coalesce(E... values)
+	{
+		for (E value : values)
+		{
+			if (value != null)
+			{
+				return value;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Compare each pair of values in the given parameters.
 	 * 
 	 * @param values

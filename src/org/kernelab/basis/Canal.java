@@ -1289,6 +1289,34 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	public static class Failure<E> implements Try<E>
+	{
+		public final Throwable cause;
+
+		public Failure(Throwable cause)
+		{
+			this.cause = cause;
+		}
+
+		@Override
+		public <D> Try<D> flatMap(Mapper<E, Try<D>> mapper)
+		{
+			return new Failure<D>(cause);
+		}
+
+		@Override
+		public <D> Try<D> map(Mapper<E, D> mapper)
+		{
+			return new Failure<D>(cause);
+		}
+
+		@Override
+		public Option<E> toOption()
+		{
+			return Option.none();
+		}
+	}
+
 	protected static class FilterOp<E> implements Converter<E, E>
 	{
 		protected final Filter<? super E> filter;
@@ -4706,6 +4734,48 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	public static class Success<E> implements Try<E>
+	{
+		public final E value;
+
+		public Success(E value)
+		{
+			this.value = value;
+		}
+
+		@Override
+		public <D> Try<D> flatMap(Mapper<E, Try<D>> mapper)
+		{
+			try
+			{
+				return mapper.map(value);
+			}
+			catch (Throwable err)
+			{
+				return new Failure<D>(err);
+			}
+		}
+
+		@Override
+		public <D> Try<D> map(Mapper<E, D> mapper)
+		{
+			try
+			{
+				return new Success<D>(mapper.map(value));
+			}
+			catch (Throwable err)
+			{
+				return new Failure<D>(err);
+			}
+		}
+
+		@Override
+		public Option<E> toOption()
+		{
+			return Option.some(value);
+		}
+	}
+
 	protected static class TakeOp<E> implements Evaluator<E, Collection<E>>
 	{
 		protected final int				limit;
@@ -4746,6 +4816,15 @@ public class Canal<D> implements Iterable<D>
 	protected static interface Terminal<E, T> extends Pond<E, E>
 	{
 		T get();
+	}
+
+	public static interface Try<E>
+	{
+		public <D> Try<D> flatMap(Mapper<E, Try<D>> mapper);
+
+		public <D> Try<D> map(Mapper<E, D> mapper);
+
+		public Option<E> toOption();
 	}
 
 	public static abstract class Tuple implements Serializable, Iterable<Object>, Comparable<Tuple>
@@ -6625,6 +6704,18 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		return res;
+	}
+
+	public static <E> Try<E> Try(Producer<E> something)
+	{
+		try
+		{
+			return new Success<E>(something.produce());
+		}
+		catch (Throwable err)
+		{
+			return new Failure<E>(err);
+		}
 	}
 
 	private Canal<?>		upstream;
