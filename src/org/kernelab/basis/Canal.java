@@ -1299,21 +1299,192 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public <D> Try<D> flatMap(Mapper<E, Try<D>> mapper)
+		public Try<E> filter(Filter<? super E> pred)
 		{
-			return new Failure<D>(cause);
+			return this;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <D> Try<D> flatMap(Mapper<? super E, ? extends Try<D>> mapper)
+		{
+			return (Try<D>) this;
 		}
 
 		@Override
-		public <D> Try<D> map(Mapper<E, D> mapper)
+		public <D> D fold(Mapper<Throwable, ? extends D> mapFail, Mapper<? super E, ? extends D> mapSucc)
 		{
-			return new Failure<D>(cause);
+			try
+			{
+				return mapFail.map(cause);
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public void foreach(Action<? super E> action)
+		{
+		}
+
+		@Override
+		public E get() throws Exception
+		{
+			if (cause instanceof RuntimeException)
+			{
+				throw (RuntimeException) cause;
+			}
+			else if (cause instanceof Exception)
+			{
+				throw (Exception) cause;
+			}
+			else
+			{
+				throw new RuntimeException(cause);
+			}
+		}
+
+		@Override
+		public E get(Producer<Exception> raiser) throws Exception
+		{
+			if (raiser != null)
+			{
+				Exception ex = null;
+				try
+				{
+					ex = raiser.produce();
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				if (ex != null)
+				{
+					throw ex;
+				}
+			}
+			return this.get();
+		}
+
+		@Override
+		public boolean isFailure()
+		{
+			return true;
+		}
+
+		@Override
+		public boolean isSuccess()
+		{
+			return false;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <D> Try<D> map(Mapper<? super E, ? extends D> mapper)
+		{
+			return (Try<D>) this;
+		}
+
+		@Override
+		public E or(E deft)
+		{
+			return deft;
+		}
+
+		@Override
+		public E or(Producer<? extends E> deft)
+		{
+			try
+			{
+				return deft.produce();
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public Try<E> orElse(Producer<? extends Try<E>> deft)
+		{
+			try
+			{
+				return deft.produce();
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public Try<E> orElse(Try<E> deft)
+		{
+			return deft;
+		}
+
+		@Override
+		public Try<E> recover(final Mapper<Throwable, ? extends E> recover)
+		{
+			try
+			{
+				return new Success<E>(recover.map(cause));
+			}
+			catch (Throwable e)
+			{
+				return new Failure<E>(e);
+			}
+		}
+
+		@Override
+		public Try<E> recoverWith(Mapper<Throwable, ? extends Try<E>> recover)
+		{
+			try
+			{
+				return recover.map(cause);
+			}
+			catch (Throwable e)
+			{
+				return new Failure<E>(e);
+			}
 		}
 
 		@Override
 		public Option<E> toOption()
 		{
 			return Option.none();
+		}
+
+		@Override
+		public <D> Try<D> transform(Mapper<? super E, ? extends Try<D>> mapSucc,
+				Mapper<Throwable, ? extends Try<D>> mapFail)
+		{
+			try
+			{
+				return mapFail.map(cause);
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
@@ -4744,7 +4915,25 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public <D> Try<D> flatMap(Mapper<E, Try<D>> mapper)
+		public Try<E> filter(Filter<? super E> pred)
+		{
+			try
+			{
+				if (!pred.filter(value))
+				{
+					return new Failure<E>(new NoSuchElementException());
+				}
+			}
+			catch (Throwable e)
+			{
+				return new Failure<E>(e);
+			}
+
+			return this;
+		}
+
+		@Override
+		public <D> Try<D> flatMap(Mapper<? super E, ? extends Try<D>> mapper)
 		{
 			try
 			{
@@ -4757,7 +4946,65 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
-		public <D> Try<D> map(Mapper<E, D> mapper)
+		public <D> D fold(Mapper<Throwable, ? extends D> mapFail, Mapper<? super E, ? extends D> mapSucc)
+		{
+			try
+			{
+				return mapSucc.map(value);
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public void foreach(Action<? super E> action)
+		{
+			try
+			{
+				action.action(value);
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public E get()
+		{
+			return value;
+		}
+
+		@Override
+		public E get(Producer<Exception> raiser)
+		{
+			return value;
+		}
+
+		@Override
+		public boolean isFailure()
+		{
+			return false;
+		}
+
+		@Override
+		public boolean isSuccess()
+		{
+			return true;
+		}
+
+		@Override
+		public <D> Try<D> map(Mapper<? super E, ? extends D> mapper)
 		{
 			try
 			{
@@ -4770,9 +5017,63 @@ public class Canal<D> implements Iterable<D>
 		}
 
 		@Override
+		public E or(E deft)
+		{
+			return value;
+		}
+
+		@Override
+		public E or(Producer<? extends E> deft)
+		{
+			return value;
+		}
+
+		@Override
+		public Try<E> orElse(Producer<? extends Try<E>> deft)
+		{
+			return this;
+		}
+
+		@Override
+		public Try<E> orElse(Try<E> deft)
+		{
+			return this;
+		}
+
+		@Override
+		public Try<E> recover(Mapper<Throwable, ? extends E> recover)
+		{
+			return this;
+		}
+
+		@Override
+		public Try<E> recoverWith(Mapper<Throwable, ? extends Try<E>> recover)
+		{
+			return this;
+		}
+
+		@Override
 		public Option<E> toOption()
 		{
 			return Option.some(value);
+		}
+
+		@Override
+		public <D> Try<D> transform(Mapper<? super E, ? extends Try<D>> mapSucc,
+				Mapper<Throwable, ? extends Try<D>> mapFail)
+		{
+			try
+			{
+				return mapSucc.map(value);
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
@@ -4820,11 +5121,40 @@ public class Canal<D> implements Iterable<D>
 
 	public static interface Try<E>
 	{
-		public <D> Try<D> flatMap(Mapper<E, Try<D>> mapper);
+		public Try<E> filter(Filter<? super E> pred);
 
-		public <D> Try<D> map(Mapper<E, D> mapper);
+		public <D> Try<D> flatMap(Mapper<? super E, ? extends Try<D>> mapper);
+
+		public <D> D fold(Mapper<Throwable, ? extends D> mapFail, Mapper<? super E, ? extends D> mapSucc);
+
+		public void foreach(Action<? super E> action);
+
+		public E get() throws Exception;
+
+		public E get(Producer<Exception> raiser) throws Exception;
+
+		public boolean isFailure();
+
+		public boolean isSuccess();
+
+		public <D> Try<D> map(Mapper<? super E, ? extends D> mapper);
+
+		public E or(E deft);
+
+		public E or(Producer<? extends E> deft);
+
+		public Try<E> orElse(Producer<? extends Try<E>> deft);
+
+		public Try<E> orElse(Try<E> deft);
+
+		public Try<E> recover(Mapper<Throwable, ? extends E> recover);
+
+		public Try<E> recoverWith(Mapper<Throwable, ? extends Try<E>> recover);
 
 		public Option<E> toOption();
+
+		public <D> Try<D> transform(Mapper<? super E, ? extends Try<D>> mapSucc,
+				Mapper<Throwable, ? extends Try<D>> mapFail);
 	}
 
 	public static abstract class Tuple implements Serializable, Iterable<Object>, Comparable<Tuple>
