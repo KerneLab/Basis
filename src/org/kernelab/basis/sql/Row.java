@@ -10,6 +10,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
@@ -525,9 +526,39 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return getCalendar(headers()[index], deft);
 	}
 
+	public Calendar getCalendar(int index, DateFormat format)
+	{
+		return getCalendar(headers()[index], format);
+	}
+
+	public Calendar getCalendar(int index, DateFormat format, Calendar deft)
+	{
+		return getCalendar(headers()[index], format, deft);
+	}
+
+	public Calendar getCalendar(int index, DateFormat format, long deft)
+	{
+		return getCalendar(headers()[index], format, deft);
+	}
+
 	public Calendar getCalendar(int index, long deft)
 	{
 		return getCalendar(headers()[index], deft);
+	}
+
+	public Calendar getCalendar(int index, String format)
+	{
+		return getCalendar(headers()[index], format);
+	}
+
+	public Calendar getCalendar(int index, String format, Calendar deft)
+	{
+		return getCalendar(headers()[index], format, deft);
+	}
+
+	public Calendar getCalendar(int index, String format, long deft)
+	{
+		return getCalendar(headers()[index], format, deft);
 	}
 
 	public Calendar getCalendar(String key)
@@ -541,9 +572,57 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return get == null ? deft : get;
 	}
 
+	public Calendar getCalendar(String key, DateFormat format)
+	{
+		return JSON.CastToCalendar(this.get(key), format);
+	}
+
+	public Calendar getCalendar(String key, DateFormat format, Calendar deft)
+	{
+		Calendar get = getCalendar(key, format);
+		return get == null ? deft : get;
+	}
+
+	public Calendar getCalendar(String key, DateFormat format, long deft)
+	{
+		Calendar get = getCalendar(key, format);
+
+		if (get == null)
+		{
+			get = new GregorianCalendar();
+			get.setTimeInMillis(deft);
+		}
+
+		return get;
+	}
+
 	public Calendar getCalendar(String key, long deft)
 	{
 		Calendar get = getCalendar(key);
+
+		if (get == null)
+		{
+			get = new GregorianCalendar();
+			get.setTimeInMillis(deft);
+		}
+
+		return get;
+	}
+
+	public Calendar getCalendar(String key, String format)
+	{
+		return JSON.CastToCalendar(this.get(key), format);
+	}
+
+	public Calendar getCalendar(String key, String format, Calendar deft)
+	{
+		Calendar get = getCalendar(key, format);
+		return get == null ? deft : get;
+	}
+
+	public Calendar getCalendar(String key, String format, long deft)
+	{
+		Calendar get = getCalendar(key, format);
 
 		if (get == null)
 		{
@@ -611,9 +690,39 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return getDate(headers()[index], deft);
 	}
 
+	public Date getDate(int index, DateFormat format)
+	{
+		return getDate(headers()[index], format);
+	}
+
+	public Date getDate(int index, DateFormat format, Date deft)
+	{
+		return getDate(headers()[index], format, deft);
+	}
+
+	public Date getDate(int index, DateFormat format, long deft)
+	{
+		return getDate(headers()[index], format, deft);
+	}
+
 	public Date getDate(int index, long deft)
 	{
 		return getDate(headers()[index], deft);
+	}
+
+	public Date getDate(int index, String format)
+	{
+		return getDate(headers()[index], format);
+	}
+
+	public Date getDate(int index, String format, Date deft)
+	{
+		return getDate(headers()[index], format, deft);
+	}
+
+	public Date getDate(int index, String format, long deft)
+	{
+		return getDate(headers()[index], format, deft);
 	}
 
 	public Date getDate(String key)
@@ -627,9 +736,43 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return get == null ? deft : get;
 	}
 
+	public Date getDate(String key, DateFormat format)
+	{
+		return JSON.CastToDate(this.get(key), format);
+	}
+
+	public Date getDate(String key, DateFormat format, Date deft)
+	{
+		Date get = getDate(key, format);
+		return get == null ? deft : get;
+	}
+
+	public Date getDate(String key, DateFormat format, long deft)
+	{
+		Date get = getDate(key, format);
+		return get == null ? new Date(deft) : get;
+	}
+
 	public Date getDate(String key, long deft)
 	{
 		Date get = getDate(key);
+		return get == null ? new Date(deft) : get;
+	}
+
+	public Date getDate(String key, String format)
+	{
+		return JSON.CastToDate(this.get(key), format);
+	}
+
+	public Date getDate(String key, String format, Date deft)
+	{
+		Date get = getDate(key, format);
+		return get == null ? deft : get;
+	}
+
+	public Date getDate(String key, String format, long deft)
+	{
+		Date get = getDate(key, format);
 		return get == null ? new Date(deft) : get;
 	}
 
@@ -828,9 +971,39 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return getTime(headers()[index]);
 	}
 
+	public Time getTime(int index, DateFormat format)
+	{
+		return getTime(headers()[index], format);
+	}
+
+	public Time getTime(int index, DateFormat format, long deft)
+	{
+		return getTime(headers()[index], format, deft);
+	}
+
+	public Time getTime(int index, DateFormat format, Time deft)
+	{
+		return getTime(headers()[index], format, deft);
+	}
+
 	public Time getTime(int index, long deft)
 	{
 		return getTime(headers()[index], deft);
+	}
+
+	public Time getTime(int index, String format)
+	{
+		return getTime(headers()[index], format);
+	}
+
+	public Time getTime(int index, String format, long deft)
+	{
+		return getTime(headers()[index], format, deft);
+	}
+
+	public Time getTime(int index, String format, Time deft)
+	{
+		return getTime(headers()[index], format, deft);
 	}
 
 	public Time getTime(int index, Time deft)
@@ -843,10 +1016,44 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return JSON.CastToTime(this.get(key));
 	}
 
+	public Time getTime(String key, DateFormat format)
+	{
+		return JSON.CastToTime(this.get(key), format);
+	}
+
+	public Time getTime(String key, DateFormat format, long deft)
+	{
+		Time get = getTime(key, format);
+		return get == null ? new Time(deft) : get;
+	}
+
+	public Time getTime(String key, DateFormat format, Time deft)
+	{
+		Time get = getTime(key, format);
+		return get == null ? deft : get;
+	}
+
 	public Time getTime(String key, long deft)
 	{
 		Time get = getTime(key);
 		return get == null ? new Time(deft) : get;
+	}
+
+	public Time getTime(String key, String format)
+	{
+		return JSON.CastToTime(this.get(key), format);
+	}
+
+	public Time getTime(String key, String format, long deft)
+	{
+		Time get = getTime(key, format);
+		return get == null ? new Time(deft) : get;
+	}
+
+	public Time getTime(String key, String format, Time deft)
+	{
+		Time get = getTime(key, format);
+		return get == null ? deft : get;
 	}
 
 	public Time getTime(String key, Time deft)
@@ -860,9 +1067,39 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return getTimestamp(headers()[index]);
 	}
 
+	public Timestamp getTimestamp(int index, DateFormat format)
+	{
+		return getTimestamp(headers()[index], format);
+	}
+
+	public Timestamp getTimestamp(int index, DateFormat format, long deft)
+	{
+		return getTimestamp(headers()[index], format, deft);
+	}
+
+	public Timestamp getTimestamp(int index, DateFormat format, Timestamp deft)
+	{
+		return getTimestamp(headers()[index], format, deft);
+	}
+
 	public Timestamp getTimestamp(int index, long deft)
 	{
 		return getTimestamp(headers()[index], deft);
+	}
+
+	public Timestamp getTimestamp(int index, String format)
+	{
+		return getTimestamp(headers()[index], format);
+	}
+
+	public Timestamp getTimestamp(int index, String format, long deft)
+	{
+		return getTimestamp(headers()[index], format, deft);
+	}
+
+	public Timestamp getTimestamp(int index, String format, Timestamp deft)
+	{
+		return getTimestamp(headers()[index], format, deft);
 	}
 
 	public Timestamp getTimestamp(int index, Timestamp deft)
@@ -875,10 +1112,44 @@ public class Row implements Map<String, Object>, Serializable, Cloneable
 		return JSON.CastToTimestamp(this.get(key));
 	}
 
+	public Timestamp getTimestamp(String key, DateFormat format)
+	{
+		return JSON.CastToTimestamp(this.get(key), format);
+	}
+
+	public Timestamp getTimestamp(String key, DateFormat format, long deft)
+	{
+		Timestamp get = getTimestamp(key, format);
+		return get == null ? new Timestamp(deft) : get;
+	}
+
+	public Timestamp getTimestamp(String key, DateFormat format, Timestamp deft)
+	{
+		Timestamp get = getTimestamp(key, format);
+		return get == null ? deft : get;
+	}
+
 	public Timestamp getTimestamp(String key, long deft)
 	{
 		Timestamp get = getTimestamp(key);
 		return get == null ? new Timestamp(deft) : get;
+	}
+
+	public Timestamp getTimestamp(String key, String format)
+	{
+		return JSON.CastToTimestamp(this.get(key), format);
+	}
+
+	public Timestamp getTimestamp(String key, String format, long deft)
+	{
+		Timestamp get = getTimestamp(key, format);
+		return get == null ? new Timestamp(deft) : get;
+	}
+
+	public Timestamp getTimestamp(String key, String format, Timestamp deft)
+	{
+		Timestamp get = getTimestamp(key, format);
+		return get == null ? deft : get;
 	}
 
 	public Timestamp getTimestamp(String key, Timestamp deft)

@@ -3177,9 +3177,57 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return val == null ? defaultValue : val;
 		}
 
+		public Calendar valCalendar(int index, DateFormat format)
+		{
+			return CastToCalendar(this.attr(index), format);
+		}
+
+		public Calendar valCalendar(int index, DateFormat format, Calendar defaultValue)
+		{
+			Calendar val = valCalendar(index, format);
+			return val == null ? defaultValue : val;
+		}
+
+		public Calendar valCalendar(int index, DateFormat format, long defaultValue)
+		{
+			Calendar val = valCalendar(index, format);
+
+			if (val == null)
+			{
+				val = new GregorianCalendar();
+				val.setTimeInMillis(defaultValue);
+			}
+
+			return val;
+		}
+
 		public Calendar valCalendar(int index, long defaultValue)
 		{
 			Calendar val = valCalendar(index);
+
+			if (val == null)
+			{
+				val = new GregorianCalendar();
+				val.setTimeInMillis(defaultValue);
+			}
+
+			return val;
+		}
+
+		public Calendar valCalendar(int index, String format)
+		{
+			return CastToCalendar(this.attr(index), format);
+		}
+
+		public Calendar valCalendar(int index, String format, Calendar defaultValue)
+		{
+			Calendar val = valCalendar(index, format);
+			return val == null ? defaultValue : val;
+		}
+
+		public Calendar valCalendar(int index, String format, long defaultValue)
+		{
+			Calendar val = valCalendar(index, format);
 
 			if (val == null)
 			{
@@ -3223,9 +3271,43 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return val == null ? defaultValue : val;
 		}
 
+		public Date valDate(int index, DateFormat format)
+		{
+			return CastToDate(this.attr(index), format);
+		}
+
+		public Date valDate(int index, DateFormat format, Date defaultValue)
+		{
+			Date val = valDate(index, format);
+			return val == null ? defaultValue : val;
+		}
+
+		public Date valDate(int index, DateFormat format, long defaultValue)
+		{
+			Date val = valDate(index, format);
+			return val == null ? new Date(defaultValue) : val;
+		}
+
 		public Date valDate(int index, long defaultValue)
 		{
 			Date val = valDate(index);
+			return val == null ? new Date(defaultValue) : val;
+		}
+
+		public Date valDate(int index, String format)
+		{
+			return CastToDate(this.attr(index), format);
+		}
+
+		public Date valDate(int index, String format, Date defaultValue)
+		{
+			Date val = valDate(index, format);
+			return val == null ? defaultValue : val;
+		}
+
+		public Date valDate(int index, String format, long defaultValue)
+		{
+			Date val = valDate(index, format);
 			return val == null ? new Date(defaultValue) : val;
 		}
 
@@ -3410,10 +3492,44 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return CastToTime(this.attr(index));
 		}
 
+		public Time valTime(int index, DateFormat format)
+		{
+			return CastToTime(this.attr(index), format);
+		}
+
+		public Time valTime(int index, DateFormat format, long defaultValue)
+		{
+			Time val = valTime(index, format);
+			return val == null ? new Time(defaultValue) : val;
+		}
+
+		public Time valTime(int index, DateFormat format, Time defaultValue)
+		{
+			Time val = valTime(index, format);
+			return val == null ? defaultValue : val;
+		}
+
 		public Time valTime(int index, long defaultValue)
 		{
 			Time val = valTime(index);
 			return val == null ? new Time(defaultValue) : val;
+		}
+
+		public Time valTime(int index, String format)
+		{
+			return CastToTime(this.attr(index), format);
+		}
+
+		public Time valTime(int index, String format, long defaultValue)
+		{
+			Time val = valTime(index, format);
+			return val == null ? new Time(defaultValue) : val;
+		}
+
+		public Time valTime(int index, String format, Time defaultValue)
+		{
+			Time val = valTime(index, format);
+			return val == null ? defaultValue : val;
 		}
 
 		public Time valTime(int index, Time defaultValue)
@@ -3427,10 +3543,44 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return CastToTimestamp(this.attr(index));
 		}
 
+		public Timestamp valTimestamp(int index, DateFormat format)
+		{
+			return CastToTimestamp(this.attr(index), format);
+		}
+
+		public Timestamp valTimestamp(int index, DateFormat format, long defaultValue)
+		{
+			Timestamp val = valTimestamp(index, format);
+			return val == null ? new Timestamp(defaultValue) : val;
+		}
+
+		public Timestamp valTimestamp(int index, DateFormat format, Timestamp defaultValue)
+		{
+			Timestamp val = valTimestamp(index, format);
+			return val == null ? defaultValue : val;
+		}
+
 		public Timestamp valTimestamp(int index, long defaultValue)
 		{
 			Timestamp val = valTimestamp(index);
 			return val == null ? new Timestamp(defaultValue) : val;
+		}
+
+		public Timestamp valTimestamp(int index, String format)
+		{
+			return CastToTimestamp(this.attr(index), format);
+		}
+
+		public Timestamp valTimestamp(int index, String format, long defaultValue)
+		{
+			Timestamp val = valTimestamp(index, format);
+			return val == null ? new Timestamp(defaultValue) : val;
+		}
+
+		public Timestamp valTimestamp(int index, String format, Timestamp defaultValue)
+		{
+			Timestamp val = valTimestamp(index, format);
+			return val == null ? defaultValue : val;
 		}
 
 		public Timestamp valTimestamp(int index, Timestamp defaultValue)
@@ -5814,7 +5964,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		if (obj != null)
 		{
 			Long millis = CastToTimeInMillis(obj);
-
 			if (millis != null)
 			{
 				Calendar val = new GregorianCalendar();
@@ -5823,6 +5972,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 		return null;
+	}
+
+	public static Calendar CastToCalendar(Object obj, DateFormat format)
+	{
+		return obj != null ? Tools.getCalendar(obj.toString(), format) : null;
+	}
+
+	public static Calendar CastToCalendar(Object obj, String format)
+	{
+		return obj != null ? Tools.getCalendar(obj.toString(), format) : null;
 	}
 
 	public static Character CastToCharacter(Object obj)
@@ -5852,7 +6011,32 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		if (obj != null)
 		{
 			Long millis = CastToTimeInMillis(obj);
+			if (millis != null)
+			{
+				return new Date(millis);
+			}
+		}
+		return null;
+	}
 
+	public static Date CastToDate(Object obj, DateFormat format)
+	{
+		if (obj != null)
+		{
+			Long millis = CastToTimeInMillis(obj, format);
+			if (millis != null)
+			{
+				return new Date(millis);
+			}
+		}
+		return null;
+	}
+
+	public static Date CastToDate(Object obj, String format)
+	{
+		if (obj != null)
+		{
+			Long millis = CastToTimeInMillis(obj, format);
 			if (millis != null)
 			{
 				return new Date(millis);
@@ -6062,7 +6246,32 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		if (obj != null)
 		{
 			Long millis = CastToTimeInMillis(obj);
+			if (millis != null)
+			{
+				return new Time(millis);
+			}
+		}
+		return null;
+	}
 
+	public static Time CastToTime(Object obj, DateFormat format)
+	{
+		if (obj != null)
+		{
+			Long millis = CastToTimeInMillis(obj, format);
+			if (millis != null)
+			{
+				return new Time(millis);
+			}
+		}
+		return null;
+	}
+
+	public static Time CastToTime(Object obj, String format)
+	{
+		if (obj != null)
+		{
+			Long millis = CastToTimeInMillis(obj, format);
 			if (millis != null)
 			{
 				return new Time(millis);
@@ -6099,12 +6308,75 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return Tools.getCalendar(ts, format).getTimeInMillis();
 	}
 
+	public static Long CastToTimeInMillis(Object obj, DateFormat format)
+	{
+		if (obj == null || format == null)
+		{
+			return null;
+		}
+
+		if (format != null)
+		{
+			Calendar c = Tools.getCalendar(obj.toString(), format);
+			if (c != null)
+			{
+				return c.getTimeInMillis();
+			}
+		}
+
+		return null;
+	}
+
+	public static Long CastToTimeInMillis(Object obj, String format)
+	{
+		if (obj == null || format == null)
+		{
+			return null;
+		}
+
+		if (format != null)
+		{
+			Calendar c = Tools.getCalendar(obj.toString(), format);
+			if (c != null)
+			{
+				return c.getTimeInMillis();
+			}
+		}
+
+		return null;
+	}
+
 	public static Timestamp CastToTimestamp(Object obj)
 	{
 		if (obj != null)
 		{
 			Long millis = CastToTimeInMillis(obj);
+			if (millis != null)
+			{
+				return new Timestamp(millis);
+			}
+		}
+		return null;
+	}
 
+	public static Timestamp CastToTimestamp(Object obj, DateFormat format)
+	{
+		if (obj != null)
+		{
+			Long millis = CastToTimeInMillis(obj, format);
+			if (millis != null)
+			{
+				return new Timestamp(millis);
+			}
+		}
+		return null;
+	}
+
+	public static Timestamp CastToTimestamp(Object obj, String format)
+	{
+		if (obj != null)
+		{
+			Long millis = CastToTimeInMillis(obj, format);
 			if (millis != null)
 			{
 				return new Timestamp(millis);
@@ -9983,6 +10255,30 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return val;
 	}
 
+	public Calendar valCalendar(String key, String format)
+	{
+		return CastToCalendar(this.attr(key), format);
+	}
+
+	public Calendar valCalendar(String key, String format, Calendar defaultValue)
+	{
+		Calendar val = valCalendar(key, format);
+		return val == null ? defaultValue : val;
+	}
+
+	public Calendar valCalendar(String key, String format, long defaultValue)
+	{
+		Calendar val = valCalendar(key, format);
+
+		if (val == null)
+		{
+			val = new GregorianCalendar();
+			val.setTimeInMillis(defaultValue);
+		}
+
+		return val;
+	}
+
 	public <E> E valCast(String key, Class<E> cls)
 	{
 		return Tools.castTo(this.valObject(key), cls);
@@ -10016,9 +10312,43 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return val == null ? defaultValue : val;
 	}
 
+	public Date valDate(String key, DateFormat format)
+	{
+		return CastToDate(this.attr(key), format);
+	}
+
+	public Date valDate(String key, DateFormat format, Date defaultValue)
+	{
+		Date val = valDate(key, format);
+		return val == null ? defaultValue : val;
+	}
+
+	public Date valDate(String key, DateFormat format, long defaultValue)
+	{
+		Date val = valDate(key, format);
+		return val == null ? new Date(defaultValue) : val;
+	}
+
 	public Date valDate(String key, long defaultValue)
 	{
 		Date val = valDate(key);
+		return val == null ? new Date(defaultValue) : val;
+	}
+
+	public Date valDate(String key, String format)
+	{
+		return CastToDate(this.attr(key), format);
+	}
+
+	public Date valDate(String key, String format, Date defaultValue)
+	{
+		Date val = valDate(key, format);
+		return val == null ? defaultValue : val;
+	}
+
+	public Date valDate(String key, String format, long defaultValue)
+	{
+		Date val = valDate(key, format);
 		return val == null ? new Date(defaultValue) : val;
 	}
 
@@ -10231,10 +10561,44 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return CastToTime(this.attr(key));
 	}
 
+	public Time valTime(String key, DateFormat format)
+	{
+		return CastToTime(this.attr(key), format);
+	}
+
+	public Time valTime(String key, DateFormat format, long defaultValue)
+	{
+		Time val = valTime(key, format);
+		return val == null ? new Time(defaultValue) : val;
+	}
+
+	public Time valTime(String key, DateFormat format, Time defaultValue)
+	{
+		Time val = valTime(key, format);
+		return val == null ? defaultValue : val;
+	}
+
 	public Time valTime(String key, long defaultValue)
 	{
 		Time val = valTime(key);
 		return val == null ? new Time(defaultValue) : val;
+	}
+
+	public Time valTime(String key, String format)
+	{
+		return CastToTime(this.attr(key), format);
+	}
+
+	public Time valTime(String key, String format, long defaultValue)
+	{
+		Time val = valTime(key, format);
+		return val == null ? new Time(defaultValue) : val;
+	}
+
+	public Time valTime(String key, String format, Time defaultValue)
+	{
+		Time val = valTime(key, format);
+		return val == null ? defaultValue : val;
 	}
 
 	public Time valTime(String key, Time defaultValue)
@@ -10248,10 +10612,44 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return CastToTimestamp(this.attr(key));
 	}
 
+	public Timestamp valTimestamp(String key, DateFormat format)
+	{
+		return CastToTimestamp(this.attr(key), format);
+	}
+
+	public Timestamp valTimestamp(String key, DateFormat format, long defaultValue)
+	{
+		Timestamp val = valTimestamp(key, format);
+		return val == null ? new Timestamp(defaultValue) : val;
+	}
+
+	public Timestamp valTimestamp(String key, DateFormat format, Timestamp defaultValue)
+	{
+		Timestamp val = valTimestamp(key, format);
+		return val == null ? defaultValue : val;
+	}
+
 	public Timestamp valTimestamp(String key, long defaultValue)
 	{
 		Timestamp val = valTimestamp(key);
 		return val == null ? new Timestamp(defaultValue) : val;
+	}
+
+	public Timestamp valTimestamp(String key, String format)
+	{
+		return CastToTimestamp(this.attr(key), format);
+	}
+
+	public Timestamp valTimestamp(String key, String format, long defaultValue)
+	{
+		Timestamp val = valTimestamp(key, format);
+		return val == null ? new Timestamp(defaultValue) : val;
+	}
+
+	public Timestamp valTimestamp(String key, String format, Timestamp defaultValue)
+	{
+		Timestamp val = valTimestamp(key, format);
+		return val == null ? defaultValue : val;
 	}
 
 	public Timestamp valTimestamp(String key, Timestamp defaultValue)

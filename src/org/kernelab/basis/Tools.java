@@ -3714,6 +3714,10 @@ public class Tools
 	 */
 	public static DateFormat getDateFormat(String pattern, Locale locale)
 	{
+		if (pattern == null)
+		{
+			return null;
+		}
 		DateFormat format = locale == null ? new SimpleDateFormat(pattern) : new SimpleDateFormat(pattern, locale);
 		if (pattern.endsWith("'Z'"))
 		{
