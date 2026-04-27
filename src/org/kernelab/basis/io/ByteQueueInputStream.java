@@ -224,7 +224,7 @@ public class ByteQueueInputStream extends InputStream
 	}
 
 	@Override
-	public synchronized void reset()
+	public synchronized void reset() throws IOException
 	{
 		queue.clear();
 	}

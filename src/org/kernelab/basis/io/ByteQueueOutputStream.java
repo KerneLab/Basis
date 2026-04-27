@@ -57,7 +57,7 @@ public class ByteQueueOutputStream extends OutputStream
 	}
 
 	@Override
-	public void flush()
+	public void flush() throws IOException
 	{
 	}
 
