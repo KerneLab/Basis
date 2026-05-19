@@ -3221,6 +3221,16 @@ public class Canal<D> implements Iterable<D>
 			}).toPair();
 		}
 
+		public JSON collectAsJSON()
+		{
+			return collectAsJSON(null);
+		}
+
+		public JSON collectAsJSON(JSON json)
+		{
+			return (JSON) collectAsMap(json != null ? json : new JSON());
+		}
+
 		/**
 		 * Collect elements into map.<br />
 		 * It assumes that the upstream is a pair Canal.<br />
