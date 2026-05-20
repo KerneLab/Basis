@@ -4215,9 +4215,9 @@ public class Canal<D> implements Iterable<D>
 		{
 			return new Wheel<E, Iterable<E>>()
 			{
-				LinkedList<E>	window	= null;
+				List<E>	window	= null;
 
-				List<E>			next	= null;
+				List<E>	next	= null;
 
 				@Override
 				public boolean hasNext()
@@ -4234,7 +4234,7 @@ public class Canal<D> implements Iterable<D>
 
 					if (window == null)
 					{
-						window = new LinkedList<E>();
+						window = step >= size ? new ArrayList<E>() : new LinkedList<E>();
 					}
 					else
 					{
@@ -4266,19 +4266,21 @@ public class Canal<D> implements Iterable<D>
 					}
 					else if (step <= size / 2)
 					{
-						for (int i = 0; i < step && !window.isEmpty(); i++)
+						LinkedList<E> list = (LinkedList<E>) window;
+						for (int i = 0; i < step && !list.isEmpty(); i++)
 						{
-							window.removeFirst();
+							list.removeFirst();
 						}
 					}
 					else
 					{
-						LinkedList<E> last = window;
+						LinkedList<E> last = (LinkedList<E>) window;
 						window = new LinkedList<E>();
+						LinkedList<E> list = (LinkedList<E>) window;
 						int rest = size - step;
 						for (int i = 0; i < rest && !last.isEmpty(); i++)
 						{
-							window.addFirst(last.removeLast());
+							list.addFirst(last.removeLast());
 						}
 						last.clear();
 					}
@@ -7148,9 +7150,9 @@ public class Canal<D> implements Iterable<D>
 	 *            The result JSAN.
 	 * @return
 	 */
-	public JSAN collectAsJSAN(final JSAN jsan)
+	public JSAN collectAsJSAN(JSAN jsan)
 	{
-		return jsan.addAll(this);
+		return (jsan != null ? jsan : new JSAN()).addAll(this);
 	}
 
 	/**
@@ -7956,7 +7958,7 @@ public class Canal<D> implements Iterable<D>
 	 */
 	public Canal<Iterable<D>> sliding(int size)
 	{
-		return this.follow(new SlidingOp<D>(size, size));
+		return this.sliding(size, size);
 	}
 
 	/**
