@@ -2616,55 +2616,7 @@ public class SQLKit
 		}
 	}
 
-	protected void log(String sql, Iterable<?> params)
-	{
-		try
-		{
-			log.debug("{} {}", sql, params);
-		}
-		catch (Throwable e)
-		{
-			log.debug(null, e);
-		}
-	}
-
-	protected void log(String sql, JSAN params)
-	{
-		try
-		{
-			log.debug("{} {}", sql, params);
-		}
-		catch (Throwable e)
-		{
-			log.debug(null, e);
-		}
-	}
-
-	protected void log(String sql, JSON params)
-	{
-		try
-		{
-			log.debug("{} {}", sql, params);
-		}
-		catch (Throwable e)
-		{
-			log.debug(null, e);
-		}
-	}
-
-	protected void log(String sql, Map<String, ?> params)
-	{
-		try
-		{
-			log.debug("{} {}", sql, params);
-		}
-		catch (Throwable e)
-		{
-			log.debug(null, e);
-		}
-	}
-
-	protected void log(String sql, Object... params)
+	protected void log(String sql, Object params)
 	{
 		try
 		{
