@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -18,60 +17,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ThreadPoolDirector extends ThreadPoolExecutor
 {
-	public static class AbortPolicy implements RejectedExecutionHandler
-	{
-		public AbortPolicy()
-		{
-		}
-
-		public void rejectedExecution(Runnable r, ThreadPoolExecutor e)
-		{
-			throw new RejectedExecutionException();
-		}
-	}
-
-	public static class CallerRunsPolicy implements RejectedExecutionHandler
-	{
-		public CallerRunsPolicy()
-		{
-		}
-
-		public void rejectedExecution(Runnable r, ThreadPoolExecutor e)
-		{
-			if (!e.isShutdown())
-			{
-				r.run();
-			}
-		}
-	}
-
-	public static class DiscardOldestPolicy implements RejectedExecutionHandler
-	{
-		public DiscardOldestPolicy()
-		{
-		}
-
-		public void rejectedExecution(Runnable r, ThreadPoolExecutor e)
-		{
-			if (!e.isShutdown())
-			{
-				e.getQueue().poll();
-				e.execute(r);
-			}
-		}
-	}
-
-	public static class DiscardPolicy implements RejectedExecutionHandler
-	{
-		public DiscardPolicy()
-		{
-		}
-
-		public void rejectedExecution(Runnable r, ThreadPoolExecutor e)
-		{
-		}
-	}
-
 	private class Worker implements Runnable
 	{
 		private final ReentrantLock	runLock	= new ReentrantLock();

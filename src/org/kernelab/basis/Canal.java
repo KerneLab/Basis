@@ -985,6 +985,49 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	protected static class CountLongOp<E> implements Evaluator<E, Long>
+	{
+		@Override
+		public Terminal<E, Long> newPond()
+		{
+			return new CountLongPond<E>();
+		}
+	}
+
+	protected static class CountLongPond<E> extends AbstractTerminal<E, Long>
+	{
+		protected long count = 0;
+
+		@Override
+		public void begin()
+		{
+			try
+			{
+				while (upstream().hasNext())
+				{
+					upstream().next();
+					count++;
+				}
+			}
+			finally
+			{
+				try
+				{
+					this.end();
+				}
+				catch (Exception e)
+				{
+				}
+			}
+		}
+
+		@Override
+		public Long get()
+		{
+			return count;
+		}
+	}
+
 	protected static class CountOp<E> implements Evaluator<E, Integer>
 	{
 		@Override
@@ -6939,6 +6982,70 @@ public class Canal<D> implements Iterable<D>
 		return Option.Of(value);
 	}
 
+	public static Iterable<Double> range(double begin, double until)
+	{
+		return range(begin, until, 1.0);
+	}
+
+	public static Iterable<Double> range(final double begin, final double until, final double step)
+	{
+		return new Iterable<Double>()
+		{
+			@Override
+			public Iterator<Double> iterator()
+			{
+				return new Iterator<Double>()
+				{
+					private double value = begin;
+
+					@Override
+					public boolean hasNext()
+					{
+						if (begin < until)
+						{
+							return step >= 0 && value < until;
+						}
+						else if (begin > until)
+						{
+							return step <= 0 && value > until;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					@Override
+					public Double next()
+					{
+						try
+						{
+							return value;
+						}
+						finally
+						{
+							if (step != 0)
+							{
+								value += step;
+							}
+							else
+							{
+								value = until;
+							}
+						}
+					}
+
+					@Override
+					public void remove()
+					{
+						throw new UnsupportedOperationException();
+					}
+				};
+			}
+		};
+	}
+	
+	
 	public static Iterable<Integer> range(int begin, int until)
 	{
 		return range(begin, until, 1);
@@ -6953,18 +7060,18 @@ public class Canal<D> implements Iterable<D>
 			{
 				return new Iterator<Integer>()
 				{
-					private int index = begin;
+					private int value = begin;
 
 					@Override
 					public boolean hasNext()
 					{
 						if (begin < until)
 						{
-							return step >= 0 && index < until;
+							return step >= 0 && value < until;
 						}
 						else if (begin > until)
 						{
-							return step <= 0 && index > until;
+							return step <= 0 && value > until;
 						}
 						else
 						{
@@ -6977,17 +7084,17 @@ public class Canal<D> implements Iterable<D>
 					{
 						try
 						{
-							return index;
+							return value;
 						}
 						finally
 						{
 							if (step != 0)
 							{
-								index += step;
+								value += step;
 							}
 							else
 							{
-								index = until;
+								value = until;
 							}
 						}
 					}
@@ -7282,6 +7389,16 @@ public class Canal<D> implements Iterable<D>
 	public Map<D, Integer> countByValue(Map<D, Integer> result)
 	{
 		return this.follow(new CountByValueOp<D>(result)).evaluate();
+	}
+
+	/**
+	 * Count the number of elements.
+	 * 
+	 * @return
+	 */
+	public long countLong()
+	{
+		return this.follow(new CountLongOp<D>()).evaluate();
 	}
 
 	/**
