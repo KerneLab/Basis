@@ -2206,6 +2206,117 @@ public class Canal<D> implements Iterable<D>
 		protected abstract void settle();
 	}
 
+	protected static class IndexSource extends Source<Integer>
+	{
+		protected final int	begin;
+
+		protected final int	until;
+
+		protected final int	step;
+
+		protected int		index;
+
+		public IndexSource(int begin, int until, int step)
+		{
+			this.begin = begin;
+			this.until = until;
+			this.step = step;
+			this.index = this.begin;
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			if (begin < until)
+			{
+				return step > 0 && index < until;
+			}
+			else if (begin > until)
+			{
+				return step < 0 && index > until;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		@Override
+		public Integer next()
+		{
+			try
+			{
+				return index;
+			}
+			finally
+			{
+				index += step;
+			}
+		}
+	}
+
+	protected static class IndexSourcer implements Sourcer<Integer>
+	{
+		protected final int	begin;
+
+		protected final int	until;
+
+		protected final int	step;
+
+		public IndexSourcer(int total, Integer begin, Integer until, Integer step)
+		{
+			int a = begin == null ? Integer.MIN_VALUE : begin;
+			int b = until == null ? Integer.MAX_VALUE : until;
+			int c = step == null ? 1 : step;
+
+			if (step != null)
+			{
+				if (begin == null)
+				{
+					a = step < 0 ? Integer.MAX_VALUE : 0;
+				}
+				if (until == null)
+				{
+					b = step < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+				}
+			}
+			else
+			{
+				c = a > b ? -1 : 1;
+			}
+
+			if (a < 0)
+			{
+				a += total;
+			}
+			if (b < 0)
+			{
+				b += total;
+			}
+
+			if (c != 0)
+			{
+				a = Math.max(Math.min(a, Math.max(total - 1, 0)), 0);
+				b = Math.max(Math.min(Math.max(b, -1), total), -total);
+			}
+			else
+			{
+				c = 1;
+				b = a;
+			}
+
+			this.begin = a;
+			this.until = b;
+			this.step = c;
+		}
+
+		@Override
+		public Source<Integer> newPond()
+		{
+			return new IndexSource(begin, until, step);
+		}
+	}
+
 	protected static class InnerJoiner<L, R, K, U, V> extends Joiner<L, R, K, U, V, U, V>
 	{
 		public InnerJoiner(Canal<R> that, Mapper<L, K> kol, Mapper<R, K> kor, Mapper<L, U> vol, Mapper<R, V> vor)
@@ -6911,6 +7022,118 @@ public class Canal<D> implements Iterable<D>
 		return Option.none();
 	}
 
+	public static Canal<Boolean> of(boolean[] array)
+	{
+		return of(array, 0);
+	}
+
+	public static Canal<Boolean> of(boolean[] array, Integer begin)
+	{
+		return of(array, begin, null);
+	}
+
+	public static Canal<Boolean> of(boolean[] array, Integer begin, Integer until)
+	{
+		return of(array, begin, until, null);
+	}
+
+	public static Canal<Boolean> of(final boolean[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, Boolean>()
+				{
+					@Override
+					public Boolean map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
+	}
+
+	public static Canal<Byte> of(byte[] array)
+	{
+		return of(array, 0);
+	}
+
+	public static Canal<Byte> of(byte[] array, Integer begin)
+	{
+		return of(array, begin, null);
+	}
+
+	public static Canal<Byte> of(byte[] array, Integer begin, Integer until)
+	{
+		return of(array, begin, until, null);
+	}
+
+	public static Canal<Byte> of(final byte[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, Byte>()
+				{
+					@Override
+					public Byte map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
+	}
+
+	public static Canal<Character> of(char[] array)
+	{
+		return of(array, 0);
+	}
+
+	public static Canal<Character> of(char[] array, Integer begin)
+	{
+		return of(array, begin, null);
+	}
+
+	public static Canal<Character> of(char[] array, Integer begin, Integer until)
+	{
+		return of(array, begin, until, null);
+	}
+
+	public static Canal<Character> of(final char[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, Character>()
+				{
+					@Override
+					public Character map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
+	}
+
+	public static Canal<Double> of(double[] array)
+	{
+		return of(array, 0);
+	}
+
+	public static Canal<Double> of(double[] array, Integer begin)
+	{
+		return of(array, begin, null);
+	}
+
+	public static Canal<Double> of(double[] array, Integer begin, Integer until)
+	{
+		return of(array, begin, until, null);
+	}
+
+	public static Canal<Double> of(final double[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, Double>()
+				{
+					@Override
+					public Double map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
+	}
+
 	public static <E> Canal<E> of(E[] array)
 	{
 		return of(array, 0);
@@ -6929,6 +7152,62 @@ public class Canal<D> implements Iterable<D>
 	public static <E> Canal<E> of(E[] array, Integer begin, Integer until, Integer step)
 	{
 		return new Canal<E>().setOperator(new ArraySourcer<E>(array, begin, until, step));
+	}
+
+	public static Canal<Float> of(float[] array)
+	{
+		return of(array, 0);
+	}
+
+	public static Canal<Float> of(float[] array, Integer begin)
+	{
+		return of(array, begin, null);
+	}
+
+	public static Canal<Float> of(float[] array, Integer begin, Integer until)
+	{
+		return of(array, begin, until, null);
+	}
+
+	public static Canal<Float> of(final float[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, Float>()
+				{
+					@Override
+					public Float map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
+	}
+
+	public static Canal<Integer> of(int[] array)
+	{
+		return of(array, 0);
+	}
+
+	public static Canal<Integer> of(int[] array, Integer begin)
+	{
+		return of(array, begin, null);
+	}
+
+	public static Canal<Integer> of(int[] array, Integer begin, Integer until)
+	{
+		return of(array, begin, until, null);
+	}
+
+	public static Canal<Integer> of(final int[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, Integer>()
+				{
+					@Override
+					public Integer map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
 	}
 
 	@SuppressWarnings("unchecked")
@@ -6950,6 +7229,34 @@ public class Canal<D> implements Iterable<D>
 						return Tuple.of(el.key, el.val());
 					}
 				}).toPair();
+	}
+
+	public static Canal<Long> of(long[] array)
+	{
+		return of(array, 0);
+	}
+
+	public static Canal<Long> of(long[] array, Integer begin)
+	{
+		return of(array, begin, null);
+	}
+
+	public static Canal<Long> of(long[] array, Integer begin, Integer until)
+	{
+		return of(array, begin, until, null);
+	}
+
+	public static Canal<Long> of(final long[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, Long>()
+				{
+					@Override
+					public Long map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
 	}
 
 	public static <K, V> PairCanal<K, V> of(Map<? extends K, ? extends V> map)
@@ -6977,9 +7284,120 @@ public class Canal<D> implements Iterable<D>
 		return new Canal<E>().setOperator(new GeneratedSourcer<E>((Producer<E>) spring));
 	}
 
+	public static Canal<Short> of(short[] array)
+	{
+		return of(array, 0);
+	}
+
+	public static Canal<Short> of(short[] array, Integer begin)
+	{
+		return of(array, begin, null);
+	}
+
+	public static Canal<Short> of(short[] array, Integer begin, Integer until)
+	{
+		return of(array, begin, until, null);
+	}
+
+	public static Canal<Short> of(final short[] array, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, Short>()
+				{
+					@Override
+					public Short map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
+	}
+
+	public static Canal<Character> of(String text)
+	{
+		return of(text, null);
+	}
+
+	public static Canal<Character> of(String text, Integer begin)
+	{
+		return of(text, begin, null);
+	}
+
+	public static Canal<Character> of(String text, Integer begin, Integer until)
+	{
+		return of(text, begin, until, null);
+	}
+
+	public static Canal<Character> of(String text, Integer begin, Integer until, Integer step)
+	{
+		return of(text.toCharArray(), begin, until, step);
+	}
+
 	public static <E> Option<E> option(E value)
 	{
 		return Option.Of(value);
+	}
+
+	public static Iterable<BigDecimal> range(BigDecimal begin, BigDecimal until)
+	{
+		return range(begin, until, BigDecimal.ONE);
+	}
+
+	public static Iterable<BigDecimal> range(final BigDecimal begin, final BigDecimal until, final BigDecimal step)
+	{
+		return new Iterable<BigDecimal>()
+		{
+			@Override
+			public Iterator<BigDecimal> iterator()
+			{
+				return new Iterator<BigDecimal>()
+				{
+					private BigDecimal value = begin;
+
+					@Override
+					public boolean hasNext()
+					{
+						if (begin.compareTo(until) < 0)
+						{
+							return step.compareTo(BigDecimal.ZERO) >= 0 && value.compareTo(until) < 0;
+						}
+						else if (begin.compareTo(until) > 0)
+						{
+							return step.compareTo(BigDecimal.ZERO) <= 0 && value.compareTo(until) > 0;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					@Override
+					public BigDecimal next()
+					{
+						try
+						{
+							return value;
+						}
+						finally
+						{
+							if (step.compareTo(BigDecimal.ZERO) != 0)
+							{
+								value = value.add(step);
+							}
+							else
+							{
+								value = until;
+							}
+						}
+					}
+
+					@Override
+					public void remove()
+					{
+						throw new UnsupportedOperationException();
+					}
+				};
+			}
+		};
 	}
 
 	public static Iterable<Double> range(double begin, double until)
@@ -7044,8 +7462,7 @@ public class Canal<D> implements Iterable<D>
 			}
 		};
 	}
-	
-	
+
 	public static Iterable<Integer> range(int begin, int until)
 	{
 		return range(begin, until, 1);
@@ -7081,6 +7498,69 @@ public class Canal<D> implements Iterable<D>
 
 					@Override
 					public Integer next()
+					{
+						try
+						{
+							return value;
+						}
+						finally
+						{
+							if (step != 0)
+							{
+								value += step;
+							}
+							else
+							{
+								value = until;
+							}
+						}
+					}
+
+					@Override
+					public void remove()
+					{
+						throw new UnsupportedOperationException();
+					}
+				};
+			}
+		};
+	}
+
+	public static Iterable<Long> range(long begin, long until)
+	{
+		return range(begin, until, 1L);
+	}
+
+	public static Iterable<Long> range(final long begin, final long until, final long step)
+	{
+		return new Iterable<Long>()
+		{
+			@Override
+			public Iterator<Long> iterator()
+			{
+				return new Iterator<Long>()
+				{
+					private long value = begin;
+
+					@Override
+					public boolean hasNext()
+					{
+						if (begin < until)
+						{
+							return step >= 0 && value < until;
+						}
+						else if (begin > until)
+						{
+							return step <= 0 && value > until;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					@Override
+					public Long next()
 					{
 						try
 						{
