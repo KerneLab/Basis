@@ -525,124 +525,6 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
-	protected static class ArraySource<E> extends Source<E>
-	{
-		protected final E[]	array;
-
-		protected final int	begin;
-
-		protected final int	until;
-
-		protected final int	step;
-
-		protected int		index;
-
-		public ArraySource(E[] array, int begin, int until, int step)
-		{
-			this.array = array;
-			this.begin = begin;
-			this.until = until;
-			this.step = step;
-			this.index = this.begin;
-		}
-
-		@Override
-		public boolean hasNext()
-		{
-			if (begin < until)
-			{
-				return step > 0 && index < until;
-			}
-			else if (begin > until)
-			{
-				return step < 0 && index > until;
-			}
-			else
-			{
-				return false;
-			}
-		}
-
-		@Override
-		public E next()
-		{
-			try
-			{
-				return array[index];
-			}
-			finally
-			{
-				index += step;
-			}
-		}
-	}
-
-	protected static class ArraySourcer<E> implements Sourcer<E>
-	{
-		protected final E[]	array;
-
-		protected final int	begin;
-
-		protected final int	until;
-
-		protected final int	step;
-
-		public ArraySourcer(E[] array, Integer begin, Integer until, Integer step)
-		{
-			int len = array.length;
-			int a = begin == null ? Integer.MIN_VALUE : begin;
-			int b = until == null ? Integer.MAX_VALUE : until;
-			int c = step == null ? 1 : step;
-
-			if (step != null)
-			{
-				if (begin == null)
-				{
-					a = step < 0 ? Integer.MAX_VALUE : 0;
-				}
-				if (until == null)
-				{
-					b = step < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-				}
-			}
-			else
-			{
-				c = a > b ? -1 : 1;
-			}
-
-			if (a < 0)
-			{
-				a += len;
-			}
-			if (b < 0)
-			{
-				b += len;
-			}
-
-			if (c != 0)
-			{
-				a = Math.max(Math.min(a, Math.max(len - 1, 0)), 0);
-				b = Math.max(Math.min(Math.max(b, -1), len), -len);
-			}
-			else
-			{
-				c = 1;
-				b = a;
-			}
-
-			this.array = array;
-			this.begin = a;
-			this.until = b;
-			this.step = c;
-		}
-
-		@Override
-		public Source<E> newPond()
-		{
-			return new ArraySource<E>(array, begin, until, step);
-		}
-	}
-
 	protected static class CacheOp<D> implements Converter<D, D>
 	{
 		protected final ArrayList<D>	cache	= new ArrayList<D>();
@@ -2280,10 +2162,6 @@ public class Canal<D> implements Iterable<D>
 					b = step < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 				}
 			}
-			else
-			{
-				c = a > b ? -1 : 1;
-			}
 
 			if (a < 0)
 			{
@@ -2294,10 +2172,20 @@ public class Canal<D> implements Iterable<D>
 				b += total;
 			}
 
-			if (c != 0)
+			if (step == null)
 			{
-				a = Math.max(Math.min(a, Math.max(total - 1, 0)), 0);
-				b = Math.max(Math.min(Math.max(b, -1), total), -total);
+				c = a > b ? -1 : 1;
+			}
+
+			if (c > 0)
+			{
+				a = Math.max(a, 0);
+				b = Math.min(b, total);
+			}
+			else if (c < 0)
+			{
+				a = Math.min(a, total - 1);
+				b = Math.max(b, -1);
 			}
 			else
 			{
@@ -7106,6 +6994,34 @@ public class Canal<D> implements Iterable<D>
 				});
 	}
 
+	public static Canal<Character> of(CharSequence text)
+	{
+		return of(text, null);
+	}
+
+	public static Canal<Character> of(CharSequence text, Integer begin)
+	{
+		return of(text, begin, null);
+	}
+
+	public static Canal<Character> of(CharSequence text, Integer begin, Integer until)
+	{
+		return of(text, begin, until, null);
+	}
+
+	public static Canal<Character> of(final CharSequence text, Integer begin, Integer until, Integer step)
+	{
+		return new Canal<Integer>().setOperator(new IndexSourcer(text.length(), begin, until, step))
+				.map(new Mapper<Integer, Character>()
+				{
+					@Override
+					public Character map(Integer i) throws Exception
+					{
+						return text.charAt(i);
+					}
+				});
+	}
+
 	public static Canal<Double> of(double[] array)
 	{
 		return of(array, 0);
@@ -7149,9 +7065,17 @@ public class Canal<D> implements Iterable<D>
 		return of(array, begin, until, null);
 	}
 
-	public static <E> Canal<E> of(E[] array, Integer begin, Integer until, Integer step)
+	public static <E> Canal<E> of(final E[] array, Integer begin, Integer until, Integer step)
 	{
-		return new Canal<E>().setOperator(new ArraySourcer<E>(array, begin, until, step));
+		return new Canal<Integer>().setOperator(new IndexSourcer(array.length, begin, until, step))
+				.map(new Mapper<Integer, E>()
+				{
+					@Override
+					public E map(Integer i) throws Exception
+					{
+						return array[i];
+					}
+				});
 	}
 
 	public static Canal<Float> of(float[] array)
@@ -7310,26 +7234,6 @@ public class Canal<D> implements Iterable<D>
 						return array[i];
 					}
 				});
-	}
-
-	public static Canal<Character> of(String text)
-	{
-		return of(text, null);
-	}
-
-	public static Canal<Character> of(String text, Integer begin)
-	{
-		return of(text, begin, null);
-	}
-
-	public static Canal<Character> of(String text, Integer begin, Integer until)
-	{
-		return of(text, begin, until, null);
-	}
-
-	public static Canal<Character> of(String text, Integer begin, Integer until, Integer step)
-	{
-		return of(text.toCharArray(), begin, until, step);
 	}
 
 	public static <E> Option<E> option(E value)
