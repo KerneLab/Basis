@@ -314,8 +314,18 @@ public class TestCanal
 			}
 		});
 
-		Tools.debug("============range 0,2,0");
-		Canal.of(Canal.range(0, 2, 0)).foreach(new Action<Integer>()
+		Tools.debug("============rangeTo 0,4,2");
+		Canal.of(Canal.rangeTo(0, 4, 2)).foreach(new Action<Number>()
+		{
+			@Override
+			public void action(Number el) throws Exception
+			{
+				Tools.debug(el.intValue());
+			}
+		});
+
+		Tools.debug("============rangeTo 0,5,2");
+		Canal.of(Canal.rangeTo(0, 5, 2)).foreach(new Action<Integer>()
 		{
 			@Override
 			public void action(Integer el) throws Exception
@@ -324,8 +334,28 @@ public class TestCanal
 			}
 		});
 
-		Tools.debug("============range 2,0,0");
-		Canal.of(Canal.range(2, 0, 0)).foreach(new Action<Integer>()
+		Tools.debug("============rangeTo 4,1,-2");
+		Canal.of(Canal.rangeTo(4, 1, -2)).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============rangeTo 4,-1,-2");
+		Canal.of(Canal.rangeTo(4, -1, -2)).foreach(new Action<Integer>()
+		{
+			@Override
+			public void action(Integer el) throws Exception
+			{
+				Tools.debug(el);
+			}
+		});
+
+		Tools.debug("============rangeTo 0,0,1");
+		Canal.of(Canal.rangeTo(0, 0, 1)).foreach(new Action<Integer>()
 		{
 			@Override
 			public void action(Integer el) throws Exception

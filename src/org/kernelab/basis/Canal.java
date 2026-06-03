@@ -7241,13 +7241,39 @@ public class Canal<D> implements Iterable<D>
 		return Option.Of(value);
 	}
 
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code until}(exclusive) increase by {@code 1}.
+	 * 
+	 * @param begin
+	 * @param until
+	 * @return
+	 */
 	public static Iterable<BigDecimal> range(BigDecimal begin, BigDecimal until)
 	{
 		return range(begin, until, BigDecimal.ONE);
 	}
 
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code until}(exclusive) increase by {@code step}.
+	 * 
+	 * @param begin
+	 * @param until
+	 * @param step
+	 * @return
+	 */
 	public static Iterable<BigDecimal> range(final BigDecimal begin, final BigDecimal until, final BigDecimal step)
 	{
+		if (step.compareTo(BigDecimal.ZERO) == 0)
+		{
+			throw new IllegalArgumentException("step cannot be 0");
+		}
+		else if (begin.compareTo(until) == 0)
+		{
+			return Collections.emptyList();
+		}
+		final boolean asc = begin.compareTo(until) < 0, inc = step.compareTo(BigDecimal.ZERO) > 0;
 		return new Iterable<BigDecimal>()
 		{
 			@Override
@@ -7260,17 +7286,13 @@ public class Canal<D> implements Iterable<D>
 					@Override
 					public boolean hasNext()
 					{
-						if (begin.compareTo(until) < 0)
+						if (asc)
 						{
-							return step.compareTo(BigDecimal.ZERO) >= 0 && value.compareTo(until) < 0;
-						}
-						else if (begin.compareTo(until) > 0)
-						{
-							return step.compareTo(BigDecimal.ZERO) <= 0 && value.compareTo(until) > 0;
+							return inc && value.compareTo(until) < 0;
 						}
 						else
 						{
-							return false;
+							return !inc && value.compareTo(until) > 0;
 						}
 					}
 
@@ -7283,14 +7305,7 @@ public class Canal<D> implements Iterable<D>
 						}
 						finally
 						{
-							if (step.compareTo(BigDecimal.ZERO) != 0)
-							{
-								value = value.add(step);
-							}
-							else
-							{
-								value = until;
-							}
+							value = value.add(step);
 						}
 					}
 
@@ -7304,13 +7319,39 @@ public class Canal<D> implements Iterable<D>
 		};
 	}
 
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code until}(exclusive) increase by {@code 1}.
+	 * 
+	 * @param begin
+	 * @param until
+	 * @return
+	 */
 	public static Iterable<Double> range(double begin, double until)
 	{
 		return range(begin, until, 1.0);
 	}
 
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code until}(exclusive) increase by {@code step}.
+	 * 
+	 * @param begin
+	 * @param until
+	 * @param step
+	 * @return
+	 */
 	public static Iterable<Double> range(final double begin, final double until, final double step)
 	{
+		if (step == 0)
+		{
+			throw new IllegalArgumentException("step cannot be 0");
+		}
+		else if (begin == until)
+		{
+			return Collections.emptyList();
+		}
+		final boolean asc = begin < until, inc = step > 0;
 		return new Iterable<Double>()
 		{
 			@Override
@@ -7323,17 +7364,13 @@ public class Canal<D> implements Iterable<D>
 					@Override
 					public boolean hasNext()
 					{
-						if (begin < until)
+						if (asc)
 						{
-							return step >= 0 && value < until;
-						}
-						else if (begin > until)
-						{
-							return step <= 0 && value > until;
+							return inc && value < until;
 						}
 						else
 						{
-							return false;
+							return !inc && value > until;
 						}
 					}
 
@@ -7346,14 +7383,7 @@ public class Canal<D> implements Iterable<D>
 						}
 						finally
 						{
-							if (step != 0)
-							{
-								value += step;
-							}
-							else
-							{
-								value = until;
-							}
+							value += step;
 						}
 					}
 
@@ -7367,13 +7397,39 @@ public class Canal<D> implements Iterable<D>
 		};
 	}
 
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code until}(exclusive) increase by {@code 1}.
+	 * 
+	 * @param begin
+	 * @param until
+	 * @return
+	 */
 	public static Iterable<Integer> range(int begin, int until)
 	{
 		return range(begin, until, 1);
 	}
 
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code until}(exclusive) increase by {@code step}.
+	 * 
+	 * @param begin
+	 * @param until
+	 * @param step
+	 * @return
+	 */
 	public static Iterable<Integer> range(final int begin, final int until, final int step)
 	{
+		if (step == 0)
+		{
+			throw new IllegalArgumentException("step cannot be 0");
+		}
+		else if (begin == until)
+		{
+			return Collections.emptyList();
+		}
+		final boolean asc = begin < until, inc = step > 0;
 		return new Iterable<Integer>()
 		{
 			@Override
@@ -7386,17 +7442,13 @@ public class Canal<D> implements Iterable<D>
 					@Override
 					public boolean hasNext()
 					{
-						if (begin < until)
+						if (asc)
 						{
-							return step >= 0 && value < until;
-						}
-						else if (begin > until)
-						{
-							return step <= 0 && value > until;
+							return inc && value < until;
 						}
 						else
 						{
-							return false;
+							return !inc && value > until;
 						}
 					}
 
@@ -7409,14 +7461,7 @@ public class Canal<D> implements Iterable<D>
 						}
 						finally
 						{
-							if (step != 0)
-							{
-								value += step;
-							}
-							else
-							{
-								value = until;
-							}
+							value += step;
 						}
 					}
 
@@ -7430,13 +7475,39 @@ public class Canal<D> implements Iterable<D>
 		};
 	}
 
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code until}(exclusive) increase by {@code 1}.
+	 * 
+	 * @param begin
+	 * @param until
+	 * @return
+	 */
 	public static Iterable<Long> range(long begin, long until)
 	{
 		return range(begin, until, 1L);
 	}
 
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code until}(exclusive) increase by {@code step}.
+	 * 
+	 * @param begin
+	 * @param until
+	 * @param step
+	 * @return
+	 */
 	public static Iterable<Long> range(final long begin, final long until, final long step)
 	{
+		if (step == 0)
+		{
+			throw new IllegalArgumentException("step cannot be 0");
+		}
+		else if (begin == until)
+		{
+			return Collections.emptyList();
+		}
+		final boolean asc = begin < until, inc = step > 0;
 		return new Iterable<Long>()
 		{
 			@Override
@@ -7449,17 +7520,13 @@ public class Canal<D> implements Iterable<D>
 					@Override
 					public boolean hasNext()
 					{
-						if (begin < until)
+						if (asc)
 						{
-							return step >= 0 && value < until;
-						}
-						else if (begin > until)
-						{
-							return step <= 0 && value > until;
+							return inc && value < until;
 						}
 						else
 						{
-							return false;
+							return !inc && value > until;
 						}
 					}
 
@@ -7472,14 +7539,320 @@ public class Canal<D> implements Iterable<D>
 						}
 						finally
 						{
-							if (step != 0)
-							{
-								value += step;
-							}
-							else
-							{
-								value = until;
-							}
+							value += step;
+						}
+					}
+
+					@Override
+					public void remove()
+					{
+						throw new UnsupportedOperationException();
+					}
+				};
+			}
+		};
+	}
+
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code end}(inclusive) increase by {@code 1}.
+	 * 
+	 * @param begin
+	 * @param end
+	 * @return
+	 */
+	public static Iterable<BigDecimal> rangeTo(BigDecimal begin, BigDecimal end)
+	{
+		return range(begin, end, BigDecimal.ONE);
+	}
+
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code end}(inclusive) increase by {@code step}.
+	 * 
+	 * @param begin
+	 * @param end
+	 * @param step
+	 * @return
+	 */
+	public static Iterable<BigDecimal> rangeTo(final BigDecimal begin, final BigDecimal end, final BigDecimal step)
+	{
+		if (step.compareTo(BigDecimal.ZERO) == 0)
+		{
+			throw new IllegalArgumentException("step cannot be 0");
+		}
+		int cmp = begin.compareTo(end);
+		if (cmp == 0)
+		{
+			return Collections.singletonList(begin);
+		}
+		final boolean asc = cmp < 0, inc = step.compareTo(BigDecimal.ZERO) > 0;
+		return new Iterable<BigDecimal>()
+		{
+			@Override
+			public Iterator<BigDecimal> iterator()
+			{
+				return new Iterator<BigDecimal>()
+				{
+					private BigDecimal value = begin;
+
+					@Override
+					public boolean hasNext()
+					{
+						if (asc)
+						{
+							return inc && value.compareTo(end) <= 0;
+						}
+						else
+						{
+							return !inc && value.compareTo(end) >= 0;
+						}
+					}
+
+					@Override
+					public BigDecimal next()
+					{
+						try
+						{
+							return value;
+						}
+						finally
+						{
+							value = value.add(step);
+						}
+					}
+
+					@Override
+					public void remove()
+					{
+						throw new UnsupportedOperationException();
+					}
+				};
+			}
+		};
+	}
+
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code end}(inclusive) increase by {@code 1}.
+	 * 
+	 * @param begin
+	 * @param end
+	 * @return
+	 */
+	public static Iterable<Double> rangeTo(double begin, double end)
+	{
+		return rangeTo(begin, end, 1);
+	}
+
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code end}(inclusive) increase by {@code step}.
+	 * 
+	 * @param begin
+	 * @param end
+	 * @param step
+	 * @return
+	 */
+	public static Iterable<Double> rangeTo(final double begin, final double end, final double step)
+	{
+		if (step == 0)
+		{
+			throw new IllegalArgumentException("step cannot be 0");
+		}
+		else if (begin == end)
+		{
+			return Collections.singletonList(begin);
+		}
+		final boolean asc = begin < end, inc = step > 0;
+		return new Iterable<Double>()
+		{
+			@Override
+			public Iterator<Double> iterator()
+			{
+				return new Iterator<Double>()
+				{
+					private double value = begin;
+
+					@Override
+					public boolean hasNext()
+					{
+						if (asc)
+						{
+							return inc && value <= end;
+						}
+						else
+						{
+							return !inc && value >= end;
+						}
+					}
+
+					@Override
+					public Double next()
+					{
+						try
+						{
+							return value;
+						}
+						finally
+						{
+							value += step;
+						}
+					}
+
+					@Override
+					public void remove()
+					{
+						throw new UnsupportedOperationException();
+					}
+				};
+			}
+		};
+	}
+
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code end}(inclusive) increase by {@code 1}.
+	 * 
+	 * @param begin
+	 * @param end
+	 * @return
+	 */
+	public static Iterable<Integer> rangeTo(int begin, int end)
+	{
+		return rangeTo(begin, end, 1);
+	}
+
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code end}(inclusive) increase by {@code step}.
+	 * 
+	 * @param begin
+	 * @param end
+	 * @param step
+	 * @return
+	 */
+	public static Iterable<Integer> rangeTo(final int begin, final int end, final int step)
+	{
+		if (step == 0)
+		{
+			throw new IllegalArgumentException("step cannot be 0");
+		}
+		else if (begin == end)
+		{
+			return Collections.singletonList(begin);
+		}
+		final boolean asc = begin < end, inc = step > 0;
+		return new Iterable<Integer>()
+		{
+			@Override
+			public Iterator<Integer> iterator()
+			{
+				return new Iterator<Integer>()
+				{
+					private int value = begin;
+
+					@Override
+					public boolean hasNext()
+					{
+						if (asc)
+						{
+							return inc && value <= end;
+						}
+						else
+						{
+							return !inc && value >= end;
+						}
+					}
+
+					@Override
+					public Integer next()
+					{
+						try
+						{
+							return value;
+						}
+						finally
+						{
+							value += step;
+						}
+					}
+
+					@Override
+					public void remove()
+					{
+						throw new UnsupportedOperationException();
+					}
+				};
+			}
+		};
+	}
+
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code end}(inclusive) increase by {@code 1}.
+	 * 
+	 * @param begin
+	 * @param end
+	 * @return
+	 */
+	public static Iterable<Long> rangeTo(long begin, long end)
+	{
+		return rangeTo(begin, end, 1);
+	}
+
+	/**
+	 * Make an Iterable object range between {@code begin}(inclusive) and
+	 * {@code end}(inclusive) increase by {@code step}.
+	 * 
+	 * @param begin
+	 * @param end
+	 * @param step
+	 * @return
+	 */
+	public static Iterable<Long> rangeTo(final long begin, final long end, final long step)
+	{
+		if (step == 0)
+		{
+			throw new IllegalArgumentException("step cannot be 0");
+		}
+		else if (begin == end)
+		{
+			return Collections.singletonList(begin);
+		}
+		final boolean asc = begin < end, inc = step > 0;
+		return new Iterable<Long>()
+		{
+			@Override
+			public Iterator<Long> iterator()
+			{
+				return new Iterator<Long>()
+				{
+					private long value = begin;
+
+					@Override
+					public boolean hasNext()
+					{
+						if (asc)
+						{
+							return inc && value <= end;
+						}
+						else
+						{
+							return !inc && value >= end;
+						}
+					}
+
+					@Override
+					public Long next()
+					{
+						try
+						{
+							return value;
+						}
+						finally
+						{
+							value += step;
 						}
 					}
 
