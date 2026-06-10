@@ -3005,6 +3005,19 @@ public class Canal<D> implements Iterable<D>
 		}
 	}
 
+	public static class NoMoreElement extends RuntimeException
+	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public NoMoreElement()
+		{
+			super();
+		}
+	}
+
 	public static class None<E> extends Option<E>
 	{
 		public None()
@@ -3760,6 +3773,68 @@ public class Canal<D> implements Iterable<D>
 		Pond<?, I> upstream();
 
 		void upstream(Pond<?, I> up);
+	}
+
+	protected static class ProducedIterator<E> implements Iterator<E>
+	{
+		protected final Producer<E>	nexter;
+
+		private boolean				has;
+
+		private E					next;
+
+		public ProducedIterator(Producer<E> nexter)
+		{
+			this.nexter = nexter;
+			this.toNext();
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return has;
+		}
+
+		@Override
+		public E next()
+		{
+			try
+			{
+				return next;
+			}
+			finally
+			{
+				this.toNext();
+			}
+		}
+
+		@Override
+		public void remove()
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		protected void toNext()
+		{
+			try
+			{
+				this.next = this.nexter.produce();
+				this.has = true;
+			}
+			catch (NoMoreElement e)
+			{
+				this.has = false;
+				this.next = null;
+			}
+			catch (RuntimeException e)
+			{
+				throw e;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
 	public static interface Producer<E>
@@ -6897,6 +6972,11 @@ public class Canal<D> implements Iterable<D>
 	public static <E> EnumerationIterator<E> iterator(Enumeration<E> enumer)
 	{
 		return new EnumerationIterator<E>(enumer);
+	}
+
+	public static <E> Iterator<E> iterator(Producer<E> nexter)
+	{
+		return new ProducedIterator<E>(nexter);
 	}
 
 	/**
