@@ -273,7 +273,40 @@ public class Sequel implements Iterable<ResultSet>
 		}
 	}
 
-	public class SequelIterator implements Iterable<Sequel>, CloseableIterator<Sequel>
+	public static class SequelIterator extends AbstractIterator<Sequel>
+	{
+		protected final Sequel sequel;
+
+		public SequelIterator(Sequel sequel)
+		{
+			super(sequel.getResultSet());
+			this.sequel = sequel;
+			this.closing(sequel.isClosing() && !sequel.isIterating());
+			this.kit(sequel.getKit());
+		}
+
+		@Override
+		public SequelIterator closing(boolean closing)
+		{
+			super.closing(closing);
+			return this;
+		}
+
+		@Override
+		public SequelIterator kit(SQLKit kit)
+		{
+			super.kit(kit);
+			return this;
+		}
+
+		@Override
+		protected Sequel next(ResultSet rs)
+		{
+			return sequel;
+		}
+	}
+
+	public class SequelSetIterator implements Iterable<Sequel>, CloseableIterator<Sequel>
 	{
 		private int		current;
 
@@ -281,12 +314,12 @@ public class Sequel implements Iterable<ResultSet>
 
 		private Sequel	next	= null;
 
-		public SequelIterator()
+		public SequelSetIterator()
 		{
 			this(Statement.CLOSE_CURRENT_RESULT);
 		}
 
-		public SequelIterator(int current)
+		public SequelSetIterator(int current)
 		{
 			this.current = current;
 		}
@@ -2074,14 +2107,14 @@ public class Sequel implements Iterable<ResultSet>
 		return this.getUpdateCount() != N_A;
 	}
 
-	public SequelIterator iterate()
+	public SequelSetIterator iterate()
 	{
-		return new SequelIterator();
+		return new SequelSetIterator();
 	}
 
-	public SequelIterator iterate(int current)
+	public SequelSetIterator iterate(int current)
 	{
-		return new SequelIterator(current);
+		return new SequelSetIterator(current);
 	}
 
 	@Override
@@ -2274,6 +2307,11 @@ public class Sequel implements Iterable<ResultSet>
 	{
 		this.updateCount = statement.getUpdateCount();
 		return this.updateCount != N_A;
+	}
+
+	public Canal<Sequel> rows()
+	{
+		return Canal.of(Canal.iterable(new SequelIterator(this)));
 	}
 
 	protected Sequel setClosed(boolean closed)
