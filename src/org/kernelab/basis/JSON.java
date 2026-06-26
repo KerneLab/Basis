@@ -1775,6 +1775,39 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return this;
 		}
 
+		public JSAN attrAsJSAN(int idx)
+		{
+			return attrAsJSAN(idx, true);
+		}
+
+		public JSAN attrAsJSAN(int idx, boolean emptyIfNull)
+		{
+			if (!this.has(idx))
+			{
+				JSAN res = new JSAN();
+				this.attr(idx, res);
+				return res;
+			}
+			else
+			{
+				Object v = this.attr(idx);
+				if (v instanceof JSAN)
+				{
+					return (JSAN) v;
+				}
+				else
+				{
+					JSAN res = new JSAN();
+					if (v != null || !emptyIfNull)
+					{
+						res.add(v);
+					}
+					this.attr(idx, res);
+					return res;
+				}
+			}
+		}
+
 		public BigDecimal attrBigDecimal(int index)
 		{
 			return attrCast(index, BigDecimal.class);
@@ -3108,6 +3141,36 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			E val = val(index);
 			return val == null ? defaultValue : val;
+		}
+
+		public JSAN valAsJSAN(int idx)
+		{
+			return valAsJSAN(idx, true);
+		}
+
+		public JSAN valAsJSAN(int idx, boolean emptyIfNull)
+		{
+			if (!this.has(idx))
+			{
+				return new JSAN();
+			}
+			else
+			{
+				Object v = this.attr(idx);
+				if (v instanceof JSAN)
+				{
+					return (JSAN) v;
+				}
+				else
+				{
+					JSAN res = new JSAN();
+					if (v != null || !emptyIfNull)
+					{
+						res.add(v);
+					}
+					return res;
+				}
+			}
 		}
 
 		public BigDecimal valBigDecimal(int index)
@@ -8737,6 +8800,39 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	public JSAN attrAsJSAN(String key)
+	{
+		return attrAsJSAN(key, true);
+	}
+
+	public JSAN attrAsJSAN(String key, boolean emptyIfNull)
+	{
+		if (!this.has(key))
+		{
+			JSAN res = new JSAN();
+			this.attr(key, res);
+			return res;
+		}
+		else
+		{
+			Object v = this.attr(key);
+			if (v instanceof JSAN)
+			{
+				return (JSAN) v;
+			}
+			else
+			{
+				JSAN res = new JSAN();
+				if (v != null || !emptyIfNull)
+				{
+					res.add(v);
+				}
+				this.attr(key, res);
+				return res;
+			}
+		}
+	}
+
 	public BigDecimal attrBigDecimal(String key)
 	{
 		return attrCast(key, BigDecimal.class);
@@ -10173,6 +10269,36 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	{
 		E val = val(key);
 		return val == null ? defaultValue : val;
+	}
+
+	public JSAN valAsJSAN(String key)
+	{
+		return valAsJSAN(key, true);
+	}
+
+	public JSAN valAsJSAN(String key, boolean emptyIfNull)
+	{
+		if (!this.has(key))
+		{
+			return new JSAN();
+		}
+		else
+		{
+			Object v = this.attr(key);
+			if (v instanceof JSAN)
+			{
+				return (JSAN) v;
+			}
+			else
+			{
+				JSAN res = new JSAN();
+				if (v != null || !emptyIfNull)
+				{
+					res.add(v);
+				}
+				return res;
+			}
+		}
 	}
 
 	public BigDecimal valBigDecimal(String key)
