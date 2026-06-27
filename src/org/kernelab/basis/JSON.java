@@ -1775,16 +1775,63 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return this;
 		}
 
+		/**
+		 * Fetch the value corresponding to the index. If the value is JSAN then
+		 * directly return the value. Otherwise, the value will be add to a new
+		 * JSAN and the JSAN will be returned after it set to this JSON. If the
+		 * key not existed in the JSON or the value was null, then a new empty
+		 * JSAN will be set and returned.
+		 * 
+		 * @param idx
+		 *            the index of value
+		 * @return
+		 * @see #valAsJSAN(int, boolean)
+		 */
 		public JSAN attrAsJSAN(int idx)
 		{
 			return attrAsJSAN(idx, true);
 		}
 
+		/**
+		 * Fetch the value corresponding to the index. If the value is JSAN then
+		 * directly return the value. Otherwise, the value will be add to a new
+		 * JSAN and the JSAN will be returned after it set to this JSON. If the
+		 * key not existed in the JSON, then a new empty JSAN will be set and
+		 * returned.
+		 * 
+		 * @param idx
+		 *            the index of value
+		 * @param emptyIfNull
+		 *            Whether the result JSAN remains empty if the value is null
+		 * @return
+		 * @see #valAsJSAN(int, boolean)
+		 */
 		public JSAN attrAsJSAN(int idx, boolean emptyIfNull)
 		{
-			if (!this.has(idx))
+			return attrAsJSAN(idx, emptyIfNull, false);
+		}
+
+		/**
+		 * Fetch the value corresponding to the index. If the value is JSAN then
+		 * directly return the value. Otherwise, the value will be add to a new
+		 * JSAN and the JSAN will be returned after it set to this JSON. If the
+		 * key not existed in the JSON, then a new empty JSAN will be set and
+		 * returned.
+		 * 
+		 * @param idx
+		 *            the index of value
+		 * @param emptyIfNull
+		 *            Whether the result JSAN remains empty if the value is null
+		 * @param nullIfMiss
+		 *            Whether treat miss key as null value
+		 * @return
+		 * @see #valAsJSAN(int, boolean, boolean)
+		 */
+		public JSAN attrAsJSAN(int idx, boolean emptyIfNull, boolean nullIfMiss)
+		{
+			if (!nullIfMiss && !this.has(idx))
 			{
-				JSAN res = new JSAN();
+				JSAN res = new JSAN().templates(this);
 				this.attr(idx, res);
 				return res;
 			}
@@ -1797,7 +1844,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else
 				{
-					JSAN res = new JSAN();
+					JSAN res = new JSAN().templates(this);
 					if (v != null || !emptyIfNull)
 					{
 						res.add(v);
@@ -3143,16 +3190,62 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return val == null ? defaultValue : val;
 		}
 
+		/**
+		 * Fetch the value corresponding to the index. If the value is JSAN then
+		 * directly return the value. Otherwise, the value will be add to a new
+		 * JSAN and the JSAN will be returned. If the key not existed in the
+		 * JSON or the value was null, then a new empty JSAN will be returned.
+		 * 
+		 * @param idx
+		 *            the index of value
+		 * @param emptyIfNull
+		 *            Whether the result JSAN remains empty if the value is null
+		 * @return
+		 * @see #attrAsJSAN(int)
+		 */
 		public JSAN valAsJSAN(int idx)
 		{
 			return valAsJSAN(idx, true);
 		}
 
+		/**
+		 * Fetch the value corresponding to the index. If the value is JSAN then
+		 * directly return the value. Otherwise, the value will be add to a new
+		 * JSAN and the JSAN will be returned. If the key not existed in the
+		 * JSON, then a new empty JSAN will be returned.
+		 * 
+		 * @param idx
+		 *            the index of value
+		 * @param emptyIfNull
+		 *            Whether the result JSAN remains empty if the value is null
+		 * @return
+		 * @see #attrAsJSAN(int, boolean)
+		 */
 		public JSAN valAsJSAN(int idx, boolean emptyIfNull)
 		{
-			if (!this.has(idx))
+			return valAsJSAN(idx, emptyIfNull, false);
+		}
+
+		/**
+		 * Fetch the value corresponding to the index. If the value is JSAN then
+		 * directly return the value. Otherwise, the value will be add to a new
+		 * JSAN and the JSAN will be returned. If the key not existed in the
+		 * JSON, then a new empty JSAN will be returned.
+		 * 
+		 * @param idx
+		 *            the index of value
+		 * @param emptyIfNull
+		 *            Whether the result JSAN remains empty if the value is null
+		 * @param nullIfMiss
+		 *            Whether treat miss key as null value
+		 * @return
+		 * @see #attrAsJSAN(int, boolean, boolean)
+		 */
+		public JSAN valAsJSAN(int idx, boolean emptyIfNull, boolean nullIfMiss)
+		{
+			if (!nullIfMiss && !this.has(idx))
 			{
-				return new JSAN();
+				return new JSAN().templates(this);
 			}
 			else
 			{
@@ -3163,7 +3256,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 				else
 				{
-					JSAN res = new JSAN();
+					JSAN res = new JSAN().templates(this);
 					if (v != null || !emptyIfNull)
 					{
 						res.add(v);
@@ -4699,6 +4792,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 				return Canal.of(res).union(Canal.of(data.values()).flatMap(new Mapper<Object, Iterable<Object>>()
 				{
+
 					@Override
 					public Iterable<Object> map(Object obj) throws Exception
 					{
@@ -8800,16 +8894,61 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return this;
 	}
 
+	/**
+	 * Fetch the value corresponding to the key. If the value is JSAN then
+	 * directly return the value. Otherwise, the value will be add to a new JSAN
+	 * and the JSAN will be returned after it set to this JSON. If the key not
+	 * existed in the JSON or the value was null, then a new empty JSAN will be
+	 * set and returned.
+	 * 
+	 * @param key
+	 *            the key of value
+	 * @return
+	 * @see #valAsJSAN(String)
+	 */
 	public JSAN attrAsJSAN(String key)
 	{
 		return attrAsJSAN(key, true);
 	}
 
+	/**
+	 * Fetch the value corresponding to the key. If the value is JSAN then
+	 * directly return the value. Otherwise, the value will be add to a new JSAN
+	 * and the JSAN will be returned after it set to this JSON. If the key not
+	 * existed in the JSON, then a new empty JSAN will be set and returned.
+	 * 
+	 * @param key
+	 *            the key of value
+	 * @param emptyIfNull
+	 *            Whether the result JSAN remains empty if the value is null
+	 * @return
+	 * @see #valAsJSAN(String, boolean)
+	 */
 	public JSAN attrAsJSAN(String key, boolean emptyIfNull)
 	{
-		if (!this.has(key))
+		return attrAsJSAN(key, emptyIfNull, false);
+	}
+
+	/**
+	 * Fetch the value corresponding to the key. If the value is JSAN then
+	 * directly return the value. Otherwise, the value will be add to a new JSAN
+	 * and the JSAN will be returned after it set to this JSON. If the key not
+	 * existed in the JSON, then a new empty JSAN will be set and returned.
+	 * 
+	 * @param key
+	 *            the key of value
+	 * @param emptyIfNull
+	 *            Whether the result JSAN remains empty if the value is null
+	 * @param nullIfMiss
+	 *            Whether treat miss key as null value
+	 * @return
+	 * @see #valAsJSAN(String, boolean, boolean)
+	 */
+	public JSAN attrAsJSAN(String key, boolean emptyIfNull, boolean nullIfMiss)
+	{
+		if (!nullIfMiss && !this.has(key))
 		{
-			JSAN res = new JSAN();
+			JSAN res = new JSAN().templates(this);
 			this.attr(key, res);
 			return res;
 		}
@@ -8822,7 +8961,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			else
 			{
-				JSAN res = new JSAN();
+				JSAN res = new JSAN().templates(this);
 				if (v != null || !emptyIfNull)
 				{
 					res.add(v);
@@ -10271,16 +10410,60 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return val == null ? defaultValue : val;
 	}
 
+	/**
+	 * Fetch the value corresponding to the key. If the value is JSAN then
+	 * directly return the value. Otherwise, the value will be add to a new JSAN
+	 * and the JSAN will be returned. If the key not existed in the JSON or the
+	 * value was null, then a new empty JSAN will be returned.
+	 * 
+	 * @param key
+	 *            the key of value
+	 * @return
+	 * @see #attrAsJSAN(String)
+	 */
 	public JSAN valAsJSAN(String key)
 	{
 		return valAsJSAN(key, true);
 	}
 
+	/**
+	 * Fetch the value corresponding to the key. If the value is JSAN then
+	 * directly return the value. Otherwise, the value will be add to a new JSAN
+	 * and the JSAN will be returned. If the key not existed in the JSON, then a
+	 * new empty JSAN will be returned.
+	 * 
+	 * @param key
+	 *            the key of value
+	 * @param emptyIfNull
+	 *            Whether the result JSAN remains empty if the value is null
+	 * @return
+	 * @see #attrAsJSAN(String, boolean)
+	 */
 	public JSAN valAsJSAN(String key, boolean emptyIfNull)
 	{
-		if (!this.has(key))
+		return valAsJSAN(key, emptyIfNull, false);
+	}
+
+	/**
+	 * Fetch the value corresponding to the key. If the value is JSAN then
+	 * directly return the value. Otherwise, the value will be add to a new JSAN
+	 * and the JSAN will be returned. If the key not existed in the JSON, then a
+	 * new empty JSAN will be returned.
+	 * 
+	 * @param key
+	 *            the key of value
+	 * @param emptyIfNull
+	 *            Whether the result JSAN remains empty if the value is null
+	 * @param nullIfMiss
+	 *            Whether treat miss key as null value
+	 * @return
+	 * @see #attrAsJSAN(String, boolean, boolean)
+	 */
+	public JSAN valAsJSAN(String key, boolean emptyIfNull, boolean nullIfMiss)
+	{
+		if (!nullIfMiss && !this.has(key))
 		{
-			return new JSAN();
+			return new JSAN().templates(this);
 		}
 		else
 		{
@@ -10291,7 +10474,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 			else
 			{
-				JSAN res = new JSAN();
+				JSAN res = new JSAN().templates(this);
 				if (v != null || !emptyIfNull)
 				{
 					res.add(v);
