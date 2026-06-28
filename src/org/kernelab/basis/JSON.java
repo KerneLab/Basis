@@ -1376,7 +1376,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public JSAN()
 		{
 			super();
-
 			array(new TreeMap<String, Object>(new ArrayIndexComparator()));
 		}
 
@@ -1814,9 +1813,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		/**
 		 * Fetch the value corresponding to the index. If the value is JSAN then
 		 * directly return the value. Otherwise, the value will be add to a new
-		 * JSAN and the JSAN will be returned after it set to this JSON. If the
-		 * key not existed in the JSON, then a new empty JSAN will be set and
-		 * returned.
+		 * JSAN and the JSAN will be returned after it set to this JSON.
 		 * 
 		 * @param idx
 		 *            the index of value
@@ -3229,8 +3226,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		/**
 		 * Fetch the value corresponding to the index. If the value is JSAN then
 		 * directly return the value. Otherwise, the value will be add to a new
-		 * JSAN and the JSAN will be returned. If the key not existed in the
-		 * JSON, then a new empty JSAN will be returned.
+		 * JSAN and the JSAN will be returned.
 		 * 
 		 * @param idx
 		 *            the index of value
@@ -8932,8 +8928,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	/**
 	 * Fetch the value corresponding to the key. If the value is JSAN then
 	 * directly return the value. Otherwise, the value will be add to a new JSAN
-	 * and the JSAN will be returned after it set to this JSON. If the key not
-	 * existed in the JSON, then a new empty JSAN will be set and returned.
+	 * and the JSAN will be returned after it set to this JSON.
 	 * 
 	 * @param key
 	 *            the key of value
@@ -10447,8 +10442,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	/**
 	 * Fetch the value corresponding to the key. If the value is JSAN then
 	 * directly return the value. Otherwise, the value will be add to a new JSAN
-	 * and the JSAN will be returned. If the key not existed in the JSON, then a
-	 * new empty JSAN will be returned.
+	 * and the JSAN will be returned.
 	 * 
 	 * @param key
 	 *            the key of value
