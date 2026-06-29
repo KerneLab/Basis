@@ -164,6 +164,69 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
+	protected static class CombinedSet<E> extends AbstractSet<E>
+	{
+		protected static class CombinedIterator<E> extends AbstractIterator<E>
+		{
+			public CombinedIterator(Iterator<E>... iters)
+			{
+				super(iters);
+			}
+
+			@Override
+			public E next()
+			{
+				return iter.next();
+			}
+		}
+
+		protected final Set<E>[] sets;
+
+		public CombinedSet(Set<E>... sets)
+		{
+			this.sets = sets;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public Iterator<E> iterator()
+		{
+			Iterator<E>[] iters = null;
+
+			if (sets != null)
+			{
+				iters = (Iterator<E>[]) new Iterator<?>[sets.length];
+
+				for (int i = 0; i < sets.length; i++)
+				{
+					if (sets[i] != null)
+					{
+						iters[i] = sets[i].iterator();
+					}
+				}
+			}
+
+			return new CombinedIterator<E>(iters);
+		}
+
+		@Override
+		public int size()
+		{
+			int size = 0;
+			if (sets != null)
+			{
+				for (Set<E> set : sets)
+				{
+					if (set != null)
+					{
+						size += set.size();
+					}
+				}
+			}
+			return size;
+		}
+	}
+
 	public static class Context extends JSON
 	{
 		private class ContextReader extends DataReader implements Serializable
@@ -339,66 +402,55 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
-	protected static class EntrySet extends AbstractSet<Map.Entry<String, Object>>
+	protected static class DefaultEntry implements Map.Entry<String, Object>
 	{
-		protected static class EntryIterator extends AbstractIterator<Map.Entry<String, Object>>
+		protected final String	key;
+
+		protected Object		value;
+
+		public DefaultEntry(String key, Object value)
 		{
-			public EntryIterator(Iterator<Map.Entry<String, Object>>... iters)
-			{
-				super(iters);
-			}
-
-			@Override
-			public Map.Entry<String, Object> next()
-			{
-				return new InnerEntry(iter.next());
-			}
-		}
-
-		protected Set<Map.Entry<String, Object>>[] sets;
-
-		public EntrySet(Set<Map.Entry<String, Object>>... sets)
-		{
-			this.sets = sets;
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public Iterator<Map.Entry<String, Object>> iterator()
-		{
-			Iterator<Map.Entry<String, Object>>[] iters = null;
-
-			if (sets != null)
-			{
-				iters = (Iterator<Map.Entry<String, Object>>[]) new Iterator<?>[sets.length];
-
-				for (int i = 0; i < sets.length; i++)
-				{
-					if (sets[i] != null)
-					{
-						iters[i] = sets[i].iterator();
-					}
-				}
-			}
-
-			return new EntryIterator(iters);
+			this.key = key;
+			this.value = value;
 		}
 
 		@Override
-		public int size()
+		public boolean equals(Object o)
 		{
-			int size = 0;
-			if (sets != null)
+			if (o instanceof DefaultEntry)
 			{
-				for (Set<Map.Entry<String, Object>> set : sets)
-				{
-					if (set != null)
-					{
-						size += set.size();
-					}
-				}
+				DefaultEntry e = (DefaultEntry) o;
+				return Tools.equals(this.key, e.key) && Tools.equals(this.value, e.value);
 			}
-			return size;
+			else
+			{
+				return false;
+			}
+		}
+
+		@Override
+		public String getKey()
+		{
+			return key;
+		}
+
+		@Override
+		public Object getValue()
+		{
+			return Quote(value);
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return (key == null ? 0 : key.hashCode()) ^ (value == null ? 0 : value.hashCode());
+
+		}
+
+		@Override
+		public Object setValue(Object value)
+		{
+			return this.value = value;
 		}
 	}
 
@@ -606,6 +658,61 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
+	protected static class IterableSet<E> extends AbstractSet<E>
+	{
+		protected final Iterable<E>	iter;
+
+		protected final int			size;
+
+		public IterableSet(Iterable<E> iter, int size)
+		{
+			this.iter = iter;
+			this.size = size;
+		}
+
+		@Override
+		public boolean addAll(Collection<? extends E> c)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void clear()
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Iterator<E> iterator()
+		{
+			return iter.iterator();
+		}
+
+		@Override
+		public boolean remove(Object obj)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean removeAll(Collection<?> c)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean retainAll(Collection<?> c)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public int size()
+		{
+			return size;
+		}
+	}
+
 	/**
 	 * A class to describe Array object using JSON format.
 	 * 
@@ -614,37 +721,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	 */
 	public static class JSAN extends JSON implements RandomAccess
 	{
-		private static class ArrayIndexComparator implements Comparator<String>, Serializable
-		{
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -3834859681987586236L;
-
-			public int compare(String a, String b)
-			{
-				Integer va = Index(a);
-				Integer vb = Index(b);
-
-				if (va != null && vb != null)
-				{
-					return va - vb;
-				}
-				else if (va == null && vb != null)
-				{
-					return 1;
-				}
-				else if (va != null && vb == null)
-				{
-					return -1;
-				}
-				else
-				{
-					return a.compareTo(b);
-				}
-			}
-		}
-
 		public static class GeneralValueComparator implements Comparator<Object>, Serializable
 		{
 			/**
@@ -840,24 +916,37 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public static final int		LAST				= -1;
 
-		protected static final String Index(int i)
+		protected static Set<Entry<String, Object>> entrySet(List<Object> array)
+		{
+			return new IterableSet<Entry<String, Object>>(
+					Canal.of(array).zipWithIndex().map(new Mapper<Tuple2<Object, Integer>, Entry<String, Object>>()
+					{
+						@Override
+						public Entry<String, Object> map(Tuple2<Object, Integer> t) throws Exception
+						{
+							return new DefaultEntry(Index((int) t._2), t._1);
+						}
+					}), array.size());
+		}
+
+		protected static String Index(int i)
 		{
 			return String.valueOf(i);
 		}
 
-		protected static final Integer Index(Object o)
+		protected static Integer Index(Object i)
 		{
-			Integer index = null;
-
-			if (o != null)
+			if (i != null)
 			{
-				index = o instanceof Integer ? (Integer) o : Index(o.toString());
+				return i instanceof Integer ? (Integer) i : Index(i.toString());
 			}
-
-			return index;
+			else
+			{
+				return null;
+			}
 		}
 
-		protected static final Integer Index(String key)
+		protected static Integer Index(String key)
 		{
 			if (key == null)
 			{
@@ -906,6 +995,29 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 			return true;
+		}
+
+		protected static Set<String> keySet(List<Object> array)
+		{
+			return new IterableSet<String>(Canal.of(Canal.range(0, array.size())).map(new Mapper<Integer, String>()
+			{
+				@Override
+				public String map(Integer el) throws Exception
+				{
+					return Index((int) el);
+				}
+			}), array.size());
+		}
+
+		protected static Collection<Object> nullsBeforeValue(int nulls, Object value)
+		{
+			ArrayList<Object> arr = new ArrayList<Object>(nulls + 1);
+			for (int i = 0; i < nulls; i++)
+			{
+				arr.add(null);
+			}
+			arr.add(value);
+			return arr;
 		}
 
 		public static JSAN Of(Iterable<?> itr)
@@ -1369,14 +1481,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return Sort(source, new LinkedHashSet<Object>(), target);
 		}
 
-		private Map<String, Object>	array;
-
-		private int					length	= 0;
+		private List<Object> array;
 
 		public JSAN()
 		{
 			super();
-			array(new TreeMap<String, Object>(new ArrayIndexComparator()));
+			array(new ArrayList<Object>());
 		}
 
 		public JSAN(Object... values)
@@ -1708,12 +1818,12 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			}
 		}
 
-		protected Map<String, Object> array()
+		protected List<Object> array()
 		{
 			return array;
 		}
 
-		protected JSAN array(Map<String, Object> array)
+		protected JSAN array(List<Object> array)
 		{
 			if (array == null)
 			{
@@ -2017,7 +2127,6 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			super.clear();
 			array().clear();
-			this.length(0);
 		}
 
 		@Override
@@ -2053,13 +2162,13 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		public boolean containsKey(Object key)
 		{
 			Integer index = Index(key);
-			return index != null ? array().containsKey(index.toString()) : super.containsKey(key);
+			return index != null ? 0 <= index && index < length() : super.containsKey(key);
 		}
 
 		@Override
 		public boolean containsValue(Object value)
 		{
-			return array().containsValue(value) || object().containsValue(value);
+			return array().contains(value) || object().containsValue(value);
 		}
 
 		public JSAN delete(Object value)
@@ -2107,7 +2216,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public Set<Map.Entry<String, Object>> entrySet()
 		{
-			return new EntrySet(array().entrySet(), object().entrySet());
+			return new CombinedSet<Map.Entry<String, Object>>(entrySet(array()), object().entrySet());
 		}
 
 		public boolean equalValues(JSAN jsan)
@@ -2133,11 +2242,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public Object got(int index)
 		{
-			if (index >= this.length())
+			if (index < 0 || index >= this.length())
 			{
 				return null;
 			}
-			return array().get(Index(bound(index)));
+			else
+			{
+				return array().get(bound(index));
+			}
 		}
 
 		@Override
@@ -2171,7 +2283,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public boolean has(int index)
 		{
-			return array().containsKey(Index(index));
+			return 0 <= index && index < length();
 		}
 
 		@Override
@@ -2183,7 +2295,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		protected int index(int index)
 		{
-			return index >= 0 ? index : index + length();
+			return index < 0 ? index + length() : index;
+		}
+
+		protected Integer index(Object key)
+		{
+			try
+			{
+				return index(key instanceof Integer ? (Integer) key : Integer.parseInt(key.toString()));
+			}
+			catch (Exception e)
+			{
+				return null;
+			}
 		}
 
 		@Override
@@ -2215,7 +2339,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public Set<String> keySet()
 		{
-			return new KeySet(array().keySet(), object().keySet());
+			return new CombinedSet<String>(keySet(array()), object().keySet());
 		}
 
 		public String lastKeyOf(Object value)
@@ -2242,13 +2366,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public int length()
 		{
-			return length;
-		}
-
-		protected JSAN length(int length)
-		{
-			this.length = length;
-			return this;
+			return array().size();
 		}
 
 		@Override
@@ -2412,13 +2530,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public Object put(int index, Object value)
 		{
-			Object old = null;
-
-			index = index(index);
-
 			String key = Index(index);
 
-			old = this.got(index);
+			if (index < 0)
+			{
+				return super.put(key, value);
+			}
+
+			Object old = this.got(index);
 			// Clear the old hierarchical relation.
 			Hierarchical hirch = AsHierarchical(old);
 			if (hirch != null && hirch.outer() == this)
@@ -2457,11 +2576,19 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 				}
 			}
 
-			array().put(key, value);
+			int len = length();
 
-			if (index >= length())
+			if (index < len)
 			{
-				length(index + 1);
+				array().set(index, value);
+			}
+			else if (index == len)
+			{
+				array().add(value);
+			}
+			else
+			{
+				array().addAll(nullsBeforeValue(index - len, value));
 			}
 
 			return old;
@@ -2501,14 +2628,14 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public JSAN readonly()
 		{
-			for (Object o : this.array().values())
+			for (Object o : this.array())
 			{
 				if (o instanceof JSON)
 				{
 					((JSON) o).readonly();
 				}
 			}
-			return ((JSAN) super.readonly()).array(Collections.unmodifiableMap(this.array()));
+			return ((JSAN) super.readonly()).array(Collections.unmodifiableList(this.array()));
 		}
 
 		@Override
@@ -2667,19 +2794,21 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public Object remove(Object key)
 		{
-			Object value = null;
-
-			if (key != null)
+			if (key == null)
 			{
-				Integer index = Index(key.toString());
+				return null;
+			}
+			else
+			{
+				Integer index = index(key);
 
 				if (index == null)
 				{
-					super.remove(key);
+					return super.remove(key);
 				}
 				else
 				{
-					value = array().remove(key.toString());
+					Object value = array().remove((int) index);
 
 					Hierarchical hirch = AsHierarchical(value);
 
@@ -2690,10 +2819,10 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 							hirch.outer(null).entry(null);
 						}
 					}
+
+					return value;
 				}
 			}
-
-			return value;
 		}
 
 		@Override
@@ -2757,7 +2886,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 
 		public JSAN slice(int start)
 		{
-			return slice(start, LAST);
+			return slice(start, this.length());
 		}
 
 		public JSAN slice(int start, int end)
@@ -2765,20 +2894,16 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			return slice(null, start, end);
 		}
 
-		public JSAN slice(JSAN jsan, int start)
+		public JSAN slice(JSAN result, int start)
 		{
-			return slice(jsan, start, LAST);
+			return slice(result, start, this.length());
 		}
 
-		public JSAN slice(JSAN jsan, int start, int end)
+		public JSAN slice(JSAN result, int start, int end)
 		{
-			if (jsan == null)
+			if (result == null)
 			{
-				jsan = new JSAN().templates(this);
-			}
-			else
-			{
-				jsan.clear();
+				result = new JSAN().templates(this);
 			}
 
 			start = bound(start);
@@ -2790,19 +2915,20 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			{
 				iter.next();
 
-				if (iter.index() >= 0 && iter.index() < end)
+				if (iter.index() >= 0)
 				{
-					jsan.attr(iter.index() - start, iter.get());
-				}
-				else
-				{
-					break;
+					if (iter.index() < end)
+					{
+						result.add(iter.get());
+					}
+					else
+					{
+						break;
+					}
 				}
 			}
 
-			jsan.length(end - start);
-
-			return jsan;
+			return result;
 		}
 
 		public JSAN sort()
@@ -2844,67 +2970,28 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			JSAN result = new JSAN().templates(this);
 
-			int trace = length();
 			index = bound(index);
-			cover = Tools.limitNumber(cover, 0, trace - index);
-			trace--;
+			cover = Tools.limitNumber(cover, 0, length() - index);
 
-			int fills = collection.size();
-			int delta = fills - cover;
+			int delta = collection.size() - cover;
 
-			ValueIterator<Object> iter = this.iterator(Index(index));
-
-			// Clean
-			while (iter.hasNext())
+			for (int i = 0; i < cover; i++)
 			{
-				iter.next();
-
-				if (iter.index() >= 0 && iter.index() < index + cover)
-				{
-					result.add(this.remove(iter.key()));
-				}
-				else
-				{
-					iter.previous();
-					break;
-				}
+				result.add(this.attr(index + i));
 			}
 
 			if (delta < 0)
-			{
-				// Shrink
-				while (iter.hasNext())
+			{ // Shrink
+				for (int i = delta; i < 0; i++)
 				{
-					iter.next();
-
-					if (iter.index() >= 0)
-					{
-						this.put(iter.index() + delta, this.remove(iter.index()));
-					}
-					else
-					{
-						break;
-					}
+					this.remove(index);
 				}
-				this.length(trace + delta + 1);
 			}
 			else if (delta > 0)
-			{
-				// Expand
-				iter.reset(Index(length() + 1));
-
-				int tail = index + cover;
-
-				while (iter.hasPrevious())
+			{ // Expand
+				for (int i = 0; i < delta; i++)
 				{
-					iter.previous();
-
-					if (iter.index() < tail)
-					{
-						break;
-					}
-
-					this.put(iter.index() + delta, this.remove(iter.index()));
+					array().add(index, null);
 				}
 			}
 
@@ -2912,7 +2999,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			int i = 0;
 			for (Object o : collection)
 			{
-				this.put(i + index, o);
+				this.put(index + i, o);
 				i++;
 			}
 
@@ -2923,67 +3010,28 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			JSAN result = new JSAN().templates(this);
 
-			int trace = length();
 			index = bound(index);
-			cover = Tools.limitNumber(cover, 0, trace - index);
-			trace--;
+			cover = Tools.limitNumber(cover, 0, length() - index);
 
-			int fills = jsan.size();
-			int delta = fills - cover;
+			int delta = jsan.size() - cover;
 
-			ValueIterator<Object> iter = this.iterator(Index(index));
-
-			// Clean
-			while (iter.hasNext())
+			for (int i = 0; i < cover; i++)
 			{
-				iter.next();
-
-				if (iter.index() >= 0 && iter.index() < index + cover)
-				{
-					result.add(this.remove(iter.key()));
-				}
-				else
-				{
-					iter.previous();
-					break;
-				}
+				result.add(this.attr(index + i));
 			}
 
 			if (delta < 0)
-			{
-				// Shrink
-				while (iter.hasNext())
+			{ // Shrink
+				for (int i = delta; i < 0; i++)
 				{
-					iter.next();
-
-					if (iter.index() >= 0)
-					{
-						this.put(iter.index() + delta, this.remove(iter.index()));
-					}
-					else
-					{
-						break;
-					}
+					this.remove(index);
 				}
-				this.length(trace + delta + 1);
 			}
 			else if (delta > 0)
-			{
-				// Expand
-				iter.reset(Index(length() + 1));
-
-				int tail = index + cover;
-
-				while (iter.hasPrevious())
+			{ // Expand
+				for (int i = 0; i < delta; i++)
 				{
-					iter.previous();
-
-					if (iter.index() < tail)
-					{
-						break;
-					}
-
-					this.put(iter.index() + delta, this.remove(iter.index()));
+					array().add(index, null);
 				}
 			}
 
@@ -2991,7 +3039,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 			int i = 0;
 			for (Object o : jsan)
 			{
-				this.put(i + index, o);
+				this.put(index + i, o);
 				i++;
 			}
 
@@ -3002,74 +3050,37 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		{
 			JSAN result = new JSAN().templates(this);
 
-			int trace = length();
 			index = bound(index);
-			cover = Tools.limitNumber(cover, 0, trace - index);
-			trace--;
+			cover = Tools.limitNumber(cover, 0, length() - index);
 
-			int fills = objects.length;
-			int delta = fills - cover;
+			int delta = objects.length - cover;
 
-			ValueIterator<Object> iter = this.iterator(Index(index));
-
-			// Clean
-			while (iter.hasNext())
+			for (int i = 0; i < cover; i++)
 			{
-				iter.next();
-
-				if (iter.index() >= 0 && iter.index() < index + cover)
-				{
-					result.add(this.remove(iter.key()));
-				}
-				else
-				{
-					iter.previous();
-					break;
-				}
+				result.add(this.attr(index + i));
 			}
 
 			if (delta < 0)
-			{
-				// Shrink
-				while (iter.hasNext())
+			{ // Shrink
+				for (int i = delta; i < 0; i++)
 				{
-					iter.next();
-
-					if (iter.index() >= 0)
-					{
-						this.put(iter.index() + delta, this.remove(iter.index()));
-					}
-					else
-					{
-						break;
-					}
+					this.remove(index);
 				}
-				this.length(trace + delta + 1);
 			}
 			else if (delta > 0)
-			{
-				// Expand
-				iter.reset(Index(length() + 1));
-
-				int tail = index + cover;
-
-				while (iter.hasPrevious())
+			{ // Expand
+				for (int i = 0; i < delta; i++)
 				{
-					iter.previous();
-
-					if (iter.index() < tail)
-					{
-						break;
-					}
-
-					this.put(iter.index() + delta, this.remove(iter.index()));
+					array().add(index, null);
 				}
 			}
 
 			// Fill
-			for (int i = 0; i < fills; i++)
+			int i = 0;
+			for (Object o : objects)
 			{
-				this.put(i + index, objects[i]);
+				this.put(index + i, o);
+				i++;
 			}
 
 			return result;
@@ -3745,70 +3756,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		@Override
 		public Collection<Object> values()
 		{
-			return new ValuesCollection(array().values(), object().values());
-		}
-	}
-
-	protected static class KeySet extends AbstractSet<String>
-	{
-		protected static class KeyIterator extends AbstractIterator<String>
-		{
-			public KeyIterator(Iterator<String>... iters)
-			{
-				super(iters);
-			}
-
-			@Override
-			public String next()
-			{
-				return iter.next();
-			}
-		}
-
-		protected Set<String>[] keys;
-
-		public KeySet(Set<String>... keys)
-		{
-			this.keys = keys;
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public Iterator<String> iterator()
-		{
-			Iterator<String>[] iters = null;
-
-			if (keys != null)
-			{
-				iters = (Iterator<String>[]) new Iterator<?>[keys.length];
-
-				for (int i = 0; i < keys.length; i++)
-				{
-					if (keys[i] != null)
-					{
-						iters[i] = keys[i].iterator();
-					}
-				}
-			}
-
-			return new KeyIterator(iters);
-		}
-
-		@Override
-		public int size()
-		{
-			int size = 0;
-			if (keys != null)
-			{
-				for (Set<String> set : keys)
-				{
-					if (set != null)
-					{
-						size += set.size();
-					}
-				}
-			}
-			return size;
+			return new ValuesCollection(array(), object().values());
 		}
 	}
 
@@ -5910,23 +5858,23 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		}
 	}
 
-	public static final Context AsContext(Object o)
+	public static Context AsContext(Object o)
 	{
 		return Tools.as(o, Context.class);
 	}
 
-	public static final Function AsFunction(Object o)
+	public static Function AsFunction(Object o)
 	{
 		return Tools.as(o, Function.class);
 	}
 
-	public static final Hierarchical AsHierarchical(Object o)
+	public static Hierarchical AsHierarchical(Object o)
 	{
 		return Tools.as(o, Hierarchical.class);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static final Iterable<Object> AsIterable(Object o)
+	public static Iterable<Object> AsIterable(Object o)
 	{
 		Iterable<Object> iter = null;
 		if (o instanceof Iterable<?>)
@@ -5936,18 +5884,18 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return iter;
 	}
 
-	public static final JSAN AsJSAN(Object o)
+	public static JSAN AsJSAN(Object o)
 	{
 		return Tools.as(o, JSAN.class);
 	}
 
-	public static final JSON AsJSON(Object o)
+	public static JSON AsJSON(Object o)
 	{
 		return Tools.as(o, JSON.class);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static final Map<String, Object> AsMap(Object o)
+	public static Map<String, Object> AsMap(Object o)
 	{
 		Map<String, Object> map = null;
 		if (o instanceof Map<?, ?>)
@@ -5957,7 +5905,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return map;
 	}
 
-	public static final Quotation AsQuotation(Object o)
+	public static Quotation AsQuotation(Object o)
 	{
 		return Tools.as(o, Quotation.class);
 	}
@@ -6961,7 +6909,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return format;
 	}
 
-	public static final int FirstNonWhitespaceIndex(CharSequence seq, int from)
+	public static int FirstNonWhitespaceIndex(CharSequence seq, int from)
 	{
 		int index = NOT_FOUND;
 
@@ -7005,42 +6953,42 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 		return true;
 	}
 
-	public static final boolean IsArray(Object o)
+	public static boolean IsArray(Object o)
 	{
 		return o != null && o.getClass().isArray();
 	}
 
-	public static final boolean IsContext(Object o)
+	public static boolean IsContext(Object o)
 	{
 		return o instanceof Context;
 	}
 
-	public static final boolean IsFunction(Object o)
+	public static boolean IsFunction(Object o)
 	{
 		return o instanceof Function;
 	}
 
-	public static final boolean IsHierarchical(Object o)
+	public static boolean IsHierarchical(Object o)
 	{
 		return o instanceof Hierarchical;
 	}
 
-	public static final boolean IsJSAN(Object o)
+	public static boolean IsJSAN(Object o)
 	{
 		return o instanceof JSAN;
 	}
 
-	public static final boolean IsJSON(Object o)
+	public static boolean IsJSON(Object o)
 	{
 		return o instanceof JSON;
 	}
 
-	public static final boolean IsPlainJSON(Object o)
+	public static boolean IsPlainJSON(Object o)
 	{
 		return (o instanceof JSON) && !(o instanceof JSAN);
 	}
 
-	public static final boolean IsQuotation(Object o)
+	public static boolean IsQuotation(Object o)
 	{
 		return o instanceof Quotation;
 	}
@@ -9219,7 +9167,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	@SuppressWarnings("unchecked")
 	public Set<Map.Entry<String, Object>> entrySet()
 	{
-		return new EntrySet(object().entrySet());
+		return new CombinedSet<Map.Entry<String, Object>>(object().entrySet());
 	}
 
 	@Override
@@ -9414,7 +9362,7 @@ public class JSON implements Map<String, Object>, Iterable<Object>, Serializable
 	@SuppressWarnings("unchecked")
 	public Set<String> keySet()
 	{
-		return new KeySet(object().keySet());
+		return new CombinedSet<String>(object().keySet());
 	}
 
 	protected Map<String, Object> object()
